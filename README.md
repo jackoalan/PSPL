@@ -1,4 +1,10 @@
-PSPL
-====
+PSPL Shader Language
+====================
 
-Intermediate polygon-raster shader language with Markdown-style syntax. Able to target a wide variety of graphics architectures
+The **Photon Shader Preprocess Language (PSPL)** aims to simplify the task 
+of designing and authoring shader programs for a wide variety of 
+[*3D polygon-rasterising*](http://en.wikipedia.org/wiki/Rasterisation) 
+graphics architectures. 
+It accomplishes this with a design-oriented suite of *file formats*, 
+*runtime libraries* and offline *pre-processing tools*. 
+ 
