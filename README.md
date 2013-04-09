@@ -89,7 +89,7 @@ When all said and done, shaders written and deployed using PSPL will function
 on many fully-programmable and fixed-function graphics architectures alike. 
 Fully-programmable shader archtectures with APIs like 
 [OpenGL&#91;ES&#93; 2.0](http://www.khronos.org/opengles/sdk/docs/man/) and 
-[Direct3D 9](http://msdn.microsoft.com/en-us/library/windows/desktop/bb174336&#40;v=vs.85&#41;.aspx) 
+[Direct3D 9](http://msdn.microsoft.com/en-us/library/windows/desktop/bb174336%40v=vs.85%41.aspx) 
 function by having native shader code ([GLSL](http://en.wikipedia.org/wiki/GLSL), 
 [HLSL](http://en.wikipedia.org/wiki/High-level_shader_language), etc...) 
 emitted by PSPL's *preprocessor*. Certain fixed-function architectures,
