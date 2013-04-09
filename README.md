@@ -8,6 +8,6 @@ of designing and authoring
 graphics architectures. 
 It accomplishes this with an extended 
 [Markdown-syntax](http://en.wikipedia.org/wiki/Markdown) programming language 
-conbined with a design-oriented suite of *file formats*, *runtime libraries* 
+combined with a design-oriented suite of *file formats*, *runtime libraries* 
 and offline *pre-processing tools*. 
  
