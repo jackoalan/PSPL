@@ -71,8 +71,8 @@ indicates an easy ability to extend into other applications
         * Textures are in platform-native format(s)
 * Runtime
     * Simple file or membuf `.pspli/.psplc` loader
-    * Heading handler installation/configuration
-    * Macro handler installation/configuration
+    * Heading hook installation/configuration
+    * Macro hook installation/configuration
     * Common uniform-variable interface
     * Common vertex format definition interface
 ```
