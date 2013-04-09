@@ -150,7 +150,7 @@ Fully-programmable shader archtectures with APIs like
 function by having native shader code ([GLSL](http://en.wikipedia.org/wiki/GLSL), 
 [HLSL](http://en.wikipedia.org/wiki/High-level_shader_language), etc...) 
 emitted by PSPL's *preprocessor*. Certain fixed-function architectures,
-like the [GX](http://libogc.devkitpro.org/gx_8h.html) API on GameCube/Wii 
+like the [GX API](http://libogc.devkitpro.org/gx_8h.html) on GameCube/Wii 
 function by having their binary configuration information saved in a file 
 buffer, which is replayed into the API by PSPL's *runtime library*.
 
