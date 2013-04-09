@@ -41,6 +41,10 @@ As this secondary heading ponders, the simplicity of Markdown also
 indicates an easy ability to extend into other applications
 (not just text formatting). 
 
+
+Art Pipeline Toolchain
+----------------------
+
 **WARNING (bold):** the following bulleted list contains spoilers!
 
 * Shaders
