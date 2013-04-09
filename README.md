@@ -70,7 +70,7 @@ indicates an easy ability to extend into other applications
             * Bi-endian design
         * Textures are in platform-native format(s)
 * Runtime
-    * Simple file or membuf `.pspli/.psplc` loader
+    * Simple file or membuf `.psplc` loader
     * Heading hook installation/configuration
     * Macro hook installation/configuration
     * Common uniform-variable interface
@@ -79,7 +79,19 @@ indicates an easy ability to extend into other applications
 
 Given the [art pipeline](http://en.wikipedia.org/wiki/Art_pipeline) paradigm
 that many digital artists follow, PSPL is designed to serve as an integral 
-tool; assisting these procedural tasks.
+tool; assisting these procedural tasks. The focus on an *art pipeline* paradigm
+is realised in five stages:
+
+* Intermediate – Filesystem-based means of gathering `.pspl` sources and intermediate assets (models, textures, etc...) into a `.pspli` root directory
+* Preprocessing – Macro-based substitution and external inclusion (think C preprocessor) for `.pspl` sources
+* Compiling – Conversion to platform native data formats (including shader code generation and asset conversion)
+* Packaging – Gathering of compiled shader objects and native flat-file assets into a `.psplc` package file for runtime
+* Runtime Playback – Loading of `.psplc` into the platform API in question, all in one efficient stage 
+
+Everything in PSPL revolves around the *Markdown-extended* `.pspl` text file format. 
+
+
+
 
 
 Focus On Design
@@ -118,3 +130,7 @@ Flexible Integrability
 ----------------------
 
 PSPL is designed to be adaptable beyond what it brings built-in.
+Headings (and sub-headings) are able to trigger routines at the *preprocessing*, 
+*compiling*, and *runtime playback* stages. Macros also exist to programmatically
+invoke processing routines during the same stages. It's also possible to provide 
+syntactic access to more esoteric platform-specific features not 
