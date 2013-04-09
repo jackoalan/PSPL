@@ -82,6 +82,12 @@ that many digital artists follow, PSPL is designed to serve as an integral
 tool; assisting these procedural tasks.
 
 
+Focus On Design
+---------------
+
+Part of PSPL's **offline toolchain** includes a packager and compiler.
+
+
 It Goes Anywhere
 ----------------
 
@@ -106,12 +112,6 @@ More Than Just A Language
 -------------------------
 
 PSPL isn't complete without its **support architecture**. 
-
-
-Focus On Design
----------------
-
-Part of PSPL's **offline toolchain** includes a packager and compiler.
 
 
 Flexible Integrability
