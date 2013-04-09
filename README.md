@@ -48,7 +48,8 @@ indicates an easy ability to extend into other applications
         * Alpha Blend Modes
         * Z-buffer Modes
     * Headings
-    * Macros
+    * Preprocessor directives
+    * Commands
     * Variables
 * Offline Tools
     * Preprocessors (to other languages/configs)
@@ -71,8 +72,8 @@ indicates an easy ability to extend into other applications
         * Textures are in platform-native format(s)
 * Runtime
     * Simple file or membuf `.psplc` loader
-    * Heading hook installation/configuration
-    * Macro hook installation/configuration
+    * Heading-context hook installation/configuration
+    * Command hook installation/configuration
     * Common uniform-variable interface
     * Common vertex format definition interface
 ```
@@ -83,19 +84,57 @@ tool; assisting these procedural tasks. The focus on an *art pipeline* paradigm
 is realised in five stages:
 
 * Intermediate – Filesystem-based means of gathering `.pspl` sources and intermediate assets (models, textures, etc...) into a `.pspli` root directory
-* Preprocessing – Macro-based substitution and external inclusion (think C preprocessor) for `.pspl` sources
+* Preprocessing – Token-based substitution and external inclusion (think C preprocessor) for `.pspl` sources
 * Compiling – Conversion to platform native data formats (including shader code generation and asset conversion)
 * Packaging – Gathering of compiled shader objects and native flat-file assets into a `.psplc` package file for runtime
-* Runtime Playback – Loading of `.psplc` into the platform API in question, all in one efficient stage 
+* Runtime Playback – Loading of `.psplc` and processing into the platform API in question, all in one efficient stage 
 
-Everything in PSPL revolves around the *Markdown-extended* `.pspl` text file format. 
+Everything in PSPL revolves around the *Markdown-extended* **PSPL** language 
+(sources have `.pspl` file extension). 
+The language provides *multi-level context headings*, *preprocessor directives*, 
+*runtime commands*, *line-based read-ins* and an optional *indentation-sensitive syntax* 
+(for some contexts).
+
+Of course, commenting is also supported with C-style `// ...` or `/* ... */` syntax.
+
+Here's a sample PSPL shader illustrating these features:
+
+```pspl
+/* Preprocessor directive invocations use a multi-token statement syntax 
+ * encapsulated in square brackets. They are resolved at *compile-time*. */
+[INCLUDE PACKAGED common.pspl]
+
+/* Command invocations are made with C-style function-call syntax (sans ending ';').
+ * They are resolved at *run-time* and may be dynamically (re)defined by the 
+ * application integrating the PSPL runtime. This particular command is a runtime 
+ * built-in and will trigger the runtime to print a string to `stderr` at load-time */
+PSPL_LOAD_MESSAGE("Hello World!\n")
+
+/* So far, we've been operating in the *GLOBAL* context. In order to route 
+ * commands and code-lines to the correct extensions of the PSPL runtime, 
+ * a multi-level hierarchical context-system is used. The context levels
+ * are invoked with the standard Markdown heading syntax of the appropriate level
+ * (either line-prepending '#'s or post-line-break '='s or '-'s). 
+ * Here we switch to the VERTEX shader component. */
+VERTEX
+======
+
+/* Each attribute of the VERTEX shader may be defined with secondary headings.
+ * Here's the POSITION attribute */
+POSITION  
+--------
+/* PSPL's compiler interface provides a line-by-line read-in convention.
+ * For the POSITION context, each line defines a link in a matrix-multiplication
+ * chain. This allows the shader author to easily define a custom vertex
+ * transformation chain for the shader. */
+@VERT_POSITION
+**************
+$
+```
 
 
-
-
-
-Focus On Design
----------------
+Design-Focused Pipeline
+-----------------------
 
 Part of PSPL's **offline toolchain** includes a packager and compiler.
 
@@ -131,6 +170,6 @@ Flexible Integrability
 
 PSPL is designed to be adaptable beyond what it brings built-in.
 Headings (and sub-headings) are able to trigger routines at the *preprocessing*, 
-*compiling*, and *runtime playback* stages. Macros also exist to programmatically
+*compiling*, and *runtime playback* stages. Commands also exist to programmatically
 invoke processing routines during the same stages. It's also possible to provide 
 syntactic access to more esoteric platform-specific features not 
