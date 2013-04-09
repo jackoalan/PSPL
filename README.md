@@ -7,6 +7,10 @@ of designing and authoring
 [*3D polygon-rasterising*](http://en.wikipedia.org/wiki/Rasterisation) 
 graphics architectures; with a solid degree of control over the entire 
 [graphics pipeline](http://en.wikipedia.org/wiki/Graphics_pipeline). 
+Additionally, PSPL defines a complete set of conventions to build an 
+[art pipeline](http://en.wikipedia.org/wiki/Art_pipeline); bridging the gap
+between 2D/3D graphics editors and the target application's runtime.
+
 It accomplishes this with an extended 
 [Markdown-syntax](http://en.wikipedia.org/wiki/Markdown) *programming language* 
 combined with a design-oriented suite of *file formats*, *runtime libraries* 
@@ -17,7 +21,7 @@ Simplicity Meets Power
 ----------------------
 
 As a document-definition format, 
-[Markdown](http://daringfireball.net/projects/markdown/) works incredibly 
+[Markdown](http://daringfireball.net/projects/markdown/) works remarkably 
 well in more ways than one. A document is usually authored entirely in 
 plain-text, yet conveys a striking set of presentation attributes. The 
 attributes are rendered through *preprocessor tools* and also
