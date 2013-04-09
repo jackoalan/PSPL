@@ -7,7 +7,7 @@ of designing and authoring
 [*3D polygon-rasterising*](http://en.wikipedia.org/wiki/Rasterisation) 
 graphics architectures. 
 It accomplishes this with an extended 
-[Markdown-syntax](http://en.wikipedia.org/wiki/Markdown) programming language 
+[Markdown-syntax](http://en.wikipedia.org/wiki/Markdown) *programming language* 
 combined with a design-oriented suite of *file formats*, *runtime libraries* 
 and offline *pre-processing tools*. 
  
