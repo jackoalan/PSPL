@@ -112,7 +112,7 @@ Here's a sample PSPL shader illustrating these features:
  * encapsulated in square brackets. They are resolved at *compile-time*. */
 [INCLUDE PACKAGED common.pspl]
 
-/* Command invocations are made with C-style function-call syntax (sans ending ';').
+/* Command invocations are made with C-style function-call syntax.
  * They are resolved at *run-time* and may be dynamically (re)defined by the 
  * application integrating the PSPL runtime. This particular command is a runtime 
  * built-in and will trigger the runtime to print a string to `stderr` at load-time */
@@ -133,11 +133,53 @@ POSITION
 --------
 /* PSPL's compiler interface provides a line-by-line read-in convention.
  * For the POSITION context, each line defines a link in a matrix-multiplication
- * chain. This allows the shader author to easily define a custom vertex
+ * chain. Links are delimited by lines of '*' indicating a matrix-multiplication
+ * stage. This allows the shader author to easily define a custom vertex
  * transformation chain for the shader. */
 @VERT_POSITION
 **************
-$
+$APP_MODELVIEW_MTX
+******************
+$APP_PROJ_MTX
+
+
+/* Now let's take a closer look at how PSPL *variables* work. As the POSITION
+ * context demonstrated, named tokens are provided to clearly identify each 
+ * matrix-role in the chain. A key thing to note is the *punctuation-prefix*
+ * for each varible name. The '@' prefix indicates that the variable value 
+ * is sourced from an 'attribute' within the vertex buffer of the 3D model being 
+ * rendered. The '$' prefix indicates the variable value is sourced from a 
+ * 'uniform' provision made via the PSPL runtime. Also available is the '!'
+ * prefix indicating that the value is provided by the PSPL package that the
+ * source file is part of. There is also the '%' prefix indicating that the
+ * variable value is dynamic within the PSPL source (perhaps across contexts
+ * and/or interpolated between shader components). The NORMAL context uses 
+ * the same sort of conventions. */
+NORMAL
+------
+@VERT_NORMAL
+************
+$APP_MODELVIEW_INVXPOSE_MTX
+
+/* So far, all headings presented have been simple identifiers indicating
+ * the context being operated in. There is an additional syntax feature: *heading arguments*.
+ * With heading arguments, it becomes possible to denote a secondary level of 
+ * hierarchy within context switches. Heading arguments may also be used to stipulate
+ * the nature of that context's inclusion in the overall shader. 
+ * In this case, a new dynamic variable is defined which generates UV-coordinates
+ * at the vertex stage of the shader, which the GPU will interpolate over to the
+ * fragment stage. */
+TEXCOORD (%STATIC_LIGHT_MAP_UV)
+-------------------------------
+@VERT_UV1
+
+/* Here's another texcoord definition, this time including an animated 
+ * matrix multiplication. */
+TEXCOORD (%DIFFUSE_MAP_UV)
+--------------------------
+@VERT_UV2
+*********
+$APP_DIFFUSE_ANIMATION_MTX
 ```
 
 
