@@ -79,7 +79,7 @@ indicates an easy ability to extend into other applications
 
 Given the [art pipeline](http://en.wikipedia.org/wiki/Art_pipeline) paradigm
 that many digital artists follow, PSPL is designed to serve as an integral 
-tool assisting these procedural tasks.
+tool; assisting these procedural tasks.
 
 
 It Goes Anywhere
