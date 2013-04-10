@@ -16,6 +16,9 @@ It accomplishes this with an extended
 combined with a design-oriented suite of *file formats*, *runtime libraries* 
 and offline *pre-processing tools*. 
 
+The Markdown *variable* and *command* extensions take design cues from 
+[CMake's listcode syntax](http://www.cmake.org/cmake/help/cmake_tutorial.html).
+
 
 Simplicity Meets Power
 ----------------------
@@ -86,6 +89,10 @@ Art Pipeline Toolchain
     * Common vertex format definition interface
 ```
 
+
+Design-Focused Pipeline
+-----------------------
+
 Given the [art pipeline](http://en.wikipedia.org/wiki/Art_pipeline) paradigm
 that many digital artists follow, PSPL is designed to serve as an integral 
 tool; assisting these procedural tasks. The focus on an *art pipeline* paradigm
@@ -109,20 +116,28 @@ Here's a sample PSPL shader illustrating these features:
 
 ```pspl
 /* Preprocessor directive invocations use a multi-token statement syntax 
- * encapsulated in square brackets. They are resolved at *compile-time*. */
+ * encapsulated in square brackets. They are resolved at *compile-time*. 
+ * This includes the contents of 'common.pspl' at the root of the same package
+ * as this .pspl file. */
 [INCLUDE PACKAGED common.pspl]
 
 /* Command invocations are made with C-style function-call syntax.
  * They are resolved at *run-time* and may be dynamically (re)defined by the 
- * application integrating the PSPL runtime. This particular command is a runtime 
- * built-in and will trigger the runtime to print a string to `stderr` at load-time */
+ * application integrating the PSPL runtime. 
+ *
+ * This particular command is a runtime built-in and will trigger the 
+ * runtime to print a string to `stderr` at load-time */
 PSPL_LOAD_MESSAGE("Hello World!\n")
+
+
+
 
 /* So far, we've been operating in the *GLOBAL* context. In order to route 
  * commands and code-lines to the correct extensions of the PSPL runtime, 
  * a multi-level hierarchical context-system is used. The context levels
  * are invoked with the standard Markdown heading syntax of the appropriate level
  * (either line-prepending '#'s or post-line-break '='s or '-'s). 
+ *
  * Here we switch to the VERTEX shader component. */
 VERTEX
 ======
@@ -146,15 +161,24 @@ $APP_PROJ_MTX
 /* Now let's take a closer look at how PSPL *variables* work. As the POSITION
  * context demonstrated, named tokens are provided to clearly identify each 
  * matrix-role in the chain. A key thing to note is the *punctuation-prefix*
- * for each varible name. The '@' prefix indicates that the variable value 
+ * for each varible name. 
+ *
+ * The '@' prefix indicates that the variable value 
  * is sourced from an 'attribute' within the vertex buffer of the 3D model being 
- * rendered. The '$' prefix indicates the variable value is sourced from a 
- * 'uniform' provision made via the PSPL runtime. Also available is the '!'
+ * rendered. 
+ *
+ * The '$' prefix indicates the variable value is sourced from a 
+ * 'uniform' provision made via the PSPL runtime. 
+ *
+ * Also available is the '!'
  * prefix indicating that the value is provided by the PSPL package that the
- * source file is part of. There is also the '%' prefix indicating that the
+ * source file is part of. 
+ * 
+ * There is also the '%' prefix indicating that the
  * variable value is dynamic within the PSPL source (perhaps across contexts
- * and/or interpolated between shader components). The NORMAL context uses 
- * the same sort of conventions. */
+ * and/or interpolated between shader components). 
+ *
+ * The NORMAL context uses the same sort of conventions. */
 NORMAL
 ------
 @VERT_NORMAL
@@ -164,7 +188,9 @@ $APP_MODELVIEW_INVXPOSE_MTX
 /* So far, all headings presented have been simple identifiers indicating
  * the context being operated in. There is an additional syntax feature: *heading arguments*.
  * With heading arguments, it becomes possible to denote a secondary level of 
- * hierarchy within context switches. Heading arguments may also be used to stipulate
+ * hierarchy within context switches. 
+ * 
+ * Heading arguments may also be used to stipulate
  * the nature of that context's inclusion in the overall shader. 
  * In this case, a new dynamic variable is defined which generates UV-coordinates
  * at the vertex stage of the shader, which the GPU will interpolate over to the
@@ -173,26 +199,160 @@ TEXCOORD (%STATIC_LIGHT_MAP_UV)
 -------------------------------
 @VERT_UV1
 
-/* Here's another texcoord definition, this time including an animated 
- * matrix multiplication. */
-TEXCOORD (%DIFFUSE_MAP_UV)
+/* Here's another texcoord definition, this time including a 
+ * runtime-provided, animated matrix-uniform multiplication. */
+TEXCOORD (%SURFACE_MAP_UV)
 --------------------------
 @VERT_UV2
 *********
-$APP_DIFFUSE_ANIMATION_MTX
+$APP_SURFACE_ANIMATION_MTX
+
+
+
+
+/* Woo! Vertex Pipeline Complete. Now, if we are to follow the conventional
+ * order of the graphics pipeline, our Z-buffer (depth) configuration comes next
+ * (the beginning of the fragment pipeline).
+ *
+ * Please note that standard PSPL is not at all picky about context orderings 
+ * within the file; the fragment definition may even occur before the vertex 
+ * definition. */
+DEPTH
+=====
+/* The following are runtime commands (another PSPL syntactic feature).
+ * These will invoke the proper platform-specific APIs to set the
+ * general design-feature described. APIs like this *depth* one take 
+ * a boolean argument (TRUE/FALSE, YES/NO, ON/OFF, 0/<*>) to enable/disable 
+ * the GPU feature. 
+ * 
+ * In cases like this, the shader author may also provide 
+ * the 'PLATFORM' value, which uses the platform-specific default setting
+ * and is PSPL's default behaviour for these commands in the event of 
+ * the author's non-specification. */
+PSPL_DEPTH_TEST(TRUE)
+PSPL_DEPTH_WRITE(TRUE)
+
+
+
+/* Now the depth context has decided whether or not to run the code generating
+ * an RGBA colour fragment for presenting somewhere within the drawing framebuffer. */
+FRAGMENT
+========
+
+/* Our COLOUR (or COLOR) sub-context is a line-by-line, top-to-bottom 
+ * Photoshop-layer-style blend sequence. 
+ *
+ * This example employs both a 
+ * Multiply blending stage (for a static shadow and lighting map 
+ * rendered offline) and a Linear Dodge (or Add) blending stage (for
+ * an emission [self illumination] map on the surface of the model).
+ *
+ * The Multiply stage is denoted with a line of '*' and the Linear Dodge '+' */
+COLOUR
+------
+[SAMPLE PACKAGED ModelLightingMap.png %STATIC_LIGHT_MAP_UV]
+***********************************************************
+[SAMPLE PACKAGED ModelSurfaceDiffuseMap.png %SURFACE_MAP_UV]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[SAMPLE PACKAGED ModelSurfaceEmissionMap.png %SURFACE_MAP_UV]
+
+
+
+/* This surface is entirely opaque, so ensure the graphics architecture treats
+ * it as such. The BLEND context controls the fragment's inclusion into the draw buffer.*/
+BLEND
+=====
+PSPL_ALPHA_BLEND(FALSE)
 ```
 
+Now, here is it without comments:
 
-Design-Focused Pipeline
------------------------
+```pspl
+[INCLUDE PACKAGED common.pspl]
 
-Part of PSPL's **offline toolchain** includes a packager and compiler.
+PSPL_LOAD_MESSAGE("Hello World!\n")
+
+
+
+VERTEX
+======
+
+POSITION  
+--------
+@VERT_POSITION
+**************
+$APP_MODELVIEW_MTX
+******************
+$APP_PROJ_MTX
+
+NORMAL
+------
+@VERT_NORMAL
+************
+$APP_MODELVIEW_INVXPOSE_MTX
+
+TEXCOORD (%STATIC_LIGHT_MAP_UV)
+-------------------------------
+@VERT_UV1
+
+TEXCOORD (%SURFACE_MAP_UV)
+--------------------------
+@VERT_UV2
+*********
+$APP_SURFACE_ANIMATION_MTX
+
+
+
+DEPTH
+=====
+PSPL_DEPTH_TEST(TRUE)
+PSPL_DEPTH_WRITE(TRUE)
+
+
+
+FRAGMENT
+========
+
+COLOUR
+------
+[SAMPLE PACKAGED ModelLightingMap.png %STATIC_LIGHT_MAP_UV]
+***********************************************************
+[SAMPLE PACKAGED ModelSurfaceDiffuseMap.png %SURFACE_MAP_UV]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[SAMPLE PACKAGED ModelSurfaceEmissionMap.png %SURFACE_MAP_UV]
+
+
+
+BLEND
+=====
+PSPL_ALPHA_BLEND(FALSE)
+```
+
+Part of PSPL's **offline toolchain** includes a *compiler* and a *packager*. 
+
+The **compiler**
+performs any preprocessor invocations. It then generates file-buffers containing 
+platform-specific, generated shader-sources (also compiled if able). Finally,
+it generates a PSPL-specific binary configuration file `.psplb` instructing the runtime
+how to set itself up against the platform graphics API (using author-specified commands).
+
+Once the `.pspli` intermediate directory is established, it may be ran through
+the **packager**. The packager mipmaps and converts texture images to the selected target's native 
+format. It also links all `.psplb` files into a monolithic object-buffer for the runtime. The
+output is a single `.psplc` compiled-flat-file, containing the entire shader package.
+
+
+That And The Kitchen Sink
+-------------------------
+
+Since the runtime has direct, non-volatile access to texture data, it may perform
+its own *streamed texture loading* as the app requests shader loads via the runtime.
 
 
 It Goes Anywhere
 ----------------
 
-When all said and done, shaders written and deployed using PSPL will function 
+When all said and done, shader packages written and deployed using PSPL will function 
 on many fully-programmable and fixed-function graphics architectures alike. 
 Fully-programmable shader archtectures with APIs like 
 [OpenGL&#91;ES&#93; 2.0](http://www.khronos.org/opengles/sdk/docs/man/) and 
@@ -207,12 +367,6 @@ buffer, which is replayed into the API by PSPL's *runtime library*.
 The **PSPL runtime** is written in portable C (except C++ for the Direct3D stuff)
 and has a configurable CMake build system to seamlessly integrate with the app's 
 graphics API of choice.
-
-
-More Than Just A Language
--------------------------
-
-PSPL isn't complete without its **support architecture**. 
 
 
 Flexible Integrability
