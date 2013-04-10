@@ -98,11 +98,11 @@ that many digital artists follow, PSPL is designed to serve as an integral
 tool; assisting these procedural tasks. The focus on an *art pipeline* paradigm
 is realised in five stages:
 
-* Intermediate – Filesystem-based means of gathering `.pspl` sources and intermediate assets (models, textures, etc...) into a `.pspli` root directory
-* Preprocessing – Token-based substitution and external inclusion (think C preprocessor) for `.pspl` sources
-* Compiling – Conversion to platform native data formats (including shader code generation and asset conversion)
-* Packaging – Gathering of compiled shader objects and native flat-file assets into a `.psplc` package file for runtime
-* Runtime Playback – Loading of `.psplc` and processing into the platform API in question, all in one efficient stage 
+* **Intermediate** – Filesystem-based means of gathering `.pspl` sources and intermediate assets (models, textures, etc...) into a `.pspli` root directory
+* **Preprocessing** – Token-based substitution and external inclusion (think C preprocessor) for `.pspl` sources
+* **Compiling** – Conversion to platform native data formats (including shader code generation and asset conversion)
+* **Packaging** – Gathering of compiled shader objects and native flat-file assets into a `.psplc` package file for runtime
+* **Runtime Playback** – Loading of `.psplc` and processing into the platform API in question, all in one efficient stage 
 
 Everything in PSPL revolves around the *Markdown-extended* **PSPL** language 
 (sources have `.pspl` file extension). 
