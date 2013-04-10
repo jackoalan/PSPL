@@ -131,7 +131,6 @@ PSPL_LOAD_MESSAGE("Hello World!\n")
 
 
 
-
 /* So far, we've been operating in the *GLOBAL* context. In order to route 
  * commands and code-lines to the correct extensions of the PSPL runtime, 
  * a multi-level hierarchical context-system is used. The context levels
@@ -206,7 +205,6 @@ TEXCOORD (%SURFACE_MAP_UV)
 @VERT_UV2
 *********
 $APP_SURFACE_ANIMATION_MTX
-
 
 
 
