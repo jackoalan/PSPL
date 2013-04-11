@@ -121,7 +121,7 @@ Here's a sample PSPL shader illustrating these features:
  * as this .pspl file. */
 [INCLUDE PACKAGED common.pspl]
 
-/* Command invocations are made with C-style function-call syntax.
+/* Command invocations are made with CMake-style command syntax.
  * They are resolved at *run-time* and may be dynamically (re)defined by the 
  * application integrating the PSPL runtime. 
  *
