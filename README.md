@@ -12,7 +12,7 @@ Additionally, PSPL defines a complete set of conventions to build an
 between 2D/3D graphics editors and the target application's runtime.
 
 It accomplishes this with an extended 
-[Markdown-syntax](http://en.wikipedia.org/wiki/Markdown) *programming language* 
+[Markdown-syntax](http://en.wikipedia.org/wiki/Markdown) *macro language* 
 combined with a design-oriented suite of *file formats*, *runtime libraries* 
 and offline *pre-processing tools*. 
 
