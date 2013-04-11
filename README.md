@@ -14,7 +14,7 @@ between 2D/3D graphics editors and the target application's runtime.
 It accomplishes this with an extended 
 [Markdown-syntax](http://en.wikipedia.org/wiki/Markdown) *macro language* 
 combined with a design-oriented suite of *file formats*, *runtime libraries* 
-and offline *pre-processing tools*. 
+and an *offline toolchain*. 
 
 The Markdown *variable* and *command* extensions take design cues from 
 [CMake's listcode syntax](http://www.cmake.org/cmake/help/cmake_tutorial.html).
@@ -168,10 +168,6 @@ $APP_PROJ_MTX
  *
  * The '$' prefix indicates the variable value is sourced from a 
  * 'uniform' provision made via the PSPL runtime. 
- *
- * Also available is the '!'
- * prefix indicating that the value is provided by the PSPL package that the
- * source file is part of. 
  * 
  * There is also the '%' prefix indicating that the
  * variable value is dynamic within the PSPL source (perhaps across contexts
@@ -220,7 +216,7 @@ DEPTH
 /* The following are runtime commands (another PSPL syntactic feature).
  * These will invoke the proper platform-specific APIs to set the
  * general design-feature described. APIs like this *depth* one take 
- * a boolean argument (TRUE/FALSE, YES/NO, ON/OFF, 0/<*>) to enable/disable 
+ * a boolean argument (TRUE/FALSE, YES/NO, ON/OFF, <*>/0) to enable/disable 
  * the GPU feature. 
  * 
  * In cases like this, the shader author may also provide 
@@ -333,11 +329,14 @@ performs any preprocessor invocations. It then generates file-buffers containing
 platform-specific, generated shader-sources (also compiled if able). Finally,
 it generates a PSPL-specific binary configuration file `.psplb` instructing the runtime
 how to set itself up against the platform graphics API (using author-specified commands).
+The compiler will add a set of platform-specific directories within the *intermediate directory*
+containing the binary `.psplb` files. The compiler will then perform asset
+conversion and place the converted assets alongside the binaries. 
 
 Once the `.pspli` intermediate directory is established, it may be ran through
-the **packager**. The packager mipmaps and converts texture images to the selected target's native 
-format. It also links all `.psplb` files into a monolithic object-buffer for the runtime. The
-output is a single `.psplc` compiled-flat-file, containing the entire shader package.
+the **packager**. The packager links all `.psplb` files into a monolithic object-buffer 
+for the runtime and archives platform-specific assets together. The output is a single
+`.psplc` compiled-flat-file, containing the entire shader package.
 
 
 That And The Kitchen Sink
@@ -345,6 +344,7 @@ That And The Kitchen Sink
 
 Since the runtime has direct, non-volatile access to texture data, it may perform
 its own *streamed texture loading* as the app requests shader loads via the runtime.
+Also, the *packager* may be integrated at this stage, bypassing offline packaging
 
 
 It Goes Anywhere
