@@ -384,7 +384,7 @@ Fully-programmable shader archtectures with APIs like
 [Direct3D 9](http://msdn.microsoft.com/en-us/library/windows/desktop/bb174336.aspx) 
 function by having native shader code ([GLSL](http://en.wikipedia.org/wiki/GLSL), 
 [HLSL](http://en.wikipedia.org/wiki/High-level_shader_language), etc...) 
-emitted by PSPL's *preprocessor*. Certain fixed-function architectures,
+emitted by PSPL's *compiler*. Certain fixed-function architectures,
 like the [GX API](http://libogc.devkitpro.org/gx_8h.html) on GameCube/Wii 
 function by having their binary configuration information saved in a file 
 buffer, which is replayed into the API by PSPL's *runtime library*.
