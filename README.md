@@ -73,7 +73,7 @@ Art Pipeline Toolchain
         * Preview Generation
 * File Formats
     * Markdown-extended source text `.pspl`
-    * Intermediate PSPL package `.pspli` (directory structure)
+    * Intermediate PSPL package `.pspld` (directory structure)
         * May contain multiple PSPL sources
         * May contain intermediately-compressed (.PSD, .PNG, .TIF) textures
     * Compiled PSPL package `.psplc`
@@ -98,7 +98,7 @@ that many digital artists follow, PSPL is designed to serve as an integral
 tool; assisting these procedural tasks. The focus on an *art pipeline* paradigm
 is realised in five stages:
 
-* **Intermediate** – Filesystem-based means of gathering `.pspl` sources and intermediate assets (models, textures, etc...) into a `.pspli` root directory
+* **Intermediate** – Filesystem-based means of gathering `.pspl` sources and intermediate assets (models, textures, etc...) into a `.pspld` root directory
 * **Preprocessing** – Token-based substitution and external inclusion (think C preprocessor) for `.pspl` sources
 * **Compiling** – Conversion to platform native data formats (including shader code generation and asset conversion)
 * **Packaging** – Gathering of compiled shader objects and native flat-file assets into a `.psplc` package file for runtime
@@ -109,8 +109,6 @@ Everything in PSPL revolves around the *Markdown-extended* **PSPL** language
 The language provides *multi-level context headings*, *preprocessor directives*, 
 *runtime commands*, *line-based read-ins* and an optional *indentation-sensitive syntax* 
 (for some contexts).
-
-Of course, commenting is also supported with C-style `// ...` or `/* ... */` syntax.
 
 
 Scalable Syntax
@@ -191,6 +189,8 @@ It's important to understand that PSPL is a medley of *bracket-enclosed*
 and a *punctuation-prefix coherent* **variable state**. 
 
 Here is the same shader with commenting describing the feature use. 
+
+Of course, commenting is also supported with C-style `// ...` or `/* ... */` syntax.
 
 ```pspl
 /* Preprocessor directive invocations use a multi-token statement syntax 
@@ -338,6 +338,9 @@ PSPL_ALPHA_BLEND(FALSE)
 ```
 
 
+Tying Everything Together
+-------------------------
+
 Part of PSPL's **offline toolchain** includes a *compiler* and a *packager*. 
 
 The **compiler**
@@ -349,10 +352,18 @@ The compiler will add a set of platform-specific directories within the *interme
 containing the binary `.psplb` files. The compiler will then perform asset
 conversion and place the converted assets alongside the binaries. 
 
-Once the `.pspli` intermediate directory is established, it may be ran through
+Once the `.pspld` intermediate directory is established, it may be ran through
 the **packager**. The packager links all `.psplb` files into a monolithic object-buffer 
 for the runtime and archives platform-specific assets together. The output is a single
 `.psplc` compiled-flat-file, containing the entire shader package.
+
+An alternative to generating a `.psplc` flat-file package is to generate a `.psplcd` 
+*compiled directory* package.
+Making a compiled directory may be useful during a development cycle, where a monolithic
+asset structure is not desired. The structure of the compiled directory remains editable
+and may be merged with a `.pspld` intermediate to keep the source assets around.
+The `.psplcd` will additionally interleave platform-native assets and shader configurations
+with the sources. 
 
 
 That And The Kitchen Sink
