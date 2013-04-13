@@ -112,7 +112,85 @@ The language provides *multi-level context headings*, *preprocessor directives*,
 
 Of course, commenting is also supported with C-style `// ...` or `/* ... */` syntax.
 
+
+Scalable Syntax
+---------------
+
+The features discussed up to now have described an *end-to-end* utilisation
+of a typical *contemporary* GPU's graphics pipeline. 
+
 Here's a sample PSPL shader illustrating these features:
+
+```pspl
+[INCLUDE PACKAGED common.pspl]
+
+PSPL_LOAD_MESSAGE("Hello World!\n")
+
+
+
+VERTEX
+======
+
+POSITION  
+--------
+@VERT_POSITION
+**************
+$APP_MODELVIEW_MTX
+******************
+$APP_PROJ_MTX
+
+NORMAL
+------
+@VERT_NORMAL
+************
+$APP_MODELVIEW_INVXPOSE_MTX
+
+TEXCOORD (%STATIC_LIGHT_MAP_UV)
+-------------------------------
+@VERT_UV1
+
+TEXCOORD (%SURFACE_MAP_UV)
+--------------------------
+@VERT_UV2
+*********
+$APP_SURFACE_ANIMATION_MTX
+
+
+
+DEPTH
+=====
+PSPL_DEPTH_TEST(TRUE)
+PSPL_DEPTH_WRITE(TRUE)
+
+
+
+FRAGMENT
+========
+
+COLOUR
+------
+[SAMPLE PACKAGED ModelLightingMap.png %STATIC_LIGHT_MAP_UV]
+***********************************************************
+[SAMPLE PACKAGED ModelSurfaceDiffuseMap.png %SURFACE_MAP_UV]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[SAMPLE PACKAGED ModelSurfaceEmissionMap.png %SURFACE_MAP_UV]
+
+
+
+BLEND
+=====
+PSPL_ALPHA_BLEND(FALSE)
+```
+
+
+Looking Closer
+--------------
+
+It's important to understand that PSPL is a medley of *bracket-enclosed* 
+**preprocessor directives**, *C-style* **runtime command calls**,
+and a *punctuation-prefix coherent* **variable state**. 
+
+Here is the same shader with commenting describing the feature use. 
 
 ```pspl
 /* Preprocessor directive invocations use a multi-token statement syntax 
@@ -259,68 +337,6 @@ BLEND
 PSPL_ALPHA_BLEND(FALSE)
 ```
 
-Now, here is it without comments:
-
-```pspl
-[INCLUDE PACKAGED common.pspl]
-
-PSPL_LOAD_MESSAGE("Hello World!\n")
-
-
-
-VERTEX
-======
-
-POSITION  
---------
-@VERT_POSITION
-**************
-$APP_MODELVIEW_MTX
-******************
-$APP_PROJ_MTX
-
-NORMAL
-------
-@VERT_NORMAL
-************
-$APP_MODELVIEW_INVXPOSE_MTX
-
-TEXCOORD (%STATIC_LIGHT_MAP_UV)
--------------------------------
-@VERT_UV1
-
-TEXCOORD (%SURFACE_MAP_UV)
---------------------------
-@VERT_UV2
-*********
-$APP_SURFACE_ANIMATION_MTX
-
-
-
-DEPTH
-=====
-PSPL_DEPTH_TEST(TRUE)
-PSPL_DEPTH_WRITE(TRUE)
-
-
-
-FRAGMENT
-========
-
-COLOUR
-------
-[SAMPLE PACKAGED ModelLightingMap.png %STATIC_LIGHT_MAP_UV]
-***********************************************************
-[SAMPLE PACKAGED ModelSurfaceDiffuseMap.png %SURFACE_MAP_UV]
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-[SAMPLE PACKAGED ModelSurfaceEmissionMap.png %SURFACE_MAP_UV]
-
-
-
-BLEND
-=====
-PSPL_ALPHA_BLEND(FALSE)
-```
 
 Part of PSPL's **offline toolchain** includes a *compiler* and a *packager*. 
 
