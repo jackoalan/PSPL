@@ -190,7 +190,7 @@ and a *punctuation-prefix coherent* **variable state**.
 
 Here is the same shader with commenting describing the feature use. 
 
-Of course, commenting is also supported with C-style `// ...` or `/* ... */` syntax.
+Of course, commenting is supported with C-style `// ...` or `/* ... */` syntax.
 
 ```pspl
 /* Preprocessor directive invocations use a multi-token statement syntax 
