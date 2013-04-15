@@ -1,0 +1,206 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXFileReference section */
+		E4AFAE28171C92B900F7A0BF /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
+		E4AFAE29171C92BE00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		E4AFAE2A171C92D100F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		E4AFAE2B171C92E000F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		E4AFAE33171C941500F7A0BF /* PSPL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPL.h; sourceTree = "<group>"; };
+		E4AFAE3F171C9E2C00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		E4AFAE40171C9E3700F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		E4AFAE41171C9E3E00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		E4AFAE42171C9E4700F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		E4AFAE45171CA0EF00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		E4AFAE46171CA34700F7A0BF /* Driver.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Driver.c; sourceTree = "<group>"; };
+		E4AFAE48171CA38600F7A0BF /* SyntaxParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SyntaxParser.h; sourceTree = "<group>"; };
+		E4AFAE49171CA39000F7A0BF /* SyntaxParser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SyntaxParser.c; sourceTree = "<group>"; };
+		E4AFAE4B171CA3DA00F7A0BF /* PSPLValue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLValue.h; sourceTree = "<group>"; };
+		E4AFAE4C171CA3FE00F7A0BF /* Option.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Option.h; sourceTree = "<group>"; };
+		E4AFAE52171CA6A300F7A0BF /* PSPLPreprocessorDirective.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLPreprocessorDirective.h; sourceTree = "<group>"; };
+		E4AFAE53171CA6C700F7A0BF /* PSPLToolchainExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLToolchainExtension.h; sourceTree = "<group>"; };
+		E4AFAE54171CA6D700F7A0BF /* PSPLExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLExtension.h; sourceTree = "<group>"; };
+		E4AFAE55171CA73200F7A0BF /* PSPLRuntimeCommand.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLRuntimeCommand.h; sourceTree = "<group>"; };
+		E4AFAE56171CA74A00F7A0BF /* PSPLRuntimeExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLRuntimeExtension.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		E4AFAE1E171C8F8E00F7A0BF = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE28171C92B900F7A0BF /* COPYING */,
+				E4AFAE29171C92BE00F7A0BF /* README.md */,
+				E4AFAE26171C8FF100F7A0BF /* Toolchain */,
+				E4AFAE25171C8FDB00F7A0BF /* Runtime */,
+				E4AFAE2E171C936300F7A0BF /* include */,
+				E4AFAE37171C955400F7A0BF /* Extensions */,
+			);
+			sourceTree = "<group>";
+		};
+		E4AFAE25171C8FDB00F7A0BF /* Runtime */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE2B171C92E000F7A0BF /* README.md */,
+			);
+			path = Runtime;
+			sourceTree = "<group>";
+		};
+		E4AFAE26171C8FF100F7A0BF /* Toolchain */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE2A171C92D100F7A0BF /* README.md */,
+				E4AFAE4C171CA3FE00F7A0BF /* Option.h */,
+				E4AFAE48171CA38600F7A0BF /* SyntaxParser.h */,
+				E4AFAE49171CA39000F7A0BF /* SyntaxParser.c */,
+				E4AFAE46171CA34700F7A0BF /* Driver.c */,
+			);
+			path = Toolchain;
+			sourceTree = "<group>";
+		};
+		E4AFAE2E171C936300F7A0BF /* include */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE32171C93C000F7A0BF /* PSPL */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		E4AFAE32171C93C000F7A0BF /* PSPL */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE33171C941500F7A0BF /* PSPL.h */,
+				E4AFAE4B171CA3DA00F7A0BF /* PSPLValue.h */,
+				E4AFAE54171CA6D700F7A0BF /* PSPLExtension.h */,
+				E4AFAE4F171CA50700F7A0BF /* Toolchain */,
+				E4AFAE50171CA50F00F7A0BF /* Runtime */,
+			);
+			path = PSPL;
+			sourceTree = "<group>";
+		};
+		E4AFAE37171C955400F7A0BF /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE3D171C98BB00F7A0BF /* OpenGLSupport */,
+				E4AFAE3C171C98BB00F7A0BF /* GXSupport */,
+				E4AFAE3B171C98BB00F7A0BF /* Direct3DSupport */,
+				E4AFAE38171C978E00F7A0BF /* TextureManager */,
+				E4AFAE43171CA0CD00F7A0BF /* LightingManager */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		E4AFAE38171C978E00F7A0BF /* TextureManager */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE42171C9E4700F7A0BF /* README.md */,
+			);
+			path = TextureManager;
+			sourceTree = "<group>";
+		};
+		E4AFAE3B171C98BB00F7A0BF /* Direct3DSupport */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE3F171C9E2C00F7A0BF /* README.md */,
+			);
+			path = Direct3DSupport;
+			sourceTree = "<group>";
+		};
+		E4AFAE3C171C98BB00F7A0BF /* GXSupport */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE41171C9E3E00F7A0BF /* README.md */,
+			);
+			path = GXSupport;
+			sourceTree = "<group>";
+		};
+		E4AFAE3D171C98BB00F7A0BF /* OpenGLSupport */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE40171C9E3700F7A0BF /* README.md */,
+			);
+			path = OpenGLSupport;
+			sourceTree = "<group>";
+		};
+		E4AFAE43171CA0CD00F7A0BF /* LightingManager */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE45171CA0EF00F7A0BF /* README.md */,
+			);
+			path = LightingManager;
+			sourceTree = "<group>";
+		};
+		E4AFAE4F171CA50700F7A0BF /* Toolchain */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE52171CA6A300F7A0BF /* PSPLPreprocessorDirective.h */,
+				E4AFAE53171CA6C700F7A0BF /* PSPLToolchainExtension.h */,
+			);
+			path = Toolchain;
+			sourceTree = "<group>";
+		};
+		E4AFAE50171CA50F00F7A0BF /* Runtime */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE55171CA73200F7A0BF /* PSPLRuntimeCommand.h */,
+				E4AFAE56171CA74A00F7A0BF /* PSPLRuntimeExtension.h */,
+			);
+			path = Runtime;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXProject section */
+		E4AFAE1F171C8F8E00F7A0BF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+			};
+			buildConfigurationList = E4AFAE22171C8F8E00F7A0BF /* Build configuration list for PBXProject "PSPL" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = E4AFAE1E171C8F8E00F7A0BF;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		E4AFAE23171C8F8E00F7A0BF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		E4AFAE24171C8F8E00F7A0BF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E4AFAE22171C8F8E00F7A0BF /* Build configuration list for PBXProject "PSPL" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E4AFAE23171C8F8E00F7A0BF /* Debug */,
+				E4AFAE24171C8F8E00F7A0BF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E4AFAE1F171C8F8E00F7A0BF /* Project object */;
+}
