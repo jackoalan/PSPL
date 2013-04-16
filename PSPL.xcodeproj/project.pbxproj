@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		E4AFAE5F171CF46500F7A0BF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E4AFAE5E171CF46500F7A0BF /* Foundation.framework */; };
 		E4AFAE6A171CF46A00F7A0BF /* Driver.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE46171CA34700F7A0BF /* Driver.c */; };
+		E4AFAE6C171D825400F7A0BF /* gx_offline.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6B171D825400F7A0BF /* gx_offline.c */; };
+		E4AFAE6E171D82B600F7A0BF /* bytecode_playback.S in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6D171D82B600F7A0BF /* bytecode_playback.S */; };
+		E4AFAE70171D83C900F7A0BF /* gx_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -46,6 +49,10 @@
 		E4AFAE56171CA74A00F7A0BF /* PSPLRuntimeExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLRuntimeExtension.h; sourceTree = "<group>"; };
 		E4AFAE5B171CF46500F7A0BF /* FAKE-TARGET */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "FAKE-TARGET"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E4AFAE5E171CF46500F7A0BF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		E4AFAE6B171D825400F7A0BF /* gx_offline.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_offline.c; sourceTree = "<group>"; };
+		E4AFAE6D171D82B600F7A0BF /* bytecode_playback.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = bytecode_playback.S; sourceTree = "<group>"; usesTabs = 1; };
+		E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_runtime.c; sourceTree = "<group>"; };
+		E4AFAE71171D841500F7A0BF /* gx_runtime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gx_runtime.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -146,6 +153,10 @@
 			isa = PBXGroup;
 			children = (
 				E4AFAE41171C9E3E00F7A0BF /* README.md */,
+				E4AFAE6B171D825400F7A0BF /* gx_offline.c */,
+				E4AFAE71171D841500F7A0BF /* gx_runtime.h */,
+				E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */,
+				E4AFAE6D171D82B600F7A0BF /* bytecode_playback.S */,
 			);
 			path = GXSupport;
 			sourceTree = "<group>";
@@ -251,6 +262,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				E4AFAE6A171CF46A00F7A0BF /* Driver.c in Sources */,
+				E4AFAE6C171D825400F7A0BF /* gx_offline.c in Sources */,
+				E4AFAE6E171D82B600F7A0BF /* bytecode_playback.S in Sources */,
+				E4AFAE70171D83C900F7A0BF /* gx_runtime.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

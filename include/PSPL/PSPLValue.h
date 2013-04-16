@@ -22,7 +22,12 @@
 
 /* It is a paradox to compile to a bi-endian target */
 #if __BIG_ENDIAN__ && __LITTLE_ENDIAN__
-#  error PSPL Cannot compile to a target that is both big and little endian
+#  error PSPL cannot compile to a target that is both big and little endian
+#endif
+
+/* We must have at least one type of target as well */
+#if !__BIG_ENDIAN__ && !__LITTLE_ENDIAN__
+#  error PSPL cannot compile to a target that is neither big or nor little endian
 #endif
 
 
@@ -128,11 +133,11 @@
 /* Double-precision float */
 
 #if __LITTLE_ENDIAN__
-#  define DECL_BI_S64(name,...) __VA_ARGS__ double name; __VA_ARGS__ double name##_swap;
-#  define DECL_BI_S64_SET(name,val,...) __VA_ARGS__ double name = val; __VA_ARGS__ double name##_swap = CAST(SWAP_64(val),double);
+#  define DECL_BI_DOUBLE(name,...) __VA_ARGS__ double name; __VA_ARGS__ double name##_swap;
+#  define DECL_BI_DOUBLE_SET(name,val,...) __VA_ARGS__ double name = val; __VA_ARGS__ double name##_swap = CAST(SWAP_64(val),double);
 #elif __BIG_ENDIAN__
-#  define DECL_BI_S64(name,...) __VA_ARGS__ double name##_swap; __VA_ARGS__ double name;
-#  define DECL_BI_S64_SET(name,val,...) __VA_ARGS__ double name##_swap = CAST(SWAP_64(val),double); __VA_ARGS__ double name = val;
+#  define DECL_BI_DOUBLE(name,...) __VA_ARGS__ double name##_swap; __VA_ARGS__ double name;
+#  define DECL_BI_DOUBLE_SET(name,val,...) __VA_ARGS__ double name##_swap = CAST(SWAP_64(val),double); __VA_ARGS__ double name = val;
 #endif
 
 
