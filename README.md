@@ -341,7 +341,7 @@ PSPL_ALPHA_BLEND(FALSE)
 Tying Everything Together
 -------------------------
 
-*Read More:* [*Toolchain*](Toolchain#readme)
+*Read More:* [*Toolchain*](/jackoalan/PSPL/tree/master/Toolchain#readme)
 
 Part of PSPL's **offline toolchain** includes a *compiler* and a *packager*. 
 
@@ -371,7 +371,7 @@ with the sources.
 That And The Kitchen Sink
 -------------------------
 
-*Read More:* [*Runtime*](Runtime#readme)
+*Read More:* [*Runtime*](/jackoalan/PSPL/tree/master/Runtime#readme)
 
 Since the runtime has direct, non-volatile access to texture data, it may perform
 its own *streamed texture loading* as the app requests shader loads via the runtime.
