@@ -14,7 +14,7 @@
 /* Scratch Regs: */
 #define loader 0
 #define shifter 11
-#define logic_applier 12
+#define temp 12
 
 /* The bytecode stream is a simple frame-based layout.
  * There is a word-sized (32-bit) header every 64 bytes containing
@@ -28,11 +28,12 @@
 
 /* Register layout:
  * r3:  `wgPipe` pointer (where the stream words should be repeatedly stored)
- * r4:  `stream_start` pointer (incremented as stream is read; must be 64-byte aligned minus 4)
+ * r4:  `stream_start` pointer (incremented as stream is read; must be 64-byte aligned, stream starts with padding word)
  * r5:  `stream_len` size (decremented as stream is read)
+ *
  * r0:  word loader/storer; other temp use (to copy a word value from the stream into the write-gather pipe)
  * r11: stream frame header shifting area (loaded at each 64-byte interval; shifted every store)
- * r12: stream frame header logic area (to exclude bits for each store)
+ * r12: temporary register for various immediate calculations
  */
 
 /* Playback our bytecode stream */
@@ -40,16 +41,66 @@
 	.globl pspl_gx_playback
 pspl_gx_playback:
 
-1:  // Frame interval (and first word)
-	lwzu shifter, 4(stream_start)
-	lwzu loader, 4(stream_start)
+	// We need at least 12 bytes in stream (4 padding, 4 header, 4 first word)
+	cmplwi stream_len, 12
+	blt    8f
+
+1:  // Frame interval (and first word of frame)
+
+	lwzu   shifter, 4(stream_start)
+	subi   stream_len, stream_len, 4
 
 2:  // Word interval
-	andi. r12, stream_start, 0x3f       // Branch back to frame interval if `and` result is 0
-	bne   1b
 
-	
+	// Load our word
+	lwzu   loader, 4(stream_start)
+	subi   stream_len, stream_len, 4
 
+	// Determine word type
+	andi.  temp, shifter, 0x2
+	beq    4f
 
-	
+3:  // stw or sth
+
+	andi.  temp, shifter, 0x1
+	beq    4f
+	stw    loader, 0(wgPipe)
+	b      7f
+
+4:  // sth
+
+	sth    loader, 0(wgPipe)
+	b      7f
+
+5:  // stb or stfs
+
+	andi.  temp, shifter, 0x1
+	beq    6f
+	stb    loader, 0(wgPipe)
+	b      7f
+
+6:  // stfs
+
+	lfs    loader, 0(stream_start)
+	stfs   loader, 0(wgPipe)
+
+7:  // Just loaded into wgPipe
+
+	// Check to see if we're done
+	cmplwi stream_len, 0
+	beq    8f
+
+	// We're not done yet
+	// Branch back to frame interval if `and` result is 0 (64align+4 is our next header)
+	andi.  temp, stream_start, 0x3f
+	bne    1b
+
+	// Otherwise shift right and branch back for next word
+	srwi   shifter, shifter, 2
+	b      2b
+
+8:
+
+	// We're done
+	blr
 

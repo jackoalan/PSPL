@@ -53,6 +53,7 @@
 		E4AFAE6D171D82B600F7A0BF /* bytecode_playback.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = bytecode_playback.S; sourceTree = "<group>"; usesTabs = 1; };
 		E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_runtime.c; sourceTree = "<group>"; };
 		E4AFAE71171D841500F7A0BF /* gx_runtime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gx_runtime.h; sourceTree = "<group>"; };
+		E4AFAE72171DFF1800F7A0BF /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,6 +73,7 @@
 			children = (
 				E4AFAE28171C92B900F7A0BF /* COPYING */,
 				E4AFAE29171C92BE00F7A0BF /* README.md */,
+				E4AFAE72171DFF1800F7A0BF /* CMakeLists.txt */,
 				E4AFAE26171C8FF100F7A0BF /* Toolchain */,
 				E4AFAE25171C8FDB00F7A0BF /* Runtime */,
 				E4AFAE2E171C936300F7A0BF /* include */,
