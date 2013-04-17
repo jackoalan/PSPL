@@ -16,8 +16,8 @@
 
 /* First, our common object structure (classed with 4-byte typestring) */
 typedef struct _pspl_object {
-    // 4-byte type
-    uint8_t type[4];
+    // 4-byte object class identifier
+    uint8_t class[4];
     
     // Size of the entire object (sum of all inheriting structure sizes)
     DECL_BI_U32(size);

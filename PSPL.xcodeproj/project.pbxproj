@@ -54,6 +54,9 @@
 		E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_runtime.c; sourceTree = "<group>"; };
 		E4AFAE71171D841500F7A0BF /* gx_runtime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gx_runtime.h; sourceTree = "<group>"; };
 		E4AFAE72171DFF1800F7A0BF /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		E4AFAE74171EF74600F7A0BF /* PSPLConfig.cmake.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLConfig.cmake.in; sourceTree = "<group>"; };
+		E4AFAE75171EF76100F7A0BF /* PSPLArtPipelineMacros.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLArtPipelineMacros.cmake; sourceTree = "<group>"; };
+		E4AFAE76171EF78600F7A0BF /* PSPLExtensionMacros.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLExtensionMacros.cmake; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +74,7 @@
 		E4AFAE1E171C8F8E00F7A0BF = {
 			isa = PBXGroup;
 			children = (
+				E4AFAE73171EF72E00F7A0BF /* cmake */,
 				E4AFAE28171C92B900F7A0BF /* COPYING */,
 				E4AFAE29171C92BE00F7A0BF /* README.md */,
 				E4AFAE72171DFF1800F7A0BF /* CMakeLists.txt */,
@@ -182,8 +186,8 @@
 		E4AFAE4F171CA50700F7A0BF /* Toolchain */ = {
 			isa = PBXGroup;
 			children = (
-				E4AFAE52171CA6A300F7A0BF /* PSPLPreprocessorDirective.h */,
 				E4AFAE53171CA6C700F7A0BF /* PSPLToolchainExtension.h */,
+				E4AFAE52171CA6A300F7A0BF /* PSPLPreprocessorDirective.h */,
 			);
 			path = Toolchain;
 			sourceTree = "<group>";
@@ -191,8 +195,8 @@
 		E4AFAE50171CA50F00F7A0BF /* Runtime */ = {
 			isa = PBXGroup;
 			children = (
-				E4AFAE55171CA73200F7A0BF /* PSPLRuntimeCommand.h */,
 				E4AFAE56171CA74A00F7A0BF /* PSPLRuntimeExtension.h */,
+				E4AFAE55171CA73200F7A0BF /* PSPLRuntimeCommand.h */,
 			);
 			path = Runtime;
 			sourceTree = "<group>";
@@ -211,6 +215,16 @@
 				E4AFAE5E171CF46500F7A0BF /* Foundation.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		E4AFAE73171EF72E00F7A0BF /* cmake */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE74171EF74600F7A0BF /* PSPLConfig.cmake.in */,
+				E4AFAE76171EF78600F7A0BF /* PSPLExtensionMacros.cmake */,
+				E4AFAE75171EF76100F7A0BF /* PSPLArtPipelineMacros.cmake */,
+			);
+			path = cmake;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

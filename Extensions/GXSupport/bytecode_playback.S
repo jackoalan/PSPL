@@ -28,7 +28,7 @@
 
 /* Register layout:
  * r3:  `wgPipe` pointer (where the stream words should be repeatedly stored)
- * r4:  `stream_start` pointer (incremented as stream is read; must be 64-byte aligned, stream starts with padding word)
+ * r4:  `stream_start` pointer (incremented as stream is read; must be 64-byte aligned, stream starts with magic word)
  * r5:  `stream_len` size (decremented as stream is read)
  *
  * r0:  word loader/storer; other temp use (to copy a word value from the stream into the write-gather pipe)
@@ -36,14 +36,36 @@
  * r12: temporary register for various immediate calculations
  */
 
+/* Our magic word to validate stream */
+	.data
+pspl_gx_magic:
+	.long  0x50534758 // "PSGX"
+	.align 2
+
+/* Error codes:
+ * 0:  No Error
+ * -1: Stream too short
+ * -2: No valid magic word (perhaps not PSPL GX bytecode)
+ */
+
 /* Playback our bytecode stream */
-// extern void pspl_gx_playback(void* wgPipe, void* stream_start, size_t stream_len)
+// extern int pspl_gx_playback(void* wgPipe, void* stream_start, size_t stream_len)
+	.text
 	.globl pspl_gx_playback
 pspl_gx_playback:
 
-	// We need at least 12 bytes in stream (4 padding, 4 header, 4 first word)
+	// We need at least 12 bytes in stream (4 magic, 4 header, 4 first word)
 	cmplwi stream_len, 12
+	li     3, -1
 	blt    8f
+
+	// Check for magic
+	lis    temp, pspl_gx_magic@ha
+	lwz    temp, pspl_gx_magic@l(temp)
+	lwz    shifter, 0(stream_start)
+	cmplw  temp, shifter
+	li     3, -2
+	bne    8f
 
 1:  // Frame interval (and first word of frame)
 
@@ -88,7 +110,7 @@ pspl_gx_playback:
 
 	// Check to see if we're done
 	cmplwi stream_len, 0
-	beq    8f
+	beq    9f
 
 	// We're not done yet
 	// Branch back to frame interval if `and` result is 0 (64align+4 is our next header)
@@ -101,6 +123,13 @@ pspl_gx_playback:
 
 8:
 
-	// We're done
+	// We're done (with error set)
 	blr
+
+9:
+
+	// We're done (no error)
+	li     3, 0
+	blr
+
 
