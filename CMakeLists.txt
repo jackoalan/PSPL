@@ -21,3 +21,6 @@ option(PSPL_RUNTIME_WINDOWS_D3D "Build the runtime for Direct3D on Windows" OFF)
 # Target subdirectories
 add_subdirectory(Toolchain)
 add_subdirectory(Runtime)
+
+# Extension subdirectories
+add_subdirectory(Extensions)

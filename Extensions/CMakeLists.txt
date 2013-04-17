@@ -1,0 +1,5 @@
+add_subdirectory(OpenGLSupport)
+add_subdirectory(GXSupport)
+add_subdirectory(Direct3DSupport)
+add_subdirectory(TextureManager)
+add_subdirectory(LightingManager)

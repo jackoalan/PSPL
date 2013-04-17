@@ -57,6 +57,8 @@
 		E4AFAE74171EF74600F7A0BF /* PSPLConfig.cmake.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLConfig.cmake.in; sourceTree = "<group>"; };
 		E4AFAE75171EF76100F7A0BF /* PSPLArtPipelineMacros.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLArtPipelineMacros.cmake; sourceTree = "<group>"; };
 		E4AFAE76171EF78600F7A0BF /* PSPLExtensionMacros.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLExtensionMacros.cmake; sourceTree = "<group>"; };
+		E4AFAE77171EFF7900F7A0BF /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		E4AFAE78171F002700F7A0BF /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,10 +76,10 @@
 		E4AFAE1E171C8F8E00F7A0BF = {
 			isa = PBXGroup;
 			children = (
-				E4AFAE73171EF72E00F7A0BF /* cmake */,
 				E4AFAE28171C92B900F7A0BF /* COPYING */,
 				E4AFAE29171C92BE00F7A0BF /* README.md */,
 				E4AFAE72171DFF1800F7A0BF /* CMakeLists.txt */,
+				E4AFAE73171EF72E00F7A0BF /* cmake */,
 				E4AFAE26171C8FF100F7A0BF /* Toolchain */,
 				E4AFAE25171C8FDB00F7A0BF /* Runtime */,
 				E4AFAE2E171C936300F7A0BF /* include */,
@@ -130,6 +132,7 @@
 		E4AFAE37171C955400F7A0BF /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				E4AFAE78171F002700F7A0BF /* CMakeLists.txt */,
 				E4AFAE3D171C98BB00F7A0BF /* OpenGLSupport */,
 				E4AFAE3C171C98BB00F7A0BF /* GXSupport */,
 				E4AFAE3B171C98BB00F7A0BF /* Direct3DSupport */,
@@ -220,6 +223,7 @@
 		E4AFAE73171EF72E00F7A0BF /* cmake */ = {
 			isa = PBXGroup;
 			children = (
+				E4AFAE77171EFF7900F7A0BF /* README.md */,
 				E4AFAE74171EF74600F7A0BF /* PSPLConfig.cmake.in */,
 				E4AFAE76171EF78600F7A0BF /* PSPLExtensionMacros.cmake */,
 				E4AFAE75171EF76100F7A0BF /* PSPLArtPipelineMacros.cmake */,
