@@ -58,7 +58,7 @@ pspl_gx_playback:
 
 	// Determine word type
 	andi.  temp, shifter, 0x2
-	beq    4f
+	beq    5f
 
 3:  // stw or sth
 
