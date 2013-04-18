@@ -17,6 +17,7 @@
 #define GX_OFFLINE_TRANS_DEFSZ 64*16
 
 static struct gx_offline_trans_state {
+	// Dynamically-sized buffer
 	void* mem_buf;
 	size_t mem_cap;
 	size_t mem_size;
@@ -24,44 +25,80 @@ static struct gx_offline_trans_state {
 	void* cur_frame_ptr;
 	void* cur_word_ptr;
 	size_t cur_word_index;
-} _gx_trans;
+} _gx_trans_o;
+
+// Made this a reference for flexibility
+static struct gx_offline_trans_state* _gx_trans = NULL;
 
 void pspl_gx_offline_clear_transaction() {
+	if (!_gx_trans)
+		return;
 	free(_gx_trans->mem_buf);
 	_gx_trans->mem_buf = NULL;
 	_gx_trans->mem_cap = 0;
 	_gx_trans->mem_size = 0;
+	_gx_trans->cur_frame_ptr = NULL;
+	_gx_trans->cur_word_ptr = NULL;
+	_gx_trans->cur_word_index = 0;
+}
+
+void pspl_gx_offline_check_capacity() {
+	if (!_gx_trans || !_gx_trans->mem_buf)
+		return;
+	if ((_gx_trans->mem_size)+4 >= _gx_trans->mem_cap) {
+		_gx_trans->mem_cap += GX_OFFLINE_TRANS_DEFSZ;
+		_gx_trans->mem_buf = realloc(_gx_trans->mem_buf, _gx_trans->mem_cap);
+	}
+	if (_gx_trans->cur_word_index >= 15) {
+		_gx_trans->cur_frame_ptr = _gx_trans->cur_word_ptr;
+		_gx_trans->cur_word_ptr += 4;
+		_gx_trans->cur_word_index = 0;
+	}
 }
 
 void pspl_gx_offline_begin_transaction() {
+	_gx_trans = &_gx_trans_o;
+	pspl_gx_offline_clear_transaction();
 	_gx_trans->mem_buf = malloc(GX_OFFLINE_TRANS_DEFSZ);
 	_gx_trans->mem_cap = GX_OFFLINE_TRANS_DEFSZ;
 	_gx_trans->mem_size = 0;
+	_gx_trans->cur_frame_ptr = _gx_trans->mem_buf+4;
+	_gx_trans->cur_word_ptr = _gx_trans->mem_buf+8;
+	_gx_trans->cur_word_index = 0;
 }
 
 size_t pspl_gx_offline_end_transaction(void** buf_out) {
+	if (!_gx_trans)
+		return;
 	*buf_out = _gx_trans->mem_buf;
 	_gx_trans->mem_buf = NULL;
 	size_t result_sz = _gx_trans->mem_size;
-	_gx_trans->mem_cap = 0;
-	_gx_trans->mem_size = 0;
+	pspl_gx_offline_clear_transaction();
 	return result_sz;
 }
 
 void pspl_gx_offline_add_u8(uint8_t val) {
-	
+	if (!_gx_trans)
+		return;
+	pspl_gx_offline_check_capacity();
 }
 
 void pspl_gx_offline_add_u16(uint16_t val) {
-	
+	if (!_gx_trans)
+		return;
+	pspl_gx_offline_check_capacity();
 }
 
 void pspl_gx_offline_add_u32(uint32_t val) {
-	
+	if (!_gx_trans)
+		return;
+	pspl_gx_offline_check_capacity();
 }
 
 void pspl_gx_offline_add_float(float val) {
-	
+	if (!_gx_trans)
+		return;
+	pspl_gx_offline_check_capacity();
 }
 
 //#define _GP_DEBUG
