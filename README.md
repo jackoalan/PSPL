@@ -3,7 +3,8 @@ PSPL Shader Language
 
 The **Photon Shader Preprocess Language (PSPL)** aims to simplify the task 
 of designing and authoring 
-[shader programs](http://en.wikipedia.org/wiki/Shader) for a wide variety of 
+[shader programs](http://en.wikipedia.org/wiki/Shader) and 
+*pipeline configurations* for a wide variety of 
 [*3D polygon-rasterising*](http://en.wikipedia.org/wiki/Rasterisation) 
 graphics architectures; with a solid degree of control over the entire 
 [graphics pipeline](http://en.wikipedia.org/wiki/Graphics_pipeline). 
