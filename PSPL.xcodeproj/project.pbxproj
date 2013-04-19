@@ -60,6 +60,11 @@
 		E4AFAE791720D49B00F7A0BF /* gx_offline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gx_offline.h; sourceTree = "<group>"; };
 		E4AFAE7A1720DA7900F7A0BF /* gx_regdef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gx_regdef.h; sourceTree = "<group>"; };
 		E4AFAE7B1720DAC400F7A0BF /* gctypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gctypes.h; sourceTree = "<group>"; };
+		E4AFAE7D17218DE600F7A0BF /* PSPLToolchainExtTemplate.c.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLToolchainExtTemplate.c.in; sourceTree = "<group>"; };
+		E4AFAE7E17218DFA00F7A0BF /* PSPLRuntimeExtTemplate.c.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLRuntimeExtTemplate.c.in; sourceTree = "<group>"; };
+		E4AFAE7F1721908E00F7A0BF /* PSPLClassDeclTemplate.h.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLClassDeclTemplate.h.in; sourceTree = "<group>"; };
+		E4AFAE801721909A00F7A0BF /* PSPLClassDefTemplate.c.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLClassDefTemplate.c.in; sourceTree = "<group>"; };
+		E4AFAE81172191B000F7A0BF /* PSPLAvailableExtensions.c.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLAvailableExtensions.c.in; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -228,11 +233,24 @@
 			isa = PBXGroup;
 			children = (
 				E4AFAE77171EFF7900F7A0BF /* README.md */,
+				E4AFAE7C17218D8300F7A0BF /* Templates */,
 				E4AFAE74171EF74600F7A0BF /* PSPLConfig.cmake.in */,
 				E4AFAE76171EF78600F7A0BF /* PSPLExtensionMacros.cmake */,
 				E4AFAE75171EF76100F7A0BF /* PSPLArtPipelineMacros.cmake */,
 			);
 			path = cmake;
+			sourceTree = "<group>";
+		};
+		E4AFAE7C17218D8300F7A0BF /* Templates */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE81172191B000F7A0BF /* PSPLAvailableExtensions.c.in */,
+				E4AFAE7D17218DE600F7A0BF /* PSPLToolchainExtTemplate.c.in */,
+				E4AFAE7E17218DFA00F7A0BF /* PSPLRuntimeExtTemplate.c.in */,
+				E4AFAE7F1721908E00F7A0BF /* PSPLClassDeclTemplate.h.in */,
+				E4AFAE801721909A00F7A0BF /* PSPLClassDefTemplate.c.in */,
+			);
+			path = Templates;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

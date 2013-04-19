@@ -1,0 +1,15 @@
+
+
+#include <PSPL/PSPLExtension.h>
+
+/* This file was automatically generated using CMake
+ * and defines a pointer array of all extensions used for building
+ * this particular PSPL toolchain or runtime */
+
+/* This file also defines common extension definition structure
+ * objects first. */
+@PSPL_EXT_DEF_OBJECTS@
+ 
+
+static pspl_extension_t 
+
