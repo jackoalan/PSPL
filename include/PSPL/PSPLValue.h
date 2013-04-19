@@ -34,7 +34,7 @@
 
 /* First, our swappers */
 
-#define CAST(val,type) (*((type##*)(&val)))
+#define CAST(val,type) (*((type*)(&val)))
 
 #define SWAP_16(val) ((CAST(val,uint16_t) << 8) | (CAST(val,uint16_t) >> 8))
 

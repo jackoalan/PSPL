@@ -82,7 +82,7 @@ pspl_gx_playback:
 	andi.  temp, shifter, 0x2
 	beq    5f
 
-3:  // stw or sth
+3:  // stw (0x0) or sth (0x1)
 
 	andi.  temp, shifter, 0x1
 	beq    4f
@@ -94,7 +94,7 @@ pspl_gx_playback:
 	sth    loader, 0(wgPipe)
 	b      7f
 
-5:  // stb or stfs
+5:  // stb (0x2) or stfs (0x3)
 
 	andi.  temp, shifter, 0x1
 	beq    6f
