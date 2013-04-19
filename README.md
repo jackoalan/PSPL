@@ -382,6 +382,11 @@ Also, the *packager* may be integrated at this stage, bypassing offline packagin
 It Goes Anywhere
 ----------------
 
+*Read More: Support for* 
+[*OpenGL*](https://github.com/jackoalan/PSPL/tree/master/Extensions/OpenGLSupport#readme), 
+[*GX*](https://github.com/jackoalan/PSPL/tree/master/Extensions/GXSupport#readme) and 
+[*Direct3D*](https://github.com/jackoalan/PSPL/tree/master/Extensions/Direct3DSupport#readme)
+
 When all said and done, shader packages written and deployed using PSPL will function 
 on many fully-programmable and fixed-function graphics architectures alike. 
 Fully-programmable shader archtectures with APIs like 
