@@ -2,11 +2,11 @@ GX Support
 ==========
 
 **GX** is a *fixed-function*, yet considerably advanced 3D rasterisation 
-API designed by [ArtX](http://en.m.wikipedia.org/wiki/ArtX). 
+API designed by [ArtX](http://en.wikipedia.org/wiki/ArtX). 
 It was originally designed to command the 
-[Nintendo GameCube's **Flipper** GPU](http://en.m.wikipedia.org/wiki/Nintendo_Gamecube#Technical_specifications)
+[Nintendo GameCube's **Flipper** GPU](http://en.wikipedia.org/wiki/Nintendo_Gamecube#Technical_specifications)
 and later adapted for the 
-[Wii's **Hollywood** GPU](http://en.m.wikipedia.org/wiki/Hollywood_%40graphics_chip%41). 
+[Wii's **Hollywood** GPU](http://en.wikipedia.org/wiki/Hollywood_%40graphics_chip%41).
 
 It works via a GameCube/Wii-specific extension to PowerPC known as the *write-gather pipe*.
 The write-gather pipe works by having the CPU assign a specific memory location
