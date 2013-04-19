@@ -20,7 +20,7 @@ These state modes represent the *GX shader architecture*.
 
 PSPL's *GX Extension* takes advantage of the write-gather pipe by defining
 a bytecode-stream format called **PSGX**. The stream stores a sequence
-of 32-bit PowerPC words. Each word has an associated enumeration bit indicating
+of 32-bit PowerPC words. Each word has an associated enumeration bit-pair indicating
 what type of PowerPC store instruction should be used with the write-gather pipe 
 (32-bit `stw`, 16-bit `sth`, 8-bit `stb`, or 32-bit float `stfs`).
 
