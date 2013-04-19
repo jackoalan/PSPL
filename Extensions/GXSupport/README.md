@@ -6,7 +6,7 @@ API designed by [ArtX](http://en.wikipedia.org/wiki/ArtX).
 It was originally designed to command the 
 [Nintendo GameCube's **Flipper** GPU](http://en.wikipedia.org/wiki/Nintendo_Gamecube#Technical_specifications)
 and later adapted for the 
-[Wii's **Hollywood** GPU](http://en.wikipedia.org/wiki/Hollywood_%40graphics_chip%41).
+[Wii's **Hollywood** GPU](http://en.wikipedia.org/wiki/Hollywood_%28graphics_chip%29).
 
 It works via a GameCube/Wii-specific extension to PowerPC known as the *write-gather pipe*.
 The write-gather pipe works by having the CPU assign a specific memory location
