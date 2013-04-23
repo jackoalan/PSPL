@@ -57,7 +57,7 @@ pspl_gx_playback:
 	// We need at least 12 bytes in stream (4 magic, 4 header, 4 first word)
 	cmplwi stream_len, 12
 	li     3, -1
-	blt    8f
+	blt    9f
 
 	// Check for magic
 	lis    temp, pspl_gx_magic@ha
@@ -65,7 +65,7 @@ pspl_gx_playback:
 	lwz    shifter, 0(stream_start)
 	cmplw  temp, shifter
 	li     3, -2
-	bne    8f
+	bne    9f
 
 1:  // Frame interval (and first word of frame)
 
@@ -110,7 +110,7 @@ pspl_gx_playback:
 
 	// Check to see if we're done
 	cmplwi stream_len, 0
-	beq    9f
+	beq    8f
 
 	// We're not done yet
 	// Branch back to frame interval if `and` result is 0 (64align+4 is our next header)
@@ -123,13 +123,12 @@ pspl_gx_playback:
 
 8:
 
-	// We're done (with error set)
-	blr
+	// We're done (no error)
+	li     3, 0
 
 9:
 
-	// We're done (no error)
-	li     3, 0
+	// We're done
 	blr
 
 

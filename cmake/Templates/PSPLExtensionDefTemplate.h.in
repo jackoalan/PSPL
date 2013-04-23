@@ -1,0 +1,9 @@
+/* For inclusion in `PSPLAvailableExtensions.c` template */
+ 
+static pspl_extension_t @CONF_EXT_NAME@_extension = {
+    .extension_name = "@CONF_EXT_NAME@",
+    .class_array = @CONF_EXT_CLASS_ARRAY@,
+    .toolchain_extension_array = @CONF_EXT_TOOLCHAIN_ARRAY@,
+    .runtime_extension_array = @CONF_EXT_RUNTIME_ARRAY@;
+};
+

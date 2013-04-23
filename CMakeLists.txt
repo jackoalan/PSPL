@@ -1,26 +1,26 @@
 cmake_minimum_required(VERSION 2.8)
 project(PSPL)
 
-# Targets to build (toolchain and/or runtime)
-option(PSPL_BUILD_TOOLCHAIN "Build toolchain" ON)
-option(PSPL_BUILD_RUNTIME "Build runtime" ON)
 
 # Runtime platform options
-if(${CMAKE_SYSTEM_TYPE} STREQUAL Darwin)
-  option(PSPL_RUNTIME_MAC "Build the runtime for OpenGL on Mac" ON)
+if(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
+  set(PSPL_RUNTIME_PLATFORM MAC_GL CACHE STRING 
+  "Select which platform to build runtime for [NONE, MAC_GL, GX, WIN_GL, WIN_D3D] (Mac OpenGL selected by default)")
 else()
-  option(PSPL_RUNTIME_MAC "Build the runtime for OpenGL on Mac" OFF)
+  set(PSPL_RUNTIME_PLATFORM NONE CACHE STRING 
+  "Select which platform to build runtime for [NONE, MAC_GL, GX, WIN_GL, WIN_D3D] (Runtime not built by default)")
 endif()
 
-option(PSPL_RUNTIME_GX "Build the runtime for GX on GameCube/Wii via libogc provided through WiiStep" OFF)
 
-option(PSPL_RUNTIME_WINDOWS_GL "Build the runtime for OpenGL on Windows" OFF)
-option(PSPL_RUNTIME_WINDOWS_D3D "Build the runtime for Direct3D on Windows" OFF)
+# Codebase `include` directory
+include_directories(include)
 
 
 # Target subdirectories
 add_subdirectory(Toolchain)
-add_subdirectory(Runtime)
+if(NOT PSPL_RUNTIME_PLATFORM STREQUAL NONE)
+  add_subdirectory(Runtime)
+endif()
 
 # Extension subdirectories
 add_subdirectory(Extensions)
