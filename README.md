@@ -170,9 +170,9 @@ COLOUR
 ------
 [SAMPLE PACKAGED ModelLightingMap.png %STATIC_LIGHT_MAP_UV]
 ***********************************************************
-[SAMPLE PACKAGED ModelSurfaceDiffuseMap.png %SURFACE_MAP_UV]
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-[SAMPLE PACKAGED ModelSurfaceEmissionMap.png %SURFACE_MAP_UV]
+[SAMPLE PACKAGED ModelSurface.psd:"Diffuse Layer" %SURFACE_MAP_UV]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[SAMPLE PACKAGED ModelSurface.psd:"Emission Layer" %SURFACE_MAP_UV]
 
 
 
@@ -325,9 +325,9 @@ COLOUR
 ------
 [SAMPLE PACKAGED ModelLightingMap.png %STATIC_LIGHT_MAP_UV]
 ***********************************************************
-[SAMPLE PACKAGED ModelSurfaceDiffuseMap.png %SURFACE_MAP_UV]
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-[SAMPLE PACKAGED ModelSurfaceEmissionMap.png %SURFACE_MAP_UV]
+[SAMPLE PACKAGED ModelSurface.psd:"Diffuse Layer" %SURFACE_MAP_UV]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[SAMPLE PACKAGED ModelSurface.psd:"Emission Layer" %SURFACE_MAP_UV]
 
 
 
