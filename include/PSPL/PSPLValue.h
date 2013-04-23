@@ -11,9 +11,11 @@
 
 #include <stdint.h>
 
-/* Macros for producing bi-endian value declarations of each numeric 
- * type available to PSPL and its extensions. Also includes assignment
- * macros to perform the necessary swap.
+/* Macros for producing bi-endian record declarations of each numeric 
+ * type available to PSPL and its extensions. They are intended to facilitate
+ * `psplb` file generation when multiple platforms with different byte-orderings 
+ * are to be targeted.
+ * Assignment macros are also available to perform the necessary swaps.
  *
  * The DECL_* macros are designed to be used in structures so that the
  * little-endian version is always declared just before the big-endian version.
@@ -31,134 +33,138 @@
 #endif
 
 
+/* First, a means to declare a bi-endian structure type
+ * from an already-declared struct type. */
+#if __LITTLE_ENDIAN__
 
-/* First, our swappers */
+#define DECL_BI_STRUCT(source_type) struct {\
+    union {\
+        source_type little;\
+        source_type native;\
+    };\
+    union {\
+        source_type big;\
+        source_type swapped;\
+    };\
+}
+
+#elif __BIG_ENDIAN__
+
+#define DECL_BI_STRUCT(source_type) struct _bi_##source_type {\
+    union {\
+        source_type little;\
+        source_type swapped;\
+    };\
+    union {\
+        source_type big;\
+        source_type native;\
+    };\
+}
+
+#endif
+
+
+
+/* Now our swappers */
 
 #define CAST(val,type) (*((type*)(&val)))
 
-#define SWAP_16(val) ((CAST(val,uint16_t) << 8) | (CAST(val,uint16_t) >> 8))
 
-#define SWAP_32_PRE(val) (((CAST(val,uint32_t) << 8) & 0xFF00FF00 ) | ((CAST(val,uint32_t) >> 8) & 0xFF00FF))
-#define SWAP_32(val) ((SWAP_32_PRE(val) << 16) | (SWAP_32_PRE(val) >> 16))
+// Byte swap unsigned short
+static uint16_t swap_uint16( uint16_t val )
+{
+    return (val << 8) | (val >> 8 );
+}
 
-#define SWAP_64_PRE1(val) (((CAST(val,uint64_t) << 8) & 0xFF00FF00FF00FF00ULL) | ((CAST(val,uint64_t) >> 8) & 0x00FF00FF00FF00FFULL))
-#define SWAP_64_PRE2(val) (((SWAP_64_PRE1(val) << 16) & 0xFFFF0000FFFF0000ULL) | ((SWAP_64_PRE1(val) >> 16) & 0x0000FFFF0000FFFFULL))
-#define SWAP_64(val) ((SWAP_64_PRE2(val) << 32) | (SWAP_64_PRE2(val) >> 32))
+// Byte swap short
+static int16_t swap_int16( int16_t val )
+{
+    return (val << 8) | ((val >> 8) & 0xFF);
+}
 
+// Byte swap unsigned int
+static uint32_t swap_uint32( uint32_t val )
+{
+    val = ((val << 8) & 0xFF00FF00 ) | ((val >> 8) & 0xFF00FF );
+    return (val << 16) | (val >> 16);
+}
 
+// Byte swap int
+static int32_t swap_int32( int32_t val )
+{
+    val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF );
+    return (val << 16) | ((val >> 16) & 0xFFFF);
+}
 
-/* 16-bit signed */
+// Byte swap 64 int
+static int64_t swap_int64( int64_t val )
+{
+    val = ((val << 8) & 0xFF00FF00FF00FF00ULL ) | ((val >> 8) & 0x00FF00FF00FF00FFULL );
+    val = ((val << 16) & 0xFFFF0000FFFF0000ULL ) | ((val >> 16) & 0x0000FFFF0000FFFFULL );
+    return (val << 32) | ((val >> 32) & 0xFFFFFFFFULL);
+}
 
-#if __LITTLE_ENDIAN__
-#  define DECL_BI_S16(name,...) __VA_ARGS__ int16_t name; __VA_ARGS__ int16_t name##_swap;
-#  define DECL_BI_S16_SET(name,val,...) __VA_ARGS__ int16_t name = val; __VA_ARGS__ int16_t name##_swap = CAST(SWAP_16(val),int16_t);
-#elif __BIG_ENDIAN__
-#  define DECL_BI_S16(name,...) __VA_ARGS__ int16_t name##_swap; __VA_ARGS__ int16_t name;
-#  define DECL_BI_S16_SET(name,val,...) __VA_ARGS__ int16_t name##_swap = CAST(SWAP_16(val),int16_t); __VA_ARGS__ int16_t name = val;
-#endif
+// Byte swap unsigned 64 int
+static uint64_t swap_uint64( uint64_t val )
+{
+    val = ((val << 8) & 0xFF00FF00FF00FF00ULL ) | ((val >> 8) & 0x00FF00FF00FF00FFULL );
+    val = ((val << 16) & 0xFFFF0000FFFF0000ULL ) | ((val >> 16) & 0x0000FFFF0000FFFFULL );
+    return (val << 32) | (val >> 32);
+}
 
+// Byte swap float
+static float swap_float( float val )
+{
+    uint32_t uval = swap_uint32(CAST(val, uint32_t));
+    return CAST(uval, float);
+}
 
-/* 16-bit unsigned */
-
-#if __LITTLE_ENDIAN__
-#  define DECL_BI_U16(name,...) uint16_t name; uint16_t name##_swap;
-#  define DECL_BI_U16_SET(name,val,...) uint16_t name = val; uint16_t name##_swap = SWAP_16(val);
-#elif __BIG_ENDIAN__
-#  define DECL_BI_U16(name,...) uint16_t name##_swap; uint16_t name;
-#  define DECL_BI_U16_SET(name,val,...) uint16_t name##_swap = SWAP_16(val); uint16_t name = val;
-#endif
-
-
-
-/* 32-bit signed */
-
-#if __LITTLE_ENDIAN__
-#  define DECL_BI_S32(name,...) __VA_ARGS__ int32_t name; __VA_ARGS__ int32_t name##_swap;
-#  define DECL_BI_S32_SET(name,val,...) __VA_ARGS__ int32_t name = val; __VA_ARGS__ int32_t name##_swap = CAST(SWAP_32(val),int32_t);
-#elif __BIG_ENDIAN__
-#  define DECL_BI_S32(name,...) __VA_ARGS__ int32_t name##_swap; __VA_ARGS__ int32_t name;
-#  define DECL_BI_S32_SET(name,val,...) __VA_ARGS__ int32_t name##_swap = CAST(SWAP_32(val),int32_t); __VA_ARGS__ int32_t name = val;
-#endif
-
-
-/* 32-bit unsigned */
-
-#if __LITTLE_ENDIAN__
-#  define DECL_BI_U32(name,...) __VA_ARGS__ uint32_t name; __VA_ARGS__ uint32_t name##_swap;
-#  define DECL_BI_U32_SET(name,val,...) __VA_ARGS__ uint32_t name = val; __VA_ARGS__ uint32_t name##_swap = SWAP_32(val);
-#elif __BIG_ENDIAN__
-#  define DECL_BI_U32(name,...) __VA_ARGS__ uint32_t name##_swap; __VA_ARGS__ uint32_t name;
-#  define DECL_BI_U32_SET(name,val,...) __VA_ARGS__ uint32_t name##_swap = SWAP_32(val); __VA_ARGS__ uint32_t name = val;
-#endif
-
-
-
-/* 64-bit signed */
-
-#if __LITTLE_ENDIAN__
-#  define DECL_BI_S64(name,...) __VA_ARGS__ int64_t name; __VA_ARGS__ int64_t name##_swap;
-#  define DECL_BI_S64_SET(name,val,...) __VA_ARGS__ int64_t name = val; __VA_ARGS__ int64_t name##_swap = CAST(SWAP_64(val),int64_t);
-#elif __BIG_ENDIAN__
-#  define DECL_BI_S64(name,...) __VA_ARGS__ int64_t name##_swap; __VA_ARGS__ int64_t name;
-#  define DECL_BI_S64_SET(name,val,...) __VA_ARGS__ int64_t name##_swap = CAST(SWAP_64(val),int64_t); __VA_ARGS__ int64_t name = val;
-#endif
-
-
-/* 64-bit unsigned */
-
-#if __LITTLE_ENDIAN__
-#  define DECL_BI_U64(name,...) __VA_ARGS__ uint64_t name; __VA_ARGS__ uint64_t name##_swap;
-#  define DECL_BI_U64_SET(name,val,...) __VA_ARGS__ uint64_t name = val; __VA_ARGS__ uint64_t name##_swap = SWAP_64(val);
-#elif __BIG_ENDIAN__
-#  define DECL_BI_U64(name,...) __VA_ARGS__ uint64_t name##_swap; __VA_ARGS__ uint64_t name;
-#  define DECL_BI_U64_SET(name,val,...) __VA_ARGS__ uint64_t name##_swap = SWAP_64(val); __VA_ARGS__ uint64_t name = val;
-#endif
-
-
-
-
-/* Single-precision float */
-
-#if __LITTLE_ENDIAN__
-#  define DECL_BI_FLOAT(name,...) __VA_ARGS__ float name; __VA_ARGS__ float name##_swap;
-#  define DECL_BI_FLOAT_SET(name,val,...) __VA_ARGS__ float name = val; __VA_ARGS__ float name##_swap = CAST(SWAP_32(val),float);
-#elif __BIG_ENDIAN__
-#  define DECL_BI_FLOAT(name,...) __VA_ARGS__ float name##_swap; __VA_ARGS__ float name;
-#  define DECL_BI_FLOAT_SET(name,val,...) __VA_ARGS__ float name##_swap = CAST(SWAP_32(val),float); __VA_ARGS__ float name = val;
-#endif
-
-
-
-
-/* Double-precision float */
-
-#if __LITTLE_ENDIAN__
-#  define DECL_BI_DOUBLE(name,...) __VA_ARGS__ double name; __VA_ARGS__ double name##_swap;
-#  define DECL_BI_DOUBLE_SET(name,val,...) __VA_ARGS__ double name = val; __VA_ARGS__ double name##_swap = CAST(SWAP_64(val),double);
-#elif __BIG_ENDIAN__
-#  define DECL_BI_DOUBLE(name,...) __VA_ARGS__ double name##_swap; __VA_ARGS__ double name;
-#  define DECL_BI_DOUBLE_SET(name,val,...) __VA_ARGS__ double name##_swap = CAST(SWAP_64(val),double); __VA_ARGS__ double name = val;
-#endif
+// Byte swap double
+static double swap_double( double val )
+{
+    uint64_t uval = swap_uint64(CAST(val, uint64_t));
+    return CAST(uval, double);
+}
 
 
 
 
 /* Now, some assignment convenience macros */
 
-#define SET_BI_S16(name,val) name = val; name##_swap = CAST(SWAP_16(val),int16_t);
-#define SET_BI_U16(name,val) name = val; name##_swap = SWAP_16(val);
+#define SET_BI_S16(record,field,val) record.native.field = val; record.swapped.field = swap_int16(val)
+#define SET_BI_U16(record,field,val) record.native.field = val; record.swapped.field = swap_uint16(val)
 
-#define SET_BI_S32(name,val) name = val; name##_swap = CAST(SWAP_32(val),int32_t);
-#define SET_BI_U32(name,val) name = val; name##_swap = SWAP_32(val);
+#define SET_BI_S32(record,field,val) record.native.field = val; record.swapped.field = swap_int32(val)
+#define SET_BI_U32(record,field,val) record.native.field = val; record.swapped.field = swap_uint32(val)
 
-#define SET_BI_S64(name,val) name = val; name##_swap = CAST(SWAP_64(val),int64_t);
-#define SET_BI_U64(name,val) name = val; name##_swap = SWAP_64(val);
+#define SET_BI_S64(record,field,val) record.native.field = val; record.swapped.field = swap_int64(val)
+#define SET_BI_U64(record,field,val) record.native.field = val; record.swapped.field = swap_uint64(val)
 
-#define SET_BI_FLOAT(name,val) name = val; name##_swap = CAST(SWAP_32(val),float);
+#define SET_BI_FLOAT(record,field,val) record.native.field = val; record.swapped.field = swap_float(val)
 
-#define SET_BI_DOUBLE(name,val) name = val; name##_swap = CAST(SWAP_64(val),double);
+#define SET_BI_DOUBLE(record,field,val) record.native.field = val; record.swapped.field = swap_double(val)
 
 
+/* Now, an automagic one (using GCC-defined builtin type detector) */
+#define SET_BI(record,field,val)\
+if(__builtin_types_compatible_p(typeof(record.native.field), int16_t))\
+    {SET_BI_S16(record,field,val);}\
+else if(__builtin_types_compatible_p(typeof(record.native.field), uint16_t))\
+    {SET_BI_U16(record,field,val);}\
+else if(__builtin_types_compatible_p(typeof(record.native.field), int32_t))\
+    {SET_BI_S32(record,field,val);}\
+else if(__builtin_types_compatible_p(typeof(record.native.field), uint32_t))\
+    {SET_BI_U32(record,field,val);}\
+else if(__builtin_types_compatible_p(typeof(record.native.field), int64_t))\
+    {SET_BI_S64(record,field,val);}\
+else if(__builtin_types_compatible_p(typeof(record.native.field), uint64_t))\
+    {SET_BI_U64(record,field,val);}\
+else if(__builtin_types_compatible_p(typeof(record.native.field), float))\
+    {SET_BI_FLOAT(record,field,val);}\
+else if(__builtin_types_compatible_p(typeof(record.native.field), double))\
+    {SET_BI_DOUBLE(record,field,val);}\
+else\
+    fprintf(stderr, "Incompatible type set to using `SET_BI` in \"" __FILE__ "\":%u\n", __LINE__)
 
 
 #endif // PSPL_PSPLValue_h

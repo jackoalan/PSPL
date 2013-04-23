@@ -27,11 +27,11 @@
  * when the stream is exhausted. */
 
 /* Register layout:
- * r3:  `wgPipe` pointer (where the stream words should be repeatedly stored)
- * r4:  `stream_start` pointer (incremented as stream is read; must be 64-byte aligned, stream starts with magic word)
- * r5:  `stream_len` size (decremented as stream is read)
+ *  r3: `wgPipe` pointer (where the stream words should be repeatedly stored)
+ *  r4: `stream_start` pointer (incremented as stream is read; must be 64-byte aligned, stream starts with magic word)
+ *  r5: `stream_len` size (decremented as stream is read)
  *
- * r0:  word loader/storer; other temp use (to copy a word value from the stream into the write-gather pipe)
+ *  r0: word loader/storer; other temp use (to copy a word value from the stream into the write-gather pipe)
  * r11: stream frame header shifting area (loaded at each 64-byte interval; shifted every store)
  * r12: temporary register for various immediate calculations
  */
@@ -43,7 +43,7 @@ pspl_gx_magic:
 	.align 2
 
 /* Error codes:
- * 0:  No Error
+ *  0: No Error
  * -1: Stream too short
  * -2: No valid magic word (perhaps not PSPL GX bytecode)
  */
