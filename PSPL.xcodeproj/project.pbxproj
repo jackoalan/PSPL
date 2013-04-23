@@ -70,6 +70,7 @@
 		E4AFAE8417259A1900F7A0BF /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E4AFAE8517259A2800F7A0BF /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E4AFAE8617259D0400F7A0BF /* PSPLAvailableExtensions.c.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLAvailableExtensions.c.in; sourceTree = "<group>"; };
+		E4AFAE881726DEC800F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -146,6 +147,7 @@
 			isa = PBXGroup;
 			children = (
 				E4AFAE78171F002700F7A0BF /* CMakeLists.txt */,
+				E4AFAE871726DEC800F7A0BF /* PMDLFormat */,
 				E4AFAE3D171C98BB00F7A0BF /* OpenGLSupport */,
 				E4AFAE3C171C98BB00F7A0BF /* GXSupport */,
 				E4AFAE3B171C98BB00F7A0BF /* Direct3DSupport */,
@@ -261,6 +263,14 @@
 				E4AFAE801721909A00F7A0BF /* PSPLClassDefTemplate.c.in */,
 			);
 			path = Templates;
+			sourceTree = "<group>";
+		};
+		E4AFAE871726DEC800F7A0BF /* PMDLFormat */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE881726DEC800F7A0BF /* README.md */,
+			);
+			path = PMDLFormat;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

@@ -10,6 +10,7 @@ include(${PSPL_SOURCE_DIR}/cmake/PSPLExtensionMacros.cmake)
 
 
 # Provided extensions
+#add_subdirectory(PMDLFormat)
 #add_subdirectory(OpenGLSupport)
 add_subdirectory(GXSupport)
 #add_subdirectory(Direct3DSupport)
