@@ -11,8 +11,12 @@
 
 
 #include <PSPL/PSPL.h>
+#ifdef PSPL_TOOLCHAIN
 #include <PSPL/Toolchain/PSPLToolchainExtension.h>
+#endif
+#ifdef PSPL_RUNTIME
 #include <PSPL/Runtime/PSPLRuntimeExtension.h>
+#endif
 
 
 /* Forward decl of class struct type */

@@ -13,16 +13,26 @@
 #include <PSPL/PSPLValue.h>
 
 
-
-/* First, our common object structure (classed with 4-byte typestring) */
-typedef struct _pspl_object {
+/* Common object structure (classed with 4-byte typestring) 
+ * This data structure is present within the `psplb` file and 
+ * when loaded into RAM */
+typedef struct {
     // 4-byte object class identifier
-    uint8_t class[4];
+    uint8_t class_id[4];
     
     // Size of the entire object (sum of all inheriting structure sizes)
-    uint32_t size;
+    DECL_BI_STRUCT(uint32_t) size;
+    
+    
     
 } pspl_object_t;
+
+
+/* Runtime platform description structure */
+typedef struct {
+    // Runtime name
+    
+} pspl_runtime_platform_t;
 
 
 #pragma mark Runtime Init
@@ -30,7 +40,7 @@ typedef struct _pspl_object {
 void PSPL_Init();
 
 
-#pragma mark
+#include "Toolchain/PSPLToolchainExtension.h"
 
 
 #endif
