@@ -50,7 +50,7 @@
 
 #elif __BIG_ENDIAN__
 
-#define DECL_BI_STRUCT(source_type) struct _bi_##source_type {\
+#define DECL_BI_STRUCT(source_type) struct {\
     union {\
         source_type little;\
         source_type swapped;\
