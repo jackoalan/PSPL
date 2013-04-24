@@ -160,7 +160,7 @@ typedef struct _pspl_toolchain_extension {
 /* A macro to abstract the global details of extension namespacing */
 #define _PSPL_INSTALLED_TOOLCHAIN_EXT_CAT2(a) a ## _extension
 #define _PSPL_INSTALLED_TOOLCHAIN_EXT_CAT(a) _PSPL_INSTALLED_TOOLCHAIN_EXT_CAT2(a)
-#define PSPL_INSTALLED_TOOLCHAIN_EXT pspl_toolchain_extension_t _PSPL_INSTALLED_TOOLCHAIN_EXT_CAT(PSPL_EXT_NAME)
+#define PSPL_INSTALLED_TOOLCHAIN_EXT static const pspl_toolchain_extension_t _PSPL_INSTALLED_TOOLCHAIN_EXT_CAT(PSPL_EXT_NAME)
 
 /* A sample toolchain extension installation (all NULL hooks) */
 static const char* claimed_heading_names[] = {"VERTEX", "FRAGMENT", NULL};
