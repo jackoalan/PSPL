@@ -15,7 +15,7 @@
 /* This will be set by build system. Contains unique extension ID.
  * The toolchain and runtime use this (in conjunction with preprocessor macros) 
  * to transparently maintain an extension namespace */
-#define PSPL_EXT_NAME "TEST_EXT"
+#define PSPL_EXT_NAME TEST_EXT
 
 
 
@@ -134,7 +134,7 @@ typedef int(*pspl_toolchain_indent_line_read_hook)(const pspl_toolchain_context_
 
 
 /* Main toolchain extension structure */
-typedef struct {
+typedef struct _pspl_toolchain_extension {
     
     // Metadata fields
     // All arrays are `NULL` terminated
@@ -158,7 +158,9 @@ typedef struct {
 } pspl_toolchain_extension_t;
 
 /* A macro to abstract the global details of extension namespacing */
-#define PSPL_INSTALLED_TOOLCHAIN_EXT pspl_toolchain_extension_t PSPL_EXT_NAME##_extension
+#define _PSPL_INSTALLED_TOOLCHAIN_EXT_CAT2(a) a ## _extension
+#define _PSPL_INSTALLED_TOOLCHAIN_EXT_CAT(a) _PSPL_INSTALLED_TOOLCHAIN_EXT_CAT2(a)
+#define PSPL_INSTALLED_TOOLCHAIN_EXT pspl_toolchain_extension_t _PSPL_INSTALLED_TOOLCHAIN_EXT_CAT(PSPL_EXT_NAME)
 
 /* A sample toolchain extension installation (all NULL hooks) */
 static const char* claimed_heading_names[] = {"VERTEX", "FRAGMENT", NULL};

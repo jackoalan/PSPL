@@ -5,33 +5,28 @@
 //  Created by Jack Andersen on 4/15/13.
 //
 //
+#define PSPL_TOOLCHAIN
 
 #include <stdio.h>
 #include <string.h>
 #include <PSPL/PSPL.h>
-
-struct test_struct {
-    uint16_t u_sixteen_field;
-    int16_t s_sixteen_field;
-    uint32_t u_thirtytwo_field;
-    int32_t s_thirtytwo_field;
-    float float_field;
-    double double_field;
-};
-
-typedef DECL_BI_STRUCT(struct test_struct) bi_test_t;
+#include <PSPL/PSPLExtension.h>
+#include "../Extensions/GXSupport/gx_offline.h"
 
 int main(int argc, char** argv) {
-    bi_test_t test_inst;
-    memset(&test_inst, 0, sizeof(test_inst));
-    SET_BI(test_inst, u_sixteen_field, -530);
-    SET_BI(test_inst, s_sixteen_field, -530);
-    SET_BI(test_inst, u_thirtytwo_field, -500000);
-    SET_BI(test_inst, s_thirtytwo_field, -500000);
-    SET_BI(test_inst, float_field, 30);
-    SET_BI(test_inst, double_field, 60);
+    
+    pspl_gx_offline_begin_transaction();
+    GX_SetNumTevStages(2);
+    GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLORNULL);
+    GX_SetTevOrder(GX_TEVSTAGE1, GX_TEXCOORD0, GX_TEXMAP1, GX_COLORNULL);
+    GX_SetTevOp(GX_TEVSTAGE1, GX_BLEND);
+    GX_SetTevColorOp(GX_TEVSTAGE1, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+    GX_Flush();
+    void* buf;
+    size_t buf_sz = pspl_gx_offline_end_transaction(&buf);
     FILE* outf = fopen("output.psplb", "w");
-    fwrite(&test_inst, 1, sizeof(test_inst), outf);
+    fwrite(buf, 1, buf_sz, outf);
     fclose(outf);
+    printf("Done %lu\n", buf_sz);
     return 0;
 }

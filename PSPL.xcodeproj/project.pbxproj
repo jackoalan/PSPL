@@ -40,10 +40,8 @@
 		E4AFAE49171CA39000F7A0BF /* SyntaxParser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SyntaxParser.c; sourceTree = "<group>"; };
 		E4AFAE4B171CA3DA00F7A0BF /* PSPLValue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLValue.h; sourceTree = "<group>"; };
 		E4AFAE4C171CA3FE00F7A0BF /* Option.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Option.h; sourceTree = "<group>"; };
-		E4AFAE52171CA6A300F7A0BF /* PSPLPreprocessorDirective.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLPreprocessorDirective.h; sourceTree = "<group>"; };
 		E4AFAE53171CA6C700F7A0BF /* PSPLToolchainExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLToolchainExtension.h; sourceTree = "<group>"; };
 		E4AFAE54171CA6D700F7A0BF /* PSPLExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLExtension.h; sourceTree = "<group>"; };
-		E4AFAE55171CA73200F7A0BF /* PSPLRuntimeCommand.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLRuntimeCommand.h; sourceTree = "<group>"; };
 		E4AFAE56171CA74A00F7A0BF /* PSPLRuntimeExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLRuntimeExtension.h; sourceTree = "<group>"; };
 		E4AFAE5B171CF46500F7A0BF /* FAKE-TARGET */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "FAKE-TARGET"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E4AFAE5E171CF46500F7A0BF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -137,8 +135,8 @@
 				E4AFAE33171C941500F7A0BF /* PSPL.h */,
 				E4AFAE4B171CA3DA00F7A0BF /* PSPLValue.h */,
 				E4AFAE54171CA6D700F7A0BF /* PSPLExtension.h */,
-				E4AFAE4F171CA50700F7A0BF /* Toolchain */,
-				E4AFAE50171CA50F00F7A0BF /* Runtime */,
+				E4AFAE53171CA6C700F7A0BF /* PSPLToolchainExtension.h */,
+				E4AFAE56171CA74A00F7A0BF /* PSPLRuntimeExtension.h */,
 			);
 			path = PSPL;
 			sourceTree = "<group>";
@@ -203,24 +201,6 @@
 				E4AFAE45171CA0EF00F7A0BF /* README.md */,
 			);
 			path = LightingManager;
-			sourceTree = "<group>";
-		};
-		E4AFAE4F171CA50700F7A0BF /* Toolchain */ = {
-			isa = PBXGroup;
-			children = (
-				E4AFAE53171CA6C700F7A0BF /* PSPLToolchainExtension.h */,
-				E4AFAE52171CA6A300F7A0BF /* PSPLPreprocessorDirective.h */,
-			);
-			path = Toolchain;
-			sourceTree = "<group>";
-		};
-		E4AFAE50171CA50F00F7A0BF /* Runtime */ = {
-			isa = PBXGroup;
-			children = (
-				E4AFAE56171CA74A00F7A0BF /* PSPLRuntimeExtension.h */,
-				E4AFAE55171CA73200F7A0BF /* PSPLRuntimeCommand.h */,
-			);
-			path = Runtime;
 			sourceTree = "<group>";
 		};
 		E4AFAE5C171CF46500F7A0BF /* Products */ = {

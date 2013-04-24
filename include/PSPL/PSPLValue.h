@@ -15,12 +15,7 @@
  * type available to PSPL and its extensions. They are intended to facilitate
  * `psplb` file generation when multiple platforms with different byte-orderings 
  * are to be targeted.
- * Assignment macros are also available to perform the necessary swaps.
- *
- * The DECL_* macros are designed to be used in structures so that the
- * little-endian version is always declared just before the big-endian version.
- * The DECL_* macros also include an optional additional macro to set declaration
- * keywords (static, extern, const, etc...) */
+ * Assignment macros are also available to perform the necessary swaps. */
 
 /* It is a paradox to compile to a bi-endian target */
 #if __BIG_ENDIAN__ && __LITTLE_ENDIAN__
@@ -146,6 +141,10 @@ static double swap_double( double val )
 
 
 /* Now, an automagic one (using GCC-defined builtin type detector) */
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wconversion"
+
 #define SET_BI(record,field,val)\
 if(__builtin_types_compatible_p(typeof(record.native.field), int16_t))\
     {SET_BI_S16(record,field,val);}\
@@ -165,6 +164,9 @@ else if(__builtin_types_compatible_p(typeof(record.native.field), double))\
     {SET_BI_DOUBLE(record,field,val);}\
 else\
     fprintf(stderr, "Incompatible type set to using `SET_BI` in \"" __FILE__ "\":%u\n", __LINE__)
+
+#pragma clang diagnostic pop
+
 
 
 #endif // PSPL_PSPLValue_h

@@ -649,4 +649,8 @@ void GX_SetZCompLoc(u8 before_tex);
 
 void GX_SetIndTexOrder(u8 indtexstage,u8 texcoord,u8 texmap);
 
+void pspl_gx_offline_begin_transaction();
+
+size_t pspl_gx_offline_end_transaction(void** buf_out);
+
 #endif // _GX_OFFLINE_H

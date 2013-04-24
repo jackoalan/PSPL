@@ -59,6 +59,7 @@ void pspl_gx_offline_check_capacity() {
         _gx_trans->cur_frame_ptr = _gx_trans->cur_word_ptr;
         _gx_trans->cur_word_ptr += 4;
         _gx_trans->cur_word_index = 0;
+        _gx_trans->mem_size += 4;
     }
 }
 
@@ -69,7 +70,7 @@ void pspl_gx_offline_begin_transaction() {
     pspl_gx_offline_clear_transaction();
     _gx_trans->mem_buf = malloc(GX_OFFLINE_TRANS_DEFSZ);
     _gx_trans->mem_cap = GX_OFFLINE_TRANS_DEFSZ;
-    _gx_trans->mem_size = 0;
+    _gx_trans->mem_size = 8;
     memcpy(_gx_trans->mem_buf, "PSGX", 4);
     _gx_trans->cur_frame_ptr = _gx_trans->mem_buf+4;
     _gx_trans->cur_word_ptr = _gx_trans->mem_buf+8;
@@ -93,7 +94,7 @@ void pspl_gx_offline_or_head_bits(uint32_t bits) {
     uint32_t val;
     
 #if __LITTLE_ENDIAN__
-    val = SWAP_32(*(_gx_trans->cur_frame_ptr));
+    val = swap_uint32(*(_gx_trans->cur_frame_ptr));
 #elif __BIG_ENDIAN__
     val = *(_gx_trans->cur_frame_ptr);
 #endif
@@ -102,7 +103,7 @@ void pspl_gx_offline_or_head_bits(uint32_t bits) {
     ++(_gx_trans->cur_word_index);
     
 #if __LITTLE_ENDIAN__
-    *(_gx_trans->cur_frame_ptr) = SWAP_32(val);
+    *(_gx_trans->cur_frame_ptr) = swap_uint32(val);
 #elif __BIG_ENDIAN__
     *(_gx_trans->cur_frame_ptr) = val;
 #endif
@@ -116,12 +117,13 @@ void pspl_gx_offline_add_u8(uint8_t val) {
     uint32_t val32 = val;
     
 #if __LITTLE_ENDIAN__
-    *(_gx_trans->cur_word_ptr) = SWAP_32(val32);
+    *(_gx_trans->cur_word_ptr) = swap_uint32(val32);
 #elif __BIG_ENDIAN__
     *(_gx_trans->cur_word_ptr) = val32;
 #endif
     
     (_gx_trans->cur_word_ptr) += 4;
+    (_gx_trans->mem_size) += 4;
     
     // Word head bit: 0x2
     pspl_gx_offline_or_head_bits(0x2);
@@ -135,12 +137,13 @@ void pspl_gx_offline_add_u16(uint16_t val) {
     uint32_t val32 = val;
     
 #if __LITTLE_ENDIAN__
-    *(_gx_trans->cur_word_ptr) = SWAP_32(val32);
+    *(_gx_trans->cur_word_ptr) = swap_uint32(val32);
 #elif __BIG_ENDIAN__
     *(_gx_trans->cur_word_ptr) = val32;
 #endif
     
     (_gx_trans->cur_word_ptr) += 4;
+    (_gx_trans->mem_size) += 4;
     
     // Word head bit: 0x1
     pspl_gx_offline_or_head_bits(0x1);
@@ -152,12 +155,13 @@ void pspl_gx_offline_add_u32(uint32_t val) {
     pspl_gx_offline_check_capacity();
         
 #if __LITTLE_ENDIAN__
-    *(_gx_trans->cur_word_ptr) = SWAP_32(val);
+    *(_gx_trans->cur_word_ptr) = swap_uint32(val);
 #elif __BIG_ENDIAN__
     *(_gx_trans->cur_word_ptr) = val;
 #endif
     
     (_gx_trans->cur_word_ptr) += 4;
+    (_gx_trans->mem_size) += 4;
     
     // Word head bit: 0x0
     pspl_gx_offline_or_head_bits(0x0);
@@ -169,12 +173,13 @@ void pspl_gx_offline_add_float(float val) {
     pspl_gx_offline_check_capacity();
         
 #if __LITTLE_ENDIAN__
-    *(_gx_trans->cur_word_ptr) = SWAP_32(val);
+    *(_gx_trans->cur_word_ptr) = swap_uint32(val);
 #elif __BIG_ENDIAN__
     *(_gx_trans->cur_word_ptr) = val;
 #endif
     
     (_gx_trans->cur_word_ptr) += 4;
+    (_gx_trans->mem_size) += 4;
     
     // Word head bit: 0x3
     pspl_gx_offline_or_head_bits(0x3);

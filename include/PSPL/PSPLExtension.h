@@ -10,19 +10,6 @@
 #define PSPL_PSPLExtension_h
 
 
-#include <PSPL/PSPL.h>
-#ifdef PSPL_TOOLCHAIN
-#include <PSPL/Toolchain/PSPLToolchainExtension.h>
-#endif
-#ifdef PSPL_RUNTIME
-#include <PSPL/Runtime/PSPLRuntimeExtension.h>
-#endif
-
-
-/* Forward decl of class struct type */
-typedef struct _pspl_class pspl_class_t;
-
-
 /* Common extension definition structure
  * 
  * This structure provides a means to compose object classes,
@@ -35,15 +22,17 @@ typedef struct _pspl_extension {
     const char* extension_name;
     
     // NULL-terminated array of composed `pspl_class_t` object classes
-    const pspl_class_t class_array[];
+    const struct _pspl_class* class_array;
     
-    // NULL-terminated array of composed `pspl_toolchain_extension_t`
-    // (NULL if accessed from runtime)
-    const pspl_toolchain_extension_t toolchain_extension_array[];
+    #ifdef PSPL_TOOLCHAIN
+    // Extension's toolchain extension definition object
+    const struct _pspl_toolchain_extension* toolchain_extension;
+    #endif
     
-    // NULL-terminated array of composed `pspl_runtime_extension_t`
-    // (NULL if accessed from toolchain)
-    const pspl_runtime_extension_t runtime_extension_array[];
+    #ifdef PSPL_RUNTIME
+    // Extension's runtime extension definition object
+    const struct _pspl_runtime_extension* runtime_extension;
+    #endif
     
 } pspl_extension_t;
 
@@ -53,17 +42,25 @@ typedef struct _pspl_extension {
  * This structure is initialised by any extensions wishing to define 
  * an archivable C-structure storable within a PSPL package.
  */
-struct _pspl_class {
+typedef struct _pspl_class {
     // 4-byte class identifier (present in class instances for association)
     uint8_t class_id[4];
     
     // Pointer to extension defining class
-    _pspl_extension_t* class_extension;
+    struct _pspl_toolchain_extension* class_extension;
     
     // Size of the entire object (sum of all inheriting structure sizes)
     uint32_t size;
     
-};
+} pspl_class_t;
+
+#include <PSPL/PSPL.h>
+#ifdef PSPL_TOOLCHAIN
+#include <PSPL/PSPLToolchainExtension.h>
+#endif
+#ifdef PSPL_RUNTIME
+#include <PSPL/PSPLRuntimeExtension.h>
+#endif
 
 
 #endif

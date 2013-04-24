@@ -40,7 +40,4 @@ typedef struct {
 void PSPL_Init();
 
 
-#include "Toolchain/PSPLToolchainExtension.h"
-
-
 #endif
