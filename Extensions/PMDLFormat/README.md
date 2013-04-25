@@ -21,7 +21,7 @@ sources* associated with the model (or a hierarchical subdivision of the model).
 PMDL also *augments the PSPL language* with a set of syntactic additions. 
 
 One PSPL shader may be referenced by many PMDL models, yet the precise behaviour 
-Of the shader may be tweaked by the specific PMDL file. This is accomplished
+of the shader may be tweaked by the specific PMDL file. This is accomplished
 by including valued macro-tags within the PMDL file's *metadata*. 
 
 
