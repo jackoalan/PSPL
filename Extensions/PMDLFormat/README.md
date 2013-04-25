@@ -8,7 +8,7 @@ appropriate shader and texture bindings.
 It is designed to store model data in platform-native, *attribute-interleaved*
 or *attribute-discrete* structured vertex array buffers. Standard floating-point
 values may be expressed in a *bi-endian* manner. Attributed vertices are tied
-together with *hierarchical topology indexing*. The runtime portion of the PSPL
+together into meshes using *hierarchical topology indexing*. The runtime portion of the PSPL
 extension uses this index to issue drawing commands using the host's native 3D
 graphics API. 
 
@@ -21,7 +21,7 @@ sources* associated with the model (or a hierarchical subdivision of the model).
 PMDL also *augments the PSPL language* with a set of syntactic additions. 
 
 One PSPL shader may be referenced by many PMDL models, yet the precise behaviour 
-Of the shader may be tweaked by the specific PMDL file. This is accomplished
+of the shader may be tweaked by the specific PMDL file. This is accomplished
 by including valued macro-tags within the PMDL file's *metadata*. 
 
 
