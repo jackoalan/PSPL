@@ -171,9 +171,11 @@ void pspl_gx_offline_add_float(float val) {
     if (!_gx_trans)
         return;
     pspl_gx_offline_check_capacity();
-        
+    
+    uint32_t val32 = CAST(val, float);
+
 #if __LITTLE_ENDIAN__
-    *(_gx_trans->cur_word_ptr) = swap_uint32(val);
+    *(_gx_trans->cur_word_ptr) = swap_uint32(val32);
 #elif __BIG_ENDIAN__
     *(_gx_trans->cur_word_ptr) = val;
 #endif
