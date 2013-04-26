@@ -77,13 +77,13 @@ Art Pipeline Toolchain
     * Intermediate PSPL package `.pspld` (directory structure)
         * May contain multiple PSPL sources
         * May contain intermediately-compressed (.PSD, .PNG, .TIF) textures
-    * Compiled PSPL package `.psplc`
+    * Compiled PSPL package `.psplp`
         * Platform-specific targeting
             * May be a "fat-package" containing multiple platforms
             * Bi-endian design
         * Textures are in platform-native format(s)
 * Runtime
-    * Simple file or membuf `.psplc` loader
+    * Simple file or membuf `.psplp` loader
     * Heading-context hook installation/configuration
     * Command hook installation/configuration
     * Common uniform-variable interface
@@ -102,8 +102,8 @@ is realised in five stages:
 * **Intermediate** – Filesystem-based means of gathering `.pspl` sources and intermediate assets (models, textures, etc...) into a `.pspld` root directory
 * **Preprocessing** – Token-based substitution and external inclusion (think C preprocessor) for `.pspl` sources
 * **Compiling** – Conversion to platform native data formats (including shader code generation and asset conversion)
-* **Packaging** – Gathering of compiled shader objects and native flat-file assets into a `.psplc` package file for runtime
-* **Runtime Playback** – Loading of `.psplc` and processing into the platform API in question, all in one efficient stage 
+* **Packaging** – Gathering of compiled shader objects and native flat-file assets into a `.psplp` package file for runtime
+* **Runtime Playback** – Loading of `.psplp` and processing into the platform API in question, all in one efficient stage 
 
 Everything in PSPL revolves around the *Markdown-extended* **PSPL** language 
 (sources have `.pspl` file extension). 
@@ -349,24 +349,22 @@ Part of PSPL's **offline toolchain** includes a *compiler* and a *packager*.
 The **compiler**
 performs any preprocessor invocations. It then generates file-buffers containing 
 platform-specific, generated shader-sources (also compiled if able). Finally,
-it generates a PSPL-specific binary configuration file `.psplb` instructing the runtime
+it generates a PSPL-specific binary configuration file `.psplc` instructing the runtime
 how to set itself up against the platform graphics API (using author-specified commands).
 The compiler will add a set of platform-specific directories within the *intermediate directory*
-containing the binary `.psplb` files. The compiler will then perform asset
+containing the binary `.psplc` files. The compiler will then perform asset
 conversion and place the converted assets alongside the binaries. 
 
 Once the `.pspld` intermediate directory is established, it may be ran through
-the **packager**. The packager links all `.psplb` files into a monolithic object-buffer 
+the **packager**. The packager links all `.psplc` files into a monolithic object-buffer 
 for the runtime and archives platform-specific assets together. The output is a single
-`.psplc` compiled-flat-file, containing the entire shader package.
+`.psplp` compiled-flat-file, containing the entire shader package.
 
-An alternative to generating a `.psplc` flat-file package is to generate a `.psplcd` 
-*compiled directory* package.
-Making a compiled directory may be useful during a development cycle, where a monolithic
-asset structure is not desired. The structure of the compiled directory remains editable
-and may be merged with a `.pspld` intermediate to keep the source assets around.
-The `.psplcd` will additionally interleave platform-native assets and shader configurations
-with the sources. 
+An alternative to generating a `.psplp` flat-file package is to generate a `.psplpd` 
+*package directory* package.
+Making a package directory may be useful during a development cycle, where a monolithic
+asset structure is not desired. The structure of the package directory remains browsable
+and may be audited before the final `.psplp` is generated.
 
 
 That And The Kitchen Sink

@@ -49,7 +49,7 @@ pspl_gx_magic:
  */
 
 /* Playback our bytecode stream */
-// extern int pspl_gx_playback(void* wgPipe, void* stream_start, size_t stream_len)
+// extern register int pspl_gx_playback(register void* wgPipe, register void* stream_start, register size_t stream_len)
 	.text
 	.globl pspl_gx_playback
 pspl_gx_playback:

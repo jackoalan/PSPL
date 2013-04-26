@@ -12,25 +12,24 @@
 /* Our method of defining numeric values in a bi-endian manner */
 #include <PSPL/PSPLValue.h>
 
-
-/* Common object structure (classed with 4-byte typestring) 
- * This data structure is present within the `psplb` file and 
- * when loaded into RAM */
-typedef struct {
-    // 4-byte object class identifier
-    uint8_t class_id[4];
-    
-    // Size of the entire object (sum of all inheriting structure sizes)
-    DECL_BI_STRUCT(uint32_t) size;
-    
-    
-    
-} pspl_object_t;
-
+/* Endianness enumerations */
+#define PSPL_LITTLE_ENDIAN 1
+#define PSPL_BIG_ENDIAN 2
+#define PSPL_BI_ENDIAN 3
 
 /* Runtime platform description structure */
 typedef struct {
+    // Runtime 4-byte string identifier
+    uint8_t runtime_id[4];
+    
     // Runtime name
+    const char* runtime_name;
+    
+    // Native byte-order [PSPL_LITTLE_ENDIAN, PSPL_BIG_ENDIAN]
+    uint8_t byte_order;
+    
+    // Padding
+    uint8_t padding[3];
     
 } pspl_runtime_platform_t;
 

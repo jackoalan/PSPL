@@ -5,6 +5,7 @@
 //  Created by Jack Andersen on 4/15/13.
 //
 //
+#define PSPL_INTERNAL
 #define PSPL_TOOLCHAIN
 
 #include <stdio.h>
@@ -12,6 +13,8 @@
 #include <PSPL/PSPL.h>
 #include <PSPL/PSPLExtension.h>
 #include "../Extensions/GXSupport/gx_offline.h"
+
+#include <PSPLInternal.h>
 
 int main(int argc, char** argv) {
     
@@ -24,7 +27,7 @@ int main(int argc, char** argv) {
     GX_Flush();
     void* buf;
     size_t buf_sz = pspl_gx_offline_end_transaction(&buf);
-    FILE* outf = fopen("output.psplb", "w");
+    FILE* outf = fopen("output.psplc", "w");
     fwrite(buf, 1, buf_sz, outf);
     fclose(outf);
     printf("Done %lu\n", buf_sz);

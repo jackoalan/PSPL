@@ -2,7 +2,7 @@ PSPL Runtime
 ============
 
 The **Runtime** portion of PSPL is responsible for *loading* data
-from a `.psplc` flat-file or `.psplcd` compiled-directory, *initialising*
+from a `.psplp` flat-file or `.psplpd` compiled-directory, *initialising*
 the data in the host's graphics API and *providing a binding mechanism*
 for the application's rendering code to use.
 

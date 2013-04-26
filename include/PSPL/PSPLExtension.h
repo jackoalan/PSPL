@@ -21,9 +21,6 @@ typedef struct _pspl_extension {
     // Unique name of extension
     const char* extension_name;
     
-    // NULL-terminated array of composed `pspl_class_t` object classes
-    const struct _pspl_class* class_array;
-    
     #ifdef PSPL_TOOLCHAIN
     // Extension's toolchain extension definition object
     const struct _pspl_toolchain_extension* toolchain_extension;
@@ -37,30 +34,9 @@ typedef struct _pspl_extension {
 } pspl_extension_t;
 
 
-/* Common object class structure 
- *
- * This structure is initialised by any extensions wishing to define 
- * an archivable C-structure storable within a PSPL package.
- */
-typedef struct _pspl_class {
-    // 4-byte class identifier (present in class instances for association)
-    uint8_t class_id[4];
-    
-    // Pointer to extension defining class
-    struct _pspl_toolchain_extension* class_extension;
-    
-    // Size of the entire object (sum of all inheriting structure sizes)
-    uint32_t size;
-    
-} pspl_class_t;
-
 #include <PSPL/PSPL.h>
-#ifdef PSPL_TOOLCHAIN
 #include <PSPL/PSPLToolchainExtension.h>
-#endif
-#ifdef PSPL_RUNTIME
 #include <PSPL/PSPLRuntimeExtension.h>
-#endif
 
 
 #endif

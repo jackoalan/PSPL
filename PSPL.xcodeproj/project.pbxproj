@@ -69,6 +69,11 @@
 		E4AFAE8517259A2800F7A0BF /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E4AFAE8617259D0400F7A0BF /* PSPLAvailableExtensions.c.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLAvailableExtensions.c.in; sourceTree = "<group>"; };
 		E4AFAE881726DEC800F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		E4AFAE8A1729A9BC00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		E4AFAE8C1729A9BC00F7A0BF /* SPECIFICATION.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = SPECIFICATION.md; sourceTree = "<group>"; };
+		E4AFAE8D1729A9CC00F7A0BF /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		E4AFAE8F1729AB3C00F7A0BF /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		E4AFAE911729D90E00F7A0BF /* PSPLInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLInternal.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,6 +95,7 @@
 				E4AFAE29171C92BE00F7A0BF /* README.md */,
 				E4AFAE72171DFF1800F7A0BF /* CMakeLists.txt */,
 				E4AFAE73171EF72E00F7A0BF /* cmake */,
+				E4AFAE911729D90E00F7A0BF /* PSPLInternal.h */,
 				E4AFAE26171C8FF100F7A0BF /* Toolchain */,
 				E4AFAE25171C8FDB00F7A0BF /* Runtime */,
 				E4AFAE2E171C936300F7A0BF /* include */,
@@ -159,6 +165,9 @@
 			isa = PBXGroup;
 			children = (
 				E4AFAE42171C9E4700F7A0BF /* README.md */,
+				E4AFAE891729A9BC00F7A0BF /* PSDSupport */,
+				E4AFAE8B1729A9BC00F7A0BF /* XCFSupport */,
+				E4AFAE8E1729AB1100F7A0BF /* OpenRasterSupport */,
 			);
 			path = TextureManager;
 			sourceTree = "<group>";
@@ -251,6 +260,31 @@
 				E4AFAE881726DEC800F7A0BF /* README.md */,
 			);
 			path = PMDLFormat;
+			sourceTree = "<group>";
+		};
+		E4AFAE891729A9BC00F7A0BF /* PSDSupport */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE8A1729A9BC00F7A0BF /* README.md */,
+			);
+			path = PSDSupport;
+			sourceTree = "<group>";
+		};
+		E4AFAE8B1729A9BC00F7A0BF /* XCFSupport */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE8D1729A9CC00F7A0BF /* README.md */,
+				E4AFAE8C1729A9BC00F7A0BF /* SPECIFICATION.md */,
+			);
+			path = XCFSupport;
+			sourceTree = "<group>";
+		};
+		E4AFAE8E1729AB1100F7A0BF /* OpenRasterSupport */ = {
+			isa = PBXGroup;
+			children = (
+				E4AFAE8F1729AB3C00F7A0BF /* README.md */,
+			);
+			path = OpenRasterSupport;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -351,7 +385,10 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = include;
+				HEADER_SEARCH_PATHS = (
+					include,
+					.,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -381,7 +418,10 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = include;
+				HEADER_SEARCH_PATHS = (
+					include,
+					.,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;

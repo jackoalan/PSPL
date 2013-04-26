@@ -13,7 +13,7 @@
 
 /* Macros for producing bi-endian record declarations of each numeric 
  * type available to PSPL and its extensions. They are intended to facilitate
- * `psplb` file generation when multiple platforms with different byte-orderings 
+ * `psplc` file generation when multiple platforms with different byte-orderings 
  * are to be targeted.
  * Assignment macros are also available to perform the necessary swaps. */
 
@@ -32,7 +32,7 @@
  * from an already-declared struct type. */
 #if __LITTLE_ENDIAN__
 
-#define DECL_BI_STRUCT(source_type) struct {\
+#define DECL_BI_OBJ_TYPE(source_type) struct {\
     union {\
         source_type little;\
         source_type native;\
@@ -45,7 +45,7 @@
 
 #elif __BIG_ENDIAN__
 
-#define DECL_BI_STRUCT(source_type) struct {\
+#define DECL_BI_OBJ_TYPE(source_type) struct {\
     union {\
         source_type little;\
         source_type swapped;\

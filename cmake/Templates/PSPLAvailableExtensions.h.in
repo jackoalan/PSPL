@@ -7,9 +7,12 @@
  * and defines a pointer array of all extensions used for building
  * this particular PSPL toolchain or runtime */
 
-/* This file also defines common extension definition structure
+/* This file declares common extension definition structure
  * objects first. */
 @CONF_EXT_DEF_OBJECTS@
+
+/* Class headers provided by registered extensions are included here */
+@CONF_EXT_CLASS_INCLUDES@
 
 /* The actual pointer array is in `PSPLAvailableExtensions.c` */
 extern pspl_extension_t pspl_available_extensions[];
