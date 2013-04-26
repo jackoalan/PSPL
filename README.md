@@ -114,7 +114,9 @@ incorporating *Markdown-list syntax*:
 
 1. Numbering,
 
-    * And multi-level indent-hierarchy
+* And multi-level 
+    * indent-hierarchy
+        * *4-Spaces* or *Tabs*
 
 
 Scalable Syntax
