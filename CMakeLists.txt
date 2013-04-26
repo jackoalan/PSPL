@@ -5,10 +5,10 @@ project(PSPL)
 # Runtime platform options
 if(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
   set(PSPL_RUNTIME_PLATFORM MAC_GL CACHE STRING 
-  "Select which platform to build runtime for [NONE, MAC_GL, GX, WIN_GL, WIN_D3D] (Mac OpenGL selected by default)")
+  "Select which platform to build runtime for [NONE, MAC_GL, EGL_GL, GLX_GL, WIN_GL, WIN_D3D, GX] (Mac OpenGL selected by default)")
 else()
   set(PSPL_RUNTIME_PLATFORM NONE CACHE STRING 
-  "Select which platform to build runtime for [NONE, MAC_GL, GX, WIN_GL, WIN_D3D] (Runtime not built by default)")
+  "Select which platform to build runtime for [NONE, MAC_GL, EGL_GL, GLX_GL, WIN_GL, WIN_D3D, GX] (Runtime not built by default)")
 endif()
 
 

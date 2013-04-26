@@ -109,7 +109,14 @@ Everything in PSPL revolves around the *Markdown-extended* **PSPL** language
 (sources have `.pspl` file extension). 
 The language provides *multi-level context headings*, *preprocessor directives*, 
 *runtime commands*, *line-based read-ins* and an optional *indentation-sensitive syntax* 
-(for some contexts).
+incorporating *Markdown-list syntax*:
+* Includes bulleting,
+
+1. Numbering,
+
+* And multi-level 
+    * indent-hierarchy
+        * *4-Spaces* or *Tabs*
 
 
 Scalable Syntax
