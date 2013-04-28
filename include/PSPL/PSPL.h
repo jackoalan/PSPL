@@ -19,11 +19,12 @@
 
 /* Runtime platform description structure */
 typedef struct {
-    // Runtime 4-byte string identifier
-    uint8_t runtime_id[4];
     
-    // Runtime name
-    const char* runtime_name;
+    // Short platform name
+    const char* platform_name;
+    
+    // Platform description
+    const char* platform_desc;
     
     // Native byte-order [PSPL_LITTLE_ENDIAN, PSPL_BIG_ENDIAN]
     uint8_t byte_order;

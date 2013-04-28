@@ -21,6 +21,9 @@ typedef struct _pspl_extension {
     // Unique name of extension
     const char* extension_name;
     
+    // Description of extension (for built-in help)
+    const char* extension_desc;
+    
     #ifdef PSPL_TOOLCHAIN
     // Extension's toolchain extension definition object
     const struct _pspl_toolchain_extension* toolchain_extension;

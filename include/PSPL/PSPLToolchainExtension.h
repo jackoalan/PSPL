@@ -10,6 +10,7 @@
 #define PSPL_PSPLToolchainExtension_h
 #ifdef PSPL_TOOLCHAIN
 
+#include <stdlib.h>
 #include <PSPL/PSPLExtension.h>
 
 
@@ -54,9 +55,9 @@
  * *warning* or *error* and bring it to the art pipeline executor's attention.
  */
 
-void pspl_warn(const char* warning_text);
+void pspl_error(int exit_code, const char* brief, const char* msg, ...);
 
-void pspl_error(const char* error_text);
+void pspl_warn(const char* brief, const char* msg, ...);
 
 
 #pragma mark Driver Context
@@ -204,6 +205,12 @@ typedef int(*pspl_toolchain_indent_line_read_hook)(const pspl_toolchain_context_
                                                    const pspl_toolchain_indent_read_t* indent_line_read);
 
 
+#pragma mark Notify Toolchain of Referenced File Dependency
+
+/* Add referenced source file to Reference Gathering list */
+void pspl_gather_referenced_file(const char* file_path);
+
+
 #pragma mark Add PSPLC-Embedded Bi-endian Data Object (for transit to runtime)
 
 /* These embed routines may be called within any toolchain-extension hook
@@ -248,7 +255,11 @@ __pspl_psplc_embed_integer_keyed_object(platforms,key,&(object.little),&(object.
 /* The `platforms` argument works as described for psplc_embed_* functions above
  * `path` may be relative to PSPL file or absolute to toolchain host */
 
-/* The toolchain will take a complete SHA1 hash of the file data and use it to 
+/* The toolchain will either move or copy (based on `move` argument) to the
+ * toolchain's staging directory and rename it to a 32-bit truncated SHA1 hash 
+ * to eliminate redundancies */
+ 
+/* The toolchain will also take a complete SHA1 hash of the file data and use it to 
  * eliminate duplicates from the final PSPL package. The hash is then truncated
  * to 32-bits and provided to the toolchain extension via `hash_out`. This hash may then
  * be stored in an embedded PSPLC object and used to uniquely load and access 
@@ -257,6 +268,7 @@ __pspl_psplc_embed_integer_keyed_object(platforms,key,&(object.little),&(object.
 /* Add file for PSPL-packaging */
 int pspl_package_add_file(pspl_runtime_platform_t* platforms,
                           const char* path,
+                          int move,
                           uint32_t* hash_out);
 
 

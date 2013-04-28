@@ -8,9 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		E4AFAE5F171CF46500F7A0BF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E4AFAE5E171CF46500F7A0BF /* Foundation.framework */; };
-		E4AFAE6A171CF46A00F7A0BF /* Driver.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE46171CA34700F7A0BF /* Driver.c */; };
 		E4AFAE6C171D825400F7A0BF /* gx_offline.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6B171D825400F7A0BF /* gx_offline.c */; };
-		E4AFAE92172AC14B00F7A0BF /* SyntaxParser.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE49171CA39000F7A0BF /* SyntaxParser.c */; };
+		E4AFAE96172D898B00F7A0BF /* Preprocessor.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE95172D898B00F7A0BF /* Preprocessor.c */; };
+		E4AFAE99172D899D00F7A0BF /* Compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE98172D899D00F7A0BF /* Compiler.c */; };
+		E4AFAE9D172DB31100F7A0BF /* Packager.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE9B172DB2D400F7A0BF /* Packager.c */; };
+		E4AFAE9F172DB5F400F7A0BF /* Driver.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE46171CA34700F7A0BF /* Driver.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -37,8 +39,6 @@
 		E4AFAE42171C9E4700F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4AFAE45171CA0EF00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4AFAE46171CA34700F7A0BF /* Driver.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Driver.c; sourceTree = "<group>"; };
-		E4AFAE48171CA38600F7A0BF /* SyntaxParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SyntaxParser.h; sourceTree = "<group>"; };
-		E4AFAE49171CA39000F7A0BF /* SyntaxParser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SyntaxParser.c; sourceTree = "<group>"; };
 		E4AFAE4B171CA3DA00F7A0BF /* PSPLValue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLValue.h; sourceTree = "<group>"; };
 		E4AFAE53171CA6C700F7A0BF /* PSPLToolchainExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLToolchainExtension.h; sourceTree = "<group>"; };
 		E4AFAE54171CA6D700F7A0BF /* PSPLExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLExtension.h; sourceTree = "<group>"; };
@@ -74,6 +74,13 @@
 		E4AFAE8D1729A9CC00F7A0BF /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4AFAE8F1729AB3C00F7A0BF /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4AFAE911729D90E00F7A0BF /* PSPLInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLInternal.h; sourceTree = "<group>"; };
+		E4AFAE93172D5F7900F7A0BF /* Driver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Driver.h; sourceTree = "<group>"; };
+		E4AFAE94172D898100F7A0BF /* Preprocessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Preprocessor.h; sourceTree = "<group>"; };
+		E4AFAE95172D898B00F7A0BF /* Preprocessor.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Preprocessor.c; sourceTree = "<group>"; };
+		E4AFAE97172D899400F7A0BF /* Compiler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Compiler.h; sourceTree = "<group>"; };
+		E4AFAE98172D899D00F7A0BF /* Compiler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Compiler.c; sourceTree = "<group>"; };
+		E4AFAE9B172DB2D400F7A0BF /* Packager.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Packager.c; sourceTree = "<group>"; };
+		E4AFAE9C172DB2D400F7A0BF /* Packager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Packager.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,9 +126,14 @@
 			children = (
 				E4AFAE2A171C92D100F7A0BF /* README.md */,
 				E4AFAE8417259A1900F7A0BF /* CMakeLists.txt */,
-				E4AFAE48171CA38600F7A0BF /* SyntaxParser.h */,
-				E4AFAE49171CA39000F7A0BF /* SyntaxParser.c */,
+				E4AFAE93172D5F7900F7A0BF /* Driver.h */,
 				E4AFAE46171CA34700F7A0BF /* Driver.c */,
+				E4AFAE94172D898100F7A0BF /* Preprocessor.h */,
+				E4AFAE95172D898B00F7A0BF /* Preprocessor.c */,
+				E4AFAE97172D899400F7A0BF /* Compiler.h */,
+				E4AFAE98172D899D00F7A0BF /* Compiler.c */,
+				E4AFAE9C172DB2D400F7A0BF /* Packager.h */,
+				E4AFAE9B172DB2D400F7A0BF /* Packager.c */,
 			);
 			path = Toolchain;
 			sourceTree = "<group>";
@@ -336,9 +348,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E4AFAE6A171CF46A00F7A0BF /* Driver.c in Sources */,
 				E4AFAE6C171D825400F7A0BF /* gx_offline.c in Sources */,
-				E4AFAE92172AC14B00F7A0BF /* SyntaxParser.c in Sources */,
+				E4AFAE96172D898B00F7A0BF /* Preprocessor.c in Sources */,
+				E4AFAE99172D899D00F7A0BF /* Compiler.c in Sources */,
+				E4AFAE9D172DB31100F7A0BF /* Packager.c in Sources */,
+				E4AFAE9F172DB5F400F7A0BF /* Driver.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

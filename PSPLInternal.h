@@ -44,9 +44,10 @@ typedef struct {
 
 #pragma mark PSPLC Types
 
-/* Extended structure for PSPLC 
- * (occurs after `pspl_header_t` within a PSPLC and for each linked pspl within a PSPLP) */
+/* PSPLC compiled object record 
+ * (every PSPLC file has exactly one and PSPLP files may have many) */
 typedef struct {
+    
     // After the header follows:
     //  * Per-extension object array count
     //  * Per-extension object array (marked by absolute offset for each byte order)
@@ -72,11 +73,26 @@ typedef struct {
     // separate tables for each byte-order
     uint32_t tier1_object_array_off;
     
-    // Total length of sub-tables in file root-referenced by previous member
-    uint32_t object_array_total_length;
+} pspl_psplc_object_t;
+typedef DECL_BI_OBJ_TYPE(pspl_psplc_object_t) pspl_psplc_object_bi_t;
+
+
+/* Header structure for PSPLC file extended from PSPLC object record
+ * (occurs after `pspl_header_t` within a PSPLC and for each linked pspl within a PSPLP) */
+typedef struct {
+    
+    // Count of file object stubs
+    uint32_t file_stub_count;
+    
+    // Offset to byte-order-specific file stub array
+    uint32_t file_stub_array_off;
+    
+    // Composed object record
+    pspl_psplc_object_t psplc_object;
     
 } pspl_psplc_header_t;
 typedef DECL_BI_OBJ_TYPE(pspl_psplc_header_t) pspl_psplc_header_bi_t;
+
 
 /* Tier 2 (per-extension) Extension object array table */
 typedef struct {
@@ -93,11 +109,34 @@ typedef struct {
     
     // Embedded object entry records (tier3) follow this one
     
-} pspl_psplc_object_array_tier2_t;
-typedef DECL_BI_OBJ_TYPE(pspl_psplc_object_array_tier2_t) pspl_psplc_object_array_tier2_bi_t;
+} pspl_object_array_tier2_t;
+typedef DECL_BI_OBJ_TYPE(pspl_object_array_tier2_t) pspl_object_array_tier2_bi_t;
 
-/* Tier 3 (per-object) Extension object array table
- * also used in PSPLP for archived file assets */
+
+/* Tier 3 (per-object) Extension object entry (stub) 
+ * (actual resource not present). Used in PSPLC files to reference
+ * hashes of files to be packaged. Also composed into concrete
+ * object entry below. */
+typedef struct {
+    
+    // Hash/integer index of object
+    union {
+        uint32_t object_hash;
+        uint32_t object_index;
+    };
+    
+    // Platform availability bitfield
+    // Bits indexed from LSB to MSB indicate whether or not this
+    // object should be loaded into RAM given the current runtime host
+    // (as indexed in the platform name table at bottom of PSPL)
+    uint32_t platform_availability_bits;
+    
+} pspl_object_stub_t;
+typedef DECL_BI_OBJ_TYPE(pspl_object_stub_t) pspl_object_stub_bi_t;
+
+
+/* Tier 3 (per-object) Extension object entry (concrete)
+ * Used to index embedded objects and archived files. */
 typedef struct {
     
     // Hash/integer index of object
@@ -118,8 +157,8 @@ typedef struct {
     // Length of object
     uint32_t object_len;
     
-} pspl_psplc_object_array_tier3_t, pspl_psplp_file_record_t;
-typedef DECL_BI_OBJ_TYPE(pspl_psplc_object_array_tier3_t) pspl_psplc_object_array_tier3_bi_t, pspl_psplp_file_record_bi_t;
+} pspl_object_record_t;
+typedef DECL_BI_OBJ_TYPE(pspl_object_record_t) pspl_object_record_bi_t;
 
 
 #pragma mark PSPLP Types
