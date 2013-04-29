@@ -376,6 +376,7 @@ static void add_def(pspl_toolchain_driver_opts_t* driver_opts,
 }
 
 /* Insert target platform into driver opts */
+static pspl_runtime_platform_t* pspl_platforms[PSPL_MAX_PLATFORMS];
 static void add_target_platform(pspl_toolchain_driver_opts_t* driver_opts,
                                 const char* name) {
     if (driver_opts->platform_c >= PSPL_MAX_PLATFORMS) {
@@ -388,7 +389,7 @@ static void add_target_platform(pspl_toolchain_driver_opts_t* driver_opts,
     int i = 0;
     while ((plat = pspl_available_target_platforms[i++])) {
         if (!strcmp(plat->platform_name, name)) {
-            driver_opts->platform_a[driver_opts->platform_c] = plat;
+            pspl_platforms[driver_opts->platform_c] = plat;
             break;
         }
     }
@@ -580,13 +581,15 @@ int main(int argc, char** argv) {
     struct stat s;
     if (stat(driver_opts.staging_path, &s))
         pspl_error(-1, "Unable to `stat` requested staging path",
-                   "`%s`, errno %d - `%s`", driver_opts.staging_path,
+                   "`%s`; errno %d - `%s`", driver_opts.staging_path,
                    errno, strerror(errno));
     else if(!(s.st_mode & S_IFDIR)) {
         pspl_error(-1, "Unable to use requested staging path",
-                   "`%s`, errno %d - `%s`", driver_opts.staging_path,
-                   errno, strerror(errno));
+                   "`%s`; path not a directory", driver_opts.staging_path);
     }
+    
+    // Set target platform array ref
+    driver_opts.platform_a = (const pspl_runtime_platform_t* const *)pspl_platforms;
     
     // Populate toolchain context
     pspl_toolchain_context_t tool_ctx = {
@@ -663,7 +666,7 @@ int main(int argc, char** argv) {
         
         
         // Now run preprocessor
-        _pspl_run_preprocessor(source, &driver_opts);
+        _pspl_run_preprocessor(source, &tool_ctx, &driver_opts);
         
         
         // Now run compiler

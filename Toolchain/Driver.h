@@ -118,7 +118,7 @@ typedef struct {
     // Array of individual preprocessor expansion line counts
     // (mapping each original line to a count of expanded lines)
     // (an array of all 1s will indicate a preprocessed file of the same length as original)
-    const unsigned int* expansion_line_counts;
+    unsigned int* expansion_line_counts;
     
 } pspl_toolchain_driver_source_t;
 
