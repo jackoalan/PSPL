@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
@@ -57,6 +58,9 @@
 /* Global driver state */
 pspl_toolchain_driver_state_t driver_state;
 
+
+/* Current working directory */
+static const char cwd[MAXPATHLEN];
 
 /* Are we using xterm? */
 static uint8_t xterm_colour = 0;
@@ -398,13 +402,20 @@ static void add_target_platform(pspl_toolchain_driver_opts_t* driver_opts,
 
 int main(int argc, char** argv) {
     
+    // Initial driver state
+    driver_state.pspl_phase = PSPL_PHASE_INIT;
+    
+    // Get CWD
+    if(!getcwd((char*)cwd, MAXPATHLEN))
+        pspl_error(-1, "Unable to get current working directory",
+                   "errno %d - `%s`", errno, strerror(errno));
+    
+    
     // Check for xterm
     const char* term_type = getenv("TERM");
     if (term_type && strlen(term_type) >= 5 && !strncmp("xterm", term_type, 5))
         xterm_colour = 1;
     
-    // Initial driver state
-    driver_state.pspl_phase = PSPL_PHASE_INIT;
     
     // Start recording driver options
     pspl_toolchain_driver_opts_t driver_opts;
@@ -561,13 +572,9 @@ int main(int argc, char** argv) {
                        driver_opts.reflist_out_path);
     }
     
-    // Staging area path
-    if (!driver_opts.staging_path) {
-        driver_opts.staging_path = malloc(512);
-        if(!getcwd((char*)driver_opts.staging_path, 512))
-            pspl_error(-1, "Unable to get current working directory",
-                       "errno %d - `%s`", errno, strerror(errno));
-    }
+    // Staging area path (make cwd if not specified)
+    if (!driver_opts.staging_path)
+        driver_opts.staging_path = cwd;
     
     // Stat path to ensure it's a directory
     struct stat s;
@@ -581,6 +588,14 @@ int main(int argc, char** argv) {
                    errno, strerror(errno));
     }
     
+    // Populate toolchain context
+    pspl_toolchain_context_t tool_ctx = {
+        .target_runtime_platforms_c = driver_opts.platform_c,
+        .target_runtime_platforms = driver_opts.platform_a,
+        .def_c = driver_opts.def_c,
+        .def_k = driver_opts.def_k,
+        .def_v = driver_opts.def_v
+    };
     
     // Arguments valid, now time to compile each source!!
     pspl_toolchain_driver_source_t sources[PSPL_MAX_SOURCES];
@@ -590,13 +605,41 @@ int main(int argc, char** argv) {
         
         // Populate filename members
         source->file_path = driver_opts.source_a[i];
-        char* base = strrchr(source->file_path, '/');
-        source->file_name = (base&&(*(base+1)))?(base+1):source->file_path;
         
-        // Set error handling state for preprocessor
-        driver_state.pspl_phase = PSPL_PHASE_PREPROCESS;
+        // Make path absolute (if it's not already)
+        const char* abs_path = source->file_path;
+        if (abs_path[0] != '/')
+            asprintf((char**)&abs_path, "%s/%s", cwd, source->file_path);
+        
+        // Enclosing dir
+        char* last_slash = strrchr(abs_path, '/');
+        asprintf((char**)&source->file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
+        
+        // File name
+        source->file_name = last_slash+1;
+
+        
+        
+        // Set error handling state for source file
         driver_state.file_name = source->file_name;
         driver_state.line_num = 0;
+        
+        // Tool context info for this source
+        tool_ctx.pspl_name = source->file_name;
+        tool_ctx.pspl_enclosing_dir = source->file_enclosing_dir;
+        
+        // Initialise each extension
+        driver_state.pspl_phase = PSPL_PHASE_INIT_EXTENSION;
+        pspl_extension_t* ext;
+        int j = 0;
+        while ((ext = pspl_available_extensions[j++])) {
+            driver_state.proc_extension = ext;
+            if (ext->toolchain_extension && ext->toolchain_extension->init_hook)
+                ext->toolchain_extension->init_hook(&tool_ctx);
+        }
+
+        // Prepare to read in file
+        driver_state.pspl_phase = PSPL_PHASE_PREPARE;
         
         // Load original source
         FILE* source_file = fopen(driver_opts.source_a[i], "r");

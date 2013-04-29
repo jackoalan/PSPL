@@ -66,21 +66,18 @@ void pspl_warn(const char* brief, const char* msg, ...);
 typedef struct {
     // Array of current target runtime platform(s) for toolchain driver
     unsigned int target_runtime_platforms_c; // Count of target platforms
-    const pspl_runtime_platform_t* target_runtime_platforms; // Platform array
+    const pspl_runtime_platform_t* const * target_runtime_platforms; // Platform array
     
     // Name of PSPL source (including extension)
     const char* pspl_name;
     
-    // Absolute path of PSPL-enclosing directory
-    const char* pspl_path;
+    // Absolute path of PSPL-enclosing directory (with trailing slash)
+    const char* pspl_enclosing_dir;
     
     // Driver-definitions (added with `-D` flag)
     unsigned int def_c; // Count of defs
     const char** def_k; // Array (of length `def_c`) containing defined key strings
     const char** def_v; // Array (of length `def_c`) containing index-associated values (or NULL if no values)
-    
-    // Current line number of (non-preprocessed) PSPL file
-    unsigned int pspl_current_line;
     
 } pspl_toolchain_context_t;
 
@@ -291,12 +288,12 @@ typedef struct _pspl_toolchain_extension {
     const char** weak_claimed_global_preprocessor_directives;
     
     // Hook fields
-    pspl_toolchain_init_hook* init_hook;
-    pspl_toolchain_finish_hook* finish_hook;
-    pspl_toolchain_line_preprocessor_hook* line_preprocessor_hook;
-    pspl_toolchain_command_call_hook* command_call_hook;
-    pspl_toolchain_line_read_hook* line_read_hook;
-    pspl_toolchain_indent_line_read_hook* indent_line_read_hook;
+    pspl_toolchain_init_hook init_hook;
+    pspl_toolchain_finish_hook finish_hook;
+    pspl_toolchain_line_preprocessor_hook line_preprocessor_hook;
+    pspl_toolchain_command_call_hook command_call_hook;
+    pspl_toolchain_line_read_hook line_read_hook;
+    pspl_toolchain_indent_line_read_hook indent_line_read_hook;
     
 } pspl_toolchain_extension_t;
 
