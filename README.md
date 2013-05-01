@@ -8,7 +8,8 @@ of designing and authoring
 [*3D polygon-rasterising*](http://en.wikipedia.org/wiki/Rasterisation) 
 graphics architectures; with a solid degree of control over the entire 
 [graphics pipeline](http://en.wikipedia.org/wiki/Graphics_pipeline). 
-Additionally, PSPL defines a complete set of conventions to build an 
+Additionally, PSPL defines a complete set of conventions to build a 
+[CMake-driven](http://cmake.org)
 [art pipeline](http://en.wikipedia.org/wiki/Art_pipeline); bridging the gap
 between 2D/3D graphics editors and the target application's runtime.
 
