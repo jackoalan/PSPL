@@ -12,7 +12,8 @@
 		E4AFAE96172D898B00F7A0BF /* Preprocessor.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE95172D898B00F7A0BF /* Preprocessor.c */; };
 		E4AFAE99172D899D00F7A0BF /* Compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE98172D899D00F7A0BF /* Compiler.c */; };
 		E4AFAE9D172DB31100F7A0BF /* Packager.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE9B172DB2D400F7A0BF /* Packager.c */; };
-		E4AFAE9F172DB5F400F7A0BF /* Driver.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE46171CA34700F7A0BF /* Driver.c */; };
+		E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAEA117315D4000F7A0BF /* Buffer.c */; };
+		E4AFAEA3173161B500F7A0BF /* Driver.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE46171CA34700F7A0BF /* Driver.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -81,6 +82,8 @@
 		E4AFAE98172D899D00F7A0BF /* Compiler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Compiler.c; sourceTree = "<group>"; };
 		E4AFAE9B172DB2D400F7A0BF /* Packager.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Packager.c; sourceTree = "<group>"; };
 		E4AFAE9C172DB2D400F7A0BF /* Packager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Packager.h; sourceTree = "<group>"; };
+		E4AFAEA017315D3800F7A0BF /* Buffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Buffer.h; sourceTree = "<group>"; };
+		E4AFAEA117315D4000F7A0BF /* Buffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Buffer.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -134,6 +137,8 @@
 				E4AFAE98172D899D00F7A0BF /* Compiler.c */,
 				E4AFAE9C172DB2D400F7A0BF /* Packager.h */,
 				E4AFAE9B172DB2D400F7A0BF /* Packager.c */,
+				E4AFAEA017315D3800F7A0BF /* Buffer.h */,
+				E4AFAEA117315D4000F7A0BF /* Buffer.c */,
 			);
 			path = Toolchain;
 			sourceTree = "<group>";
@@ -352,7 +357,8 @@
 				E4AFAE96172D898B00F7A0BF /* Preprocessor.c in Sources */,
 				E4AFAE99172D899D00F7A0BF /* Compiler.c in Sources */,
 				E4AFAE9D172DB31100F7A0BF /* Packager.c in Sources */,
-				E4AFAE9F172DB5F400F7A0BF /* Driver.c in Sources */,
+				E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */,
+				E4AFAEA3173161B500F7A0BF /* Driver.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -62,7 +62,7 @@ void pspl_warn(const char* brief, const char* msg, ...);
 
 #pragma mark Driver Context
 
-/* Toolchain driver context (data consistent from init to finish, except line number) */
+/* Toolchain driver context (data consistent from init to finish) */
 typedef struct {
     // Array of current target runtime platform(s) for toolchain driver
     unsigned int target_runtime_platforms_c; // Count of target platforms

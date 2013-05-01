@@ -87,7 +87,7 @@ typedef struct {
     // Offset to byte-order-specific file stub array
     uint32_t file_stub_array_off;
     
-    // Composed object record
+    // Composed object record (there's only one in a PSPLC file)
     pspl_psplc_object_t psplc_object;
     
 } pspl_psplc_header_t;

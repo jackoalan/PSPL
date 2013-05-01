@@ -8,6 +8,9 @@
 #define PSPL_INTERNAL
 #define PSPL_TOOLCHAIN
 
+/* Should an error condition print backtrace? */
+#define PSPL_ERROR_PRINT_BACKTRACE 1
+
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
@@ -17,6 +20,10 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <errno.h>
+#if PSPL_ERROR_PRINT_BACKTRACE
+#include <execinfo.h>
+#endif
+
 #include <PSPL/PSPL.h>
 #include <PSPL/PSPLExtension.h>
 #include <PSPLInternal.h>
@@ -42,17 +49,17 @@
 
 
 /* Escape character sequences to control xterm */
-#define NOBKD "\E[47;49m"
-#define RED "\E[47;31m"NOBKD
-#define GREEN "\E[47;32m"NOBKD
-#define YELLOW "\E[47;33m"NOBKD
-#define BLUE "\E[47;34m"NOBKD
-#define MAGENTA "\E[47;35m"NOBKD
-#define CYAN "\E[47;36m"NOBKD
-#define NORMAL "\033[0m"
-#define BOLD "\033[1m"
+#define NOBKD     "\E[47;49m"
+#define RED       "\E[47;31m"NOBKD
+#define GREEN     "\E[47;32m"NOBKD
+#define YELLOW    "\E[47;33m"NOBKD
+#define BLUE      "\E[47;34m"NOBKD
+#define MAGENTA   "\E[47;35m"NOBKD
+#define CYAN      "\E[47;36m"NOBKD
+#define NORMAL    "\033[0m"
+#define BOLD      "\033[1m"
 #define UNDERLINE "\033[4m"
-#define SGR0 "\E[m\017"
+#define SGR0      "\E[m\017"
 
 
 /* Global driver state */
@@ -60,21 +67,39 @@ pspl_toolchain_driver_state_t driver_state;
 
 
 /* Current working directory */
-static const char cwd[MAXPATHLEN];
+static char cwd[MAXPATHLEN];
 
 /* Are we using xterm? */
 static uint8_t xterm_colour = 0;
 
 /* Way to get terminal width (for line wrapping) */
-int term_cols() {
+static int term_cols() {
     struct winsize w;
     ioctl(0, TIOCGWINSZ, &w);
     return w.ws_col;
 }
 
+/* Word len (similar to `strlen` but ignores escape sequences) */
+static size_t word_len(const char* word) {
+    size_t result = 0;;
+    uint8_t in_esc = 0;
+    --word;
+    while ((*(++word))) {
+        if (*word == '\E' || *word == '\033')
+            in_esc = 1;
+        else if (in_esc && (*word == 'm' || *word == '\017'))
+            in_esc = 0;
+        else if (*word == '\0')
+            break;
+        else if (!in_esc)
+            ++result;
+    }
+    return result;
+}
+
 /* Transform string into wrapped string */
 #define truncate_string(str, max_len, to_buf) strncpy(to_buf, str, (max_len)-3); strncpy(to_buf+(max_len)-3, "...", 4);
-char* wrap_string(const char* str_in, int indent) {
+static char* wrap_string(const char* str_in, int indent) {
     
     // Term col count
     int num_cols = term_cols();
@@ -106,7 +131,7 @@ char* wrap_string(const char* str_in, int indent) {
         int avail_line_space = num_cols-cur_line_col;
         
         // Actual word length (0 length is actually a space)
-        size_t word_length = strlen(word_str);
+        size_t word_length = word_len(word_str);
         if (!word_length)
             word_length = 1;
         
@@ -146,7 +171,7 @@ char* wrap_string(const char* str_in, int indent) {
 }
 
 
-void print_help(const char* prog_name) {
+static void print_help(const char* prog_name) {
     
     if (xterm_colour) {
         
@@ -210,6 +235,28 @@ void print_help(const char* prog_name) {
     }
 }
 
+/* This will print a backtrace for `pspl_error` call */
+#if PSPL_ERROR_PRINT_BACKTRACE
+static void print_backtrace() {
+    void *array[10];
+    size_t size;
+    char **strings;
+    size_t i;
+    
+    size = backtrace(array, 10);
+    strings = backtrace_symbols(array, (int)size);
+    
+    fprintf(stderr, "Obtained %zd stack frames.\n", size);
+    
+    for (i = 0; i < size; i++)
+        fprintf(stderr, "%s\n", strings[i]);
+    
+    free(strings);
+}
+#endif
+
+/* Toolchain-wide error handler
+ * uses a global context state to print context-sensitive error info */
 void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
     brief = wrap_string(brief, 1);
     char* msg_str = NULL;
@@ -280,9 +327,20 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
     
     fprintf(stderr, "%s\n", msg_str);
     
+#if PSPL_ERROR_PRINT_BACKTRACE
+    if (xterm_colour)
+        fprintf(stderr, BOLD CYAN"\nBACKTRACE:\n"SGR0);
+    else
+        fprintf(stderr, "\nBACKTRACE:\n");
+
+    print_backtrace();
+#endif // PSPL_ERROR_PRINT_BACKTRACE
+    
     exit(exit_code);
 }
 
+/* Toolchain-wide warning handler
+ * uses a global context state to print context-sensitive error info */
 void pspl_warn(const char* brief, const char* msg, ...) {
     brief = wrap_string(brief, 1);
     char* msg_str = NULL;

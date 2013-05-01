@@ -12,6 +12,9 @@
 
 #include <PSPL/PSPLExtension.h>
 
+/* How many spaces equates to an indent level? */
+#define PSPL_INDENT_SPACES 4
+
 /* Available extensions (NULL-terminated array) */
 extern pspl_extension_t* pspl_available_extensions[];
 
@@ -127,3 +130,4 @@ extern pspl_toolchain_driver_state_t driver_state;
 
 #endif // PSPL_INTERNAL
 #endif
+
