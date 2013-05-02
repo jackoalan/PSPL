@@ -166,6 +166,8 @@ static char* wrap_string(const char* str_in, int indent) {
     }
     
     free(cpy_str);
+    char* last_space = strrchr(result_str, ' ');
+    *last_space = '\0';
     return result_str;
     
 }
@@ -210,25 +212,17 @@ static void print_help(const char* prog_name) {
         fprintf(stderr,
                 "\n"
                 "\n");
-        /*
-                BOLD BLUE"Directory Usage:"NORMAL"\n"
-                BLUE"  pspl [-d] [-o "UNDERLINE"output-path"NORMAL BLUE"] "UNDERLINE"input-directory-path"NORMAL"\n"
-                "\n"
-                "  This usage will transform a valid intermediate directory structure ("UNDERLINE"PSPLD"NORMAL")\n"
-                "  or package directory structure ("UNDERLINE"PSPLPD"NORMAL") into a "UNDERLINE"PSPLP"NORMAL" flat-file package.\n"
-                "\n"
-                "    "BOLD"-d"NORMAL"    Emit a "UNDERLINE"PSPLPD"NORMAL" directory rather than a "UNDERLINE"PSPLP"NORMAL" flat-file.\n"
-                "\n"
-                "    "BOLD"-o"NORMAL" "UNDERLINE"output-path"NORMAL"\n"
-                "          Save the output file in the same directory with appropriate\n"
-                "          file-extension added.\n"
-                "\n"
-                "\n"
-                BOLD BLUE"File Usage:"NORMAL"\n"
-                BLUE"  pspl [-o "UNDERLINE"output-path"NORMAL BLUE"] "UNDERLINE"input-file-path"NORMAL"\n"
-                "  It's also possible to "
-                );
-         */
+        
+        // Now print usage info
+        fprintf(stderr, BOLD BLUE"Command Synopsis:\n"NORMAL);
+        const char* help =
+        wrap_string("pspl ["BOLD"-o"NORMAL" "UNDERLINE"out-path"NORMAL"] ["BOLD"-E"NORMAL"|"BOLD"-c"NORMAL"] ["BOLD"-G"NORMAL" "UNDERLINE"reflist-out-path"NORMAL"] ["BOLD"-S"NORMAL" "UNDERLINE"staging-root-path"NORMAL"] ["BOLD"-D"NORMAL" "UNDERLINE"def-name"NORMAL"[="UNDERLINE"def-value"NORMAL"]]... ["BOLD"-T"NORMAL" "UNDERLINE"target-platform"NORMAL"]... "UNDERLINE"source1"NORMAL" ["UNDERLINE"source2"NORMAL" ["UNDERLINE"sourceN"NORMAL"]]...", 1);
+        fprintf(stderr, "%s\n\n", help);
+        
+        help =
+        wrap_string("", 1);
+        fprintf(stderr, "%s\n\n", help);
+
         
     } else {
         fprintf(stderr, "No colour version\n");
@@ -237,17 +231,16 @@ static void print_help(const char* prog_name) {
 
 /* This will print a backtrace for `pspl_error` call */
 #if PSPL_ERROR_PRINT_BACKTRACE
+#define BACKTRACE_DEPTH 20
 static void print_backtrace() {
-    void *array[10];
+    void *array[BACKTRACE_DEPTH];
     size_t size;
     char **strings;
     size_t i;
     
-    size = backtrace(array, 10);
+    size = backtrace(array, BACKTRACE_DEPTH);
     strings = backtrace_symbols(array, (int)size);
-    
-    fprintf(stderr, "Obtained %zd stack frames.\n", size);
-    
+        
     for (i = 0; i < size; i++)
         fprintf(stderr, "%s\n", strings[i]);
     
@@ -274,7 +267,7 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
     if (xterm_colour) {
         switch (driver_state.pspl_phase) {
             case PSPL_PHASE_INIT:
-                err_head = wrap_string(BOLD RED"ERROR "CYAN"INITIALISING"RED" TOOLCHAIN:\n"SGR0, 1);
+                err_head = wrap_string(BOLD RED"ERROR While "UNDERLINE"Initialising"NORMAL BOLD RED" Toolchain:\n"SGR0, 1);
                 break;
             case PSPL_PHASE_PREPROCESS:
                 sprintf(err_head, BOLD RED"ERROR WHILE "CYAN"PREPROCESSING "BLUE"`%s`"GREEN" LINE %u:\n"SGR0,
@@ -329,11 +322,12 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
     
 #if PSPL_ERROR_PRINT_BACKTRACE
     if (xterm_colour)
-        fprintf(stderr, BOLD CYAN"\nBACKTRACE:\n"SGR0);
+        fprintf(stderr, BOLD BLUE"\nBacktrace:\n"SGR0);
     else
-        fprintf(stderr, "\nBACKTRACE:\n");
+        fprintf(stderr, "\nBacktrace:\n");
 
     print_backtrace();
+    fprintf(stderr, "\n");
 #endif // PSPL_ERROR_PRINT_BACKTRACE
     
     exit(exit_code);
@@ -618,7 +612,7 @@ int main(int argc, char** argv) {
         if ((file = fopen(driver_opts.source_a[i], "r")))
             fclose(file);
         else
-            pspl_error(-1, "Unable to open provided source", "%s", driver_opts.source_a[i]);
+            pspl_error(-1, "Unable to open provided source", "Can't open `%s` for reading", driver_opts.source_a[i]);
     }
     
     // Reflist (just the path)
