@@ -95,7 +95,7 @@ typedef struct {
     unsigned int line_num;
     
     // Processing extension
-    pspl_extension_t* proc_extension;
+    const pspl_extension_t* proc_extension;
     
 } pspl_toolchain_driver_state_t;
 

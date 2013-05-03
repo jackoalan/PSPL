@@ -105,12 +105,12 @@ typedef void(*pspl_toolchain_line_preprocessor_hook)(const pspl_toolchain_contex
 
 /* All 'pspl_preprocessor_*' functions must be called within preprocessor hook */
 
-/* Emit PSPL line (may be called repeatedly, in desired order)
- * Newlines ('\n') are chomped off */
-void pspl_preprocessor_add_line(const char* line_text);
+/* Emit formatted PSPL line (may be called repeatedly, in desired order)
+ * Newlines ('\n') are automatically tokenised into multiple `add_line` calls */
+void pspl_preprocessor_add_line(const char* line_text, ...);
 
-/* Convenience function to add line with specified indent level (0 is primary) */
-void pspl_preprocessor_add_indent_line(const char* line_text, unsigned int indent_level);
+/* Convenience function to add formatted line with specified indent level (0 is primary) */
+void pspl_preprocessor_add_indent_line(unsigned int indent_level, const char* line_text, ...);
 
 /* Convenience function to emit PSPL primary-heading push
  * (emits 'PSPL_HEADING_PUSH(primary_heading_name)') 
@@ -123,8 +123,9 @@ void pspl_preprocessor_add_heading_push(const char* primary_heading_name);
 void pspl_preprocessor_add_heading_pop();
 
 /* Convenience function to emit command call with arguments. 
- * All varadic arguments *must* be C-strings */
-void pspl_preprocessor_add_command_call(const char* command_name, ...);
+ * All variadic arguments *must* be C-strings */
+void _pspl_preprocessor_add_command_call(const char* command_name, ...);
+#define pspl_preprocessor_add_command_call(command_name, ...) _pspl_preprocessor_add_command_call(command_name, __VA_ARGS__, NULL)
 
 
 #pragma mark Hierarchical Heading Context

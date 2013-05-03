@@ -84,6 +84,7 @@
 		E4AFAE9C172DB2D400F7A0BF /* Packager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Packager.h; sourceTree = "<group>"; };
 		E4AFAEA017315D3800F7A0BF /* Buffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Buffer.h; sourceTree = "<group>"; };
 		E4AFAEA117315D4000F7A0BF /* Buffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Buffer.c; sourceTree = "<group>"; };
+		E4BB18D81734333800B8CDD1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -167,6 +168,7 @@
 			isa = PBXGroup;
 			children = (
 				E4AFAE78171F002700F7A0BF /* CMakeLists.txt */,
+				E4BB18D7173432EA00B8CDD1 /* PSPLBuiltins */,
 				E4AFAE871726DEC800F7A0BF /* PMDLFormat */,
 				E4AFAE3D171C98BB00F7A0BF /* OpenGLSupport */,
 				E4AFAE3C171C98BB00F7A0BF /* GXSupport */,
@@ -301,6 +303,14 @@
 				E4AFAE8F1729AB3C00F7A0BF /* README.md */,
 			);
 			path = OpenRasterSupport;
+			sourceTree = "<group>";
+		};
+		E4BB18D7173432EA00B8CDD1 /* PSPLBuiltins */ = {
+			isa = PBXGroup;
+			children = (
+				E4BB18D81734333800B8CDD1 /* README.md */,
+			);
+			path = PSPLBuiltins;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

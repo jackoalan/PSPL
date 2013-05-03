@@ -10,6 +10,8 @@
 #define PSPL_TOOLCHAIN
 
 #include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 #include <PSPL/PSPLExtension.h>
 #include <PSPLInternal.h>
@@ -21,15 +23,170 @@
 #define PSPL_MAX_PREPROCESSOR_TOKENS 64
 
 
+#pragma mark Internal Preprocessor State
+
+/* Internal preprocessor state to convey line-by-line
+ * preprocessor-expansion info */
+static struct _pspl_preprocessor_state {
+    
+    // Current source being preprocessed
+    pspl_toolchain_driver_source_t* source;
+    
+    // Current indent level
+    unsigned int indent_level;
+    
+    // Current output buffer being built up
+    pspl_buffer_t out_buf;
+    
+} preprocessor_state;
+
+
 #pragma mark Public Extension API Implementation
 
+/* All of these functions are called within extension preprocessor hook */
+
+
+/* Private, common `add_line` routine */
+static void _add_line(unsigned int indent_level, char* exp_line_text) {
+    
+    // Tokensise into lines
+    char* save_ptr;
+    char* line_str = strtok_r(exp_line_text, "\n", &save_ptr);
+    if (!line_str)
+        line_str = exp_line_text;
+    
+    // Read in lines
+    do {
+        
+        // Recreate indent level
+        unsigned int i;
+        for (i=0 ; i<indent_level ; ++i)
+            pspl_buffer_addchar(&preprocessor_state.out_buf, '\t');
+        
+        // Deposit expanded string
+        pspl_buffer_addstr(&preprocessor_state.out_buf, line_str);
+        pspl_buffer_addchar(&preprocessor_state.out_buf, '\n');
+        
+        // Add a line to expansion count
+        ++preprocessor_state.source->expansion_line_counts[driver_state.line_num];
+        
+    } while ((line_str = strtok_r(save_ptr, "\n", &save_ptr)));
+    
+}
+
+
+/* Emit PSPL line (may be called repeatedly, in desired order)
+ * Newlines ('\n') are automatically tokenised into multiple `add_line` calls */
+void pspl_preprocessor_add_line(const char* line_text, ...) {
+    if (driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION)
+        return;
+    
+    // Expand format string
+    char* exp_line_text;
+    va_list va;
+    va_start(va, line_text);
+    vasprintf(&exp_line_text, line_text, va);
+    va_end(va);
+    
+    // Common line add
+    _add_line(preprocessor_state.indent_level, exp_line_text);
+    
+    // Done with format-expanded string
+    free(exp_line_text);
+}
+
+/* Convenience function to add line with specified indent level (0 is primary) */
+void pspl_preprocessor_add_indent_line(unsigned int indent_level, const char* line_text, ...) {
+    if (driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION)
+        return;
+    
+    // Expand format string
+    char* exp_line_text;
+    va_list va;
+    va_start(va, line_text);
+    vasprintf(&exp_line_text, line_text, va);
+    va_end(va);
+    
+    // Common line add
+    _add_line(preprocessor_state.indent_level+indent_level, exp_line_text);
+    
+    // Done with format-expanded string
+    free(exp_line_text);
+}
+
+/* Convenience function to emit PSPL primary-heading push
+ * (emits 'PSPL_HEADING_PUSH(primary_heading_name)')
+ * Saves heading state onto internal toolchain-driver stack */
+void pspl_preprocessor_add_heading_push(const char* primary_heading_name) {
+    if (driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION)
+        return;
+    
+    // Recreate indent level
+    unsigned int i;
+    for (i=0 ; i<preprocessor_state.indent_level ; ++i)
+        pspl_buffer_addchar(&preprocessor_state.out_buf, '\t');
+    
+    // Deposit expanded string
+    pspl_buffer_addstr(&preprocessor_state.out_buf, "PSPL_HEADING_PUSH(");
+    pspl_buffer_addstr(&preprocessor_state.out_buf, primary_heading_name);
+    pspl_buffer_addstr(&preprocessor_state.out_buf, ")\n");
+    
+    // Add a line to expansion count
+    ++preprocessor_state.source->expansion_line_counts[driver_state.line_num];
+}
+
+/* Convenience function to emit PSPL primary-heading push
+ * (emits 'PSPL_HEADING_POP()')
+ * restores the heading state before previous PSPL_HEADING_PUSH() */
+void pspl_preprocessor_add_heading_pop() {
+    if (driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION)
+        return;
+    
+    // Recreate indent level
+    unsigned int i;
+    for (i=0 ; i<preprocessor_state.indent_level ; ++i)
+        pspl_buffer_addchar(&preprocessor_state.out_buf, '\t');
+    
+    // Deposit expanded string
+    pspl_buffer_addstr(&preprocessor_state.out_buf, "PSPL_HEADING_POP()\n");
+    
+    // Add a line to expansion count
+    ++preprocessor_state.source->expansion_line_counts[driver_state.line_num];
+}
+
+/* Convenience function to emit command call with arguments.
+ * All variadic arguments *must* be C-strings */
+void _pspl_preprocessor_add_command_call(const char* command_name, ...) {
+    if (driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION)
+        return;
+    
+    // Construct command call
+    const char* arg;
+    va_list va;
+    va_start(va, command_name);
+    pspl_buffer_addstr(&preprocessor_state.out_buf, command_name);
+    pspl_buffer_addchar(&preprocessor_state.out_buf, '(');
+    uint8_t put_space = 1;
+    while ((arg = va_arg(va, const char*))) {
+        if (put_space) {
+            pspl_buffer_addchar(&preprocessor_state.out_buf, ' ');
+            put_space = 0;
+        }
+        pspl_buffer_addstr(&preprocessor_state.out_buf, arg);
+    }
+    pspl_buffer_addstr(&preprocessor_state.out_buf, ")\n");
+    va_end(va);
+    
+    // Add a line to expansion count
+    ++preprocessor_state.source->expansion_line_counts[driver_state.line_num];
+}
 
 
 #pragma mark Private Core API Implementation
 
 /* Get preprocessor hook from directive name
  * ensure weak convention is followed */
-static pspl_toolchain_line_preprocessor_hook get_pp_hook(const char* name) {
+static const pspl_extension_t* get_pp_hook_ext(const char* name) {
     
     // Track candidate weak and strong hooks
     const pspl_extension_t* weak_ext = NULL;
@@ -74,9 +231,9 @@ static pspl_toolchain_line_preprocessor_hook get_pp_hook(const char* name) {
     
     // Return strong if it exists; otherwise return weak
     if (strong_ext)
-        return strong_ext->toolchain_extension->line_preprocessor_hook;
+        return strong_ext;
     if (weak_ext)
-        return weak_ext->toolchain_extension->line_preprocessor_hook;
+        return weak_ext;
     
     // No matching directive found
     return NULL;
@@ -88,25 +245,31 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
                             pspl_toolchain_context_t* ext_driver_ctx,
                             pspl_toolchain_driver_opts_t* driver_opts) {
     
+    // Set error-handling phase
+    driver_state.pspl_phase = PSPL_PHASE_PREPROCESS;
+    
+    // Propogate source reference
+    preprocessor_state.source = source;
+    
     // Allocate space for preprocessed expansion (and maintain reallocation state)
-    pspl_buffer_t out_buf;
-    pspl_buffer_init(&out_buf, strlen(source->original_source)*2+1);
+    pspl_buffer_init(&preprocessor_state.out_buf,
+                     strlen(preprocessor_state.source->original_source)*2+1);
     
     
     // Start by counting lines
     unsigned int line_count = 1;
-    const char* nl_ptr = source->original_source;
+    const char* nl_ptr = preprocessor_state.source->original_source;
     while ((nl_ptr = strchr(nl_ptr, '\n'))) {
         ++line_count;
         ++nl_ptr;
     }
     
     // Allocate expansion line count array
-    source->expansion_line_counts = calloc(line_count, sizeof(unsigned int));
+    preprocessor_state.source->expansion_line_counts = calloc(line_count, sizeof(unsigned int));
     
     // Examine each line for preprocessor invocation ('[')
-    unsigned int line_idx = 0;
-    const char* current_line = source->original_source;
+    driver_state.line_num = 0;
+    const char* current_line = preprocessor_state.source->original_source;
     
     do {
         // Chomp leading whitespace (and track indent level)
@@ -119,12 +282,12 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
                 ++added_tabs;
             ++current_line;
         }
-        unsigned int indent_level = added_spaces/PSPL_INDENT_SPACES + added_tabs;
+        preprocessor_state.indent_level = added_spaces/PSPL_INDENT_SPACES + added_tabs;
         
         if (*current_line == '[') { // Invoke preprocessor
             
             // Start expansion line count at 0
-            source->expansion_line_counts[line_idx] = 0;
+            preprocessor_state.source->expansion_line_counts[driver_state.line_num] = 0;
             
             // Start and end pointers
             const char* pp_start = &current_line[1];
@@ -149,7 +312,7 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
             tok_arr[0] = tok_read_ptr;
             unsigned int tok_c = 0;
             uint8_t just_read_tok = 0;
-            for (cur_chr=pp_start;cur_chr<pp_end;++cur_chr) {
+            for (cur_chr=pp_start ; cur_chr<pp_end ; ++cur_chr) {
                 
                 // Ignore whitespace (or treat as token delimiter)
                 if (*cur_chr == ' ' || *cur_chr == '\t') {
@@ -178,16 +341,21 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
             // Ensure the directive was not empty
             if (tok_c) {
                 
-                // Now determine which preprocessor hook needs to be dispatched
-                pspl_toolchain_line_preprocessor_hook hook = get_pp_hook(tok_arr[0]);
+                // Now determine which extension's preprocessor hook needs to be dispatched
+                const pspl_extension_t* hook_ext = get_pp_hook_ext(tok_arr[0]);
                 
-                if (hook) {
+                if (hook_ext) {
                     
                     // Set callout context accordingly
-                    // TODO: DO
+                    driver_state.pspl_phase = PSPL_PHASE_PREPROCESS_EXTENSION;
+                    driver_state.proc_extension = hook_ext;
                     
                     // Callout to preprocessor hook
-                    hook(ext_driver_ctx, tok_c, (const char**)tok_arr);
+                    hook_ext->toolchain_extension->
+                    line_preprocessor_hook(ext_driver_ctx, tok_c, (const char**)tok_arr);
+                    
+                    // Unset callout context
+                    driver_state.pspl_phase = PSPL_PHASE_PREPROCESS;
                     
                 } else
                     pspl_warn("Unrecognised preprocessor directive",
@@ -204,13 +372,17 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
             // Copy line into preprocessed buffer *without* expansion
             char* end_of_line = strchr(current_line, '\n');
             size_t line_len = (end_of_line)?(end_of_line-current_line+1):strlen(current_line);
-            pspl_buffer_addstrn(&out_buf, current_line, line_len);
+            pspl_buffer_addstrn(&preprocessor_state.out_buf, current_line, line_len);
+            preprocessor_state.source->expansion_line_counts[driver_state.line_num] = 1;
             
         }
         
-        ++line_idx;
+        ++driver_state.line_num;
     } while ((current_line = strchr(current_line, '\n')));
     
+    
+    // Load expanded buffer into source object
+    preprocessor_state.source->preprocessed_source = preprocessor_state.out_buf.buf;
     
 }
 
