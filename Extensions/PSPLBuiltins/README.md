@@ -146,7 +146,7 @@ colour value, and restore the previous context, do the following:
 ```
 PSPL_PUSH_HEADING("FRAGMENT")
 *********************
-RGBA(1.0,0.0,0.0,1.0)
+RGBA(1.0 0.0 0.0 1.0)
 PSPL_POP_HEADING()
 ```
 
@@ -171,12 +171,11 @@ PSPL_DEPTH_WRITE(TRUE)
 FRAGMENT
 ========
 *********************
-RGBA(1.0,0.0,0.0,1.0)
+RGBA(1.0 0.0 0.0 1.0)
 
 DEPTH
 =====
 PSPL_DEPTH_TEST(TRUE)
-
 ```
 
 Note that the second *DEPTH* heading-switch was synthesised with `PSPL_POP_HEADING`.
