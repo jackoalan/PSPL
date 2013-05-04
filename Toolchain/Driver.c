@@ -20,6 +20,7 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <errno.h>
+#include <signal.h>
 #if PSPL_ERROR_PRINT_BACKTRACE
 #include <execinfo.h>
 #endif
@@ -167,7 +168,8 @@ static char* wrap_string(const char* str_in, int indent) {
     
     free(cpy_str);
     char* last_space = strrchr(result_str, ' ');
-    *last_space = '\0';
+    if (last_space)
+        *last_space = '\0';
     return result_str;
     
 }
@@ -453,7 +455,16 @@ static void add_target_platform(pspl_toolchain_driver_opts_t* driver_opts,
     ++driver_opts->platform_c;
 }
 
+static void catch_sig(int sig) {
+    pspl_error(-1, "Caught signal", "PSPL caught signal %d (%s)", sig, sys_siglist[sig]);
+}
+
 int main(int argc, char** argv) {
+    
+    // Register signal handler (throws error)
+    int i;
+    for (i=1 ; i<NSIG ; ++i)
+        signal(i, catch_sig);
     
     // Initial driver state
     driver_state.pspl_phase = PSPL_PHASE_INIT;
@@ -486,7 +497,6 @@ int main(int argc, char** argv) {
     
     // Initial argument pass
     char expected_arg = 0;
-    int i;
     for (i=1;i<argc;++i) {
         if (!expected_arg && argv[i][0] == '-') { // Process flag argument
             char token_char = argv[i][1];
