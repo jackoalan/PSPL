@@ -183,7 +183,7 @@ static void print_help(const char* prog_name) {
         
         fprintf(stderr,
                 BOLD RED "PSPL Toolchain\n"
-                BOLD MAGENTA "Copyright 2013 Jack Andersen "GREEN"<jackoalan@gmail.com>\n"
+                BOLD MAGENTA "By Jack Andersen "GREEN"<jackoalan@gmail.com>\n"
                 UNDERLINE CYAN "https://github.com/jackoalan/PSPL\n" NORMAL
                 "\n"
                 "\n"

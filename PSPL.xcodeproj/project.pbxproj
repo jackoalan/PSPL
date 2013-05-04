@@ -14,7 +14,7 @@
 		E4AFAE9D172DB31100F7A0BF /* Packager.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE9B172DB2D400F7A0BF /* Packager.c */; };
 		E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAEA117315D4000F7A0BF /* Buffer.c */; };
 		E4AFAEA3173161B500F7A0BF /* Driver.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE46171CA34700F7A0BF /* Driver.c */; };
-		E4BB18DC173462A800B8CDD1 /* BuiltinsExt.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DB173462A800B8CDD1 /* BuiltinsExt.c */; };
+		E4BB18DC173462A800B8CDD1 /* BuiltinsToolchainExt.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DB173462A800B8CDD1 /* BuiltinsToolchainExt.c */; };
 		E4BB18DF1734632E00B8CDD1 /* PreprocessorBuiltins.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DE1734632E00B8CDD1 /* PreprocessorBuiltins.c */; };
 		E4BB18E21734634600B8CDD1 /* CompilerBuiltins.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18E11734634600B8CDD1 /* CompilerBuiltins.c */; };
 		E4BB18E81734860C00B8CDD1 /* pspl_available_extensions.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18E71734860C00B8CDD1 /* pspl_available_extensions.c */; };
@@ -84,7 +84,7 @@
 		E4AFAEA017315D3800F7A0BF /* Buffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Buffer.h; sourceTree = "<group>"; };
 		E4AFAEA117315D4000F7A0BF /* Buffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Buffer.c; sourceTree = "<group>"; };
 		E4BB18D81734333800B8CDD1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
-		E4BB18DB173462A800B8CDD1 /* BuiltinsExt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = BuiltinsExt.c; sourceTree = "<group>"; };
+		E4BB18DB173462A800B8CDD1 /* BuiltinsToolchainExt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = BuiltinsToolchainExt.c; sourceTree = "<group>"; };
 		E4BB18DD1734632400B8CDD1 /* PreprocessorBuiltins.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PreprocessorBuiltins.h; sourceTree = "<group>"; };
 		E4BB18DE1734632E00B8CDD1 /* PreprocessorBuiltins.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = PreprocessorBuiltins.c; sourceTree = "<group>"; };
 		E4BB18E01734633D00B8CDD1 /* CompilerBuiltins.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CompilerBuiltins.h; sourceTree = "<group>"; };
@@ -313,7 +313,7 @@
 			children = (
 				E4BB18D81734333800B8CDD1 /* README.md */,
 				E4BB18E31734635400B8CDD1 /* CMakeLists.txt */,
-				E4BB18DB173462A800B8CDD1 /* BuiltinsExt.c */,
+				E4BB18DB173462A800B8CDD1 /* BuiltinsToolchainExt.c */,
 				E4BB18DD1734632400B8CDD1 /* PreprocessorBuiltins.h */,
 				E4BB18DE1734632E00B8CDD1 /* PreprocessorBuiltins.c */,
 				E4BB18E01734633D00B8CDD1 /* CompilerBuiltins.h */,
@@ -389,7 +389,7 @@
 				E4AFAE9D172DB31100F7A0BF /* Packager.c in Sources */,
 				E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */,
 				E4AFAEA3173161B500F7A0BF /* Driver.c in Sources */,
-				E4BB18DC173462A800B8CDD1 /* BuiltinsExt.c in Sources */,
+				E4BB18DC173462A800B8CDD1 /* BuiltinsToolchainExt.c in Sources */,
 				E4BB18DF1734632E00B8CDD1 /* PreprocessorBuiltins.c in Sources */,
 				E4BB18E21734634600B8CDD1 /* CompilerBuiltins.c in Sources */,
 				E4BB18E81734860C00B8CDD1 /* pspl_available_extensions.c in Sources */,
