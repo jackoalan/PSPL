@@ -5,4 +5,5 @@ add_executable(pspl
                Preprocessor.c
                Compiler.c
                Packager.c
-               Buffer.c)
+               Buffer.c
+               ${PSPL_BINARY_DIR}/pspl_available_extensions.c)

@@ -1,0 +1,1 @@
+pspl_add_platform(GX "GX API for GameCube and Wii" BIG)

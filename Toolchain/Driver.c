@@ -741,37 +741,4 @@ int main(int argc, char** argv) {
     
 }
 
-/* Test extension and platform */
-
-pspl_extension_t test_ext = {
-    .extension_name = "Test Extension",
-    .extension_desc = "A test of the PSPL extension system"
-};
-
-pspl_extension_t test_ext2 = {
-    .extension_name = "Test Extension 2",
-    .extension_desc = "Another test of the PSPL extension system"
-};
-
-pspl_extension_t* pspl_available_extensions[] = {
-    &test_ext,
-    &test_ext2,
-    NULL
-};
-
-pspl_runtime_platform_t test_plat = {
-    .platform_name = "GL2LE",
-    .platform_desc = "OpenGL[ES] 2.0 for Little-Endian platforms",
-    .byte_order = PSPL_LITTLE_ENDIAN
-};
-
-pspl_runtime_platform_t* pspl_available_target_platforms[] = {
-    &test_plat,
-    NULL
-};
-
-pspl_runtime_platform_t* pspl_default_target_platform = &test_plat;
-
-
-
 

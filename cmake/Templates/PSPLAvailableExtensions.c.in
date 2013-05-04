@@ -1,8 +1,0 @@
-
-#include <PSPL/Extensions/PSPLAvailableExtensions.h>
-
-/* Now the master list (NULL-terminated) */
-static pspl_extension_t pspl_available_extensions[] =
-{@CONF_EXT_ARRAY_INIT_LIST@
-    NULL
-};

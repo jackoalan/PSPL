@@ -1,0 +1,30 @@
+
+/* This file was automatically generated via CMake to configure
+ * the available platforms and extensions for this PSPL build */
+
+#include <stdlib.h>
+#include <PSPL/PSPLExtension.h>
+
+
+/* Platform definitions */
+@CONF_PLAT_DEF_INCLUDES@
+
+/* Master platform list (NULL-terminated) */
+pspl_runtime_platform_t* pspl_available_target_platforms[] =
+{@CONF_PLAT_ARRAY_INIT_LIST@
+    NULL
+};
+
+
+/* Extension definitions */
+@CONF_EXT_DEF_INCLUDES@
+
+/* Master extension list (NULL-terminated) */
+pspl_extension_t* pspl_available_extensions[] =
+{@CONF_EXT_ARRAY_INIT_LIST@
+    NULL
+};
+
+
+/* Default target platform */
+pspl_runtime_platform_t* pspl_default_target_platform = &@DEF_PLAT@_platform;
