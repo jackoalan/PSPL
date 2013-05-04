@@ -389,9 +389,9 @@ It Goes Anywhere
 ----------------
 
 *Read More: Support for* 
-[*OpenGL*](https://github.com/jackoalan/PSPL/tree/master/Extensions/OpenGLSupport#readme), 
-[*GX*](https://github.com/jackoalan/PSPL/tree/master/Extensions/GXSupport#readme) and 
-[*Direct3D*](https://github.com/jackoalan/PSPL/tree/master/Extensions/Direct3DSupport#readme)
+[*OpenGL*](https://github.com/jackoalan/PSPL/tree/master/Platforms/OpenGL#readme), 
+[*GX*](https://github.com/jackoalan/PSPL/tree/master/Platforms/GX#readme) and 
+[*Direct3D*](https://github.com/jackoalan/PSPL/tree/master/Platforms/Direct3D#readme)
 
 When all said and done, shader packages written and deployed using PSPL will function 
 on many fully-programmable and fixed-function graphics architectures alike. 
