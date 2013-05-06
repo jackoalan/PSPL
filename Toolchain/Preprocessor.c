@@ -382,6 +382,9 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
             if (cur_chr < pp_end)
                 continue;
             
+            // Directive has finished by this point
+            in_pp = 0;
+            
             // Ensure the directive was not empty
             if (tok_c) {
                 

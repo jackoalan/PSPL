@@ -304,24 +304,25 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
         msg_str = new_msg;
     }
     
-    char* err_head = NULL;
+    char err_head_buf[256];
+    char* err_head = err_head_buf;
     if (xterm_colour) {
         switch (driver_state.pspl_phase) {
             case PSPL_PHASE_INIT:
                 err_head = wrap_string(BOLD RED"ERROR While "UNDERLINE"Initialising"NORMAL BOLD RED" Toolchain:\n"SGR0, 1);
                 break;
             case PSPL_PHASE_PREPROCESS:
-                sprintf(err_head, BOLD RED"ERROR WHILE "CYAN"PREPROCESSING "BLUE"`%s`"GREEN" LINE %u:\n"SGR0,
+                snprintf(err_head, 255, BOLD RED"ERROR WHILE "CYAN"PREPROCESSING "BLUE"`%s`"GREEN" LINE %u:\n"SGR0,
                         driver_state.file_name, driver_state.line_num);
                 err_head = wrap_string(err_head, 1);
                 break;
             case PSPL_PHASE_COMPILE:
-                sprintf(err_head, BOLD RED"ERROR WHILE "CYAN"COMPILING "BLUE"`%s`"GREEN" LINE %u:\n"SGR0,
+                snprintf(err_head, 255, BOLD RED"ERROR WHILE "CYAN"COMPILING "BLUE"`%s`"GREEN" LINE %u:\n"SGR0,
                         driver_state.file_name, driver_state.line_num);
                 err_head = wrap_string(err_head, 1);
                 break;
             case PSPL_PHASE_PACKAGE:
-                sprintf(err_head, BOLD RED"ERROR WHILE "CYAN"PACKAGING "BLUE"`%s`\n"SGR0,
+                snprintf(err_head, 255, BOLD RED"ERROR WHILE "CYAN"PACKAGING "BLUE"`%s`\n"SGR0,
                         driver_state.file_name);
                 err_head = wrap_string(err_head, 1);
                 break;
@@ -329,7 +330,8 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
                 break;
         }
         fprintf(stderr, "%s", err_head);
-        free(err_head);
+        if (err_head != err_head_buf)
+            free(err_head);
         fprintf(stderr, BOLD"%s:\n"SGR0, brief);
     } else {
         switch (driver_state.pspl_phase) {
@@ -337,17 +339,17 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
                 err_head = wrap_string("ERROR INITIALISING TOOLCHAIN:\n", 1);
                 break;
             case PSPL_PHASE_PREPROCESS:
-                sprintf(err_head, "ERROR WHILE PREPROCESSING `%s` LINE %u:\n",
+                snprintf(err_head, 255, "ERROR WHILE PREPROCESSING `%s` LINE %u:\n",
                         driver_state.file_name, driver_state.line_num);
                 err_head = wrap_string(err_head, 1);
                 break;
             case PSPL_PHASE_COMPILE:
-                sprintf(err_head, "ERROR WHILE COMPILING `%s` LINE %u:\n",
+                snprintf(err_head, 255, "ERROR WHILE COMPILING `%s` LINE %u:\n",
                         driver_state.file_name, driver_state.line_num);
                 err_head = wrap_string(err_head, 1);
                 break;
             case PSPL_PHASE_PACKAGE:
-                sprintf(err_head, "ERROR WHILE PACKAGING `%s`\n",
+                snprintf(err_head, 255, "ERROR WHILE PACKAGING `%s`\n",
                         driver_state.file_name);
                 err_head = wrap_string(err_head, 1);
                 break;
@@ -355,7 +357,8 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
                 break;
         }
         fprintf(stderr, "%s", err_head);
-        free(err_head);
+        if (err_head != err_head_buf)
+            free(err_head);
         fprintf(stderr, "%s:\n", brief);
     }
     
@@ -389,24 +392,25 @@ void pspl_warn(const char* brief, const char* msg, ...) {
         msg_str = new_msg;
     }
     
-    char* err_head = NULL;
+    char err_head_buf[256];
+    char* err_head = err_head_buf;
     if (xterm_colour) {
         switch (driver_state.pspl_phase) {
             case PSPL_PHASE_INIT:
                 err_head = wrap_string(BOLD YELLOW"WARNING WHILE "CYAN"INITIALISING"YELLOW" TOOLCHAIN:\n"SGR0, 1);
                 break;
             case PSPL_PHASE_PREPROCESS:
-                sprintf(err_head, BOLD YELLOW"WARNING WHILE "CYAN"PREPROCESSING "BLUE"`%s`"GREEN" LINE %u:\n"SGR0,
+                snprintf(err_head, 255, BOLD YELLOW"WARNING WHILE "CYAN"PREPROCESSING "BLUE"`%s`"GREEN" LINE %u:\n"SGR0,
                         driver_state.file_name, driver_state.line_num);
                 err_head = wrap_string(err_head, 1);
                 break;
             case PSPL_PHASE_COMPILE:
-                sprintf(err_head, BOLD YELLOW"WARNING WHILE "CYAN"COMPILING "BLUE"`%s`"GREEN" LINE %u:\n"SGR0,
+                snprintf(err_head, 255, BOLD YELLOW"WARNING WHILE "CYAN"COMPILING "BLUE"`%s`"GREEN" LINE %u:\n"SGR0,
                         driver_state.file_name, driver_state.line_num);
                 err_head = wrap_string(err_head, 1);
                 break;
             case PSPL_PHASE_PACKAGE:
-                sprintf(err_head, BOLD RED"WARNING WHILE "CYAN"PACKAGING "BLUE"`%s`\n"SGR0,
+                snprintf(err_head, 255, BOLD RED"WARNING WHILE "CYAN"PACKAGING "BLUE"`%s`\n"SGR0,
                         driver_state.file_name);
                 err_head = wrap_string(err_head, 1);
                 break;
@@ -414,7 +418,8 @@ void pspl_warn(const char* brief, const char* msg, ...) {
                 break;
         }
         fprintf(stderr, "%s", err_head);
-        free(err_head);
+        if (err_head != err_head_buf)
+            free(err_head);
         fprintf(stderr, BOLD"%s:\n"SGR0, brief);
     } else {
         switch (driver_state.pspl_phase) {
@@ -422,17 +427,17 @@ void pspl_warn(const char* brief, const char* msg, ...) {
                 err_head = wrap_string("WARNING WHILE INITIALISING TOOLCHAIN:\n", 1);
                 break;
             case PSPL_PHASE_PREPROCESS:
-                sprintf(err_head, "WARNING WHILE PREPROCESSING `%s` LINE %u:\n",
+                snprintf(err_head, 255, "WARNING WHILE PREPROCESSING `%s` LINE %u:\n",
                         driver_state.file_name, driver_state.line_num);
                 err_head = wrap_string(err_head, 1);
                 break;
             case PSPL_PHASE_COMPILE:
-                sprintf(err_head, "WARNING WHILE COMPILING `%s` LINE %u:\n",
+                snprintf(err_head, 255, "WARNING WHILE COMPILING `%s` LINE %u:\n",
                         driver_state.file_name, driver_state.line_num);
                 err_head = wrap_string(err_head, 1);
                 break;
             case PSPL_PHASE_PACKAGE:
-                sprintf(err_head, "WARNING WHILE PACKAGING `%s`\n",
+                snprintf(err_head, 255, "WARNING WHILE PACKAGING `%s`\n",
                         driver_state.file_name);
                 err_head = wrap_string(err_head, 1);
                 break;
@@ -440,7 +445,8 @@ void pspl_warn(const char* brief, const char* msg, ...) {
                 break;
         }
         fprintf(stderr, "%s", err_head);
-        free(err_head);
+        if (err_head != err_head_buf)
+            free(err_head);
         fprintf(stderr, "%s:\n", brief);
     }
     
@@ -590,7 +596,9 @@ int main(int argc, char** argv) {
                 else
                     expected_arg = token_char;
                 
-            }
+            } else
+                pspl_error(-1, "Unrecognised argument flag",
+                           "`-%c` flag not recognised by PSPL", token_char);
             
         } else { // Process string argument
             char* str_arg = argv[i];
