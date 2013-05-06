@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 2.8)
 
-# Include our extension and art pipeline macros
-include(PSPLExtensionMacros.cmake)
+# Include the art pipeline macros
 include(PSPLArtPipelineMacros.cmake)

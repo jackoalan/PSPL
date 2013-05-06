@@ -76,16 +76,16 @@ typedef struct {
     
     // Driver phase
     enum {
-        PSPL_PHASE_NONE = 0,
-        PSPL_PHASE_INIT = 1,
-        PSPL_PHASE_INIT_EXTENSION = 2,
-        PSPL_PHASE_PREPARE = 3,
-        PSPL_PHASE_PREPROCESS = 4,
-        PSPL_PHASE_PREPROCESS_EXTENSION = 5,
-        PSPL_PHASE_COMPILE = 6,
-        PSPL_PHASE_COMPILE_EXTENSION = 7,
-        PSPL_PHASE_PACKAGE = 8,
-        PSPL_PHASE_FINISH_EXTENSION = 9
+        PSPL_PHASE_NONE                  = 0,
+        PSPL_PHASE_INIT                  = 1,
+        PSPL_PHASE_INIT_EXTENSION        = 2,
+        PSPL_PHASE_PREPARE               = 3,
+        PSPL_PHASE_PREPROCESS            = 4,
+        PSPL_PHASE_PREPROCESS_EXTENSION  = 5,
+        PSPL_PHASE_COMPILE               = 6,
+        PSPL_PHASE_COMPILE_EXTENSION     = 7,
+        PSPL_PHASE_PACKAGE               = 8,
+        PSPL_PHASE_FINISH_EXTENSION      = 9
     } pspl_phase;
     
     // File name

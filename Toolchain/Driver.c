@@ -219,15 +219,54 @@ static void print_help(const char* prog_name) {
         fprintf(stderr, BOLD BLUE"Command Synopsis:\n"NORMAL);
         const char* help =
         wrap_string("pspl ["BOLD"-o"NORMAL" "UNDERLINE"out-path"NORMAL"] ["BOLD"-E"NORMAL"|"BOLD"-c"NORMAL"] ["BOLD"-G"NORMAL" "UNDERLINE"reflist-out-path"NORMAL"] ["BOLD"-S"NORMAL" "UNDERLINE"staging-root-path"NORMAL"] ["BOLD"-D"NORMAL" "UNDERLINE"def-name"NORMAL"[="UNDERLINE"def-value"NORMAL"]]... ["BOLD"-T"NORMAL" "UNDERLINE"target-platform"NORMAL"]... "UNDERLINE"source1"NORMAL" ["UNDERLINE"source2"NORMAL" ["UNDERLINE"sourceN"NORMAL"]]...", 1);
-        fprintf(stderr, "%s\n\n", help);
-        
-        help =
-        wrap_string("", 1);
-        fprintf(stderr, "%s\n\n", help);
-
+        fprintf(stderr, "%s\n\n\n", help);
+        free((char*)help);
         
     } else {
-        fprintf(stderr, "No colour version\n");
+        
+        // No colour support
+        
+        fprintf(stderr,
+                "PSPL Toolchain\n"
+                "By Jack Andersen <jackoalan@gmail.com>\n"
+                "https://github.com/jackoalan/PSPL\n"
+                "\n"
+                "\n"
+                "Available Extensions:\n");
+        pspl_extension_t* ext = NULL;
+        int i = 0;
+        while ((ext = pspl_available_extensions[i++])) {
+            fprintf(stderr, "  * %s - %s\n",
+                    ext->extension_name, ext->extension_desc);
+        }
+        if (i==1)
+            fprintf(stderr, "  -- No extensions available --\n");
+        fprintf(stderr,
+                "\n"
+                "\n"
+                "Available Target Platforms:\n");
+        pspl_runtime_platform_t* plat = NULL;
+        i = 0;
+        while ((plat = pspl_available_target_platforms[i++])) {
+            fprintf(stderr, "  * %s - %s",
+                    plat->platform_name, plat->platform_desc);
+            if (plat == pspl_default_target_platform)
+                fprintf(stderr, " [DEFAULT]");
+            fprintf(stderr, "\n");
+        }
+        if (i==1)
+            fprintf(stderr, "  -- No target platforms available --\n");
+        fprintf(stderr,
+                "\n"
+                "\n");
+        
+        // Now print usage info
+        fprintf(stderr, "Command Synopsis:\n");
+        const char* help =
+        wrap_string("pspl [-o out-path] [-E|-c] [-G reflist-out-path] [-S staging-root-path] [-D def-name[=def-value]]... [-T target-platform]... source1 [source2 [sourceN]]...", 1);
+        fprintf(stderr, "%s\n\n\n", help);
+        free((char*)help);
+        
     }
 }
 
@@ -719,7 +758,7 @@ int main(int argc, char** argv) {
         if (!source->original_source)
             pspl_error(-1, "Unable to allocate memory buffer for PSPL source",
                        "errno %d - `%s`", errno, strerror(errno));
-        size_t read_len = fread((void*)source->original_source, source_len, 1, source_file);
+        size_t read_len = fread((void*)source->original_source, 1, source_len, source_file);
         fclose(source_file);
         if (read_len != source_len)
             pspl_error(-1, "Didn't read expected amount from PSPL source",

@@ -31,8 +31,8 @@ set(pspl_runtime_extension_list "" CACHE INTERNAL
 include(${PSPL_SOURCE_DIR}/cmake/PSPLExtensionMacros.cmake)
 
 # Platform and Extension subdirectories
-add_subdirectory(Platforms)
 add_subdirectory(Extensions)
+add_subdirectory(Platforms)
 
 # Assemble platform definitions together
 set(CONF_PLAT_DEF_INCLUDES "")

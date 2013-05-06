@@ -166,13 +166,14 @@ void _pspl_preprocessor_add_command_call(const char* command_name, ...) {
     va_start(va, command_name);
     pspl_buffer_addstr(&preprocessor_state.out_buf, command_name);
     pspl_buffer_addchar(&preprocessor_state.out_buf, '(');
-    uint8_t put_space = 1;
+    uint8_t put_space = 0;
     while ((arg = va_arg(va, const char*))) {
         if (put_space) {
             pspl_buffer_addchar(&preprocessor_state.out_buf, ' ');
             put_space = 0;
         }
         pspl_buffer_addstr(&preprocessor_state.out_buf, arg);
+        put_space = 1;
     }
     pspl_buffer_addstr(&preprocessor_state.out_buf, ")\n");
     va_end(va);
@@ -271,7 +272,21 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
     driver_state.line_num = 0;
     const char* current_line = preprocessor_state.source->original_source;
     
-    do {
+    // Preprocessor invocation state
+    uint8_t in_pp = 0;
+    char* tok_read_in;
+    char* tok_read_ptr;
+    char* tok_arr[PSPL_MAX_PREPROCESSOR_TOKENS];
+    unsigned int tok_c;
+    uint8_t just_read_tok;
+    uint8_t in_quote;
+    
+    // Preprocessor start and end pointers
+    const char* pp_start;
+    const char* pp_end;
+    
+    do { // Per line
+        
         // Chomp leading whitespace (and track indent level)
         unsigned int added_spaces = 0;
         unsigned int added_tabs = 0;
@@ -284,48 +299,73 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
         }
         preprocessor_state.indent_level = added_spaces/PSPL_INDENT_SPACES + added_tabs;
         
-        if (*current_line == '[') { // Invoke preprocessor
+        if (in_pp || *current_line == '[') { // Invoke preprocessor for this line
+            const char* cur_chr;
             
             // Start expansion line count at 0
             preprocessor_state.source->expansion_line_counts[driver_state.line_num] = 0;
             
-            // Start and end pointers
-            const char* pp_start = &current_line[1];
-            const char* pp_end;
-            
-            // Find preprocessor invocation end (']') (ensure it exists)
-            const char* cur_chr = pp_start;
-            for (;;) {
-                if (*cur_chr == ']') {
-                    pp_end = cur_chr;
-                    break;
-                } else if (*cur_chr == '\n' || *cur_chr == '\0')
-                    pspl_error(-2, "Unclosed preprocessor directive",
-                               "please add closing ']'");
-                ++cur_chr;
+            if (!in_pp) { // We haven't started preprocessor invocation; start now
+                in_pp = 1;
+                pp_start = current_line+1;
+                
+                // Find preprocessor invocation end (']') (ensure it exists)
+                cur_chr = pp_start;
+                in_quote = 0;
+                for (;;) {
+                    if (*cur_chr == '"')
+                        in_quote ^= 1;
+                    else if (!in_quote && *cur_chr == ']' && *(cur_chr-1) != '\\') {
+                        pp_end = cur_chr;
+                        break;
+                    } else if ((!in_quote && *cur_chr == '[' && *(cur_chr-1) != '\\') || *cur_chr == '\0')
+                        pspl_error(-2, "Unclosed preprocessor directive",
+                                   "please add closing ']'");
+                    ++cur_chr;
+                }
+                
+                // Prepare PP state
+                tok_read_in = malloc(pp_end-pp_start);
+                tok_read_ptr = tok_read_in;
+                tok_arr[0] = tok_read_ptr;
+                tok_c = 0;
+                just_read_tok = 0;
+                in_quote = 0;
+                
             }
             
-            // Read in invocation up to end; saving token pointers using a buffer-array
-            char* tok_read_in = malloc(pp_end-pp_start);
-            char* tok_read_ptr = tok_read_in;
-            char* tok_arr[PSPL_MAX_PREPROCESSOR_TOKENS];
-            tok_arr[0] = tok_read_ptr;
-            unsigned int tok_c = 0;
-            uint8_t just_read_tok = 0;
-            for (cur_chr=pp_start ; cur_chr<pp_end ; ++cur_chr) {
+            
+            // Read in invocation up to end of line or PP directive;
+            // saving token pointers using a buffer-array
+            for (cur_chr=pp_start ; *cur_chr != '\n' && cur_chr<pp_end ; ++cur_chr) {
                 
-                // Ignore whitespace (or treat as token delimiter)
-                if (*cur_chr == ' ' || *cur_chr == '\t') {
-                    if (just_read_tok) {
-                        just_read_tok = 0;
-                        *tok_read_ptr = '\0';
-                        ++tok_read_ptr;
-                        tok_arr[tok_c] = tok_read_ptr;
-                        if (tok_c >= PSPL_MAX_PREPROCESSOR_TOKENS)
-                            pspl_error(-2, "Maximum preprocessor tokens exceeded",
-                                       "Up to %u tokens supported", PSPL_MAX_PREPROCESSOR_TOKENS);
+                // Check for escapable character
+                if (*cur_chr == '\\') {
+                    ++cur_chr;
+                    if (cur_chr>=pp_end)
+                        break;
+                } else {
+                    
+                    // Check for quoted token start or end (toggle)
+                    if (*cur_chr == '"') {
+                        in_quote ^= 1;
+                        continue;
                     }
-                    continue;
+                    
+                    // Ignore whitespace (or treat as token delimiter)
+                    if (!in_quote && (*cur_chr == ' ' || *cur_chr == '\t' || *cur_chr == '\n')) {
+                        if (just_read_tok) {
+                            just_read_tok = 0;
+                            *tok_read_ptr = '\0';
+                            ++tok_read_ptr;
+                            tok_arr[tok_c] = tok_read_ptr;
+                            if (tok_c >= PSPL_MAX_PREPROCESSOR_TOKENS)
+                                pspl_error(-2, "Maximum preprocessor tokens exceeded",
+                                           "Up to %u tokens supported", PSPL_MAX_PREPROCESSOR_TOKENS);
+                        }
+                        continue;
+                    }
+                    
                 }
                 
                 // Copy character into read ptr otherwise
@@ -337,6 +377,10 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
                 ++tok_read_ptr;
                 
             }
+            
+            // Do next line if there is more of the directive
+            if (cur_chr < pp_end)
+                continue;
             
             // Ensure the directive was not empty
             if (tok_c) {
@@ -367,7 +411,7 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
             // Free token buffer array
             free(tok_read_in);
             
-        } else {
+        } else { // Not in preprocessor invocation
             
             // Copy line into preprocessed buffer *without* expansion
             char* end_of_line = strchr(current_line, '\n');

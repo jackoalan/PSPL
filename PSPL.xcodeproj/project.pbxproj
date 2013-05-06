@@ -7,14 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E4AFAE5F171CF46500F7A0BF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E4AFAE5E171CF46500F7A0BF /* Foundation.framework */; };
 		E4AFAE6C171D825400F7A0BF /* gx_offline.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6B171D825400F7A0BF /* gx_offline.c */; };
 		E4AFAE96172D898B00F7A0BF /* Preprocessor.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE95172D898B00F7A0BF /* Preprocessor.c */; };
 		E4AFAE99172D899D00F7A0BF /* Compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE98172D899D00F7A0BF /* Compiler.c */; };
 		E4AFAE9D172DB31100F7A0BF /* Packager.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE9B172DB2D400F7A0BF /* Packager.c */; };
 		E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAEA117315D4000F7A0BF /* Buffer.c */; };
 		E4AFAEA3173161B500F7A0BF /* Driver.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE46171CA34700F7A0BF /* Driver.c */; };
-		E4BB18DC173462A800B8CDD1 /* BuiltinsToolchainExt.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DB173462A800B8CDD1 /* BuiltinsToolchainExt.c */; };
+		E4BB18DC173462A800B8CDD1 /* BuiltinsToolext.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DB173462A800B8CDD1 /* BuiltinsToolext.c */; };
 		E4BB18DF1734632E00B8CDD1 /* PreprocessorBuiltins.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DE1734632E00B8CDD1 /* PreprocessorBuiltins.c */; };
 		E4BB18E21734634600B8CDD1 /* CompilerBuiltins.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18E11734634600B8CDD1 /* CompilerBuiltins.c */; };
 		E4BB18E81734860C00B8CDD1 /* pspl_available_extensions.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18E71734860C00B8CDD1 /* pspl_available_extensions.c */; };
@@ -49,7 +48,6 @@
 		E4AFAE54171CA6D700F7A0BF /* PSPLExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLExtension.h; sourceTree = "<group>"; };
 		E4AFAE56171CA74A00F7A0BF /* PSPLRuntimeExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLRuntimeExtension.h; sourceTree = "<group>"; };
 		E4AFAE5B171CF46500F7A0BF /* FAKE-TARGET */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "FAKE-TARGET"; sourceTree = BUILT_PRODUCTS_DIR; };
-		E4AFAE5E171CF46500F7A0BF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		E4AFAE6B171D825400F7A0BF /* gx_offline.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_offline.c; sourceTree = "<group>"; };
 		E4AFAE6D171D82B600F7A0BF /* bytecode_playback.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = bytecode_playback.S; sourceTree = "<group>"; usesTabs = 1; };
 		E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_runtime.c; sourceTree = "<group>"; };
@@ -84,7 +82,7 @@
 		E4AFAEA017315D3800F7A0BF /* Buffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Buffer.h; sourceTree = "<group>"; };
 		E4AFAEA117315D4000F7A0BF /* Buffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Buffer.c; sourceTree = "<group>"; };
 		E4BB18D81734333800B8CDD1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
-		E4BB18DB173462A800B8CDD1 /* BuiltinsToolchainExt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = BuiltinsToolchainExt.c; sourceTree = "<group>"; };
+		E4BB18DB173462A800B8CDD1 /* BuiltinsToolext.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = BuiltinsToolext.c; sourceTree = "<group>"; };
 		E4BB18DD1734632400B8CDD1 /* PreprocessorBuiltins.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PreprocessorBuiltins.h; sourceTree = "<group>"; };
 		E4BB18DE1734632E00B8CDD1 /* PreprocessorBuiltins.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = PreprocessorBuiltins.c; sourceTree = "<group>"; };
 		E4BB18E01734633D00B8CDD1 /* CompilerBuiltins.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CompilerBuiltins.h; sourceTree = "<group>"; };
@@ -100,7 +98,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E4AFAE5F171CF46500F7A0BF /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -121,7 +118,6 @@
 				E4AFAE2E171C936300F7A0BF /* include */,
 				E4BB18E517347F6B00B8CDD1 /* Platforms */,
 				E4AFAE37171C955400F7A0BF /* Extensions */,
-				E4AFAE5D171CF46500F7A0BF /* Frameworks */,
 				E4AFAE5C171CF46500F7A0BF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -245,14 +241,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		E4AFAE5D171CF46500F7A0BF /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				E4AFAE5E171CF46500F7A0BF /* Foundation.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		E4AFAE73171EF72E00F7A0BF /* cmake */ = {
 			isa = PBXGroup;
 			children = (
@@ -313,7 +301,7 @@
 			children = (
 				E4BB18D81734333800B8CDD1 /* README.md */,
 				E4BB18E31734635400B8CDD1 /* CMakeLists.txt */,
-				E4BB18DB173462A800B8CDD1 /* BuiltinsToolchainExt.c */,
+				E4BB18DB173462A800B8CDD1 /* BuiltinsToolext.c */,
 				E4BB18DD1734632400B8CDD1 /* PreprocessorBuiltins.h */,
 				E4BB18DE1734632E00B8CDD1 /* PreprocessorBuiltins.c */,
 				E4BB18E01734633D00B8CDD1 /* CompilerBuiltins.h */,
@@ -389,7 +377,7 @@
 				E4AFAE9D172DB31100F7A0BF /* Packager.c in Sources */,
 				E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */,
 				E4AFAEA3173161B500F7A0BF /* Driver.c in Sources */,
-				E4BB18DC173462A800B8CDD1 /* BuiltinsToolchainExt.c in Sources */,
+				E4BB18DC173462A800B8CDD1 /* BuiltinsToolext.c in Sources */,
 				E4BB18DF1734632E00B8CDD1 /* PreprocessorBuiltins.c in Sources */,
 				E4BB18E21734634600B8CDD1 /* CompilerBuiltins.c in Sources */,
 				E4BB18E81734860C00B8CDD1 /* pspl_available_extensions.c in Sources */,
@@ -433,6 +421,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
+					"PSPL_TOOLCHAIN=1",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;

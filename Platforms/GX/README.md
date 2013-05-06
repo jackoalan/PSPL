@@ -31,7 +31,7 @@ Toolchain Extension
 Extends the PSPL toolchain with an offline version of 
 [libogc's](http://libogc.devkitpro.org/gx_8h.html) GX implementation to 
 generate a PSGX bytecode sequence. The offline GX API is used
-by a code-generator implementing the PSPL source with vertex lighting
+by a code-generator implementing the PSPL source with vertex lighting channel
 and multi-texturing (TEV) states. The resulting bytecode sequence is packaged 
 into the PSPL package.
 
