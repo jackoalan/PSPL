@@ -270,7 +270,8 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
     
     // Examine each line for preprocessor invocation ('[')
     driver_state.line_num = 0;
-    const char* current_line = preprocessor_state.source->original_source;
+    const char* cur_line = preprocessor_state.source->original_source;
+    const char* cur_chr = NULL;
     
     // Preprocessor invocation state
     uint8_t in_pp = 0;
@@ -286,28 +287,29 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
     const char* pp_end;
     
     do { // Per line
+        if (*cur_line == '\n')
+            ++cur_line;
         
         // Chomp leading whitespace (and track indent level)
         unsigned int added_spaces = 0;
         unsigned int added_tabs = 0;
-        while (*current_line == ' ' || *current_line == '\t') {
-            if (*current_line == ' ')
+        while (*cur_line == ' ' || *cur_line == '\t') {
+            if (*cur_line == ' ')
                 ++added_spaces;
-            else if(*current_line == '\t')
+            else if(*cur_line == '\t')
                 ++added_tabs;
-            ++current_line;
+            ++cur_line;
         }
         preprocessor_state.indent_level = added_spaces/PSPL_INDENT_SPACES + added_tabs;
         
-        if (in_pp || *current_line == '[') { // Invoke preprocessor for this line
-            const char* cur_chr;
+        if (in_pp || *cur_line == '[') { // Invoke preprocessor for this line
             
             // Start expansion line count at 0
             preprocessor_state.source->expansion_line_counts[driver_state.line_num] = 0;
             
             if (!in_pp) { // We haven't started preprocessor invocation; start now
                 in_pp = 1;
-                pp_start = current_line+1;
+                pp_start = cur_line+1;
                 
                 // Find preprocessor invocation end (']') (ensure it exists)
                 cur_chr = pp_start;
@@ -331,13 +333,14 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
                 tok_c = 0;
                 just_read_tok = 0;
                 in_quote = 0;
+                cur_chr = pp_start;
                 
             }
             
             
-            // Read in invocation up to end of line or PP directive;
+            // Read in invocation up to end of PP directive;
             // saving token pointers using a buffer-array
-            for (cur_chr=pp_start ; *cur_chr != '\n' && cur_chr<pp_end ; ++cur_chr) {
+            for (; cur_chr<pp_end ; ++cur_chr) {
                 
                 // Check for escapable character
                 if (*cur_chr == '\\') {
@@ -362,6 +365,10 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
                             if (tok_c >= PSPL_MAX_PREPROCESSOR_TOKENS)
                                 pspl_error(-2, "Maximum preprocessor tokens exceeded",
                                            "Up to %u tokens supported", PSPL_MAX_PREPROCESSOR_TOKENS);
+                        }
+                        if (*cur_chr == '\n') {
+                            ++cur_chr;
+                            break;
                         }
                         continue;
                     }
@@ -417,15 +424,15 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
         } else { // Not in preprocessor invocation
             
             // Copy line into preprocessed buffer *without* expansion
-            char* end_of_line = strchr(current_line, '\n');
-            size_t line_len = (end_of_line)?(end_of_line-current_line+1):strlen(current_line);
-            pspl_buffer_addstrn(&preprocessor_state.out_buf, current_line, line_len);
+            char* end_of_line = strchr(cur_line, '\n');
+            size_t line_len = (end_of_line)?(end_of_line-cur_line+1):strlen(cur_line);
+            pspl_buffer_addstrn(&preprocessor_state.out_buf, cur_line, line_len);
             preprocessor_state.source->expansion_line_counts[driver_state.line_num] = 1;
             
         }
         
         ++driver_state.line_num;
-    } while ((current_line = strchr(current_line, '\n')));
+    } while ((cur_line = strchr(cur_line, '\n')));
     
     
     // Load expanded buffer into source object

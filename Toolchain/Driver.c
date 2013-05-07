@@ -309,11 +309,11 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
     if (xterm_colour) {
         switch (driver_state.pspl_phase) {
             case PSPL_PHASE_INIT:
-                err_head = wrap_string(BOLD RED"ERROR While "UNDERLINE"Initialising"NORMAL BOLD RED" Toolchain:\n"SGR0, 1);
+                err_head = wrap_string(BOLD RED"ERROR WHILE "UNDERLINE"INITIALISING"NORMAL BOLD RED" TOOLCHAIN:\n"SGR0, 1);
                 break;
             case PSPL_PHASE_PREPROCESS:
-                snprintf(err_head, 255, BOLD RED"ERROR WHILE "CYAN"PREPROCESSING "BLUE"`%s`"GREEN" LINE %u:\n"SGR0,
-                        driver_state.file_name, driver_state.line_num);
+                snprintf(err_head, 255, BOLD RED"ERROR WHILE "UNDERLINE"PREPROCESSING"NORMAL BOLD BLUE" `%s`"MAGENTA" LINE %u:\n"SGR0,
+                        driver_state.file_name, driver_state.line_num+1);
                 err_head = wrap_string(err_head, 1);
                 break;
             case PSPL_PHASE_COMPILE:
@@ -336,7 +336,7 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
     } else {
         switch (driver_state.pspl_phase) {
             case PSPL_PHASE_INIT:
-                err_head = wrap_string("ERROR INITIALISING TOOLCHAIN:\n", 1);
+                err_head = wrap_string("ERROR WHILE INITIALISING TOOLCHAIN:\n", 1);
                 break;
             case PSPL_PHASE_PREPROCESS:
                 snprintf(err_head, 255, "ERROR WHILE PREPROCESSING `%s` LINE %u:\n",
