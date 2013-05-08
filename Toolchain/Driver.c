@@ -506,7 +506,7 @@ static void catch_sig(int sig) {
 
 int main(int argc, char** argv) {
     
-    // Register signal handler (throws error)
+    // Register signal handler (throws pspl error with backtrace)
     int i;
     for (i=1 ; i<NSIG ; ++i)
         signal(i, catch_sig);
@@ -656,7 +656,7 @@ int main(int argc, char** argv) {
     if ((driver_opts.pspl_mode_opts & PSPL_MODE_PREPROCESS_ONLY) &&
         (driver_opts.pspl_mode_opts & PSPL_MODE_COMPILE_ONLY)) {
         pspl_error(-1, "Impossible task",
-                   "PSPL can't preprocess-only `-E` *and* compile-only `-c` simultaneously");
+                   "PSPL can't preprocess-only (-E) *and* compile-only (-c) simultaneously");
         return -1;
     }
     
@@ -669,7 +669,8 @@ int main(int argc, char** argv) {
         if ((file = fopen(driver_opts.source_a[i], "r")))
             fclose(file);
         else
-            pspl_error(-1, "Unable to open provided source", "Can't open `%s` for reading", driver_opts.source_a[i]);
+            pspl_error(-1, "Unable to open provided source", "Can't open `%s` for reading",
+                       driver_opts.source_a[i]);
     }
     
     // Reflist (just the path)
@@ -680,6 +681,16 @@ int main(int argc, char** argv) {
         else
             pspl_error(-1, "Unable to write reflist", "Can't open `%s` for writing",
                        driver_opts.reflist_out_path);
+    }
+    
+    // Output file
+    if (driver_opts.out_path) {
+        FILE* file;
+        if ((file = fopen(driver_opts.out_path, "w")))
+            fclose(file);
+        else
+            pspl_error(-1, "Unable to write output", "Can't open `%s` for writing",
+                       driver_opts.out_path);
     }
     
     // Staging area path (make cwd if not specified)
@@ -762,11 +773,13 @@ int main(int argc, char** argv) {
             pspl_error(-1, "PSPL Source file exceeded filesize limit",
                        "source file `%s` is %l bytes in length; exceeding %u byte limit",
                        driver_opts.source_a[i], source_len, (unsigned)PSPL_MAX_SOURCE_SIZE);
-        source->original_source = malloc(source_len);
+        char* source_buf = malloc(source_len+1);
         if (!source->original_source)
             pspl_error(-1, "Unable to allocate memory buffer for PSPL source",
                        "errno %d - `%s`", errno, strerror(errno));
-        size_t read_len = fread((void*)source->original_source, 1, source_len, source_file);
+        size_t read_len = fread(source_buf, 1, source_len, source_file);
+        source_buf[source_len] = '\0';
+        source->original_source = source_buf;
         fclose(source_file);
         if (read_len != source_len)
             pspl_error(-1, "Didn't read expected amount from PSPL source",
@@ -778,21 +791,50 @@ int main(int argc, char** argv) {
         _pspl_run_preprocessor(source, &tool_ctx, &driver_opts);
         
         
-        // Now run compiler
-        driver_state.pspl_phase = PSPL_PHASE_COMPILE;
-        driver_state.file_name = source->file_name;
-        driver_state.line_num = 0;
-        _pspl_run_compiler(source, &driver_opts);
+        // Now run compiler (if not in preprocess-only mode)
+        if (!(driver_opts.pspl_mode_opts & PSPL_MODE_PREPROCESS_ONLY)) {
+            driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+            driver_state.file_name = source->file_name;
+            driver_state.line_num = 0;
+            _pspl_run_compiler(source, &driver_opts);
+        }
+        
+        // Only do first source if in preprocess or compile only modes
+        if (driver_opts.pspl_mode_opts & (PSPL_MODE_PREPROCESS_ONLY|PSPL_MODE_COMPILE_ONLY))
+            break;
         
     }
     
     
-    // Now run packager
-    driver_state.pspl_phase = PSPL_PHASE_PACKAGE;
-    driver_state.file_name = driver_opts.out_path;
-    driver_state.line_num = 0;
-    _pspl_run_packager(sources, &driver_opts);
+    // Now run packager (if in packaging mode)
+    if (!(driver_opts.pspl_mode_opts & (PSPL_MODE_PREPROCESS_ONLY|PSPL_MODE_COMPILE_ONLY))) {
+        driver_state.pspl_phase = PSPL_PHASE_PACKAGE;
+        driver_state.file_name = driver_opts.out_path;
+        driver_state.line_num = 0;
+        _pspl_run_packager(sources, &driver_opts);
+    }
     
+    
+    // Open output file
+    FILE* out_file = stdout;
+    if (driver_opts.out_path)
+        out_file = fopen(driver_opts.out_path, "w");
+    
+    // Output selected data
+    if (driver_opts.pspl_mode_opts & PSPL_MODE_PREPROCESS_ONLY) {
+        
+        // Preprocessor only
+        size_t len = strlen(sources[0].preprocessed_source);
+        fwrite(sources[0].preprocessed_source, 1, len, out_file);
+        
+    } else if (driver_opts.pspl_mode_opts & PSPL_MODE_COMPILE_ONLY) {
+        
+    } else {
+        
+    }
+    
+    if (driver_opts.out_path)
+        fclose(out_file);
     
     return 0;
     

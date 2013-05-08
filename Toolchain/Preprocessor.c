@@ -281,6 +281,7 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
     unsigned int tok_c;
     uint8_t just_read_tok;
     uint8_t in_quote;
+    uint8_t in_comment;
     
     // Preprocessor start and end pointers
     const char* pp_start;
@@ -314,13 +315,33 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
                 // Find preprocessor invocation end (']') (ensure it exists)
                 cur_chr = pp_start;
                 in_quote = 0;
+                in_comment = 0;
+                uint8_t unclosed_dir = 0;
                 for (;;) {
-                    if (*cur_chr == '"')
+                    if (in_comment) {
+                        if (*cur_chr == '\0')
+                            unclosed_dir = 1;
+                        else if (in_comment == 1 && *cur_chr == '\n')
+                            in_comment = 0;
+                        else if (in_comment == 2 && (*cur_chr == '*' && *(cur_chr+1) == '/')) {
+                            ++cur_chr;
+                            in_comment = 0;
+                        }
+                    } else if (!in_quote && (*cur_chr == '/' && (*(cur_chr+1) == '*' ||
+                                                                 *(cur_chr+1) == '/'))) {
+                        ++cur_chr;
+                        if (*cur_chr == '/')
+                            in_comment = 1;
+                        else if (*cur_chr == '*')
+                            in_comment = 2;
+                    } else if (*cur_chr == '"') {
                         in_quote ^= 1;
-                    else if (!in_quote && *cur_chr == ']' && *(cur_chr-1) != '\\') {
+                    } else if (!in_quote && *cur_chr == ']' && *(cur_chr-1) != '\\') {
                         pp_end = cur_chr;
                         break;
                     } else if ((!in_quote && *cur_chr == '[' && *(cur_chr-1) != '\\') || *cur_chr == '\0')
+                        unclosed_dir = 1;
+                    if (unclosed_dir)
                         pspl_error(-2, "Unclosed preprocessor directive",
                                    "please add closing ']'");
                     ++cur_chr;
@@ -333,6 +354,7 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
                 tok_c = 0;
                 just_read_tok = 0;
                 in_quote = 0;
+                in_comment = 0;
                 cur_chr = pp_start;
                 
             }
@@ -341,6 +363,21 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
             // Read in invocation up to end of PP directive;
             // saving token pointers using a buffer-array
             for (; cur_chr<pp_end ; ++cur_chr) {
+                
+                // If we're in a comment, handle accordingly
+                if (in_comment) {
+                    if (*cur_chr == '\n') {
+                        ++cur_chr;
+                        if (in_comment == 1)
+                            in_comment = 0;
+                        break;
+                    }
+                    if (in_comment == 2 && *cur_chr == '*' && *(cur_chr+1) == '/') {
+                        ++cur_chr;
+                        in_comment = 0;
+                    }
+                    continue;
+                }
                 
                 // Check for escapable character
                 if (*cur_chr == '\\') {
@@ -356,7 +393,8 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
                     }
                     
                     // Ignore whitespace (or treat as token delimiter)
-                    if (!in_quote && (*cur_chr == ' ' || *cur_chr == '\t' || *cur_chr == '\n')) {
+                    if (!in_quote && (*cur_chr == ' ' || *cur_chr == '\t' ||
+                                      *cur_chr == '\n' || *cur_chr == '/')) {
                         if (just_read_tok) {
                             just_read_tok = 0;
                             *tok_read_ptr = '\0';
@@ -366,7 +404,13 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
                                 pspl_error(-2, "Maximum preprocessor tokens exceeded",
                                            "Up to %u tokens supported", PSPL_MAX_PREPROCESSOR_TOKENS);
                         }
-                        if (*cur_chr == '\n') {
+                        if (*cur_chr == '/') { // Handle comment start
+                            ++cur_chr;
+                            if (*cur_chr == '/')
+                                in_comment = 1;
+                            else if (*cur_chr == '*')
+                                in_comment = 2;
+                        } else if (*cur_chr == '\n') { // Handle line break
                             ++cur_chr;
                             break;
                         }
@@ -421,18 +465,47 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
             // Free token buffer array
             free(tok_read_in);
             
-        } else { // Not in preprocessor invocation
+        } else { // Not in preprocessor invocation (perform copy for compiler; stripping comments)
             
             // Copy line into preprocessed buffer *without* expansion
-            char* end_of_line = strchr(cur_line, '\n');
-            size_t line_len = (end_of_line)?(end_of_line-cur_line+1):strlen(cur_line);
-            pspl_buffer_addstrn(&preprocessor_state.out_buf, cur_line, line_len);
+            const char* end_of_line = strchr(cur_line, '\n');
+            if (!end_of_line)
+                end_of_line = cur_line + strlen(cur_line);
+            
+            // If we're in a comment already, find out if it ends
+            const char* slash = NULL;
+            if (in_comment == 2) {
+                slash = strstr(cur_line, "*/");
+                if (slash && slash<end_of_line) {
+                    cur_line = slash + 2;
+                    in_comment = 0;
+                } else
+                    continue; // This line is all comment
+            }
+            
+            // Check for starting line comment as well
+            slash = strchr(cur_line, '/');
+            if (slash && slash<end_of_line && (*(slash+1) == '/' || *(slash+1) == '*')) {
+                pspl_buffer_addstrn(&preprocessor_state.out_buf, cur_line, slash-cur_line);
+                if ((*(slash+1) == '*')) {
+                    pspl_buffer_addstrn(&preprocessor_state.out_buf, cur_line, slash-cur_line);
+                    slash += 2;
+                    slash = strstr(slash, "*/");
+                    if (slash && slash<end_of_line) {
+                        slash += 2;
+                        pspl_buffer_addstrn(&preprocessor_state.out_buf, slash, end_of_line-slash);
+                    } else
+                        in_comment = 2;
+                }
+                pspl_buffer_addchar(&preprocessor_state.out_buf, '\n');
+            } else
+                pspl_buffer_addstrn(&preprocessor_state.out_buf, cur_line, end_of_line-cur_line+1);
+            
             preprocessor_state.source->expansion_line_counts[driver_state.line_num] = 1;
             
         }
         
-        ++driver_state.line_num;
-    } while ((cur_line = strchr(cur_line, '\n')));
+    } while ((cur_line = strchr(cur_line, '\n')) && ++driver_state.line_num);
     
     
     // Load expanded buffer into source object
