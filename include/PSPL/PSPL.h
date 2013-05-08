@@ -14,28 +14,36 @@
 
 /* Endianness enumerations */
 #define PSPL_LITTLE_ENDIAN 1
-#define PSPL_BIG_ENDIAN 2
-#define PSPL_BI_ENDIAN 3
+#define PSPL_BIG_ENDIAN    2
+#define PSPL_BI_ENDIAN     3
 
 /* Runtime-only structures */
-#define PSPL_RUNTIME
 #ifdef PSPL_RUNTIME
 
 /* Shader runtime object (from PSPLC) 
  * Holds state information about object during runtime */
 typedef struct {
     
+    // Truncated SHA1 hash of PSPLC object
+    uint32_t hash;
     
+    // Platform-specific shader object
+    // (initialised by load hook, freed by unload hook, bound by bind hook)
+    pspl_runtime_platform_shader_object_t native_shader;
+    
+    // Opaque object pointer used by PSPL's runtime internals
+    const void* pspl_shader_internals;
     
 } pspl_runtime_shader_object_t;
 
 
 /* Hook function types */
 struct _pspl_runtime_platform;
-typedef int(*pspl_runtime_platform_init_hook)(struct _pspl_runtime_platform* platform);
-typedef void(*pspl_runtime_platform_shutdown_hook)(struct _pspl_runtime_platform* platform);
-typedef void(*pspl_runtime_platform_load_shader_object_hook);
-
+typedef int(*pspl_runtime_platform_init_hook)();
+typedef void(*pspl_runtime_platform_shutdown_hook)();
+typedef void(*pspl_runtime_platform_load_shader_object_hook)(pspl_runtime_shader_object_t* shader);
+typedef void(*pspl_runtime_platform_unload_shader_object_hook)(pspl_runtime_shader_object_t* shader);
+typedef void(*pspl_runtime_platform_bind_shader_object_hook)(pspl_runtime_shader_object_t* shader);
 
 /* Hooks structure (implemented by platform extension)
  * containing function references to set up platform runtime 
@@ -43,6 +51,20 @@ typedef void(*pspl_runtime_platform_load_shader_object_hook);
 typedef struct {
     
     // Platform init (called once at runtime init)
+    pspl_runtime_platform_init_hook init_hook;
+    
+    // Shutdown (called once at runtime shutdown)
+    pspl_runtime_platform_shutdown_hook shutdown_hook;
+    
+    // Shader object load (platform implementation needs to initialise `native_shader`)
+    pspl_runtime_platform_load_shader_object_hook load_shader_object_hook;
+    
+    // Shader object unload (platform implementation needs to free `native_shader`)
+    pspl_runtime_platform_unload_shader_object_hook unload_shader_object_hook;
+    
+    // Shader object bind
+    // (platform implementation needs to set GPU into using specified shader object)
+    pspl_runtime_platform_bind_shader_object_hook bind_shader_object_hook;
     
 } pspl_runtime_platform_hooks_t;
 

@@ -32,11 +32,13 @@ typedef struct {
     uint8_t version;
     uint8_t endian_flags; // 1: Little, 2: Big, 3: Bi
     uint8_t padding;
-    
-    // Offset to extension name table
+        
+    // Count and offset of extension name table
+    DECL_BI_OBJ_TYPE(uint32_t) extension_name_table_c;
     DECL_BI_OBJ_TYPE(uint32_t) extension_name_table_off;
     
-    // Offset to platform name table
+    // Count and offset of platform name table
+    DECL_BI_OBJ_TYPE(uint32_t) platform_name_table_c;
     DECL_BI_OBJ_TYPE(uint32_t) platform_name_table_off;
     
 } pspl_header_t;
@@ -48,7 +50,10 @@ typedef struct {
  * (every PSPLC file has exactly one and PSPLP files may have many) */
 typedef struct {
     
-    // After the header follows:
+    // Hash of this PSPLC object (truncated 32-bit SHA1 of object name)
+    uint32_t psplc_object_hash;
+    
+    // Tiered object indexing structure:
     //  * Per-extension object array count
     //  * Per-extension object array (marked by absolute offset for each byte order)
     //  * Total length of the sub-tables below this one (pointed to by previous member)
@@ -66,18 +71,18 @@ typedef struct {
     //          * Absolute file offset of native byte-order object
     //          * Length of object
     
-    // Count of file object stubs
-    uint32_t file_stub_count;
-    
-    // Offset to byte-order-specific file stub array
-    uint32_t file_stub_array_off;
-    
     // Count of extensions referenced by this psplc (count of elements in array below)
     uint32_t tier1_object_array_count;
     
     // File-absolute offset to per-extension object subtables,
     // separate tables for each byte-order
     uint32_t tier1_object_array_off;
+    
+    // Count of file object stubs
+    uint32_t file_stub_count;
+    
+    // Offset to byte-order-specific file stub array
+    uint32_t file_stub_array_off;
     
 } pspl_psplc_header_t;
 typedef DECL_BI_OBJ_TYPE(pspl_psplc_header_t) pspl_psplc_header_bi_t;
@@ -159,7 +164,7 @@ typedef struct {
     uint32_t psplc_array_count;
     
     // Absolute offset to byte-order native array of `pspl_psplc_header_t` objects
-    uint32_t psplc_array_off;
+    //uint32_t psplc_array_off; // Occurs after this structure (therefore unnecessary)
     
     // Count of packaged files
     uint32_t packaged_file_array_count;

@@ -10,6 +10,6 @@
 #define PSPL_GX_PSPLTypes_h
 
 /* GX-specific type for shader object */
-typedef u32 pspl_platform_shader_object_t;
+typedef u32 GX_shader_object_t;
 
 #endif
