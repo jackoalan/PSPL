@@ -54,15 +54,17 @@ void pspl_buffer_init(pspl_buffer_t* buf, size_t cap) {
 /* Append a copied string */
 void pspl_buffer_addstr(pspl_buffer_t* buf, const char* str) {
     size_t str_len = strlen(str);
+    if (!str_len)
+        return;
     pspl_buffer_check_cap(buf, str_len+1);
     strncpy(buf->buf_cur, str, str_len);
     buf->buf_cur += str_len;
     *buf->buf_cur = '\0';
 }
 void pspl_buffer_addstrn(pspl_buffer_t* buf, const char* str, size_t str_len) {
+    str_len = strnlen(str, str_len);
     if (!str_len)
         return;
-    str_len = strnlen(str, str_len);
     pspl_buffer_check_cap(buf, str_len+1);
     strncpy(buf->buf_cur, str, str_len);
     buf->buf_cur += str_len;

@@ -1,0 +1,13 @@
+#ifndef _PSPL_TOOLCHAIN_PLATFORM_TYPEFILES_
+#define _PSPL_TOOLCHAIN_PLATFORM_TYPEFILES_
+
+/* This file is used during toolchain compilation to
+ * define common type unions of all platform-specific object classes */
+
+@CONF_PLATFORM_TYPEFILE_INCLUDES@
+
+typedef union {@CONF_PLATFORM_SHADER_OBJECT_TYPES@
+} pspl_runtime_platform_shader_object_t;
+
+#endif // _PSPL_TOOLCHAIN_PLATFORM_TYPEFILES_
+

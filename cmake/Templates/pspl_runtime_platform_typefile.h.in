@@ -1,0 +1,12 @@
+#ifndef _PSPL_RUNTIME_PLATFORM_TYPEFILE_
+#define _PSPL_RUNTIME_PLATFORM_TYPEFILE_
+
+/* This file is used during runtime compilation to
+ * define common types of all platform-specific object classes */
+
+#include "@CONF_RUNTIME_PLATFORM_TYPEFILE@"
+
+typedef @CONF_RUNTIME_SHADER_OBJECT_TYPE@ pspl_runtime_platform_shader_object_t;
+
+#endif // _PSPL_RUNTIME_PLATFORM_TYPEFILE_
+

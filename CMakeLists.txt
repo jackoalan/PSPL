@@ -16,6 +16,8 @@ set(pspl_platform_desc_list "" CACHE INTERNAL
     "Ordered plaform description list, augmented by `pspl_add_platform`")
 set(pspl_platform_bo_list "" CACHE INTERNAL
     "Ordered plaform byte-order list, augmented by `pspl_add_platform`")
+set(pspl_platform_typefile_list "" CACHE INTERNAL
+    "Ordered plaform type-definition-file list, augmented by `pspl_add_platform`")
 
 # Set our extension list scope here
 set(pspl_extension_list "" CACHE INTERNAL
@@ -131,18 +133,22 @@ configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_available_extensions.c.in
 
 # Runtime platform options
 if(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
-  set(PSPL_RUNTIME_PLATFORM MAC_GL CACHE STRING 
-  "Select which platform to build runtime for [NONE, MAC_GL, EGL_GL, GLX_GL, WIN_GL, WIN_D3D, GX] (Mac OpenGL selected by default)")
+  set(PSPL_RUNTIME_PLATFORM GL2LE CACHE STRING 
+      "Select which platform to build runtime for [${pspl_platform_list}] (GL2LE selected by default)")
 else()
-  set(PSPL_RUNTIME_PLATFORM NONE CACHE STRING 
-  "Select which platform to build runtime for [NONE, MAC_GL, EGL_GL, GLX_GL, WIN_GL, WIN_D3D, GX] (Runtime not built by default)")
+  set(PSPL_RUNTIME_PLATFORM "" CACHE STRING 
+      "Select which platform to build runtime for [${pspl_platform_list}] (Runtime not built by default)")
 endif()
 
 
 
 # Target subdirectories
 add_subdirectory(Toolchain)
-if(NOT PSPL_RUNTIME_PLATFORM STREQUAL NONE)
+
+list(FIND pspl_platform_list ${PSPL_RUNTIME_PLATFORM} runtime_idx)
+if(runtime_idx GREATER -1)
   add_subdirectory(Runtime)
+else()
+  message(WARNING "Unable to build runtime; '${PSPL_RUNTIME_PLATFORM}' platform not available")
 endif()
 

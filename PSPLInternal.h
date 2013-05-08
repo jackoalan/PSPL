@@ -66,29 +66,18 @@ typedef struct {
     //          * Absolute file offset of native byte-order object
     //          * Length of object
     
-    // Count of extensions referenced by this psplc (count of elements in array below)
-    uint32_t tier1_object_array_count;
-    
-    // File-absolute offset to per-extension object subtables,
-    // separate tables for each byte-order
-    uint32_t tier1_object_array_off;
-    
-} pspl_psplc_object_t;
-typedef DECL_BI_OBJ_TYPE(pspl_psplc_object_t) pspl_psplc_object_bi_t;
-
-
-/* Header structure for PSPLC file extended from PSPLC object record
- * (occurs after `pspl_header_t` within a PSPLC and for each linked pspl within a PSPLP) */
-typedef struct {
-    
     // Count of file object stubs
     uint32_t file_stub_count;
     
     // Offset to byte-order-specific file stub array
     uint32_t file_stub_array_off;
     
-    // Composed object record (there's only one in a PSPLC file)
-    pspl_psplc_object_t psplc_object;
+    // Count of extensions referenced by this psplc (count of elements in array below)
+    uint32_t tier1_object_array_count;
+    
+    // File-absolute offset to per-extension object subtables,
+    // separate tables for each byte-order
+    uint32_t tier1_object_array_off;
     
 } pspl_psplc_header_t;
 typedef DECL_BI_OBJ_TYPE(pspl_psplc_header_t) pspl_psplc_header_bi_t;
@@ -175,7 +164,7 @@ typedef struct {
     // Count of packaged files
     uint32_t packaged_file_array_count;
     
-    // Absolute offset to byte-order native array of `pspl_psplp_file_record_t`
+    // Absolute offset to byte-order native array of `pspl_object_record_t`
     // objects storing file hashes and absolute locations
     uint32_t packaged_file_array_off;
     

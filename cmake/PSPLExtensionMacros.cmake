@@ -14,15 +14,23 @@ macro(pspl_add_platform platform_name platform_desc byte_order)
   if(existing GREATER -1)
     message(AUTHOR_WARNING "WARNING: Unable to add platform '${platform_name}'; already added")
   else()
-    list(APPEND pspl_platform_list ${platform_name})
-    list(APPEND pspl_platform_desc_list ${platform_desc})
-    list(APPEND pspl_platform_bo_list ${byte_order})
-    set(pspl_platform_list ${pspl_platform_list} CACHE INTERNAL
-        "Ordered plaform name list, augmented by `pspl_add_platform`")
-    set(pspl_platform_desc_list ${pspl_platform_desc_list} CACHE INTERNAL
-        "Ordered plaform description list, augmented by `pspl_add_platform`")
-    set(pspl_platform_bo_list ${pspl_platform_bo_list} CACHE INTERNAL
-        "Ordered plaform byte-order list, augmented by `pspl_add_platform`")
+    get_filename_component(typefile "${platform_name}_PSPLTypes.h" ABSOLUTE)
+    if(NOT EXISTS ${typefile})
+      message(AUTHOR_WARNING "WARNING: Unable to add platform '${platform_name}'; '${typefile}' doesn't exist")
+    else()
+      list(APPEND pspl_platform_list ${platform_name})
+      list(APPEND pspl_platform_desc_list ${platform_desc})
+      list(APPEND pspl_platform_bo_list ${byte_order})
+      list(APPEND pspl_platform_typefile_list ${typefile})
+      set(pspl_platform_list ${pspl_platform_list} CACHE INTERNAL
+          "Ordered plaform name list, augmented by `pspl_add_platform`")
+      set(pspl_platform_desc_list ${pspl_platform_desc_list} CACHE INTERNAL
+          "Ordered plaform description list, augmented by `pspl_add_platform`")
+      set(pspl_platform_bo_list ${pspl_platform_bo_list} CACHE INTERNAL
+          "Ordered plaform byte-order list, augmented by `pspl_add_platform`")
+      set(pspl_platform_typefile_list ${pspl_platform_typefile_list} CACHE INTERNAL
+          "Ordered plaform type-definition-file list, augmented by `pspl_add_platform`")
+    endif()
   endif()
 
 endmacro(pspl_add_platform)

@@ -29,7 +29,7 @@
 
 
 /* First, a means to declare a bi-endian structure type
- * from an already-declared struct type. */
+ * from an already-declared type. */
 #if __LITTLE_ENDIAN__
 
 #define DECL_BI_OBJ_TYPE(source_type) struct {\

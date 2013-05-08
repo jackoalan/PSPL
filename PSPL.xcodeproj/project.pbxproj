@@ -91,6 +91,9 @@
 		E4BB18E417347B3D00B8CDD1 /* pspl_platform_def.h.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = pspl_platform_def.h.in; sourceTree = "<group>"; };
 		E4BB18E61734803A00B8CDD1 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E4BB18E71734860C00B8CDD1 /* pspl_available_extensions.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pspl_available_extensions.c; path = build/pspl_available_extensions.c; sourceTree = "<group>"; };
+		E4F078E4173AA5F9000D6699 /* GX_PSPLTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GX_PSPLTypes.h; sourceTree = "<group>"; };
+		E4F078E5173AA891000D6699 /* pspl_runtime_platform_typefile.h.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = pspl_runtime_platform_typefile.h.in; sourceTree = "<group>"; };
+		E4F078E8173AAEAD000D6699 /* pspl_toolchain_platform_typefiles.h.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = pspl_toolchain_platform_typefiles.h.in; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -206,6 +209,7 @@
 			children = (
 				E4AFAE8317238EC800F7A0BF /* CMakeLists.txt */,
 				E4AFAE41171C9E3E00F7A0BF /* README.md */,
+				E4F078E4173AA5F9000D6699 /* GX_PSPLTypes.h */,
 				E4AFAE7B1720DAC400F7A0BF /* gctypes.h */,
 				E4AFAE7A1720DA7900F7A0BF /* gx_regdef.h */,
 				E4AFAE791720D49B00F7A0BF /* gx_offline.h */,
@@ -259,6 +263,8 @@
 				E4AFAE8617259D0400F7A0BF /* pspl_available_extensions.c.in */,
 				E4BB18E417347B3D00B8CDD1 /* pspl_platform_def.h.in */,
 				E4AFAE821721A94B00F7A0BF /* pspl_extension_def.h.in */,
+				E4F078E8173AAEAD000D6699 /* pspl_toolchain_platform_typefiles.h.in */,
+				E4F078E5173AA891000D6699 /* pspl_runtime_platform_typefile.h.in */,
 			);
 			path = Templates;
 			sourceTree = "<group>";

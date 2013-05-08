@@ -25,7 +25,7 @@
 
 #pragma mark Internal Preprocessor State
 
-/* Internal preprocessor state to convey line-by-line
+/* Internal preprocessor state to convey invocation-by-invocation
  * preprocessor-expansion info */
 static struct _pspl_preprocessor_state {
     
@@ -303,10 +303,10 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
         }
         preprocessor_state.indent_level = added_spaces/PSPL_INDENT_SPACES + added_tabs;
         
+        // Start expansion line count at 0
+        preprocessor_state.source->expansion_line_counts[driver_state.line_num] = 0;
+        
         if (in_pp || *cur_line == '[') { // Invoke preprocessor for this line
-            
-            // Start expansion line count at 0
-            preprocessor_state.source->expansion_line_counts[driver_state.line_num] = 0;
             
             if (!in_pp) { // We haven't started preprocessor invocation; start now
                 in_pp = 1;
@@ -488,7 +488,6 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
             if (slash && slash<end_of_line && (*(slash+1) == '/' || *(slash+1) == '*')) {
                 pspl_buffer_addstrn(&preprocessor_state.out_buf, cur_line, slash-cur_line);
                 if ((*(slash+1) == '*')) {
-                    pspl_buffer_addstrn(&preprocessor_state.out_buf, cur_line, slash-cur_line);
                     slash += 2;
                     slash = strstr(slash, "*/");
                     if (slash && slash<end_of_line) {
@@ -497,10 +496,10 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
                     } else
                         in_comment = 2;
                 }
-                pspl_buffer_addchar(&preprocessor_state.out_buf, '\n');
             } else
-                pspl_buffer_addstrn(&preprocessor_state.out_buf, cur_line, end_of_line-cur_line+1);
+                pspl_buffer_addstrn(&preprocessor_state.out_buf, cur_line, end_of_line-cur_line);
             
+            pspl_buffer_addchar(&preprocessor_state.out_buf, '\n');
             preprocessor_state.source->expansion_line_counts[driver_state.line_num] = 1;
             
         }
