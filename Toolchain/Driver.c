@@ -796,7 +796,7 @@ int main(int argc, char** argv) {
             driver_state.pspl_phase = PSPL_PHASE_COMPILE;
             driver_state.file_name = source->file_name;
             driver_state.line_num = 0;
-            _pspl_run_compiler(source, &driver_opts);
+            _pspl_run_compiler(source, &tool_ctx, &driver_opts);
         }
         
         // Only do first source if in preprocess or compile only modes

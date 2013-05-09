@@ -161,6 +161,17 @@ typedef int(*pspl_toolchain_command_call_hook)(const pspl_toolchain_context_t* d
                                                unsigned int command_argc,
                                                const char** command_argv);
 
+
+#pragma mark Whitespace Line Read Hooking
+
+/* When consecutive line(s) of whitespace are encountered, this method may be 
+ * implemented to handle the situation. Returning a negative value will defer 
+ * the read in to the generic line-read hook below */
+typedef int(*pspl_toolchain_whitespace_line_read_hook)(const pspl_toolchain_context_t* driver_context,
+                                                       const pspl_toolchain_heading_context_t* current_heading,
+                                                       unsigned int white_line_count);
+
+
 #pragma mark Generic Line Read Hooking
 
 /* Line read hook type */
@@ -171,10 +182,10 @@ typedef void(*pspl_toolchain_line_read_hook)(const pspl_toolchain_context_t* dri
 
 #pragma mark Indented (and/or Markdown-list) Line Read Hooking
 
-/* Generate platform-native bullet enumerations */
-static const unsigned int PSPL_BULLET_MASK = (~(((~0)<<2)>>2));
-static const unsigned int PSPL_BULLET_STAR = (((~0)>>1)&PSPL_BULLET_MASK);
-static const unsigned int PSPL_BULLET_DASH = (((~0)>>1)&PSPL_BULLET_MASK);
+/* Platform-native bullet enumerations */
+extern const unsigned int PSPL_BULLET_MASK;
+extern const unsigned int PSPL_BULLET_STAR;
+extern const unsigned int PSPL_BULLET_DASH;
 
 /* Indentation context type */
 typedef struct _pspl_toolchain_indent_read {
@@ -292,6 +303,7 @@ typedef struct _pspl_toolchain_extension {
     pspl_toolchain_finish_hook finish_hook;
     pspl_toolchain_line_preprocessor_hook line_preprocessor_hook;
     pspl_toolchain_command_call_hook command_call_hook;
+    pspl_toolchain_whitespace_line_read_hook whitespace_line_read_hook;
     pspl_toolchain_line_read_hook line_read_hook;
     pspl_toolchain_indent_line_read_hook indent_line_read_hook;
     

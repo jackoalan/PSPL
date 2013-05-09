@@ -1,6 +1,18 @@
 #ifndef _GX_OFFLINE_H
 #define _GX_OFFLINE_H
 
+/* This file is primarily derived from libogc's zlib-licenced GX implementation
+ * http://sourceforge.net/p/devkitpro/libogc/ci/master/tree/libogc_license.txt */
+
+/* This file serves as a deferred, offline GX implementation (sans drawing commands)
+ * It includes a subset of GX commands to bind internal objects (like matrices),
+ * set TEV states, and set vertex lighting channel states 
+ * (Material and Ambient colours).
+ *
+ * Calling these functions (encapsulated by `pspl_gx_offline_begin_transaction`
+ * and `pspl_gx_offline_end_transaction`) build a display list stream for the
+ * GameCube/Wii GPU write-gather pipe */
+
 #include "gctypes.h"
 
 /*! \typedef struct _gx_texreg GXTexRegion

@@ -25,8 +25,8 @@ extern pspl_runtime_platform_t* pspl_available_target_platforms[];
 extern pspl_runtime_platform_t* pspl_default_target_platform;
 
 /* Mode bits for logical setting/testing (set in `pspl_mode_opts`) */
-#define PSPL_MODE_COMPILE_ONLY (1<<0)
-#define PSPL_MODE_PREPROCESS_ONLY (1<<1)
+#define PSPL_MODE_COMPILE_ONLY     (1<<0)
+#define PSPL_MODE_PREPROCESS_ONLY  (1<<1)
 
 /* Error and warning reporting */
 void pspl_error(int exit_code, const char* brief, const char* msg, ...);

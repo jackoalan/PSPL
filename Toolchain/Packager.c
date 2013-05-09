@@ -9,17 +9,13 @@
 #define PSPL_INTERNAL
 #define PSPL_TOOLCHAIN
 
-#include <PSPL/PSPL.h>
+#include <PSPL/PSPLExtension.h>
 #include <PSPLInternal.h>
 
 #include "Packager.h"
 
 
-#pragma mark Public Extension API Implementation
-
-
-
-#pragma mark Private Implementation
+#pragma mark Packager Implementation
 
 /* Main entry point for packaging an array of compiled PSPL sources 
  * (whose structure contains the necessary object buffers) */

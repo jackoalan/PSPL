@@ -393,8 +393,8 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
                     }
                     
                     // Ignore whitespace (or treat as token delimiter)
-                    if (!in_quote && (*cur_chr == ' ' || *cur_chr == '\t' ||
-                                      *cur_chr == '\n' || *cur_chr == '/')) {
+                    if (!in_quote && (*cur_chr == ' ' || *cur_chr == '\t' || *cur_chr == '\n' ||
+                                      (*cur_chr == '/' && (*(cur_chr+1) == '/' || *(cur_chr+1) == '*')))) {
                         if (just_read_tok) {
                             just_read_tok = 0;
                             *tok_read_ptr = '\0';
