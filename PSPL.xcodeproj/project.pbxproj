@@ -12,6 +12,7 @@
 		E4AFAE9D172DB31100F7A0BF /* Packager.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE9B172DB2D400F7A0BF /* Packager.c */; };
 		E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAEA117315D4000F7A0BF /* Buffer.c */; };
 		E4AFAEA3173161B500F7A0BF /* Driver.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE46171CA34700F7A0BF /* Driver.c */; };
+		E4B7BCF0173C9DC0002A513E /* gx_offline.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6B171D825400F7A0BF /* gx_offline.c */; };
 		E4BB18DC173462A800B8CDD1 /* BuiltinsToolext.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DB173462A800B8CDD1 /* BuiltinsToolext.c */; settings = {COMPILER_FLAGS = "-DPSPL_TOOLCHAIN"; }; };
 		E4BB18DF1734632E00B8CDD1 /* PreprocessorBuiltins.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DE1734632E00B8CDD1 /* PreprocessorBuiltins.c */; settings = {COMPILER_FLAGS = "-DPSPL_TOOLCHAIN"; }; };
 		E4BB18E21734634600B8CDD1 /* CompilerBuiltins.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18E11734634600B8CDD1 /* CompilerBuiltins.c */; settings = {COMPILER_FLAGS = "-DPSPL_TOOLCHAIN"; }; };
@@ -385,6 +386,7 @@
 				E4BB18DF1734632E00B8CDD1 /* PreprocessorBuiltins.c in Sources */,
 				E4BB18E21734634600B8CDD1 /* CompilerBuiltins.c in Sources */,
 				E4BB18E81734860C00B8CDD1 /* pspl_available_extensions.c in Sources */,
+				E4B7BCF0173C9DC0002A513E /* gx_offline.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -119,7 +119,6 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
     unsigned int tok_c;
     uint8_t just_read_tok;
     uint8_t in_quote;
-    uint8_t in_comment;
     
     // Command start and end pointers
     const char* com_start;
@@ -157,8 +156,11 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
         const char* end_of_line = strchr(cur_line, '\n');
         if (!end_of_line)
             end_of_line = strchr(cur_line, '\0');
+        
+        
+        #pragma mark Scan For Heading
 
-        // Heading definition? and level?
+        // Heading scan state
         uint8_t is_heading = 0;
         unsigned int level = 0;
         
@@ -180,10 +182,10 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             while (*next_line == ' ' || *next_line == '\t')
                 ++next_line;
             if (*next_line == '=') {
-                is_heading = 1;
+                is_heading = 2;
                 level = 0;
             } else if (*next_line == '-') {
-                is_heading = 1;
+                is_heading = 2;
                 level = 1;
             }
         }
@@ -259,7 +261,7 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
                         }
                         
                     }
-                    break; // Done with heading
+                    break; // Done with heading args
                     
                 }
                 
@@ -279,7 +281,54 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             name[name_end-name_start] = '\0';
             target_ctx->heading_name = name;
             
+            
+            // Skip line if using '='s or '-'s in heading
+            if (is_heading == 2)
+                cur_line = end_of_line + 1;
+            
+            continue; // On to next line
+            
+        } // Done with heading spec
+        
+        
+        #pragma mark Scan For Command
+        
+        if (!in_com) { // Open parenthesis test
+            
+            // See if '(' exists on same line
+            const char* com_args = strchr(cur_line, '(');
+            if (com_args && com_args < end_of_line) {
+                in_com = 1;
+                
+                // Ensure there is only whitespace between command name and '('
+                const char* first_ws = strchr(cur_line, ' ');
+                if (first_ws && first_ws < com_args) {
+                    while (*first_ws == ' ' || *first_ws == '\t')
+                        ++first_ws;
+                    if (first_ws != com_args)
+                        in_com = 0;
+                }
+                
+                if (!in_com) { // Same test for tabs
+                    first_ws = strchr(cur_line, '\t');
+                    if (first_ws && first_ws < com_args) {
+                        while (*first_ws == ' ' || *first_ws == '\t')
+                            ++first_ws;
+                        if (first_ws != com_args)
+                            in_com = 0;
+                    }
+                }
+                
+            }
+            
         }
+        
+        if (in_com) { // In command
+            
+            
+            
+        }
+        
         
     } while ((cur_line = strchr(cur_line, '\n')) && ++driver_state.line_num);
     

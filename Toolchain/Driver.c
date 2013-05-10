@@ -703,7 +703,7 @@ int main(int argc, char** argv) {
         pspl_error(-1, "Unable to `stat` requested staging path",
                    "`%s`; errno %d - `%s`", driver_opts.staging_path,
                    errno, strerror(errno));
-    else if(!(s.st_mode & S_IFDIR)) {
+    else if (!(s.st_mode & S_IFDIR)) {
         pspl_error(-1, "Unable to use requested staging path",
                    "`%s`; path not a directory", driver_opts.staging_path);
     }
