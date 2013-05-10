@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include <PSPL/PSPLExtension.h>
 
+#define PSPL_MAX_HEADING_ARGS 16
+
 
 /* This will be set by build system. Contains unique extension ID.
  * The toolchain and runtime use this (in conjunction with preprocessor macros) 
@@ -140,7 +142,7 @@ typedef struct _pspl_toolchain_heading_context {
     // Heading argument count
     unsigned int heading_argc;
     // Heading argument array
-    const char** heading_argv;
+    const char* heading_argv[PSPL_MAX_HEADING_ARGS];
     
     // Level of heading (0 is primary; increments from there)
     unsigned int heading_level;

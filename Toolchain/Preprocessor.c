@@ -288,7 +288,7 @@ void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
     const char* pp_end;
     
     do { // Per line
-        if (*cur_line == '\n')
+        if (driver_state.line_num && *cur_line == '\n')
             ++cur_line;
         
         // Chomp leading whitespace (and track indent level)
