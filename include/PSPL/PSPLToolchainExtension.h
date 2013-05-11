@@ -89,9 +89,9 @@ typedef int(*pspl_toolchain_init_hook)(const pspl_toolchain_context_t* driver_co
 /* Finish hook type */
 typedef void(*pspl_toolchain_finish_hook)(const pspl_toolchain_context_t* driver_context);
 
-/* Request the immediate initialisation of another extension 
+/* Request the immediate initialisation of another extension by name
  * (only valid within init hook) */
-int pspl_toolchain_init_other_extension(pspl_extension_t* extension);
+int pspl_toolchain_init_other_extension(const char* ext_name);
 
 
 #pragma mark Preprocessor Directive Hooking

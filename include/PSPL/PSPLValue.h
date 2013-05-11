@@ -66,33 +66,33 @@
 
 
 // Byte swap unsigned short
-static uint16_t swap_uint16( uint16_t val )
+static inline uint16_t swap_uint16( uint16_t val )
 {
     return (val << 8) | (val >> 8 );
 }
 
 // Byte swap short
-static int16_t swap_int16( int16_t val )
+static inline int16_t swap_int16( int16_t val )
 {
     return (val << 8) | ((val >> 8) & 0xFF);
 }
 
 // Byte swap unsigned int
-static uint32_t swap_uint32( uint32_t val )
+static inline uint32_t swap_uint32( uint32_t val )
 {
     val = ((val << 8) & 0xFF00FF00 ) | ((val >> 8) & 0xFF00FF );
     return (val << 16) | (val >> 16);
 }
 
 // Byte swap int
-static int32_t swap_int32( int32_t val )
+static inline int32_t swap_int32( int32_t val )
 {
     val = ((val << 8) & 0xFF00FF00) | ((val >> 8) & 0xFF00FF );
     return (val << 16) | ((val >> 16) & 0xFFFF);
 }
 
 // Byte swap 64 int
-static int64_t swap_int64( int64_t val )
+static inline int64_t swap_int64( int64_t val )
 {
     val = ((val << 8) & 0xFF00FF00FF00FF00ULL ) | ((val >> 8) & 0x00FF00FF00FF00FFULL );
     val = ((val << 16) & 0xFFFF0000FFFF0000ULL ) | ((val >> 16) & 0x0000FFFF0000FFFFULL );
@@ -100,7 +100,7 @@ static int64_t swap_int64( int64_t val )
 }
 
 // Byte swap unsigned 64 int
-static uint64_t swap_uint64( uint64_t val )
+static inline uint64_t swap_uint64( uint64_t val )
 {
     val = ((val << 8) & 0xFF00FF00FF00FF00ULL ) | ((val >> 8) & 0x00FF00FF00FF00FFULL );
     val = ((val << 16) & 0xFFFF0000FFFF0000ULL ) | ((val >> 16) & 0x0000FFFF0000FFFFULL );
@@ -108,14 +108,14 @@ static uint64_t swap_uint64( uint64_t val )
 }
 
 // Byte swap float
-static float swap_float( float val )
+static inline float swap_float( float val )
 {
     uint32_t uval = swap_uint32(CAST(val, uint32_t));
     return CAST(uval, float);
 }
 
 // Byte swap double
-static double swap_double( double val )
+static inline double swap_double( double val )
 {
     uint64_t uval = swap_uint64(CAST(val, uint64_t));
     return CAST(uval, double);

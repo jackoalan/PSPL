@@ -11,6 +11,9 @@
 /* Should an error condition print backtrace? */
 #define PSPL_ERROR_PRINT_BACKTRACE 1
 
+/* Should PSPL catch system signals as errors on its own? */
+#define PSPL_ERROR_CATCH_SIGNALS 1
+
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
@@ -20,7 +23,9 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <errno.h>
+#if PSPL_ERROR_CATCH_SIGNALS
 #include <signal.h>
+#endif
 #if PSPL_ERROR_PRINT_BACKTRACE
 #include <execinfo.h>
 #endif
@@ -304,7 +309,7 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
         msg_str = new_msg;
     }
     
-    char err_head_buf[256];
+    char err_head_buf[256] = {0};
     char* err_head = err_head_buf;
     if (xterm_colour) {
         switch (driver_state.pspl_phase) {
@@ -364,7 +369,7 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
     
     fprintf(stderr, "%s\n", msg_str);
     
-#if PSPL_ERROR_PRINT_BACKTRACE
+#   if PSPL_ERROR_PRINT_BACKTRACE
     if (xterm_colour)
         fprintf(stderr, BOLD BLUE"\nBacktrace:\n"SGR0);
     else
@@ -372,7 +377,7 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
 
     print_backtrace();
     fprintf(stderr, "\n");
-#endif // PSPL_ERROR_PRINT_BACKTRACE
+#   endif // PSPL_ERROR_PRINT_BACKTRACE
     
     exit(exit_code);
 }
@@ -392,7 +397,7 @@ void pspl_warn(const char* brief, const char* msg, ...) {
         msg_str = new_msg;
     }
     
-    char err_head_buf[256];
+    char err_head_buf[256] = {0};
     char* err_head = err_head_buf;
     if (xterm_colour) {
         switch (driver_state.pspl_phase) {
@@ -500,16 +505,20 @@ static void add_target_platform(pspl_toolchain_driver_opts_t* driver_opts,
     ++driver_opts->platform_c;
 }
 
+#if PSPL_ERROR_CATCH_SIGNALS
 static void catch_sig(int sig) {
     pspl_error(-1, "Caught signal", "PSPL caught signal %d (%s)", sig, sys_siglist[sig]);
 }
+#endif
 
 int main(int argc, char** argv) {
     
+#   if PSPL_ERROR_CATCH_SIGNALS
     // Register signal handler (throws pspl error with backtrace)
     int i;
     for (i=1 ; i<NSIG ; ++i)
         signal(i, catch_sig);
+#   endif
     
     // Initial driver state
     driver_state.pspl_phase = PSPL_PHASE_INIT;
@@ -542,7 +551,7 @@ int main(int argc, char** argv) {
     
     // Initial argument pass
     char expected_arg = 0;
-    for (i=1;i<argc;++i) {
+    for (i=1 ; i<argc ; ++i) {
         if (!expected_arg && argv[i][0] == '-') { // Process flag argument
             char token_char = argv[i][1];
             
@@ -774,7 +783,7 @@ int main(int argc, char** argv) {
                        "source file `%s` is %l bytes in length; exceeding %u byte limit",
                        driver_opts.source_a[i], source_len, (unsigned)PSPL_MAX_SOURCE_SIZE);
         char* source_buf = malloc(source_len+1);
-        if (!source->original_source)
+        if (!source_buf)
             pspl_error(-1, "Unable to allocate memory buffer for PSPL source",
                        "errno %d - `%s`", errno, strerror(errno));
         size_t read_len = fread(source_buf, 1, source_len, source_file);
@@ -807,11 +816,13 @@ int main(int argc, char** argv) {
     
     
     // Now run packager (if in packaging mode)
+    const void* psplp_data = NULL;
+    size_t psplp_data_len = 0;
     if (!(driver_opts.pspl_mode_opts & (PSPL_MODE_PREPROCESS_ONLY|PSPL_MODE_COMPILE_ONLY))) {
         driver_state.pspl_phase = PSPL_PHASE_PACKAGE;
         driver_state.file_name = driver_opts.out_path;
         driver_state.line_num = 0;
-        _pspl_run_packager(sources, &driver_opts);
+        _pspl_run_packager(sources, &driver_opts, &psplp_data, &psplp_data_len);
     }
     
     
@@ -829,7 +840,13 @@ int main(int argc, char** argv) {
         
     } else if (driver_opts.pspl_mode_opts & PSPL_MODE_COMPILE_ONLY) {
         
+        // Compile only
+        fwrite(sources[0].psplc_data, 1, sources[0].psplc_data_len, out_file);
+        
     } else {
+        
+        // Full Package
+        fwrite(psplp_data, 1, psplp_data_len, out_file);
         
     }
     

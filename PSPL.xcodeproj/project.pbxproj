@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
 		E4AFAE96172D898B00F7A0BF /* Preprocessor.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE95172D898B00F7A0BF /* Preprocessor.c */; };
 		E4AFAE99172D899D00F7A0BF /* Compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE98172D899D00F7A0BF /* Compiler.c */; };
 		E4AFAE9D172DB31100F7A0BF /* Packager.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE9B172DB2D400F7A0BF /* Packager.c */; };
@@ -32,6 +33,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E4995F2B173E8BCE003B06BF /* PSPLHash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLHash.h; sourceTree = "<group>"; };
+		E4995F2C173E8C06003B06BF /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		E4995F2D173E8C4D003B06BF /* hash_builtin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hash_builtin.h; sourceTree = "<group>"; };
+		E4995F2E173E8C55003B06BF /* hash_builtin.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hash_builtin.c; sourceTree = "<group>"; };
+		E4995F30173E8C6C003B06BF /* hash_commoncrypto.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hash_commoncrypto.h; sourceTree = "<group>"; };
+		E4995F31173E8C87003B06BF /* hash_openssl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hash_openssl.h; sourceTree = "<group>"; };
+		E4995F32173E8C92003B06BF /* hash_windows.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hash_windows.h; sourceTree = "<group>"; };
 		E4AFAE28171C92B900F7A0BF /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		E4AFAE29171C92BE00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4AFAE2A171C92D100F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
@@ -52,7 +60,7 @@
 		E4AFAE6D171D82B600F7A0BF /* bytecode_playback.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = bytecode_playback.S; sourceTree = "<group>"; usesTabs = 1; };
 		E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_runtime.c; sourceTree = "<group>"; };
 		E4AFAE71171D841500F7A0BF /* gx_runtime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gx_runtime.h; sourceTree = "<group>"; };
-		E4AFAE72171DFF1800F7A0BF /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		E4AFAE72171DFF1800F7A0BF /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 2; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; tabWidth = 2; };
 		E4AFAE74171EF74600F7A0BF /* PSPLConfig.cmake.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLConfig.cmake.in; sourceTree = "<group>"; };
 		E4AFAE75171EF76100F7A0BF /* PSPLArtPipelineMacros.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLArtPipelineMacros.cmake; sourceTree = "<group>"; };
 		E4AFAE76171EF78600F7A0BF /* PSPLExtensionMacros.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PSPLExtensionMacros.cmake; sourceTree = "<group>"; };
@@ -107,6 +115,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		E4995F2A173E8B3E003B06BF /* Hash */ = {
+			isa = PBXGroup;
+			children = (
+				E4995F2C173E8C06003B06BF /* CMakeLists.txt */,
+				E4995F2D173E8C4D003B06BF /* hash_builtin.h */,
+				E4995F2E173E8C55003B06BF /* hash_builtin.c */,
+				E4995F30173E8C6C003B06BF /* hash_commoncrypto.h */,
+				E4995F31173E8C87003B06BF /* hash_openssl.h */,
+				E4995F32173E8C92003B06BF /* hash_windows.h */,
+			);
+			path = Hash;
+			sourceTree = "<group>";
+		};
 		E4AFAE1E171C8F8E00F7A0BF = {
 			isa = PBXGroup;
 			children = (
@@ -118,6 +139,8 @@
 				E4AFAE911729D90E00F7A0BF /* PSPLInternal.h */,
 				E4AFAE26171C8FF100F7A0BF /* Toolchain */,
 				E4AFAE25171C8FDB00F7A0BF /* Runtime */,
+				E4995F2B173E8BCE003B06BF /* PSPLHash.h */,
+				E4995F2A173E8B3E003B06BF /* Hash */,
 				E4AFAE2E171C936300F7A0BF /* include */,
 				E4BB18E517347F6B00B8CDD1 /* Platforms */,
 				E4AFAE37171C955400F7A0BF /* Extensions */,
@@ -387,6 +410,7 @@
 				E4BB18E21734634600B8CDD1 /* CompilerBuiltins.c in Sources */,
 				E4BB18E81734860C00B8CDD1 /* pspl_available_extensions.c in Sources */,
 				E4B7BCF0173C9DC0002A513E /* gx_offline.c in Sources */,
+				E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -427,6 +451,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
+					PSPL_HASHING_COMMON_CRYPTO,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -436,6 +461,10 @@
 				HEADER_SEARCH_PATHS = (
 					include,
 					.,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SDKROOT)/usr/lib/system\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
@@ -469,6 +498,10 @@
 				HEADER_SEARCH_PATHS = (
 					include,
 					.,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SDKROOT)/usr/lib/system\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = "$(TARGET_NAME)";

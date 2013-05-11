@@ -118,6 +118,10 @@ typedef struct {
     // Preprocessed source
     const char* preprocessed_source;
     
+    // Compiled object data
+    const void* psplc_data;
+    size_t psplc_data_len;
+    
     // Array of individual preprocessor expansion line counts
     // (mapping each original line to a count of expanded lines)
     // (an array of all 1s will indicate a preprocessed file of the same length as original)

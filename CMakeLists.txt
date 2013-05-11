@@ -4,6 +4,21 @@ project(PSPL)
 # Codebase `include` directory
 include_directories(include)
 
+# Hashing library options
+if(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
+  set(PSPL_TOOLCHAIN_HASHING COMMON_CRYPTO CACHE STRING 
+      "Select which hashing library to use for compile-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (COMMON_CRYPTO selected by default)")
+  set(PSPL_RUNTIME_HASHING COMMON_CRYPTO CACHE STRING 
+      "Select which hashing library to use for run-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (COMMON_CRYPTO selected by default)")
+else()
+  set(PSPL_TOOLCHAIN_HASHING BUILTIN CACHE STRING 
+      "Select which hashing library to use for compile-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (BUILTIN selected by default)")
+  set(PSPL_RUNTIME_HASHING BUILTIN CACHE STRING 
+      "Select which hashing library to use for run-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (BUILTIN selected by default)")
+endif()
+
+add_subdirectory(Hash)
+
 
 ############################
 # Platforms and Extensions #
@@ -129,6 +144,7 @@ configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_available_extensions.c.in
 ################
 # Core Targets #
 ################
+
 
 
 # Runtime platform options

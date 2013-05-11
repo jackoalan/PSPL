@@ -13,6 +13,7 @@
 
 #include <PSPL/PSPLExtension.h>
 #include <PSPLInternal.h>
+#include <PSPLHash.h>
 
 #include "Compiler.h"
 
@@ -54,7 +55,7 @@ static struct _pspl_compiler_state {
 
 /* Request the immediate initialisation of another extension
  * (only valid within init hook) */
-int pspl_toolchain_init_other_extension(pspl_extension_t* extension) {
+int pspl_toolchain_init_other_extension(const char* ext_name) {
     if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION)
         return -1;
 }
@@ -73,6 +74,8 @@ int __pspl_psplc_embed_hash_keyed_object(pspl_runtime_platform_t* platforms,
                                          size_t object_size) {
     if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
         return -1;
+    
+    
 }
 
 /* Add data object (keyed with a non-hashed 32-bit unsigned numeric value)
@@ -302,7 +305,7 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             pspl_toolchain_whitespace_line_read_hook ws_hook =
             compiler_state.heading_extension->toolchain_extension->whitespace_line_read_hook;
             
-            // Advise current heading that whitespace has occured
+            // Advise current heading extension that whitespace has occured
             if (ws_hook)
                 ws_hook(ext_driver_ctx, compiler_state.heading_context, white_line_count);
             white_line_count = 0;
@@ -438,8 +441,12 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
                 cur_line = end_of_line + 1;
             
             // Resolve "owner" extension from primary heading name
-            if (!level)
-                compiler_state.heading_extension = get_heading_ext(name);
+            if (!level) {
+                if (!strcasecmp(name, "GLOBAL"))
+                    compiler_state.heading_extension = NULL;
+                else
+                    compiler_state.heading_extension = get_heading_ext(name);
+            }
             
             continue; // On to next line
             
@@ -558,7 +565,7 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             in_com = 0;
             
             // Now determine which extension's command hook needs to be dispatched
-            const pspl_extension_t* hook_ext = get_com_hook_ext(tok_arr[0]);
+            const pspl_extension_t* hook_ext = get_com_hook_ext(com_name);
             
             if (hook_ext) {
                 
@@ -577,7 +584,7 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             } else
                 pspl_warn("Unrecognised command",
                           "command `%s` not handled by any installed extensions; skipping",
-                          tok_arr[0]);
+                          com_name);
             
             // Free resources
             free(com_name);
