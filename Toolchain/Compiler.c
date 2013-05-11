@@ -291,7 +291,7 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             end_of_line = strchr(cur_line, '\0');
         
         
-        #pragma mark Scan For Whitespace
+#       pragma mark Scan For Whitespace
         
         // This line is whitespace if first character is newline
         if (*cur_line == '\n') {
@@ -309,7 +309,7 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
         }
         
         
-        #pragma mark Scan For Heading
+#       pragma mark Scan For Heading
 
         // Heading scan state
         uint8_t is_heading = 0;
@@ -446,7 +446,7 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
         } // Done with heading spec
         
         
-        #pragma mark Scan For Command
+#       pragma mark Scan For Command
         
         if (!in_com) { // Open parenthesis test
             
