@@ -194,7 +194,7 @@ static const pspl_extension_t* get_pp_hook_ext(const char* name) {
     const pspl_extension_t* strong_ext = NULL;
     
     // Enumerate all extensions for hook
-    pspl_extension_t* ext;
+    const pspl_extension_t* ext;
     unsigned int i = 0;
     while ((ext = pspl_available_extensions[i++])) {
         const pspl_toolchain_extension_t* tool_ext;

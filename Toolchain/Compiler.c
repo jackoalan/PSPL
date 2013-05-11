@@ -45,7 +45,7 @@ static struct _pspl_compiler_state {
     pspl_toolchain_heading_context_t* heading_context;
     
     // Resolved extension for heading (NULL if 'GLOBAL' heading)
-    pspl_extension_t* heading_extension;
+    const pspl_extension_t* heading_extension;
     
 } compiler_state;
 
@@ -55,12 +55,14 @@ static struct _pspl_compiler_state {
 /* Request the immediate initialisation of another extension
  * (only valid within init hook) */
 int pspl_toolchain_init_other_extension(pspl_extension_t* extension) {
-    
+    if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION)
+        return -1;
 }
 
 /* Add referenced source file to Reference Gathering list */
 void pspl_gather_referenced_file(const char* file_path) {
-    
+    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
+        return;
 }
 
 /* Add data object (keyed with a null-terminated string stored as 32-bit truncated SHA1 hash) */
@@ -69,7 +71,8 @@ int __pspl_psplc_embed_hash_keyed_object(pspl_runtime_platform_t* platforms,
                                          const void* little_object,
                                          const void* big_object,
                                          size_t object_size) {
-    
+    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
+        return -1;
 }
 
 /* Add data object (keyed with a non-hashed 32-bit unsigned numeric value)
@@ -79,7 +82,8 @@ int __pspl_psplc_embed_integer_keyed_object(pspl_runtime_platform_t* platforms,
                                             const void* little_object,
                                             const void* big_object,
                                             size_t object_size) {
-    
+    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
+        return -1;
 }
 
 /* Add file for PSPL-packaging */
@@ -87,12 +91,135 @@ int pspl_package_add_file(pspl_runtime_platform_t* platforms,
                           const char* path,
                           int move,
                           uint32_t* hash_out) {
-    
+    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
+        return -1;
     
 }
 
 
 #pragma mark Private Core API Implementation
+
+/* Get primary heading owner from heading name
+ * ensure weak convention is followed */
+static const pspl_extension_t* get_heading_ext(const char* name) {
+    
+    const pspl_extension_t* ext;
+    const pspl_toolchain_extension_t* tool_ext;
+    
+    // Track candidate weak and strong global command hooks
+    const pspl_extension_t* weak_ext = NULL;
+    const pspl_extension_t* strong_ext = NULL;
+    
+    // Enumerate all extensions for hook
+    unsigned int i = 0;
+    while ((ext = pspl_available_extensions[i++])) {
+        if ((tool_ext = ext->toolchain_extension)) {
+            
+            const char* ext_heading;
+            unsigned int j = 0;
+            
+            // Weak heading enumeration
+            if (tool_ext->weak_claimed_heading_names)
+                while ((ext_heading = tool_ext->weak_claimed_heading_names[j++]))
+                    if (!strcasecmp(name, ext_heading)) {
+                        if (weak_ext)
+                            pspl_warn("Multiple weakly-claimed primary heading",
+                                      "Primary heading named `%s` claimed by both `%s` extension and `%s` extension; latter will overload former",
+                                      name, strong_ext->extension_name, ext->extension_name);
+                        weak_ext = ext;
+                    }
+            
+            // Strong heading enumeration
+            j = 0;
+            if (tool_ext->claimed_heading_names)
+                while ((ext_heading = tool_ext->claimed_heading_names[j++]))
+                    if (!strcasecmp(name, ext_heading)) {
+                        if (!strong_ext)
+                            strong_ext = ext;
+                        else
+                            pspl_error(-1, "Multiple strongly-claimed command",
+                                       "Primary heading named `%s` claimed by both `%s` extension and `%s` extension; this is disallowed by PSPL",
+                                       name, strong_ext->extension_name, ext->extension_name);
+                    }
+            
+        }
+    }
+    
+    // Return strong if it exists; otherwise return weak
+    if (strong_ext)
+        return strong_ext;
+    if (weak_ext)
+        return weak_ext;
+    
+    // No matching command found
+    return NULL;
+    
+}
+
+/* Get command hook from command name
+ * ensure weak convention is followed */
+static const pspl_extension_t* get_com_hook_ext(const char* name) {
+    
+    const pspl_extension_t* ext;
+    const pspl_toolchain_extension_t* tool_ext;
+    
+    // Determine if active primary heading's extension claims this command
+    // Early return if so
+    if ((ext = compiler_state.heading_extension) &&
+        (tool_ext = ext->toolchain_extension) &&
+        tool_ext->command_call_hook) {
+        return ext;
+    }
+    
+    // Track candidate weak and strong global command hooks
+    const pspl_extension_t* weak_ext = NULL;
+    const pspl_extension_t* strong_ext = NULL;
+    
+    // Enumerate all extensions for hook
+    unsigned int i = 0;
+    while ((ext = pspl_available_extensions[i++])) {
+        if ((tool_ext = ext->toolchain_extension)) {
+            
+            const char* ext_command;
+            unsigned int j = 0;
+            
+            // Weak global command enumeration
+            if (tool_ext->weak_claimed_global_command_names)
+                while ((ext_command = tool_ext->weak_claimed_global_command_names[j++]))
+                    if (!strcasecmp(name, ext_command) && tool_ext->command_call_hook) {
+                        if (weak_ext)
+                            pspl_warn("Multiple weakly-claimed command",
+                                      "Command named `%s` claimed by both `%s` extension and `%s` extension; latter will overload former",
+                                      name, strong_ext->extension_name, ext->extension_name);
+                        weak_ext = ext;
+                    }
+            
+            // Strong global command enumeration
+            j = 0;
+            if (tool_ext->claimed_global_command_names)
+                while ((ext_command = tool_ext->claimed_global_command_names[j++]))
+                    if (!strcasecmp(name, ext_command) && tool_ext->command_call_hook) {
+                        if (!strong_ext)
+                            strong_ext = ext;
+                        else
+                            pspl_error(-1, "Multiple strongly-claimed command",
+                                       "Command named `%s` claimed by both `%s` extension and `%s` extension; this is disallowed by PSPL",
+                                       name, strong_ext->extension_name, ext->extension_name);
+                    }
+            
+        }
+    }
+    
+    // Return strong if it exists; otherwise return weak
+    if (strong_ext)
+        return strong_ext;
+    if (weak_ext)
+        return weak_ext;
+    
+    // No matching command found
+    return NULL;
+    
+}
 
 /* Main entry point for compiling a single PSPL source */
 void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
@@ -117,12 +244,18 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
     char* tok_read_ptr;
     char* tok_arr[PSPL_MAX_COMMAND_ARGS];
     unsigned int tok_c;
-    uint8_t just_read_tok;
-    uint8_t in_quote;
+    uint8_t just_read_tok = 0;
+    uint8_t in_quote = 0;
     
-    // Command start and end pointers
-    const char* com_start;
-    const char* com_end;
+    // Command name
+    char* com_name;
+    
+    // Command argument start and end pointers
+    const char* com_arg_start;
+    const char* com_arg_end;
+    
+    // Whitespace line counter
+    unsigned int white_line_count = 0;
     
     // Heading context stack
     pspl_toolchain_heading_context_t heading_ctx_stack[PSPL_HEADING_CTX_STACK_SIZE];
@@ -156,6 +289,24 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
         const char* end_of_line = strchr(cur_line, '\n');
         if (!end_of_line)
             end_of_line = strchr(cur_line, '\0');
+        
+        
+        #pragma mark Scan For Whitespace
+        
+        // This line is whitespace if first character is newline
+        if (*cur_line == '\n') {
+            ++white_line_count;
+            continue;
+        } else if (white_line_count && compiler_state.heading_extension &&
+                   compiler_state.heading_extension->toolchain_extension) {
+            pspl_toolchain_whitespace_line_read_hook ws_hook =
+            compiler_state.heading_extension->toolchain_extension->whitespace_line_read_hook;
+            
+            // Advise current heading that whitespace has occured
+            if (ws_hook)
+                ws_hook(ext_driver_ctx, compiler_state.heading_context, white_line_count);
+            white_line_count = 0;
+        }
         
         
         #pragma mark Scan For Heading
@@ -194,7 +345,7 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
         
             // Validate heading level (and push one level if level greater)
             if (level > compiler_state.heading_context->heading_level)
-                level = ++compiler_state.heading_context->heading_level;
+                level = compiler_state.heading_context->heading_level + 1;
             else { // Deallocate same-and-higher-level contexts and bring stack down
                 unsigned int down_level = compiler_state.heading_context->heading_level;
                 while (level <= down_level) {
@@ -205,7 +356,6 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
                         free((void*)de_ctx->heading_argv[0]);
                     --down_level;
                 }
-                compiler_state.heading_context->heading_level = level;
             }
             if (level >= PSPL_HEADING_CTX_STACK_SIZE)
                 pspl_error(-1, "Unsupported heading level",
@@ -214,6 +364,7 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             
             // Target heading context
             pspl_toolchain_heading_context_t* target_ctx = &heading_ctx_stack[level];
+            compiler_state.heading_context = target_ctx;
             target_ctx->heading_argc = 0;
             target_ctx->heading_level = level;
             target_ctx->heading_trace = (level)?&heading_ctx_stack[level-1]:NULL;
@@ -286,6 +437,10 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             if (is_heading == 2)
                 cur_line = end_of_line + 1;
             
+            // Resolve "owner" extension from primary heading name
+            if (!level)
+                compiler_state.heading_extension = get_heading_ext(name);
+            
             continue; // On to next line
             
         } // Done with heading spec
@@ -296,27 +451,59 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
         if (!in_com) { // Open parenthesis test
             
             // See if '(' exists on same line
-            const char* com_args = strchr(cur_line, '(');
-            if (com_args && com_args < end_of_line) {
+            com_arg_start = strchr(cur_line, '(');
+            if (com_arg_start && com_arg_start < end_of_line) {
                 in_com = 1;
                 
                 // Ensure there is only whitespace between command name and '('
                 const char* first_ws = strchr(cur_line, ' ');
-                if (first_ws && first_ws < com_args) {
+                if (first_ws && first_ws < com_arg_start) {
                     while (*first_ws == ' ' || *first_ws == '\t')
                         ++first_ws;
-                    if (first_ws != com_args)
+                    if (first_ws != com_arg_start)
                         in_com = 0;
                 }
                 
-                if (!in_com) { // Same test for tabs
+                if (in_com) { // Same test for tabs
                     first_ws = strchr(cur_line, '\t');
-                    if (first_ws && first_ws < com_args) {
+                    if (first_ws && first_ws < com_arg_start) {
                         while (*first_ws == ' ' || *first_ws == '\t')
                             ++first_ws;
-                        if (first_ws != com_args)
+                        if (first_ws != com_arg_start)
                             in_com = 0;
                     }
+                }
+                
+                if (in_com) { // This is a valid command; find argument end then get name
+                    com_arg_end = strchr(com_arg_start, ')');
+                    if (!com_arg_end)
+                        pspl_error(-1, "Unclosed command arguments",
+                                   "please add closing ')'");
+                    
+                    // Command name
+                    const char* name_end = com_arg_start;
+                    const char* test = strchr(cur_line, ' ');
+                    if (test && test < name_end)
+                        name_end = test;
+                    test = strchr(cur_line, '\t');
+                    if (test && test < name_end)
+                        name_end = test;
+                    
+                    if (cur_line == name_end)
+                        pspl_error(-1, "No-name command",
+                                   "commands must have a name in PSPL");
+                    com_name = malloc(name_end-cur_line+1);
+                    strncpy(com_name, cur_line, name_end-cur_line);
+                    com_name[name_end-cur_line] = '\0';
+                    
+                    // Initial command state
+                    tok_read_in = malloc(com_arg_end-com_arg_start);
+                    tok_read_ptr = tok_read_in;
+                    tok_arr[0] = tok_read_ptr;
+                    tok_c = 0;
+                    just_read_tok = 0;
+                    in_quote = 0;
+                    cur_chr = com_arg_start + 1;
                 }
                 
             }
@@ -325,7 +512,76 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
         
         if (in_com) { // In command
             
+            // Read in invocation up to end of command args;
+            // saving token pointers using a buffer-array
+            for (; cur_chr<com_arg_end ; ++cur_chr) {
+                
+                // Check for quoted token start or end (toggle)
+                if (*cur_chr == '"' && !(in_quote && *(cur_chr-1) == '\\')) {
+                    in_quote ^= 1;
+                    continue;
+                }
+                
+                // Ignore whitespace (or treat as token delimiter)
+                if (!in_quote && (*cur_chr == ' ' || *cur_chr == '\t' || *cur_chr == '\n')) {
+                    if (just_read_tok) {
+                        just_read_tok = 0;
+                        *tok_read_ptr = '\0';
+                        ++tok_read_ptr;
+                        tok_arr[tok_c] = tok_read_ptr;
+                        if (tok_c >= PSPL_MAX_COMMAND_ARGS)
+                            pspl_error(-2, "Maximum command arguments exceeded",
+                                       "Up to %u arguments supported", PSPL_MAX_COMMAND_ARGS);
+                    }
+                    if (*cur_chr == '\n') { // Handle line break
+                        ++cur_chr;
+                        break;
+                    }
+                    continue;
+                }
+                
+                // Copy character into read ptr otherwise
+                if (!just_read_tok) {
+                    just_read_tok = 1;
+                    ++tok_c;
+                }
+                *tok_read_ptr = *cur_chr;
+                ++tok_read_ptr;
+                
+            }
             
+            // Do next line if there is more of the directive
+            if (cur_chr < com_arg_end)
+                continue;
+            
+            // Directive has finished by this point
+            in_com = 0;
+            
+            // Now determine which extension's command hook needs to be dispatched
+            const pspl_extension_t* hook_ext = get_com_hook_ext(tok_arr[0]);
+            
+            if (hook_ext) {
+                
+                // Set callout context accordingly
+                driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
+                driver_state.proc_extension = hook_ext;
+                
+                // Callout to command hook
+                hook_ext->toolchain_extension->
+                command_call_hook(ext_driver_ctx, compiler_state.heading_context,
+                                  com_name, tok_c, (const char**)tok_arr);
+                
+                // Unset callout context
+                driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+                
+            } else
+                pspl_warn("Unrecognised command",
+                          "command `%s` not handled by any installed extensions; skipping",
+                          tok_arr[0]);
+            
+            // Free resources
+            free(com_name);
+            free(tok_read_in);
             
         }
         
