@@ -12,6 +12,10 @@
 
 #include <PSPL/PSPLExtension.h>
 
+/* Maximum count of target platforms
+ * (logical 32-bit bitfields are used to relate objects to platforms) */
+#define PSPL_MAX_PLATFORMS 32
+
 /* How many spaces equates to an indent level? */
 #define PSPL_INDENT_SPACES 4
 
@@ -115,19 +119,53 @@ typedef struct {
     // Full original source buffer
     const char* original_source;
     
+    
     // Preprocessed source
     const char* preprocessed_source;
-    
-    // Compiled object data
-    const void* psplc_data;
-    size_t psplc_data_len;
     
     // Array of individual preprocessor expansion line counts
     // (mapping each original line to a count of expanded lines)
     // (an array of all 1s will indicate a preprocessed file of the same length as original)
     unsigned int* expansion_line_counts;
     
+    
+    // Required extension set (NULL-terminated array)
+    const pspl_extension_t** required_extension_set;
+    
+    // Compiled object data
+    const uint8_t* psplc_data;
+    size_t psplc_data_len;
+
+    
 } pspl_toolchain_driver_source_t;
+
+
+/* Loaded PSPLC file state */
+typedef struct {
+    
+    // File path (as provided)
+    const char* file_path;
+    
+    // Absolute enclosing directory (with trailing slash)
+    const char* file_enclosing_dir;
+    
+    // Base file name (prepending path chomped)
+    const char* file_name;
+    
+    
+    // Required extension set (NULL-terminated array)
+    const pspl_extension_t** required_extension_set;
+    
+    // Required platform set (NULL-terminated array)
+    const pspl_runtime_platform_t** required_platform_set;
+    
+    // Compiled object data
+    const uint8_t* psplc_data;
+    size_t psplc_data_len;
+    
+    
+} pspl_toolchain_driver_psplc_t;
+
 
 extern pspl_toolchain_driver_state_t driver_state;
 

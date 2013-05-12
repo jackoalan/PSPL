@@ -45,10 +45,6 @@
 /* Maximum count of defs */
 #define PSPL_MAX_DEFS 128
 
-/* Maximum count of target platforms
- * (logical 32-bit bitfields are used to relate objects to platforms) */
-#define PSPL_MAX_PLATFORMS 32
-
 /* Maximum source file size (512K) */
 #define PSPL_MAX_SOURCE_SIZE (512*1024)
 
@@ -77,6 +73,9 @@ static char cwd[MAXPATHLEN];
 
 /* Are we using xterm? */
 static uint8_t xterm_colour = 0;
+
+
+#pragma mark Terminal Utils
 
 /* Way to get terminal width (for line wrapping) */
 static int term_cols() {
@@ -180,6 +179,8 @@ static char* wrap_string(const char* str_in, int indent) {
 }
 
 
+#pragma mark Built-in Help
+
 static void print_help(const char* prog_name) {
     
     if (xterm_colour) {
@@ -274,6 +275,9 @@ static void print_help(const char* prog_name) {
         
     }
 }
+
+
+#pragma mark Error Handling
 
 /* This will print a backtrace for `pspl_error` call */
 #if PSPL_ERROR_PRINT_BACKTRACE
@@ -458,6 +462,18 @@ void pspl_warn(const char* brief, const char* msg, ...) {
     fprintf(stderr, "%s\n", msg_str);
 }
 
+/* Report PSPLC read-in underflow */
+static void check_psplc_underflow(pspl_toolchain_driver_psplc_t* psplc, const void* cur_ptr) {
+    size_t delta = cur_ptr-(void*)psplc->psplc_data;
+    if (delta > psplc->psplc_data_len)
+        pspl_error(-1, "PSPLC underflow detected",
+                   "PSPLC `%s` is not long enough to load needed data @0x%x (%u)",
+                   psplc->file_path, delta, (unsigned)delta);
+}
+
+
+#pragma mark Driver State Helpers
+
 /* Insert def into driver opts */
 static void add_def(pspl_toolchain_driver_opts_t* driver_opts,
                     const char* def) {
@@ -503,6 +519,28 @@ static void add_target_platform(pspl_toolchain_driver_opts_t* driver_opts,
                    "requested `%s`", name);
     
     ++driver_opts->platform_c;
+}
+
+/* Lookup target extension by name */
+static pspl_extension_t* lookup_ext(const char* ext_name) {
+    pspl_extension_t* ext = NULL;
+    int i = 0;
+    while ((ext = pspl_available_extensions[i++])) {
+        if (!strcmp(ext->extension_name, ext_name))
+            break;
+    }
+    return ext;
+}
+
+/* Lookup target platform by name */
+static pspl_runtime_platform_t* lookup_target_platform(const char* plat_name) {
+    pspl_runtime_platform_t* plat = NULL;
+    int i = 0;
+    while ((plat = pspl_available_target_platforms[i++])) {
+        if (!strcmp(plat->platform_name, plat_name))
+            break;
+    }
+    return plat;
 }
 
 #if PSPL_ERROR_CATCH_SIGNALS
@@ -674,6 +712,13 @@ int main(int argc, char** argv) {
     
     // Sources
     for (i=0;i<driver_opts.source_c;++i) {
+        
+        // Verify file extension
+        const char* file_ext = strrchr(driver_opts.source_a[i], '.') + 1;
+        if (!file_ext || (strcasecmp(file_ext, "pspl") && strcasecmp(file_ext, "psplc")))
+            pspl_error(-1, "Source file extension matters!!",
+                       "please provide PSPL sources with '.pspl' extension and compiled objects with '.psplc' extension; `%s` does not follow this convention", driver_opts.source_a[i]);
+        
         FILE* file;
         if ((file = fopen(driver_opts.source_a[i], "r")))
             fclose(file);
@@ -729,91 +774,243 @@ int main(int argc, char** argv) {
         .def_v = driver_opts.def_v
     };
     
-    // Arguments valid, now time to compile each source!!
+    
+#   pragma mark Available Extension Count
+    
+    // Extension count
+    unsigned int available_extension_count = 0;
+    pspl_extension_t** ext_counter = pspl_available_extensions;
+    while (*(ext_counter++))
+        ++available_extension_count;
+    
+    
+#   pragma mark Begin Toolchain Process
+    
+    // Arguments valid, now time to compile each source and/or load PSPLCs for packaging!!
+    unsigned int sources_c = 0;
     pspl_toolchain_driver_source_t sources[PSPL_MAX_SOURCES];
+    unsigned int psplcs_c = 0;
+    pspl_toolchain_driver_psplc_t psplcs[PSPL_MAX_SOURCES];
     for (i=0;i<driver_opts.source_c;++i) {
-        pspl_toolchain_driver_source_t* source = &sources[i];
+        int j,k;
         
-        
-        // Populate filename members
-        source->file_path = driver_opts.source_a[i];
-        
-        // Make path absolute (if it's not already)
-        const char* abs_path = source->file_path;
-        if (abs_path[0] != '/')
-            asprintf((char**)&abs_path, "%s/%s", cwd, source->file_path);
-        
-        // Enclosing dir
-        char* last_slash = strrchr(abs_path, '/');
-        asprintf((char**)&source->file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
-        
-        // File name
-        source->file_name = last_slash+1;
-
-        
-        
-        // Set error handling state for source file
-        driver_state.file_name = source->file_name;
-        driver_state.line_num = 0;
-        
-        // Tool context info for this source
-        tool_ctx.pspl_name = source->file_name;
-        tool_ctx.pspl_enclosing_dir = source->file_enclosing_dir;
-        
-        // Initialise each extension
-        driver_state.pspl_phase = PSPL_PHASE_INIT_EXTENSION;
-        pspl_extension_t* ext;
-        int j = 0;
-        while ((ext = pspl_available_extensions[j++])) {
-            driver_state.proc_extension = ext;
-            if (ext->toolchain_extension && ext->toolchain_extension->init_hook)
-                ext->toolchain_extension->init_hook(&tool_ctx);
-        }
-
-        // Prepare to read in file
-        driver_state.pspl_phase = PSPL_PHASE_PREPARE;
-        
-        // Load original source
-        FILE* source_file = fopen(driver_opts.source_a[i], "r");
-        fseek(source_file, 0, SEEK_END);
-        long source_len = ftell(source_file);
-        fseek(source_file, 0, SEEK_SET);
-        if (source_len > PSPL_MAX_SOURCE_SIZE)
-            pspl_error(-1, "PSPL Source file exceeded filesize limit",
-                       "source file `%s` is %l bytes in length; exceeding %u byte limit",
-                       driver_opts.source_a[i], source_len, (unsigned)PSPL_MAX_SOURCE_SIZE);
-        char* source_buf = malloc(source_len+1);
-        if (!source_buf)
-            pspl_error(-1, "Unable to allocate memory buffer for PSPL source",
-                       "errno %d - `%s`", errno, strerror(errno));
-        size_t read_len = fread(source_buf, 1, source_len, source_file);
-        source_buf[source_len] = '\0';
-        source->original_source = source_buf;
-        fclose(source_file);
-        if (read_len != source_len)
-            pspl_error(-1, "Didn't read expected amount from PSPL source",
-                       "expected %u bytes; read %u bytes", source_len, read_len);
-        
-        
-        
-        // Now run preprocessor
-        _pspl_run_preprocessor(source, &tool_ctx, &driver_opts);
-        
-        
-        // Now run compiler (if not in preprocess-only mode)
-        if (!(driver_opts.pspl_mode_opts & PSPL_MODE_PREPROCESS_ONLY)) {
-            driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+        // Source or PSPLC?
+        const char* file_ext = strrchr(driver_opts.source_a[i], '.') + 1;
+        if (!strcasecmp(file_ext, "pspl")) {
+            
+#           pragma mark Process PSPL Source
+            pspl_toolchain_driver_source_t* source = &sources[sources_c++];
+            
+            // Populate filename members
+            source->file_path = driver_opts.source_a[i];
+            
+            // Make path absolute (if it's not already)
+            const char* abs_path = source->file_path;
+            if (abs_path[0] != '/')
+                asprintf((char**)&abs_path, "%s/%s", cwd, source->file_path);
+            
+            // Enclosing dir
+            char* last_slash = strrchr(abs_path, '/');
+            asprintf((char**)&source->file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
+            
+            // File name
+            source->file_name = last_slash+1;
+            
+            // Allocate required extension set
+            source->required_extension_set = calloc(available_extension_count+1, sizeof(pspl_extension_t*));
+            
+            // Set error handling state for source file
             driver_state.file_name = source->file_name;
             driver_state.line_num = 0;
-            _pspl_run_compiler(source, &tool_ctx, &driver_opts);
+            
+            // Toolchain context info for this source
+            tool_ctx.pspl_name = source->file_name;
+            tool_ctx.pspl_enclosing_dir = source->file_enclosing_dir;
+            
+            // Initialise each extension
+            driver_state.pspl_phase = PSPL_PHASE_INIT_EXTENSION;
+            pspl_extension_t* ext;
+            j = 0;
+            while ((ext = pspl_available_extensions[j++])) {
+                driver_state.proc_extension = ext;
+                if (ext->toolchain_extension && ext->toolchain_extension->init_hook)
+                    ext->toolchain_extension->init_hook(&tool_ctx);
+            }
+            
+            // Prepare to read in file
+            driver_state.pspl_phase = PSPL_PHASE_PREPARE;
+            
+            // Load original source
+            FILE* source_file = fopen(driver_opts.source_a[i], "r");
+            fseek(source_file, 0, SEEK_END);
+            long source_len = ftell(source_file);
+            fseek(source_file, 0, SEEK_SET);
+            if (source_len > PSPL_MAX_SOURCE_SIZE)
+                pspl_error(-1, "PSPL Source file exceeded filesize limit",
+                           "source file `%s` is %l bytes in length; exceeding %u byte limit",
+                           driver_opts.source_a[i], source_len, (unsigned)PSPL_MAX_SOURCE_SIZE);
+            char* source_buf = malloc(source_len+1);
+            if (!source_buf)
+                pspl_error(-1, "Unable to allocate memory buffer for PSPL source",
+                           "errno %d - `%s`", errno, strerror(errno));
+            size_t read_len = fread(source_buf, 1, source_len, source_file);
+            source_buf[source_len] = '\0';
+            source->original_source = source_buf;
+            fclose(source_file);
+            if (read_len != source_len)
+                pspl_error(-1, "Didn't read expected amount from PSPL source",
+                           "expected %u bytes; read %u bytes", source_len, read_len);
+            
+            
+            
+            // Now run preprocessor
+            _pspl_run_preprocessor(source, &tool_ctx, &driver_opts);
+            
+            
+            // Now run compiler (if not in preprocess-only mode)
+            if (!(driver_opts.pspl_mode_opts & PSPL_MODE_PREPROCESS_ONLY)) {
+                driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+                driver_state.file_name = source->file_name;
+                driver_state.line_num = 0;
+                _pspl_run_compiler(source, &tool_ctx, &driver_opts);
+            }
+            
+            // Only do first source if in preprocess or compile only modes
+            if (driver_opts.pspl_mode_opts & (PSPL_MODE_PREPROCESS_ONLY|PSPL_MODE_COMPILE_ONLY))
+                break;
+            
+            
+        } else if (!strcasecmp(file_ext, "psplc")) {
+            
+            
+#           pragma mark Process PSPLC Object
+            pspl_toolchain_driver_psplc_t* psplc = &psplcs[psplcs_c++];
+            
+            // Populate filename members
+            psplc->file_path = driver_opts.source_a[i];
+            
+            // Make path absolute (if it's not already)
+            const char* abs_path = psplc->file_path;
+            if (abs_path[0] != '/')
+                asprintf((char**)&abs_path, "%s/%s", cwd, psplc->file_path);
+            
+            // Enclosing dir
+            char* last_slash = strrchr(abs_path, '/');
+            asprintf((char**)&psplc->file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
+            
+            // File name
+            psplc->file_name = last_slash+1;
+            
+            
+            // Load PSPLC object data
+            FILE* psplc_file = fopen(driver_opts.source_a[i], "r");
+            fseek(psplc_file, 0, SEEK_END);
+            long psplc_len = ftell(psplc_file);
+            fseek(psplc_file, 0, SEEK_SET);
+            if (psplc_len > PSPL_MAX_SOURCE_SIZE)
+                pspl_error(-1, "PSPLC file exceeded filesize limit",
+                           "PSPLC file `%s` is %l bytes in length; exceeding %u byte limit",
+                           driver_opts.source_a[i], psplc_len, (unsigned)PSPL_MAX_SOURCE_SIZE);
+            uint8_t* psplc_buf = malloc(psplc_len+1);
+            if (!psplc_buf)
+                pspl_error(-1, "Unable to allocate memory buffer for PSPLC",
+                           "errno %d - `%s`", errno, strerror(errno));
+            size_t read_len = fread(psplc_buf, 1, psplc_len, psplc_file);
+            psplc_buf[psplc_len] = '\0';
+            psplc->psplc_data = psplc_buf;
+            psplc->psplc_data_len = psplc_len;
+            fclose(psplc_file);
+            if (read_len != psplc_len)
+                pspl_error(-1, "Didn't read expected amount from PSPLC",
+                           "expected %u bytes; read %u bytes", psplc_len, read_len);
+            
+            // Verify file size (at least a header in length)
+            if (psplc->psplc_data_len < sizeof(pspl_header_t))
+                pspl_error(-1, "PSPLC file too short",
+                           "`%s` is not a valid PSPLC file", psplc->file_path);
+            
+            // Set Header and verify magic
+            const pspl_header_t* psplc_header = (pspl_header_t*)psplc->psplc_data;
+            if (memcmp(psplc_header->magic, "PSPL", 4))
+                pspl_error(-1, "Invalid PSPLC magic",
+                           "`%s` is not a valid PSPLC file", psplc->file_path);
+            
+            
+            // Populate extension set
+            unsigned int psplc_extension_count = psplc_header->extension_name_table_c.native;
+            unsigned int psplc_extension_off = psplc_header->extension_name_table_off.native;
+            const char* psplc_extension_name = (char*)(psplc->psplc_data + psplc_extension_off);
+            psplc->required_extension_set = calloc(psplc_extension_count+1, sizeof(pspl_extension_t*));
+            for (j=0 ; j<psplc_extension_count ; ++j) {
+                check_psplc_underflow(psplc, psplc_extension_name);
+                
+                // Lookup
+                const pspl_extension_t* ext = lookup_ext(psplc_extension_name);
+                if (!ext)
+                    pspl_error(-1, "PSPLC-required extension not available",
+                               "PSPLC `%s` requested `%s` which is not available in this build of PSPL",
+                               psplc->file_path, psplc_extension_name);
+                
+                // Ensure this isn't a redundant add (set enforcement)
+                for (k=0 ; k<j ; ++k) {
+                    if (psplc->required_extension_set[k] == ext) {
+                        --j;
+                        --psplc_extension_count;
+                        break;
+                    }
+                }
+                if (k<j)
+                    continue;
+                
+                // Add to set
+                psplc->required_extension_set[j] = ext;
+                
+                // Advance
+                psplc_extension_name += strlen(psplc_extension_name) + 1;
+            }
+            psplc->required_extension_set[psplc_extension_count] = NULL;
+            
+            
+            // Populate platform set
+            unsigned int psplc_platform_count = psplc_header->platform_name_table_c.native;
+            unsigned int psplc_platform_off = psplc_header->platform_name_table_off.native;
+            const char* psplc_platform_name = (char*)(psplc->psplc_data + psplc_platform_off);
+            psplc->required_platform_set = calloc(psplc_platform_count+1, sizeof(pspl_runtime_platform_t*));
+            for (j=0 ; j<psplc_platform_count ; ++j) {
+                check_psplc_underflow(psplc, psplc_platform_name);
+                
+                // Lookup
+                const pspl_runtime_platform_t* plat = lookup_target_platform(psplc_platform_name);
+                if (!plat)
+                    pspl_error(-1, "PSPLC-required target platform not available",
+                               "PSPLC `%s` requested `%s` which is not available in this build of PSPL",
+                               psplc->file_path, psplc_platform_name);
+                
+                // Ensure this isn't a redundant add (set enforcement)
+                for (k=0 ; k<j ; ++k) {
+                    if (psplc->required_platform_set[k] == plat) {
+                        --j;
+                        --psplc_platform_count;
+                        break;
+                    }
+                }
+                if (k<j)
+                    continue;
+                
+                // Add to set
+                psplc->required_platform_set[j] = plat;
+                
+                // Advance
+                psplc_platform_name += strlen(psplc_platform_name) + 1;
+            }
+            psplc->required_platform_set[psplc_platform_count] = NULL;
+            
         }
-        
-        // Only do first source if in preprocess or compile only modes
-        if (driver_opts.pspl_mode_opts & (PSPL_MODE_PREPROCESS_ONLY|PSPL_MODE_COMPILE_ONLY))
-            break;
         
     }
     
+    
+#   pragma mark Perform Packaging
     
     // Now run packager (if in packaging mode)
     const void* psplp_data = NULL;
@@ -822,9 +1019,12 @@ int main(int argc, char** argv) {
         driver_state.pspl_phase = PSPL_PHASE_PACKAGE;
         driver_state.file_name = driver_opts.out_path;
         driver_state.line_num = 0;
-        _pspl_run_packager(sources, &driver_opts, &psplp_data, &psplp_data_len);
+        _pspl_run_packager(sources_c, sources, psplcs_c, psplcs,
+                           &driver_opts, &psplp_data, &psplp_data_len);
     }
     
+    
+#   pragma mark Output Stage
     
     // Open output file
     FILE* out_file = stdout;

@@ -19,7 +19,10 @@
 
 /* Main entry point for packaging an array of compiled PSPL sources 
  * (whose structure contains the necessary object buffers) */
-void _pspl_run_packager(pspl_toolchain_driver_source_t* sources,
+void _pspl_run_packager(unsigned int sources_c,
+                        pspl_toolchain_driver_source_t* sources,
+                        unsigned int psplcs_c,
+                        pspl_toolchain_driver_psplc_t* psplcs,
                         pspl_toolchain_driver_opts_t* driver_opts,
                         const void** psplp_data_out,
                         size_t* psplp_data_len_out) {

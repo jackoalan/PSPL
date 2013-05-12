@@ -185,9 +185,9 @@ typedef void(*pspl_toolchain_line_read_hook)(const pspl_toolchain_context_t* dri
 #pragma mark Indented (and/or Markdown-list) Line Read Hooking
 
 /* Platform-native bullet enumerations */
-extern const unsigned int PSPL_BULLET_MASK;
-extern const unsigned int PSPL_BULLET_STAR;
-extern const unsigned int PSPL_BULLET_DASH;
+extern const unsigned long PSPL_BULLET_MASK;
+extern const unsigned long PSPL_BULLET_STAR;
+extern const unsigned long PSPL_BULLET_DASH;
 
 /* Indentation context type */
 typedef struct _pspl_toolchain_indent_read {
@@ -196,7 +196,7 @@ typedef struct _pspl_toolchain_indent_read {
     
     // Bullet/numbering character/value
     // ('*':PSPL_BULLET_STAR, '-':PSPL_BULLET_DASH, <UNSIGNED NUMERIC VALUE FOR NUMBERED LIST>)
-    unsigned int bullet_value;
+    unsigned long bullet_value;
     
     // Line text (stripped of bullet/numbering characters and whitespace)
     const char* line_text_stripped;

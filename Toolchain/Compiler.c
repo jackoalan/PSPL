@@ -18,15 +18,16 @@
 #include "Compiler.h"
 
 /* Generate platform-native bullet enumerations */
-const unsigned int PSPL_BULLET_MASK = (~(((~0)<<2)>>2));
-const unsigned int PSPL_BULLET_STAR = (((~0)>>1)&PSPL_BULLET_MASK);
-const unsigned int PSPL_BULLET_DASH = (((~0)>>1)&PSPL_BULLET_MASK);
+const unsigned long PSPL_BULLET_MASK = (~(((~0)<<2)>>2));
+const unsigned long PSPL_BULLET_STAR = (((~0)>>1)&PSPL_BULLET_MASK);
+const unsigned long PSPL_BULLET_DASH = (((~0)>>1)&PSPL_BULLET_MASK);
 
 /* Name of GLOBAL context */
 static const char* PSPL_GLOBAL_NAME = "GLOBAL";
 
 
 #define PSPL_HEADING_CTX_STACK_SIZE 8
+#define PSPL_INDENT_CTX_STACK_SIZE 16
 #define PSPL_MAX_COMMAND_ARGS 64
 
 
@@ -39,11 +40,11 @@ static struct _pspl_compiler_state {
     // Current source being preprocessed
     pspl_toolchain_driver_source_t* source;
     
-    // Current indent level
-    unsigned int indent_level;
-    
     // Current heading context info
     pspl_toolchain_heading_context_t* heading_context;
+    
+    // Current indent context info
+    pspl_toolchain_indent_read_t* indent_context;
     
     // Resolved extension for heading (NULL if 'GLOBAL' heading)
     const pspl_extension_t* heading_extension;
@@ -58,6 +59,8 @@ static struct _pspl_compiler_state {
 int pspl_toolchain_init_other_extension(const char* ext_name) {
     if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION)
         return -1;
+    
+    
 }
 
 /* Add referenced source file to Reference Gathering list */
@@ -263,7 +266,10 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
     // Heading context stack
     pspl_toolchain_heading_context_t heading_ctx_stack[PSPL_HEADING_CTX_STACK_SIZE];
     
-    // Global heading context
+    // Indent context stack
+    pspl_toolchain_indent_read_t indent_ctx_stack[PSPL_INDENT_CTX_STACK_SIZE];
+    
+    // Initial (Global) heading context
     compiler_state.heading_extension = NULL;
     heading_ctx_stack[0].heading_name = PSPL_GLOBAL_NAME;
     heading_ctx_stack[0].heading_argc = 0;
@@ -271,11 +277,21 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
     heading_ctx_stack[0].heading_trace = NULL;
     compiler_state.heading_context = &heading_ctx_stack[0];
     
+    // Initial indent context
+    indent_ctx_stack[0].indent_level = 0;
+    indent_ctx_stack[0].indent_trace = NULL;
+    indent_ctx_stack[0].line_text = NULL;
+    compiler_state.indent_context = &indent_ctx_stack[0];
+    
+    
+    // Start reading lines
+    
     do { // Per line
         if (driver_state.line_num && *cur_line == '\n')
             ++cur_line;
         
         // Chomp leading whitespace (and track indent level)
+        const char* cur_line_unchomped = cur_line;
         unsigned int added_spaces = 0;
         unsigned int added_tabs = 0;
         while (*cur_line == ' ' || *cur_line == '\t') {
@@ -285,8 +301,7 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
                 ++added_tabs;
             ++cur_line;
         }
-        compiler_state.indent_level = added_spaces/PSPL_INDENT_SPACES + added_tabs;
-        
+        int indent_level = added_spaces/PSPL_INDENT_SPACES + added_tabs;
         
         // End of this line
         const char* end_of_line = strchr(cur_line, '\n');
@@ -294,29 +309,118 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             end_of_line = strchr(cur_line, '\0');
         
         
+        
+        
 #       pragma mark Scan For Whitespace
         
         // This line is whitespace if first character is newline
         if (*cur_line == '\n') {
+            
             ++white_line_count;
             continue;
+            
         } else if (white_line_count && compiler_state.heading_extension &&
                    compiler_state.heading_extension->toolchain_extension) {
+            
             pspl_toolchain_whitespace_line_read_hook ws_hook =
             compiler_state.heading_extension->toolchain_extension->whitespace_line_read_hook;
             
             // Advise current heading extension that whitespace has occured
-            if (ws_hook)
+            if (ws_hook) {
+                
+                // Set callout context accordingly
+                driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
+                driver_state.proc_extension = compiler_state.heading_extension;
+                
+                // Call hook
                 ws_hook(ext_driver_ctx, compiler_state.heading_context, white_line_count);
-            white_line_count = 0;
+                
+                // Unset callout context
+                driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+                
+            }
+            
         }
+        white_line_count = 0;
+
+        
+        
+#       pragma mark Indent Context
+        
+        // Set indent context accordingly (after whitespace since it doesn't count)
+        if (indent_level > compiler_state.indent_context->indent_level)
+            indent_level = compiler_state.indent_context->indent_level + 1;
+        else { // Deallocate same-and-higher-level contexts and bring stack down
+            int down_level = compiler_state.indent_context->indent_level;
+            while (indent_level <= down_level) {
+                pspl_toolchain_indent_read_t* de_ctx = &indent_ctx_stack[down_level];
+                free((void*)de_ctx->line_text);
+                --down_level;
+            }
+        }
+        if (indent_level >= PSPL_INDENT_CTX_STACK_SIZE)
+            pspl_error(-1, "Unsupported indent level",
+                       "specified indent level would cause stack overflow; maximum level count: %u",
+                       PSPL_INDENT_CTX_STACK_SIZE);
+        
+        // Target indent context
+        pspl_toolchain_indent_read_t* target_ctx = &indent_ctx_stack[indent_level];
+        compiler_state.indent_context = target_ctx;
+        target_ctx->indent_level = indent_level;
+        target_ctx->indent_trace = (indent_level)?&indent_ctx_stack[indent_level-1]:NULL;
+        
+        // Generate unchomped line buffer
+        size_t line_len = end_of_line-cur_line_unchomped;
+        if (line_len)
+            --line_len;
+        char* line_buf = malloc(line_len+1);
+        strncpy(line_buf, cur_line_unchomped, line_len);
+        line_buf[line_len] = '\0';
+        target_ctx->line_text = line_buf;
+        
+        // Chomp leading and end whitespace
+        char* line_start = line_buf;
+        while (*line_start == ' ' || *line_start == '\t')
+            ++line_start;
+        
+        char* line_end = line_buf + line_len;
+        while (line_end > line_start &&
+               (*line_end == '\0' || *line_end == ' ' || *line_end == '\t'))
+            --line_end;
+        *(line_end+1) = '\0';
+        
+        // See if there is a bullet or number
+        unsigned long bullet = 0;
+        if (*line_start == '*')
+            bullet = PSPL_BULLET_STAR;
+        else if (*line_start == '-')
+            bullet = PSPL_BULLET_DASH;
+        else if ((bullet = atoi(line_start))) {
+            bullet &= ~PSPL_BULLET_MASK;
+            char* dot = strchr(line_start, '.');
+            if (dot)
+                line_start = dot;
+            else
+                bullet = 0;
+        }
+        
+        // Chomp leading whitespace again if bullet present
+        if (bullet) {
+            ++line_start;
+            while (*line_start == ' ' || *line_start == '\t')
+                ++line_start;
+        }
+                
+        
+        target_ctx->bullet_value = bullet;
+        target_ctx->line_text_stripped = line_start;
         
         
 #       pragma mark Scan For Heading
 
         // Heading scan state
         uint8_t is_heading = 0;
-        unsigned int level = 0;
+        int level = 0;
         
         // Determine if we are entering a new heading with '#'s
         if (*cur_line == '#') {
@@ -350,7 +454,7 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             if (level > compiler_state.heading_context->heading_level)
                 level = compiler_state.heading_context->heading_level + 1;
             else { // Deallocate same-and-higher-level contexts and bring stack down
-                unsigned int down_level = compiler_state.heading_context->heading_level;
+                int down_level = compiler_state.heading_context->heading_level;
                 while (level <= down_level) {
                     pspl_toolchain_heading_context_t* de_ctx = &heading_ctx_stack[down_level];
                     if (de_ctx->heading_name != PSPL_GLOBAL_NAME)
@@ -589,6 +693,49 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             // Free resources
             free(com_name);
             free(tok_read_in);
+            
+        }
+        
+        
+#       pragma mark Fall Back To Line Read In
+        
+        if (compiler_state.heading_extension) { // Heading context required
+            
+            const pspl_extension_t* readin_ext = compiler_state.heading_extension;
+            if (readin_ext->toolchain_extension) {
+                
+                const pspl_toolchain_extension_t* readin_toolext = readin_ext->toolchain_extension;
+                
+                // Set callout context accordingly
+                driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
+                driver_state.proc_extension = compiler_state.heading_extension;
+                
+
+                // Determine if current heading context extension supports indenting
+                uint8_t fallback_non_indent = 1;
+                if (readin_toolext->indent_line_read_hook) {
+                    
+                    // Callout to indent line read hook
+                    fallback_non_indent = (readin_toolext->indent_line_read_hook(ext_driver_ctx,
+                                                                                 compiler_state.heading_context,
+                                                                                 compiler_state.indent_context) < 0)?1:0;
+                    
+                }
+                
+                // Fallback to non-indent read in
+                if (fallback_non_indent && readin_toolext->line_read_hook) {
+                    
+                    // Callout to line read hook
+                    readin_toolext->line_read_hook(ext_driver_ctx,
+                                                   compiler_state.heading_context,
+                                                   line_buf);
+                    
+                }
+                
+                // Unset callout context
+                driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+                
+            }
             
         }
         
