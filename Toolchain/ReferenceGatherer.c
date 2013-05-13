@@ -29,11 +29,6 @@ static void __pspl_gather_add_old_file(pspl_gatherer_context_t* ctx, const char*
             return;
     }
     
-    // Buffer string separately
-    size_t len = strlen(file) + 1;
-    char* buf = malloc(len);
-    strncpy(buf, file, len);
-    
     // Increment ref count (and reallocate if necessary)
     ++ctx->ref_old_count;
     if (ctx->ref_old_count >= ctx->ref_old_cap) {
@@ -42,7 +37,7 @@ static void __pspl_gather_add_old_file(pspl_gatherer_context_t* ctx, const char*
     }
     
     // Add to list
-    ctx->ref_old_array[ctx->ref_old_count-1] = buf;
+    ctx->ref_old_array[ctx->ref_old_count-1] = file;
     
     // We made changes!
     ctx->changes_made = 1;
@@ -89,9 +84,6 @@ void pspl_gather_load_cmake(pspl_gatherer_context_t* ctx, const char* cmake_path
                     __pspl_gather_add_old_file(ctx, read_in);
                 while ((read_in = strtok_r(save_ptr, "\";\n\"", &save_ptr)) && read_in < read_end);
             }
-            
-            // Done
-            free(cmake_buf);
             
         }
         
