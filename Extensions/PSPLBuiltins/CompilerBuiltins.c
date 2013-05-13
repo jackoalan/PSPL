@@ -32,6 +32,10 @@ int BUILTINS_command_call_hook(const pspl_toolchain_context_t* driver_context,
                 fprintf(stderr, "%02X", (unsigned int)(result[i]));
             }
             fprintf(stderr, "\n");
+            
+            // Test ref gathering
+            pspl_gather_referenced_file("test.txt");
+            pspl_gather_referenced_file("test.txt");
         }
         
     }

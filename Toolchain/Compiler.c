@@ -10,6 +10,7 @@
 #define PSPL_TOOLCHAIN
 
 #include <string.h>
+#include <sys/param.h>
 
 #include <PSPL/PSPLExtension.h>
 #include <PSPLInternal.h>
@@ -54,19 +55,28 @@ static struct _pspl_compiler_state {
 
 #pragma mark Public Extension API Implementation
 
-/* Request the immediate initialisation of another extension
- * (only valid within init hook) */
-int pspl_toolchain_init_other_extension(const char* ext_name) {
-    if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION)
-        return -1;
-    
-    
+static void __pspl_gather_referenced_file_rel(const char* rel_file_path) {
+    // Make path absolute from source
+    char abs_path[MAXPATHLEN];
+    abs_path[0] = '\0';
+    strcat(abs_path, compiler_state.source->file_enclosing_dir);
+    strcat(abs_path, rel_file_path);
+    pspl_gather_add_file(driver_state.gather_ctx, abs_path);
 }
 
 /* Add referenced source file to Reference Gathering list */
 void pspl_gather_referenced_file(const char* file_path) {
-    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
+    if (!driver_state.gather_ctx || driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
         return;
+    
+    // Good to go if absolute
+    if (*file_path == '/') {
+        pspl_gather_add_file(driver_state.gather_ctx, file_path);
+        return;
+    }
+    
+    // Need to expand if relative
+    __pspl_gather_referenced_file_rel(file_path);
 }
 
 /* Add data object (keyed with a null-terminated string stored as 32-bit truncated SHA1 hash) */

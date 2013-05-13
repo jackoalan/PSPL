@@ -11,6 +11,7 @@
 #ifdef PSPL_INTERNAL
 
 #include <PSPL/PSPLExtension.h>
+#include "ReferenceGatherer.h"
 
 /* Maximum count of target platforms
  * (logical 32-bit bitfields are used to relate objects to platforms) */
@@ -75,7 +76,7 @@ typedef struct {
 } pspl_toolchain_driver_opts_t;
 
 
-/* Driver state (for error reporting) */
+/* Driver state (for error reporting and other global operations) */
 typedef struct {
     
     // Driver phase
@@ -100,6 +101,18 @@ typedef struct {
     
     // Processing extension
     const pspl_extension_t* proc_extension;
+    
+    // Count of available extensions
+    unsigned int ext_count;
+    
+    // Bitfield to track which extensions have been initialised
+    uint32_t* ext_init_bits;
+    
+    // Toolchain context (public subset of this structure for extension use)
+    const pspl_toolchain_context_t* tool_ctx;
+    
+    // Reference gathering context
+    pspl_gatherer_context_t* gather_ctx;
     
 } pspl_toolchain_driver_state_t;
 

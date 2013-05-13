@@ -522,12 +522,15 @@ static void add_target_platform(pspl_toolchain_driver_opts_t* driver_opts,
 }
 
 /* Lookup target extension by name */
-static pspl_extension_t* lookup_ext(const char* ext_name) {
+static pspl_extension_t* lookup_ext(const char* ext_name, unsigned int* idx_out) {
     pspl_extension_t* ext = NULL;
-    int i = 0;
+    unsigned int i = 0;
     while ((ext = pspl_available_extensions[i++])) {
-        if (!strcmp(ext->extension_name, ext_name))
+        if (!strcmp(ext->extension_name, ext_name)) {
+            if (idx_out)
+                *idx_out = i-1;
             break;
+        }
     }
     return ext;
 }
@@ -535,13 +538,51 @@ static pspl_extension_t* lookup_ext(const char* ext_name) {
 /* Lookup target platform by name */
 static pspl_runtime_platform_t* lookup_target_platform(const char* plat_name) {
     pspl_runtime_platform_t* plat = NULL;
-    int i = 0;
+    unsigned int i = 0;
     while ((plat = pspl_available_target_platforms[i++])) {
         if (!strcmp(plat->platform_name, plat_name))
             break;
     }
     return plat;
 }
+
+
+#pragma mark Public Init Other Extension Request
+
+/* Get/set/unset bit state of extension init index */
+#define GET_INIT_BIT(idx) ((driver_state.ext_init_bits[idx/0x20] >> idx%0x20) & 0x1)
+#define SET_INIT_BIT(idx) (driver_state.ext_init_bits[idx/0x20] |= (0x1 << idx%0x20))
+#define UNSET_INIT_BIT(idx) (driver_state.ext_init_bits[idx/0x20] &= ~(0x1 << idx%0x20))
+
+/* Request the immediate initialisation of another extension
+ * (only valid within init hook) */
+int pspl_toolchain_init_other_extension(const char* ext_name) {
+    if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION)
+        return -1;
+    
+    // Lookup extension
+    unsigned int idx;
+    const pspl_extension_t* ext = lookup_ext(ext_name, &idx);
+    if (!ext) {
+        pspl_warn("Unable to locate extension requested by other extension",
+                  "extension '%s' requested initialising '%s' which is not available in this build of PSPL",
+                  driver_state.proc_extension->extension_name, ext_name);
+        return -1;
+    }
+    
+    // Run init hook of other extension if its not yet initialised
+    int good = 0;
+    if (ext->toolchain_extension && ext->toolchain_extension->init_hook && !GET_INIT_BIT(idx)) {
+        const pspl_extension_t* save_ext = driver_state.proc_extension;
+        driver_state.proc_extension = ext;
+        good = ext->toolchain_extension->init_hook(driver_state.tool_ctx);
+        driver_state.proc_extension = save_ext;
+        SET_INIT_BIT(idx);
+    }
+    
+    return good;
+}
+
 
 #if PSPL_ERROR_CATCH_SIGNALS
 static void catch_sig(int sig) {
@@ -730,7 +771,9 @@ int main(int argc, char** argv) {
     // Reflist (just the path)
     if (driver_opts.reflist_out_path) {
         FILE* file;
-        if ((file = fopen(driver_opts.reflist_out_path, "w")))
+        if ((file = fopen(driver_opts.reflist_out_path, "r")))
+            fclose(file);
+        else if ((file = fopen(driver_opts.reflist_out_path, "w")))
             fclose(file);
         else
             pspl_error(-1, "Unable to write reflist", "Can't open `%s` for writing",
@@ -773,15 +816,30 @@ int main(int argc, char** argv) {
         .def_k = driver_opts.def_k,
         .def_v = driver_opts.def_v
     };
+    driver_state.tool_ctx = &tool_ctx;
+    
+    
+    // Reference gathering context (if requested)
+    driver_state.gather_ctx = NULL;
+    if (!(driver_opts.pspl_mode_opts & PSPL_MODE_PREPROCESS_ONLY) &&
+        driver_opts.reflist_out_path) {
+        pspl_gatherer_context_t gatherer;
+        pspl_gather_load_cmake(&gatherer, driver_opts.reflist_out_path);
+        driver_state.gather_ctx = &gatherer;
+    }
     
     
 #   pragma mark Available Extension Count
     
     // Extension count
-    unsigned int available_extension_count = 0;
+    driver_state.ext_count = 0;
     pspl_extension_t** ext_counter = pspl_available_extensions;
     while (*(ext_counter++))
-        ++available_extension_count;
+        ++driver_state.ext_count;
+    
+    // Allocate extension init bits
+    size_t ext_init_bits_words = driver_state.ext_count / 0x20 + (driver_state.ext_count&0x1f)?1:0;
+    driver_state.ext_init_bits = calloc(ext_init_bits_words, sizeof(uint32_t));
     
     
 #   pragma mark Begin Toolchain Process
@@ -797,6 +855,7 @@ int main(int argc, char** argv) {
         // Source or PSPLC?
         const char* file_ext = strrchr(driver_opts.source_a[i], '.') + 1;
         if (!strcasecmp(file_ext, "pspl")) {
+            driver_state.pspl_phase = PSPL_PHASE_PREPARE;
             
 #           pragma mark Process PSPL Source
             pspl_toolchain_driver_source_t* source = &sources[sources_c++];
@@ -817,7 +876,7 @@ int main(int argc, char** argv) {
             source->file_name = last_slash+1;
             
             // Allocate required extension set
-            source->required_extension_set = calloc(available_extension_count+1, sizeof(pspl_extension_t*));
+            source->required_extension_set = calloc(driver_state.ext_count+1, sizeof(pspl_extension_t*));
             
             // Set error handling state for source file
             driver_state.file_name = source->file_name;
@@ -833,8 +892,10 @@ int main(int argc, char** argv) {
             j = 0;
             while ((ext = pspl_available_extensions[j++])) {
                 driver_state.proc_extension = ext;
-                if (ext->toolchain_extension && ext->toolchain_extension->init_hook)
+                if (ext->toolchain_extension && ext->toolchain_extension->init_hook && !GET_INIT_BIT(j-1)) {
                     ext->toolchain_extension->init_hook(&tool_ctx);
+                    SET_INIT_BIT(j-1);
+                }
             }
             
             // Prepare to read in file
@@ -875,12 +936,23 @@ int main(int argc, char** argv) {
                 _pspl_run_compiler(source, &tool_ctx, &driver_opts);
             }
             
+            // Finish each extension
+            driver_state.pspl_phase = PSPL_PHASE_FINISH_EXTENSION;
+            j = 0;
+            while ((ext = pspl_available_extensions[j++])) {
+                driver_state.proc_extension = ext;
+                if (ext->toolchain_extension && ext->toolchain_extension->finish_hook)
+                    ext->toolchain_extension->finish_hook(&tool_ctx);
+                UNSET_INIT_BIT(j-1);
+            }
+            
             // Only do first source if in preprocess or compile only modes
             if (driver_opts.pspl_mode_opts & (PSPL_MODE_PREPROCESS_ONLY|PSPL_MODE_COMPILE_ONLY))
                 break;
             
             
         } else if (!strcasecmp(file_ext, "psplc")) {
+            driver_state.pspl_phase = PSPL_PHASE_PREPARE;
             
             
 #           pragma mark Process PSPLC Object
@@ -945,7 +1017,7 @@ int main(int argc, char** argv) {
                 check_psplc_underflow(psplc, psplc_extension_name);
                 
                 // Lookup
-                const pspl_extension_t* ext = lookup_ext(psplc_extension_name);
+                const pspl_extension_t* ext = lookup_ext(psplc_extension_name, NULL);
                 if (!ext)
                     pspl_error(-1, "PSPLC-required extension not available",
                                "PSPLC `%s` requested `%s` which is not available in this build of PSPL",
@@ -1011,12 +1083,12 @@ int main(int argc, char** argv) {
     
     
 #   pragma mark Perform Packaging
+    driver_state.pspl_phase = PSPL_PHASE_PACKAGE;
     
     // Now run packager (if in packaging mode)
     const void* psplp_data = NULL;
     size_t psplp_data_len = 0;
     if (!(driver_opts.pspl_mode_opts & (PSPL_MODE_PREPROCESS_ONLY|PSPL_MODE_COMPILE_ONLY))) {
-        driver_state.pspl_phase = PSPL_PHASE_PACKAGE;
         driver_state.file_name = driver_opts.out_path;
         driver_state.line_num = 0;
         _pspl_run_packager(sources_c, sources, psplcs_c, psplcs,
@@ -1052,6 +1124,12 @@ int main(int argc, char** argv) {
     
     if (driver_opts.out_path)
         fclose(out_file);
+    
+    
+    // Same for reflist
+    if (driver_state.gather_ctx)
+        pspl_gather_finish(driver_state.gather_ctx, driver_opts.out_path);
+    
     
     return 0;
     
