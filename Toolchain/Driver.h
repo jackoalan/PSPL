@@ -76,6 +76,74 @@ typedef struct {
 } pspl_toolchain_driver_opts_t;
 
 
+
+/* Source file state */
+typedef struct {
+    
+    // File path (as provided)
+    const char* file_path;
+    
+    // Absolute enclosing directory (with trailing slash)
+    const char* file_enclosing_dir;
+    
+    // Base file name (prepending path chomped)
+    const char* file_name;
+    
+    // Full original source buffer
+    const char* original_source;
+    
+    
+    // Preprocessed source
+    const char* preprocessed_source;
+    
+    // Array of individual preprocessor expansion line counts
+    // (mapping each original line to a count of expanded lines)
+    // (an array of all 1s will indicate a preprocessed file of the same length as original)
+    unsigned int* expansion_line_counts;
+    
+    
+    // Required extension set (NULL-terminated array)
+    const pspl_extension_t** required_extension_set;
+    
+    
+    // Compiled object data
+    const uint8_t* psplc_data;
+    size_t psplc_data_len;
+
+    
+} pspl_toolchain_driver_source_t;
+
+
+/* Loaded PSPLC file state */
+typedef struct {
+    
+    // File path (as provided)
+    const char* file_path;
+    
+    // Absolute enclosing directory (with trailing slash)
+    const char* file_enclosing_dir;
+    
+    // Base file name (prepending path chomped)
+    const char* file_name;
+    
+    
+    // Required extension set (NULL-terminated array)
+    const pspl_extension_t** required_extension_set;
+    
+    // Required platform set (NULL-terminated array)
+    const pspl_runtime_platform_t** required_platform_set;
+    
+    
+    // Compiled object data
+    const uint8_t* psplc_data;
+    size_t psplc_data_len;
+    
+    
+} pspl_toolchain_driver_psplc_t;
+
+#include "ObjectIndexer.h"
+void check_psplc_underflow(pspl_toolchain_driver_psplc_t* psplc, const void* cur_ptr);
+
 /* Driver state (for error reporting and other global operations) */
 typedef struct {
     
@@ -114,70 +182,10 @@ typedef struct {
     // Reference gathering context
     pspl_gatherer_context_t* gather_ctx;
     
+    // Object indexing context
+    pspl_indexer_context_t* indexer_ctx;
+    
 } pspl_toolchain_driver_state_t;
-
-
-/* Source file state */
-typedef struct {
-    
-    // File path (as provided)
-    const char* file_path;
-    
-    // Absolute enclosing directory (with trailing slash)
-    const char* file_enclosing_dir;
-    
-    // Base file name (prepending path chomped)
-    const char* file_name;
-    
-    // Full original source buffer
-    const char* original_source;
-    
-    
-    // Preprocessed source
-    const char* preprocessed_source;
-    
-    // Array of individual preprocessor expansion line counts
-    // (mapping each original line to a count of expanded lines)
-    // (an array of all 1s will indicate a preprocessed file of the same length as original)
-    unsigned int* expansion_line_counts;
-    
-    
-    // Required extension set (NULL-terminated array)
-    const pspl_extension_t** required_extension_set;
-    
-    // Compiled object data
-    const uint8_t* psplc_data;
-    size_t psplc_data_len;
-
-    
-} pspl_toolchain_driver_source_t;
-
-
-/* Loaded PSPLC file state */
-typedef struct {
-    
-    // File path (as provided)
-    const char* file_path;
-    
-    // Absolute enclosing directory (with trailing slash)
-    const char* file_enclosing_dir;
-    
-    // Base file name (prepending path chomped)
-    const char* file_name;
-    
-    
-    // Required extension set (NULL-terminated array)
-    const pspl_extension_t** required_extension_set;
-    
-    // Required platform set (NULL-terminated array)
-    const pspl_runtime_platform_t** required_platform_set;
-    
-    // Compiled object data
-    const uint8_t* psplc_data;
-    size_t psplc_data_len;
-    
-    
-} pspl_toolchain_driver_psplc_t;
 
 
 extern pspl_toolchain_driver_state_t driver_state;

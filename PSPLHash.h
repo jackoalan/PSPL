@@ -9,6 +9,8 @@
 #ifndef PSPL_PSPLHash_h
 #define PSPL_PSPLHash_h
 
+#include <PSPL/PSPL.h>
+
 #if defined(PSPL_HASHING_BUILTIN)
 #  include "Hash/hash_builtin.h"
 #elif defined(PSPL_HASHING_COMMON_CRYPTO)

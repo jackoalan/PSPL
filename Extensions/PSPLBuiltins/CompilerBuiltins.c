@@ -23,7 +23,7 @@ int BUILTINS_command_call_hook(const pspl_toolchain_context_t* driver_context,
             pspl_hash_ctx_t hash_ctx;
             pspl_hash_init(&hash_ctx);
             pspl_hash_write(&hash_ctx, command_argv[0], strlen(command_argv[0]));
-            uint8_t* result;
+            pspl_hash* result;
             pspl_hash_result(&hash_ctx, result);
             fprintf(stderr, "Hash of '%s':\n", command_argv[0]);
             int i;
@@ -34,8 +34,8 @@ int BUILTINS_command_call_hook(const pspl_toolchain_context_t* driver_context,
             fprintf(stderr, "\n");
             
             // Test ref gathering
-            pspl_gather_referenced_file("test.txt");
-            pspl_gather_referenced_file("test.txt");
+            //pspl_gather_referenced_file("test.txt");
+            //pspl_gather_referenced_file("test12.txt");
         }
         
     }

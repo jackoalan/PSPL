@@ -80,7 +80,7 @@ void pspl_gather_referenced_file(const char* file_path) {
 }
 
 /* Add data object (keyed with a null-terminated string stored as 32-bit truncated SHA1 hash) */
-int __pspl_psplc_embed_hash_keyed_object(pspl_runtime_platform_t* platforms,
+int __pspl_psplc_embed_hash_keyed_object(const pspl_runtime_platform_t* platforms,
                                          const char* key,
                                          const void* little_object,
                                          const void* big_object,
@@ -93,7 +93,7 @@ int __pspl_psplc_embed_hash_keyed_object(pspl_runtime_platform_t* platforms,
 
 /* Add data object (keyed with a non-hashed 32-bit unsigned numeric value)
  * Integer keying uses a separate namespace from hashed keying */
-int __pspl_psplc_embed_integer_keyed_object(pspl_runtime_platform_t* platforms,
+int __pspl_psplc_embed_integer_keyed_object(const pspl_runtime_platform_t* platforms,
                                             uint32_t key,
                                             const void* little_object,
                                             const void* big_object,
@@ -103,7 +103,7 @@ int __pspl_psplc_embed_integer_keyed_object(pspl_runtime_platform_t* platforms,
 }
 
 /* Add file for PSPL-packaging */
-int pspl_package_add_file(pspl_runtime_platform_t* platforms,
+int pspl_package_add_file(const pspl_runtime_platform_t* platforms,
                           const char* path,
                           int move,
                           uint32_t* hash_out) {

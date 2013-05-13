@@ -8,6 +8,7 @@
 
 #ifndef PSPL_ReferenceGatherer_h
 #define PSPL_ReferenceGatherer_h
+#ifdef PSPL_INTERNAL
 
 /* The Reference Gather stores the necessary state to generate
  * a CMake include file that will augment the CMake dependencies 
@@ -43,4 +44,5 @@ void pspl_gather_add_file(pspl_gatherer_context_t* ctx, const char* file);
 /* Finish context and write to disk */
 void pspl_gather_finish(pspl_gatherer_context_t* ctx, const char* psplc_file);
 
+#endif // PSPL_INTERNAL
 #endif

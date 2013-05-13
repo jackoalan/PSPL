@@ -51,7 +51,7 @@ typedef struct {
 typedef struct {
     
     // Hash of this PSPLC object (truncated 32-bit SHA1 of object name)
-    uint32_t psplc_object_hash;
+    pspl_hash psplc_object_hash;
     
     // Tiered object indexing structure:
     //  * Per-extension object array count
@@ -115,7 +115,7 @@ typedef struct {
     
     // Hash/integer index of object
     union {
-        uint32_t object_hash;
+        pspl_hash object_hash;
         uint32_t object_index;
     };
     
@@ -125,6 +125,11 @@ typedef struct {
     // (as indexed in the platform name table at bottom of PSPL)
     uint32_t platform_availability_bits;
     
+    // Absolute file-offset to source file name this file stub
+    // is derived from (used to perform internal dependency calculation
+    // if the PSPLC is re-compiled over itself)
+    uint32_t object_source_path_off;
+    
 } pspl_object_stub_t;
 typedef DECL_BI_OBJ_TYPE(pspl_object_stub_t) pspl_object_stub_bi_t;
 
@@ -133,11 +138,8 @@ typedef DECL_BI_OBJ_TYPE(pspl_object_stub_t) pspl_object_stub_bi_t;
  * Used to index embedded objects and archived files. */
 typedef struct {
     
-    // Hash/integer index of object
-    union {
-        uint32_t object_hash;
-        uint32_t object_index;
-    };
+    // Hash of object
+    pspl_hash object_hash;
     
     // Platform availability bitfield
     // Bits indexed from LSB to MSB indicate whether or not this
@@ -151,8 +153,27 @@ typedef struct {
     // Length of object
     uint32_t object_len;
     
-} pspl_object_record_t;
-typedef DECL_BI_OBJ_TYPE(pspl_object_record_t) pspl_object_record_bi_t;
+} pspl_object_hash_record_t;
+typedef DECL_BI_OBJ_TYPE(pspl_object_hash_record_t) pspl_object_hash_record_bi_t;
+typedef struct {
+    
+    // Index of object
+    uint32_t object_index;
+    
+    // Platform availability bitfield
+    // Bits indexed from LSB to MSB indicate whether or not this
+    // object should be loaded into RAM given the current runtime host
+    // (as indexed in the platform name table at bottom of PSPL)
+    uint32_t platform_availability_bits;
+    
+    // Absolute file-offset to embedded object
+    uint32_t object_off;
+    
+    // Length of object
+    uint32_t object_len;
+    
+} pspl_object_int_record_t;
+typedef DECL_BI_OBJ_TYPE(pspl_object_int_record_t) pspl_object_int_record_bi_t;
 
 
 #pragma mark PSPLP Types

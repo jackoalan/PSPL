@@ -17,6 +17,9 @@
 #define PSPL_BIG_ENDIAN    2
 #define PSPL_BI_ENDIAN     3
 
+/* PSPL stored hash type */
+typedef uint8_t pspl_hash[20];
+
 /* Runtime-only structures */
 #ifdef PSPL_RUNTIME
 
@@ -24,8 +27,8 @@
  * Holds state information about object during runtime */
 typedef struct {
     
-    // Truncated SHA1 hash of PSPLC object
-    uint32_t hash;
+    // Hash of PSPLC object
+    pspl_hash hash;
     
     // Platform-specific shader object
     // (initialised by load hook, freed by unload hook, bound by bind hook)

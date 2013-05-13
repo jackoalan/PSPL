@@ -39,6 +39,7 @@
 #include "Compiler.h"
 #include "Packager.h"
 
+
 /* Maximum count of sources */
 #define PSPL_MAX_SOURCES 128
 
@@ -463,7 +464,7 @@ void pspl_warn(const char* brief, const char* msg, ...) {
 }
 
 /* Report PSPLC read-in underflow */
-static void check_psplc_underflow(pspl_toolchain_driver_psplc_t* psplc, const void* cur_ptr) {
+void check_psplc_underflow(pspl_toolchain_driver_psplc_t* psplc, const void* cur_ptr) {
     size_t delta = cur_ptr-(void*)psplc->psplc_data;
     if (delta > psplc->psplc_data_len)
         pspl_error(-1, "PSPLC underflow detected",
@@ -546,6 +547,142 @@ static pspl_runtime_platform_t* lookup_target_platform(const char* plat_name) {
     return plat;
 }
 
+/* Initialise psplc structure from file */
+static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const char* path) {
+    int j;
+    
+    // Populate filename members
+    psplc->file_path = path;
+    
+    // Make path absolute (if it's not already)
+    const char* abs_path = psplc->file_path;
+    if (abs_path[0] != '/')
+        asprintf((char**)&abs_path, "%s/%s", cwd, psplc->file_path);
+    
+    // Enclosing dir
+    char* last_slash = strrchr(abs_path, '/');
+    asprintf((char**)&psplc->file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
+    
+    // File name
+    psplc->file_name = last_slash+1;
+    
+    
+    // Load PSPLC object data
+    FILE* psplc_file = fopen(path, "r");
+    fseek(psplc_file, 0, SEEK_END);
+    long psplc_len = ftell(psplc_file);
+    fseek(psplc_file, 0, SEEK_SET);
+    if (psplc_len > PSPL_MAX_SOURCE_SIZE)
+        pspl_error(-1, "PSPLC file exceeded filesize limit",
+                   "PSPLC file `%s` is %l bytes in length; exceeding %u byte limit",
+                   path, psplc_len, (unsigned)PSPL_MAX_SOURCE_SIZE);
+    uint8_t* psplc_buf = malloc(psplc_len+1);
+    if (!psplc_buf)
+        pspl_error(-1, "Unable to allocate memory buffer for PSPLC",
+                   "errno %d - `%s`", errno, strerror(errno));
+    size_t read_len = fread(psplc_buf, 1, psplc_len, psplc_file);
+    psplc_buf[psplc_len] = '\0';
+    psplc->psplc_data = psplc_buf;
+    psplc->psplc_data_len = psplc_len;
+    fclose(psplc_file);
+    if (read_len != psplc_len)
+        pspl_error(-1, "Didn't read expected amount from PSPLC",
+                   "expected %u bytes; read %u bytes", psplc_len, read_len);
+    
+    // Verify file size (at least a header in length)
+    if (psplc->psplc_data_len < sizeof(pspl_header_t))
+        pspl_error(-1, "PSPLC file too short",
+                   "`%s` is not a valid PSPLC file", psplc->file_path);
+    
+    // Set Header and verify magic
+    const pspl_header_t* psplc_header = (pspl_header_t*)psplc->psplc_data;
+    if (memcmp(psplc_header->magic, "PSPL", 4))
+        pspl_error(-1, "Invalid PSPLC magic",
+                   "`%s` is not a valid PSPLC file", psplc->file_path);
+    // Verify not package
+    if (psplc_header->package_flag)
+        pspl_error(-1, "Unable to import PSPLP packages",
+                   "`%s` is a PSPLP package, not a PSPLC object file", psplc->file_path);
+    // Verify endianness
+    if (!(psplc_header->endian_flags & 0x3))
+        pspl_error(-1, "Invalid endian flag",
+                   "`%s` has invalid endian flag", psplc->file_path);
+    
+    
+    // Populate extension set
+    unsigned int psplc_extension_count = psplc_header->extension_name_table_c.native;
+    unsigned int psplc_extension_off = psplc_header->extension_name_table_off.native;
+    const char* psplc_extension_name = (char*)(psplc->psplc_data + psplc_extension_off);
+    psplc->required_extension_set = calloc(psplc_extension_count+1, sizeof(pspl_extension_t*));
+    for (j=0 ; j<psplc_extension_count ; ++j) {
+        check_psplc_underflow(psplc, psplc_extension_name);
+        
+        // Lookup
+        const pspl_extension_t* ext = lookup_ext(psplc_extension_name, NULL);
+        if (!ext)
+            pspl_error(-1, "PSPLC-required extension not available",
+                       "PSPLC `%s` requested `%s` which is not available in this build of PSPL",
+                       psplc->file_path, psplc_extension_name);
+        
+        // Ensure this isn't a redundant add (set enforcement)
+        /*
+        for (k=0 ; k<j ; ++k) {
+            if (psplc->required_extension_set[k] == ext) {
+                --j;
+                --psplc_extension_count;
+                break;
+            }
+        }
+        if (k<j)
+            continue;
+         */
+        
+        // Add to set
+        psplc->required_extension_set[j] = ext;
+        
+        // Advance
+        psplc_extension_name += strlen(psplc_extension_name) + 1;
+    }
+    psplc->required_extension_set[psplc_extension_count] = NULL;
+    
+    
+    // Populate platform set
+    unsigned int psplc_platform_count = psplc_header->platform_name_table_c.native;
+    unsigned int psplc_platform_off = psplc_header->platform_name_table_off.native;
+    const char* psplc_platform_name = (char*)(psplc->psplc_data + psplc_platform_off);
+    psplc->required_platform_set = calloc(psplc_platform_count+1, sizeof(pspl_runtime_platform_t*));
+    for (j=0 ; j<psplc_platform_count ; ++j) {
+        check_psplc_underflow(psplc, psplc_platform_name);
+        
+        // Lookup
+        const pspl_runtime_platform_t* plat = lookup_target_platform(psplc_platform_name);
+        if (!plat)
+            pspl_error(-1, "PSPLC-required target platform not available",
+                       "PSPLC `%s` requested `%s` which is not available in this build of PSPL",
+                       psplc->file_path, psplc_platform_name);
+        
+        // Ensure this isn't a redundant add (set enforcement)
+        /*
+        for (k=0 ; k<j ; ++k) {
+            if (psplc->required_platform_set[k] == plat) {
+                --j;
+                --psplc_platform_count;
+                break;
+            }
+        }
+        if (k<j)
+            continue;
+         */
+        
+        // Add to set
+        psplc->required_platform_set[j] = plat;
+        
+        // Advance
+        psplc_platform_name += strlen(psplc_platform_name) + 1;
+    }
+    psplc->required_platform_set[psplc_platform_count] = NULL;
+}
+
 
 #pragma mark Public Init Other Extension Request
 
@@ -589,6 +726,9 @@ static void catch_sig(int sig) {
     pspl_error(-1, "Caught signal", "PSPL caught signal %d (%s)", sig, sys_siglist[sig]);
 }
 #endif
+
+
+#pragma mark Main Driver Routine
 
 int main(int argc, char** argv) {
     
@@ -844,15 +984,53 @@ int main(int argc, char** argv) {
     
 #   pragma mark Begin Toolchain Process
     
+    // Initialise object indexer
+    driver_state.indexer_ctx = NULL;
+    if (!(driver_opts.pspl_mode_opts & PSPL_MODE_PREPROCESS_ONLY)) {
+        pspl_indexer_context_t indexer;
+        pspl_indexer_init(&indexer, driver_state.ext_count, driver_opts.platform_c);
+        driver_state.indexer_ctx = &indexer;
+    }
+    
+    // If compiling only; existing output present, augment indexer with existing file stubs
+    if (driver_opts.pspl_mode_opts & PSPL_MODE_COMPILE_ONLY &&
+        driver_state.indexer_ctx && driver_opts.out_path) {
+        pspl_toolchain_driver_psplc_t psplc;
+        init_psplc_from_file(&psplc, driver_opts.out_path);
+        pspl_indexer_psplc_stub_augment(driver_state.indexer_ctx, &psplc);
+    }
+    
     // Arguments valid, now time to compile each source and/or load PSPLCs for packaging!!
     unsigned int sources_c = 0;
     pspl_toolchain_driver_source_t sources[PSPL_MAX_SOURCES];
     unsigned int psplcs_c = 0;
     pspl_toolchain_driver_psplc_t psplcs[PSPL_MAX_SOURCES];
-    for (i=0;i<driver_opts.source_c;++i) {
-        int j,k;
+    
+
+    
+    // Pass 1/2: Augment PSPLC metadata and index existing members
+    for (i=0 ; i<driver_opts.source_c ; ++i) {
         
-        // Source or PSPLC?
+        // PSPLCs only
+        const char* file_ext = strrchr(driver_opts.source_a[i], '.') + 1;
+        if (!strcasecmp(file_ext, "psplc")) {
+            driver_state.pspl_phase = PSPL_PHASE_PREPARE;
+            
+#           pragma mark Process PSPLC Object
+            pspl_toolchain_driver_psplc_t* psplc = &psplcs[psplcs_c++];
+            init_psplc_from_file(psplc, driver_opts.source_a[i]);
+            if (driver_state.indexer_ctx)
+                pspl_indexer_psplc_stub_augment(driver_state.indexer_ctx, psplc);
+            
+        }
+        
+    }
+    
+    // Pass 2/2: Compile PSPL sources
+    for (i=0 ; i<driver_opts.source_c ; ++i) {
+        int j;
+        
+        // PSPL sources only
         const char* file_ext = strrchr(driver_opts.source_a[i], '.') + 1;
         if (!strcasecmp(file_ext, "pspl")) {
             driver_state.pspl_phase = PSPL_PHASE_PREPARE;
@@ -951,135 +1129,10 @@ int main(int argc, char** argv) {
                 break;
             
             
-        } else if (!strcasecmp(file_ext, "psplc")) {
-            driver_state.pspl_phase = PSPL_PHASE_PREPARE;
-            
-            
-#           pragma mark Process PSPLC Object
-            pspl_toolchain_driver_psplc_t* psplc = &psplcs[psplcs_c++];
-            
-            // Populate filename members
-            psplc->file_path = driver_opts.source_a[i];
-            
-            // Make path absolute (if it's not already)
-            const char* abs_path = psplc->file_path;
-            if (abs_path[0] != '/')
-                asprintf((char**)&abs_path, "%s/%s", cwd, psplc->file_path);
-            
-            // Enclosing dir
-            char* last_slash = strrchr(abs_path, '/');
-            asprintf((char**)&psplc->file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
-            
-            // File name
-            psplc->file_name = last_slash+1;
-            
-            
-            // Load PSPLC object data
-            FILE* psplc_file = fopen(driver_opts.source_a[i], "r");
-            fseek(psplc_file, 0, SEEK_END);
-            long psplc_len = ftell(psplc_file);
-            fseek(psplc_file, 0, SEEK_SET);
-            if (psplc_len > PSPL_MAX_SOURCE_SIZE)
-                pspl_error(-1, "PSPLC file exceeded filesize limit",
-                           "PSPLC file `%s` is %l bytes in length; exceeding %u byte limit",
-                           driver_opts.source_a[i], psplc_len, (unsigned)PSPL_MAX_SOURCE_SIZE);
-            uint8_t* psplc_buf = malloc(psplc_len+1);
-            if (!psplc_buf)
-                pspl_error(-1, "Unable to allocate memory buffer for PSPLC",
-                           "errno %d - `%s`", errno, strerror(errno));
-            size_t read_len = fread(psplc_buf, 1, psplc_len, psplc_file);
-            psplc_buf[psplc_len] = '\0';
-            psplc->psplc_data = psplc_buf;
-            psplc->psplc_data_len = psplc_len;
-            fclose(psplc_file);
-            if (read_len != psplc_len)
-                pspl_error(-1, "Didn't read expected amount from PSPLC",
-                           "expected %u bytes; read %u bytes", psplc_len, read_len);
-            
-            // Verify file size (at least a header in length)
-            if (psplc->psplc_data_len < sizeof(pspl_header_t))
-                pspl_error(-1, "PSPLC file too short",
-                           "`%s` is not a valid PSPLC file", psplc->file_path);
-            
-            // Set Header and verify magic
-            const pspl_header_t* psplc_header = (pspl_header_t*)psplc->psplc_data;
-            if (memcmp(psplc_header->magic, "PSPL", 4))
-                pspl_error(-1, "Invalid PSPLC magic",
-                           "`%s` is not a valid PSPLC file", psplc->file_path);
-            
-            
-            // Populate extension set
-            unsigned int psplc_extension_count = psplc_header->extension_name_table_c.native;
-            unsigned int psplc_extension_off = psplc_header->extension_name_table_off.native;
-            const char* psplc_extension_name = (char*)(psplc->psplc_data + psplc_extension_off);
-            psplc->required_extension_set = calloc(psplc_extension_count+1, sizeof(pspl_extension_t*));
-            for (j=0 ; j<psplc_extension_count ; ++j) {
-                check_psplc_underflow(psplc, psplc_extension_name);
-                
-                // Lookup
-                const pspl_extension_t* ext = lookup_ext(psplc_extension_name, NULL);
-                if (!ext)
-                    pspl_error(-1, "PSPLC-required extension not available",
-                               "PSPLC `%s` requested `%s` which is not available in this build of PSPL",
-                               psplc->file_path, psplc_extension_name);
-                
-                // Ensure this isn't a redundant add (set enforcement)
-                for (k=0 ; k<j ; ++k) {
-                    if (psplc->required_extension_set[k] == ext) {
-                        --j;
-                        --psplc_extension_count;
-                        break;
-                    }
-                }
-                if (k<j)
-                    continue;
-                
-                // Add to set
-                psplc->required_extension_set[j] = ext;
-                
-                // Advance
-                psplc_extension_name += strlen(psplc_extension_name) + 1;
-            }
-            psplc->required_extension_set[psplc_extension_count] = NULL;
-            
-            
-            // Populate platform set
-            unsigned int psplc_platform_count = psplc_header->platform_name_table_c.native;
-            unsigned int psplc_platform_off = psplc_header->platform_name_table_off.native;
-            const char* psplc_platform_name = (char*)(psplc->psplc_data + psplc_platform_off);
-            psplc->required_platform_set = calloc(psplc_platform_count+1, sizeof(pspl_runtime_platform_t*));
-            for (j=0 ; j<psplc_platform_count ; ++j) {
-                check_psplc_underflow(psplc, psplc_platform_name);
-                
-                // Lookup
-                const pspl_runtime_platform_t* plat = lookup_target_platform(psplc_platform_name);
-                if (!plat)
-                    pspl_error(-1, "PSPLC-required target platform not available",
-                               "PSPLC `%s` requested `%s` which is not available in this build of PSPL",
-                               psplc->file_path, psplc_platform_name);
-                
-                // Ensure this isn't a redundant add (set enforcement)
-                for (k=0 ; k<j ; ++k) {
-                    if (psplc->required_platform_set[k] == plat) {
-                        --j;
-                        --psplc_platform_count;
-                        break;
-                    }
-                }
-                if (k<j)
-                    continue;
-                
-                // Add to set
-                psplc->required_platform_set[j] = plat;
-                
-                // Advance
-                psplc_platform_name += strlen(psplc_platform_name) + 1;
-            }
-            psplc->required_platform_set[psplc_platform_count] = NULL;
-            
-        }
+        } 
         
     }
+
     
     
 #   pragma mark Perform Packaging

@@ -48,6 +48,7 @@ add_executable(pspl
                Packager.c
                Buffer.c
                ReferenceGatherer.c
+               ObjectIndexer.c
                ${PSPL_BINARY_DIR}/pspl_available_extensions.c)
 
 # Link toolchain extensions

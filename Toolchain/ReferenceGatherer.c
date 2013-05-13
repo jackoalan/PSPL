@@ -39,9 +39,6 @@ static void __pspl_gather_add_old_file(pspl_gatherer_context_t* ctx, const char*
     // Add to list
     ctx->ref_old_array[ctx->ref_old_count-1] = file;
     
-    // We made changes!
-    ctx->changes_made = 1;
-    
 }
 
 /* Init context and load (or stage creation of) include file */

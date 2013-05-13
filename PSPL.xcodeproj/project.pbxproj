@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
 		E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3A1740578E003B06BF /* ReferenceGatherer.c */; };
+		E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3D17411620003B06BF /* ObjectIndexer.c */; };
 		E4AFAE96172D898B00F7A0BF /* Preprocessor.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE95172D898B00F7A0BF /* Preprocessor.c */; };
 		E4AFAE99172D899D00F7A0BF /* Compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE98172D899D00F7A0BF /* Compiler.c */; };
 		E4AFAE9D172DB31100F7A0BF /* Packager.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE9B172DB2D400F7A0BF /* Packager.c */; };
@@ -43,6 +44,8 @@
 		E4995F32173E8C92003B06BF /* hash_windows.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hash_windows.h; sourceTree = "<group>"; };
 		E4995F3917405785003B06BF /* ReferenceGatherer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReferenceGatherer.h; sourceTree = "<group>"; };
 		E4995F3A1740578E003B06BF /* ReferenceGatherer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ReferenceGatherer.c; sourceTree = "<group>"; };
+		E4995F3C17411617003B06BF /* ObjectIndexer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjectIndexer.h; sourceTree = "<group>"; };
+		E4995F3D17411620003B06BF /* ObjectIndexer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ObjectIndexer.c; sourceTree = "<group>"; };
 		E4AFAE28171C92B900F7A0BF /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		E4AFAE29171C92BE00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4AFAE2A171C92D100F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
@@ -177,6 +180,8 @@
 				E4AFAEA117315D4000F7A0BF /* Buffer.c */,
 				E4995F3917405785003B06BF /* ReferenceGatherer.h */,
 				E4995F3A1740578E003B06BF /* ReferenceGatherer.c */,
+				E4995F3C17411617003B06BF /* ObjectIndexer.h */,
+				E4995F3D17411620003B06BF /* ObjectIndexer.c */,
 			);
 			path = Toolchain;
 			sourceTree = "<group>";
@@ -417,6 +422,7 @@
 				E4B7BCF0173C9DC0002A513E /* gx_offline.c in Sources */,
 				E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */,
 				E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */,
+				E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

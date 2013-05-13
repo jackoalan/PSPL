@@ -50,6 +50,6 @@ uint8_t* sha1_result(sha1nfo *s);
 typedef sha1nfo pspl_hash_ctx_t;
 #define pspl_hash_init(ctx_ptr) sha1_init(ctx_ptr)
 #define pspl_hash_write(ctx_ptr, data_ptr, len) sha1_write(ctx_ptr, (const char*)data_ptr, len)
-#define pspl_hash_result(ctx_ptr, out_ptr) out_ptr = (void*)sha1_result(ctx_ptr)
+#define pspl_hash_result(ctx_ptr, out_ptr) out_ptr = (pspl_hash*)sha1_result(ctx_ptr)
 
 #endif
