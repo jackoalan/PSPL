@@ -12,7 +12,7 @@
 #include "CompilerBuiltins.h"
 
 /* Command names */
-static const char* claimed_commands[] = {"TEST_HASH", NULL};
+static const char* claimed_commands[] = {"TEST_HASH", "TEST_FILE", NULL};
 
 /* Preprocessor directives */
 static const char* claimed_pp_direc[] = {"MESSAGE", NULL};

@@ -931,6 +931,7 @@ int main(int argc, char** argv) {
     }
     
     // Output file
+    driver_state.out_path = driver_opts.out_path;
     if (driver_opts.out_path) {
         FILE* file;
         if ((file = fopen(driver_opts.out_path, "w")))

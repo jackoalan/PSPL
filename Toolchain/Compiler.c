@@ -17,6 +17,7 @@
 #include <PSPLHash.h>
 
 #include "Compiler.h"
+#include "ObjectIndexer.h"
 
 /* Generate platform-native bullet enumerations */
 const unsigned long PSPL_BULLET_MASK = (~(((~0)<<2)>>2));
@@ -54,7 +55,7 @@ static struct _pspl_compiler_state {
 
 
 #pragma mark Public Extension API Implementation
-
+/*
 static void __pspl_gather_referenced_file_rel(const char* rel_file_path) {
     // Make path absolute from source
     char abs_path[MAXPATHLEN];
@@ -62,9 +63,10 @@ static void __pspl_gather_referenced_file_rel(const char* rel_file_path) {
     strcat(abs_path, compiler_state.source->file_enclosing_dir);
     strcat(abs_path, rel_file_path);
     pspl_gather_add_file(driver_state.gather_ctx, abs_path);
-}
+}*/
 
 /* Add referenced source file to Reference Gathering list */
+/*
 void pspl_gather_referenced_file(const char* file_path) {
     if (!driver_state.gather_ctx || driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
         return;
@@ -77,39 +79,43 @@ void pspl_gather_referenced_file(const char* file_path) {
     
     // Need to expand if relative
     __pspl_gather_referenced_file_rel(file_path);
-}
+}*/
 
 /* Add data object (keyed with a null-terminated string stored as 32-bit truncated SHA1 hash) */
-int __pspl_psplc_embed_hash_keyed_object(const pspl_runtime_platform_t* platforms,
-                                         const char* key,
-                                         const void* little_object,
-                                         const void* big_object,
-                                         size_t object_size) {
-    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
-        return -1;
-    
-    
+void __pspl_embed_hash_keyed_object(const pspl_runtime_platform_t** platforms,
+                                    const char* key,
+                                    const void* little_object,
+                                    const void* big_object,
+                                    size_t object_size) {
+    pspl_indexer_hash_object_augment(driver_state.indexer_ctx, driver_state.proc_extension,
+                                     platforms, key, little_object, big_object, object_size,
+                                     compiler_state.source);
 }
 
 /* Add data object (keyed with a non-hashed 32-bit unsigned numeric value)
  * Integer keying uses a separate namespace from hashed keying */
-int __pspl_psplc_embed_integer_keyed_object(const pspl_runtime_platform_t* platforms,
-                                            uint32_t key,
-                                            const void* little_object,
-                                            const void* big_object,
-                                            size_t object_size) {
-    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
-        return -1;
+void __pspl_embed_integer_keyed_object(const pspl_runtime_platform_t** platforms,
+                                       uint32_t key,
+                                       const void* little_object,
+                                       const void* big_object,
+                                       size_t object_size) {
+    pspl_indexer_integer_object_augment(driver_state.indexer_ctx, driver_state.proc_extension,
+                                        platforms, key, little_object, big_object, object_size,
+                                        compiler_state.source);
 }
 
 /* Add file for PSPL-packaging */
-int pspl_package_add_file(const pspl_runtime_platform_t* platforms,
-                          const char* path,
-                          int move,
-                          uint32_t* hash_out) {
-    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
-        return -1;
-    
+void pspl_package_file_augment(const pspl_runtime_platform_t** plats, const char* path_in,
+                               pspl_converter_file_hook converter_hook, uint8_t move_output,
+                               pspl_hash** hash_out) {
+    pspl_indexer_stub_file_augment(driver_state.indexer_ctx, plats, path_in, converter_hook,
+                                   move_output, hash_out, compiler_state.source);
+}
+void pspl_package_membuf_augment(const pspl_runtime_platform_t** plats, const char* path_in,
+                                 pspl_converter_membuf_hook converter_hook,
+                                 pspl_hash** hash_out) {
+    pspl_indexer_stub_membuf_augment(driver_state.indexer_ctx, plats, path_in, converter_hook,
+                                     hash_out, compiler_state.source);
 }
 
 

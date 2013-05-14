@@ -29,12 +29,18 @@ int BUILTINS_command_call_hook(const pspl_toolchain_context_t* driver_context,
             char string[PSPL_HASH_STRING_LEN];
             pspl_hash_fmt(string, result);
             fprintf(stderr, "%s\n", string);
-            
-            // Test ref gathering
-            //pspl_gather_referenced_file("test.txt");
-            //pspl_gather_referenced_file("test12.txt");
         }
-        
+    } else if (!strcasecmp(command_name, "TEST_FILE")) {
+        if (!command_argc)
+            fprintf(stderr, "`TEST_FILE` needs one argument\n");
+        else {
+            fprintf(stderr, "Received: %s\n", command_argv[0]);
+            pspl_hash* result_hash;
+            pspl_package_file_augment(NULL, command_argv[0], NULL, 0, &result_hash);
+            char hash_str[PSPL_HASH_STRING_LEN];
+            pspl_hash_fmt(hash_str, result_hash);
+            fprintf(stderr, "Hash: %s\n", hash_str);
+        }
     }
     
     return 0;

@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include <PSPLInternal.h>
 #include <PSPLHash.h>
@@ -26,8 +27,8 @@
 
 #define PSPL_INDEXER_INITIAL_CAP 50
 
-/* Determine if source is newer than last-known hashed binary */
-static int is_source_newer(const char* path, const pspl_hash* hash) {
+/* Determine if source is newer than last-known hashed binary object */
+static int is_source_newer_than_object(const char* path, const pspl_hash* hash) {
     // Stat source
     struct stat src_stat;
     if (stat(path, &src_stat))
@@ -50,6 +51,33 @@ static int is_source_newer(const char* path, const pspl_hash* hash) {
     
     // Compare modtimes
     if (src_stat.st_mtimespec.tv_sec >= obj_stat.st_mtimespec.tv_sec)
+        return 1;
+    
+    return 0;
+}
+
+/* Determine if source is newer than set output */
+static int is_source_newer_than_output(const char* path) {
+    // Integrate this later
+    return 1;
+    
+    // Stat source
+    struct stat src_stat;
+    if (stat(path, &src_stat))
+        return 1;
+    
+    if (!driver_state.out_path)
+        return 1;
+    
+    // Stat object
+    struct stat out_stat;
+    if (stat(driver_state.out_path, &out_stat))
+        pspl_error(-1, "Unable to stat output file",
+                   "can't stat `%s`",
+                   path);
+    
+    // Compare modtimes
+    if (src_stat.st_mtimespec.tv_sec >= out_stat.st_mtimespec.tv_sec)
         return 1;
     
     return 0;
@@ -83,7 +111,7 @@ static int copy_file(const char* dest_path, const char* src_path) {
     int in_fd = open(src_path, O_RDONLY);
     if (in_fd < 0)
         return -1;
-    int out_fd = open(dest_path, O_WRONLY);
+    int out_fd = open(dest_path, O_WRONLY|O_CREAT, 0644);
     if (out_fd < 0)
         return -1;
     char buf[8192];
@@ -273,7 +301,7 @@ static void __pspl_indexer_stub_file_post_augment(pspl_indexer_context_t* ctx,
             return;
     
     // Warn user if the source is newer than the object (necessitating recompile)
-    if (is_source_newer(path_in, hash_in))
+    if (is_source_newer_than_object(path_in, hash_in))
         pspl_warn("Newer data source detected",
                   "PSPL detected that `%s` has changed since `%s` was last compiled. "
                   "Old converted object will be used. Recompile if this is not desired.",
@@ -762,9 +790,20 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
                                     pspl_toolchain_driver_source_t* definer) {
     converter_state.path = path_in;
     converter_state.last_prog = 1;
+    char abs_path[MAXPATHLEN];
+    abs_path[0] = '\0';
+    
+    // Ensure staging directory exists
+    strcat(abs_path, driver_state.staging_path);
+    strcat(abs_path, "/PSPLFiles");
+    if(mkdir(abs_path, 0755))
+        if (errno != EEXIST)
+            pspl_error(-1, "Error creating staging directory",
+                       "unable to create `%s` as staging directory",
+                       abs_path);
+    
     
     // Make path absolute
-    char abs_path[MAXPATHLEN];
     if (*path_in != '/') {
         abs_path[0] = '\0';
         strcat(abs_path, definer->file_enclosing_dir);
@@ -820,51 +859,55 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
     } else
         new_entry->platform_availability_bits = ~0;
     
-    // Convert data
-    const char* final_path;
-    if (converter_hook) {
-        char conv_path_buf[MAXPATHLEN];
-        conv_path_buf[0] = '\0';
-        int err;
-        pspl_converter_progress_update(0.0);
-        if((err = converter_hook(conv_path_buf, path_in, sug_path))) {
-            fprintf(stderr, "\n");
-            pspl_error(-1, "Error converting file", "converter hook returned error '%d' for `%s`",
-                       err, path_in);
+    if (is_source_newer_than_output(path_in)) {
+        
+        // Convert data
+        const char* final_path;
+        if (converter_hook) {
+            char conv_path_buf[MAXPATHLEN];
+            conv_path_buf[0] = '\0';
+            int err;
+            pspl_converter_progress_update(0.0);
+            if((err = converter_hook(conv_path_buf, path_in, sug_path))) {
+                fprintf(stderr, "\n");
+                pspl_error(-1, "Error converting file", "converter hook returned error '%d' for `%s`",
+                           err, path_in);
+            }
+            pspl_converter_progress_update(1.0);
+            final_path = conv_path_buf;
+        } else {
+            if(copy_file(sug_path, path_in))
+                pspl_error(-1, "Unable to copy file",
+                           "unable to copy `%s` during conversion", path_in);
+            final_path = sug_path;
         }
-        pspl_converter_progress_update(1.0);
-        final_path = conv_path_buf;
-    } else {
-        if(copy_file(sug_path, path_in))
-            pspl_error(-1, "Unable to copy file",
-                       "unable to copy `%s` during conversion", path_in);
-        final_path = sug_path;
+        
+        // Hash converted data
+        if (hash_file(&new_entry->object_hash, final_path))
+            pspl_error(-1, "Unable to hash file",
+                       "error while hashing `%s`", final_path);
+        *hash_out = &new_entry->object_hash;
+        
+        // Final Hash path
+        char final_hash_str[PSPL_HASH_STRING_LEN];
+        pspl_hash_fmt(final_hash_str, &new_entry->object_hash);
+        char final_hash_path_str[MAXPATHLEN];
+        final_hash_path_str[0] = '\0';
+        strcat(final_hash_path_str, driver_state.staging_path);
+        strcat(final_hash_path_str, "/PSPLFiles/");
+        strcat(final_hash_path_str, final_hash_str);
+        
+        // Copy (or move)
+        if (converter_hook && !move_output) {
+            if(copy_file(final_hash_path_str, final_path))
+                pspl_error(-1, "Unable to copy file",
+                           "unable to copy `%s` during conversion", final_path);
+        } else
+            if(rename(final_path, final_hash_path_str))
+                pspl_error(-1, "Unable to move file",
+                           "unable to move `%s` during conversion", final_path);
+        
     }
-    
-    // Hash converted data
-    if (hash_file(&new_entry->object_hash, final_path))
-        pspl_error(-1, "Unable to hash file",
-                   "error while hashing `%s`", final_path);
-    *hash_out = &new_entry->object_hash;
-    
-    // Final Hash path
-    char final_hash_str[PSPL_HASH_STRING_LEN];
-    pspl_hash_fmt(final_hash_str, &new_entry->object_hash);
-    char final_hash_path_str[MAXPATHLEN];
-    final_hash_path_str[0] = '\0';
-    strcat(final_hash_path_str, driver_state.staging_path);
-    strcat(final_hash_path_str, "/PSPLFiles/");
-    strcat(final_hash_path_str, final_hash_str);
-    
-    // Copy (or move)
-    if (converter_hook && !move_output) {
-        if(copy_file(final_hash_path_str, final_path))
-            pspl_error(-1, "Unable to copy file",
-                       "unable to copy `%s` during conversion", final_path);
-    } else
-        if(rename(final_path, final_hash_path_str))
-            pspl_error(-1, "Unable to move file",
-                       "unable to move `%s` during conversion", final_path);
     
     // Populate structure
     new_entry->definer = definer->file_path;
@@ -886,9 +929,19 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
     
     converter_state.path = path_in;
     converter_state.last_prog = 1;
+    char abs_path[MAXPATHLEN];
+    abs_path[0] = '\0';
+    
+    // Ensure staging directory exists
+    strcat(abs_path, driver_state.staging_path);
+    strcat(abs_path, "/PSPLFiles");
+    if(mkdir(abs_path, 0755))
+        if (errno != EEXIST)
+            pspl_error(-1, "Error creating staging directory",
+                       "unable to create `%s` as staging directory",
+                       abs_path);
     
     // Make path absolute
-    char abs_path[MAXPATHLEN];
     if (*path_in != '/') {
         abs_path[0] = '\0';
         strcat(abs_path, definer->file_enclosing_dir);
@@ -902,7 +955,6 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
     for (i=0 ; i<ctx->stubs_count ; ++i)
         if (!strcmp(ctx->stubs_array[i]->stub_source_path, path_in))
             return;
-    
     
     // Allocate and add
     ++ctx->stubs_count;
@@ -931,47 +983,50 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
     } else
         new_entry->platform_availability_bits = ~0;
     
-    // Convert data
-    void* conv_buf = NULL;
-    size_t conv_len = 0;
-    int err;
-    pspl_converter_progress_update(0.0);
-    if((err = converter_hook(&conv_buf, &conv_len, path_in))) {
-        fprintf(stderr, "\n");
-        pspl_error(-1, "Error converting file", "converter hook returned error '%d' for `%s`",
-                    err, path_in);
+    if (is_source_newer_than_output(path_in)) {
+        
+        // Convert data
+        void* conv_buf = NULL;
+        size_t conv_len = 0;
+        int err;
+        pspl_converter_progress_update(0.0);
+        if((err = converter_hook(&conv_buf, &conv_len, path_in))) {
+            fprintf(stderr, "\n");
+            pspl_error(-1, "Error converting file", "converter hook returned error '%d' for `%s`",
+                       err, path_in);
+        }
+        pspl_converter_progress_update(1.0);
+        if (!conv_buf || !conv_len)
+            pspl_error(-1, "Empty conversion buffer returned",
+                       "conversion hook returned empty buffer for `%s`", path_in);
+        
+        // Hash converted data
+        pspl_hash_ctx_t hash_ctx;
+        pspl_hash_init(&hash_ctx);
+        pspl_hash_write(&hash_ctx, conv_buf, conv_len);
+        pspl_hash* hash_result;
+        pspl_hash_result(&hash_ctx, hash_result);
+        pspl_hash_cpy(&new_entry->object_hash, hash_result);
+        *hash_out = &new_entry->object_hash;
+        
+        // Final Hash path
+        char final_hash_str[PSPL_HASH_STRING_LEN];
+        pspl_hash_fmt(final_hash_str, &new_entry->object_hash);
+        char final_hash_path_str[MAXPATHLEN];
+        final_hash_path_str[0] = '\0';
+        strcat(final_hash_path_str, driver_state.staging_path);
+        strcat(final_hash_path_str, "/PSPLFiles/");
+        strcat(final_hash_path_str, final_hash_str);
+        
+        // Write to staging area
+        FILE* file = fopen(final_hash_path_str, "w");
+        if (!file)
+            pspl_error(-1, "Unable to open conversion file for writing", "Unable to write to `%s`",
+                       final_hash_path_str);
+        fwrite(conv_buf, 1, conv_len, file);
+        fclose(file);
+        
     }
-    pspl_converter_progress_update(1.0);
-    if (!conv_buf || !conv_len)
-        pspl_error(-1, "Empty conversion buffer returned",
-                   "conversion hook returned empty buffer for `%s`", path_in);
-    
-    // Hash converted data
-    pspl_hash_ctx_t hash_ctx;
-    pspl_hash_init(&hash_ctx);
-    pspl_hash_write(&hash_ctx, conv_buf, conv_len);
-    pspl_hash* hash_result;
-    pspl_hash_result(&hash_ctx, hash_result);
-    pspl_hash_cpy(&new_entry->object_hash, hash_result);
-    *hash_out = &new_entry->object_hash;
-    
-    // Final Hash path
-    char final_hash_str[PSPL_HASH_STRING_LEN];
-    pspl_hash_fmt(final_hash_str, &new_entry->object_hash);
-    char final_hash_path_str[MAXPATHLEN];
-    final_hash_path_str[0] = '\0';
-    strcat(final_hash_path_str, driver_state.staging_path);
-    strcat(final_hash_path_str, "/PSPLFiles/");
-    strcat(final_hash_path_str, final_hash_str);
-    
-    // Write to staging area
-    FILE* file = fopen(final_hash_path_str, "w");
-    if (!file)
-        pspl_error(-1, "Unable to open conversion file for writing", "Unable to write to `%s`",
-                   final_hash_path_str);
-    fwrite(conv_buf, 1, conv_len, file);
-    fclose(file);
-    
     
     // Populate structure
     new_entry->definer = definer->file_path;

@@ -10,6 +10,8 @@
 #define PSPL_Driver_h
 #ifdef PSPL_INTERNAL
 
+#include <sys/stat.h>
+
 #include <PSPL/PSPLExtension.h>
 #include "ReferenceGatherer.h"
 
@@ -190,6 +192,9 @@ typedef struct {
     
     // Staging area path (set to working dir otherwise)
     const char* staging_path;
+    
+    // Out file path
+    const char* out_path;
     
 } pspl_toolchain_driver_state_t;
 
