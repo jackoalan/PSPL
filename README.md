@@ -1,3 +1,6 @@
+If you need to build PSPL, follow the 
+[CMake usage instructions](https://github.com/jackoalan/PSPL/tree/master/cmake/#readme)
+
 PSPL Shader Language
 ====================
 
