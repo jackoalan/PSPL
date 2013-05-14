@@ -208,14 +208,11 @@ static void __pspl_indexer_hash_object_post_augment(pspl_indexer_context_t* ctx,
         --plats;
         while (*(++plats)) {
             for (i=0 ; i<ctx->plat_count ; ++i)
-                if (ctx->plat_array[i] == *plats) {
-                    new_entry->platform_availability_bits |= 1<<i;
+                if (ctx->plat_array[i] == *plats)
                     break;
-                }
-            if (i == ctx->plat_count) {
+            if (i == ctx->plat_count)
                 ctx->plat_array[ctx->plat_count++] = *plats;
-                new_entry->platform_availability_bits |= 1<<i;
-            }
+            new_entry->platform_availability_bits |= 1<<i;
         }
     } else
         new_entry->platform_availability_bits = ~0;
