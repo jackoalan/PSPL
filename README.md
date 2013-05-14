@@ -413,7 +413,7 @@ graphics API of choice.
 Flexible Integrability
 ----------------------
 
-*Read More:* [*CMake usage*](https://github.com/jackoalan/PSPL/blob/master/cmake#readme)
+*Read More:* [*CMake usage*](https://github.com/jackoalan/PSPL/tree/master/cmake/#readme)
 
 PSPL is designed to be adaptable beyond what it brings built-in.
 Headings (and sub-headings) are able to trigger routines at the *preprocessing*, 
