@@ -735,10 +735,13 @@ void pspl_indexer_integer_object_augment(pspl_indexer_context_t* ctx, const pspl
 /* Augment indexer context with file-stub
  * (triggering conversion hook if provided and output is outdated) */
 static struct {
+    uint8_t last_prog;
     const char* path;
 } converter_state;
 void pspl_converter_progress_update(double progress) {
     uint8_t prog_int = progress*100;
+    if (prog_int == converter_state.last_prog)
+        return; // Ease load on terminal if nothing is textually changing
     fprintf(stderr, "\r[");
     if (prog_int >= 100)
         fprintf(stderr, "100");
@@ -750,6 +753,7 @@ void pspl_converter_progress_update(double progress) {
         fprintf(stderr, "%c] \E[47;32m\E[47;49mConverting %s\E[m\017", '%', converter_state.path);
     else
         fprintf(stderr, "%c] Converting `%s`", '%', converter_state.path);
+    converter_state.last_prog = prog_int;
 }
 void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
                                     const pspl_runtime_platform_t** plats, const char* path_in,
@@ -757,6 +761,7 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
                                     pspl_hash** hash_out,
                                     pspl_toolchain_driver_source_t* definer) {
     converter_state.path = path_in;
+    converter_state.last_prog = 1;
     
     // Make path absolute
     char abs_path[MAXPATHLEN];
@@ -880,6 +885,7 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
         return;
     
     converter_state.path = path_in;
+    converter_state.last_prog = 1;
     
     // Make path absolute
     char abs_path[MAXPATHLEN];
