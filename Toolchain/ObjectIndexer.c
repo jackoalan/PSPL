@@ -24,6 +24,7 @@
 
 #include "ObjectIndexer.h"
 #include "Driver.h"
+#include "ReferenceGatherer.h"
 
 #define PSPL_INDEXER_INITIAL_CAP 50
 
@@ -925,6 +926,8 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
     char* cpy_path = malloc(cpy_len);
     strncpy(cpy_path, path_in, cpy_len);
     new_entry->stub_source_path = cpy_path;
+    if (driver_state.gather_ctx)
+        pspl_gather_add_file(driver_state.gather_ctx, cpy_path);
     
     converter_state.path = NULL;
     
@@ -1051,6 +1054,8 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
     char* cpy_path = malloc(cpy_len);
     strncpy(cpy_path, path_in, cpy_len);
     new_entry->stub_source_path = cpy_path;
+    if (driver_state.gather_ctx)
+        pspl_gather_add_file(driver_state.gather_ctx, cpy_path);
     
     converter_state.path = NULL;
     
