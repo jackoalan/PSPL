@@ -9,6 +9,8 @@
 #ifndef PSPL_PSPL_h
 #define PSPL_PSPL_h
 
+#include <string.h>
+
 /* PSPL's method of defining numeric values in a bi-endian manner */
 #include <PSPL/PSPLValue.h>
 
@@ -18,7 +20,17 @@
 #define PSPL_BI_ENDIAN     3
 
 /* PSPL stored hash type */
-typedef uint8_t pspl_hash[20];
+typedef struct {
+    uint8_t hash[20];
+} pspl_hash;
+static inline int pspl_hash_cmp(const pspl_hash* a, const pspl_hash* b) {
+    return memcmp(a, b, sizeof(pspl_hash));
+}
+static inline void pspl_hash_cpy(pspl_hash* dest, const pspl_hash* src) {
+    memcpy(dest, src, sizeof(pspl_hash));
+}
+#define PSPL_HASH_STRING_LEN 41
+extern void pspl_hash_fmt(char* out, const pspl_hash* hash);
 
 /* Runtime-only structures */
 #ifdef PSPL_RUNTIME

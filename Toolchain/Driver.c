@@ -73,7 +73,17 @@ pspl_toolchain_driver_state_t driver_state;
 static char cwd[MAXPATHLEN];
 
 /* Are we using xterm? */
-static uint8_t xterm_colour = 0;
+uint8_t xterm_colour = 0;
+
+
+/* Putting this here */
+void pspl_hash_fmt(char* out, const pspl_hash* hash) {
+    int i;
+    for (i=0 ; i<sizeof(pspl_hash) ; i++) {
+        sprintf(out, "%02X", (unsigned int)(hash->hash[i]));
+        out += 2;
+    }
+}
 
 
 #pragma mark Terminal Utils
@@ -944,6 +954,7 @@ int main(int argc, char** argv) {
         pspl_error(-1, "Unable to use requested staging path",
                    "`%s`; path not a directory", driver_opts.staging_path);
     }
+    driver_state.staging_path = driver_opts.staging_path;
     
     // Set target platform array ref
     driver_opts.platform_a = (const pspl_runtime_platform_t* const *)pspl_platforms;
@@ -992,45 +1003,17 @@ int main(int argc, char** argv) {
         driver_state.indexer_ctx = &indexer;
     }
     
-    // If compiling only; existing output present, augment indexer with existing file stubs
-    if (driver_opts.pspl_mode_opts & PSPL_MODE_COMPILE_ONLY &&
-        driver_state.indexer_ctx && driver_opts.out_path) {
-        pspl_toolchain_driver_psplc_t psplc;
-        init_psplc_from_file(&psplc, driver_opts.out_path);
-        pspl_indexer_psplc_stub_augment(driver_state.indexer_ctx, &psplc);
-    }
-    
     // Arguments valid, now time to compile each source and/or load PSPLCs for packaging!!
     unsigned int sources_c = 0;
     pspl_toolchain_driver_source_t sources[PSPL_MAX_SOURCES];
     unsigned int psplcs_c = 0;
     pspl_toolchain_driver_psplc_t psplcs[PSPL_MAX_SOURCES];
     
-
     
-    // Pass 1/2: Augment PSPLC metadata and index existing members
-    for (i=0 ; i<driver_opts.source_c ; ++i) {
-        
-        // PSPLCs only
-        const char* file_ext = strrchr(driver_opts.source_a[i], '.') + 1;
-        if (!strcasecmp(file_ext, "psplc")) {
-            driver_state.pspl_phase = PSPL_PHASE_PREPARE;
-            
-#           pragma mark Process PSPLC Object
-            pspl_toolchain_driver_psplc_t* psplc = &psplcs[psplcs_c++];
-            init_psplc_from_file(psplc, driver_opts.source_a[i]);
-            if (driver_state.indexer_ctx)
-                pspl_indexer_psplc_stub_augment(driver_state.indexer_ctx, psplc);
-            
-        }
-        
-    }
-    
-    // Pass 2/2: Compile PSPL sources
+    // Run through sources and objects
     for (i=0 ; i<driver_opts.source_c ; ++i) {
         int j;
         
-        // PSPL sources only
         const char* file_ext = strrchr(driver_opts.source_a[i], '.') + 1;
         if (!strcasecmp(file_ext, "pspl")) {
             driver_state.pspl_phase = PSPL_PHASE_PREPARE;
@@ -1129,7 +1112,16 @@ int main(int argc, char** argv) {
                 break;
             
             
-        } 
+        } else if (!strcasecmp(file_ext, "psplc")) {
+            driver_state.pspl_phase = PSPL_PHASE_PREPARE;
+            
+#           pragma mark Process PSPLC Object
+            pspl_toolchain_driver_psplc_t* psplc = &psplcs[psplcs_c++];
+            init_psplc_from_file(psplc, driver_opts.source_a[i]);
+            if (driver_state.indexer_ctx)
+                pspl_indexer_psplc_stub_augment(driver_state.indexer_ctx, psplc);
+            
+        }
         
     }
 

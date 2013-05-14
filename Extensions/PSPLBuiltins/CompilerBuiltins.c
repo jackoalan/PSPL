@@ -26,12 +26,9 @@ int BUILTINS_command_call_hook(const pspl_toolchain_context_t* driver_context,
             pspl_hash* result;
             pspl_hash_result(&hash_ctx, result);
             fprintf(stderr, "Hash of '%s':\n", command_argv[0]);
-            int i;
-            for (i = 0; i < PSPL_HASH_LENGTH; i++) {
-                if (i > 0) fprintf(stderr, ":");
-                fprintf(stderr, "%02X", (unsigned int)(result[i]));
-            }
-            fprintf(stderr, "\n");
+            char string[PSPL_HASH_STRING_LEN];
+            pspl_hash_fmt(string, result);
+            fprintf(stderr, "%s\n", string);
             
             // Test ref gathering
             //pspl_gather_referenced_file("test.txt");

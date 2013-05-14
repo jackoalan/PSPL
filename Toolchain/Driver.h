@@ -29,6 +29,9 @@ extern pspl_runtime_platform_t* pspl_available_target_platforms[];
 /* Default target platform */
 extern pspl_runtime_platform_t* pspl_default_target_platform;
 
+/* xterm Colour */
+extern uint8_t xterm_colour;
+
 /* Mode bits for logical setting/testing (set in `pspl_mode_opts`) */
 #define PSPL_MODE_COMPILE_ONLY     (1<<0)
 #define PSPL_MODE_PREPROCESS_ONLY  (1<<1)
@@ -184,6 +187,9 @@ typedef struct {
     
     // Object indexing context
     pspl_indexer_context_t* indexer_ctx;
+    
+    // Staging area path (set to working dir otherwise)
+    const char* staging_path;
     
 } pspl_toolchain_driver_state_t;
 

@@ -241,30 +241,34 @@ typedef int(*pspl_toolchain_indent_line_read_hook)(const pspl_toolchain_context_
  * results in the previous object being overloaded with the new object */
 
 /* Add data object (keyed with a null-terminated string stored as 32-bit truncated SHA1 hash) */
-int __pspl_psplc_embed_hash_keyed_object(const pspl_runtime_platform_t* platforms,
-                                         const char* key,
-                                         const void* little_object,
-                                         const void* big_object,
-                                         size_t object_size);
-#define pspl_psplc_embed_hash_keyed_object(platforms,key,object) \
-__pspl_psplc_embed_hash_keyed_object(platforms,key,&(object.little),&(object.big),sizeof(object.native))
+int __pspl_embed_hash_keyed_object(const pspl_runtime_platform_t* platforms,
+                                   const char* key,
+                                   const void* little_object,
+                                   const void* big_object,
+                                   size_t object_size);
+#define pspl_embed_hash_keyed_bi_object(platforms,key,object) \
+__pspl_embed_hash_keyed_object(platforms,key,&(object.little),&(object.big),sizeof(object.native))
+#define pspl_embed_hash_keyed_object(platforms,key,object) \
+__pspl_embed_hash_keyed_object(platforms,key,&object,&object,sizeof(object))
 
 /* Add data object (keyed with a non-hashed 32-bit unsigned numeric value) 
  * Integer keying uses a separate namespace from hashed keying */
-int __pspl_psplc_embed_integer_keyed_object(const pspl_runtime_platform_t* platforms,
-                                            uint32_t key,
-                                            const void* little_object,
-                                            const void* big_object,
-                                            size_t object_size);
-#define pspl_psplc_embed_integer_keyed_object(platforms,key,object) \
-__pspl_psplc_embed_integer_keyed_object(platforms,key,&(object.little),&(object.big),sizeof(object.native))
+int __pspl_embed_integer_keyed_object(const pspl_runtime_platform_t* platforms,
+                                      uint32_t key,
+                                      const void* little_object,
+                                      const void* big_object,
+                                      size_t object_size);
+#define pspl_embed_integer_keyed_bi_object(platforms,key,object) \
+__pspl_embed_integer_keyed_object(platforms,key,&(object.little),&(object.big),sizeof(object.native))
+#define pspl_embed_integer_keyed_object(platforms,key,object) \
+__pspl_embed_integer_keyed_object(platforms,key,&object,&object,sizeof(object))
 
 
 #pragma mark Add File For Packaging Into PSPLP Flat-File and/or PSPLPD Directory
 
 /* Standard data conversion interface */
-void pspl_converter_progress_update(double progress);
-typedef int(*pspl_converter_file_hook)(char* path_out, const char* path_in);
+extern void pspl_converter_progress_update(double progress);
+typedef int(*pspl_converter_file_hook)(char* path_out, const char* path_in, const char* suggested_path);
 typedef int(*pspl_converter_membuf_hook)(void** buf_out, size_t* len_out, const char* path_in);
 
 /* The `platforms` argument works as described for psplc_embed_* functions above
