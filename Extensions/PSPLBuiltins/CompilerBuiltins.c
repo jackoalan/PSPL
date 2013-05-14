@@ -11,6 +11,14 @@
 #include <string.h>
 #include <stdio.h>
 
+static int converter_hook(char* path_out, const char* path_in, const char* suggested_path) {
+    strcpy(path_out, suggested_path);
+    FILE* file = fopen(suggested_path, "w");
+    fwrite("Some stuff", 1, sizeof("Some stuff"), file);
+    fclose(file);
+    return 0;
+}
+
 int BUILTINS_command_call_hook(const pspl_toolchain_context_t* driver_context,
                                const pspl_toolchain_heading_context_t* current_heading,
                                const char* command_name,
@@ -36,10 +44,7 @@ int BUILTINS_command_call_hook(const pspl_toolchain_context_t* driver_context,
         else {
             fprintf(stderr, "Received: %s\n", command_argv[0]);
             pspl_hash* result_hash;
-            pspl_package_file_augment(NULL, command_argv[0], NULL, 0, &result_hash);
-            char hash_str[PSPL_HASH_STRING_LEN];
-            pspl_hash_fmt(hash_str, result_hash);
-            fprintf(stderr, "Hash: %s\n", hash_str);
+            pspl_package_file_augment(NULL, command_argv[0], converter_hook, 1, &result_hash);
         }
     }
     

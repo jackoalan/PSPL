@@ -770,7 +770,10 @@ void pspl_converter_progress_update(double progress) {
     uint8_t prog_int = progress*100;
     if (prog_int == converter_state.last_prog)
         return; // Ease load on terminal if nothing is textually changing
-    fprintf(stderr, "\r[");
+    if (xterm_colour)
+        fprintf(stderr, "\r\033[1m[");
+    else
+        fprintf(stderr, "\r[");
     if (prog_int >= 100)
         fprintf(stderr, "100");
     else if (prog_int >= 10)
@@ -778,7 +781,7 @@ void pspl_converter_progress_update(double progress) {
     else
         fprintf(stderr, "  %u", prog_int);
     if (xterm_colour)
-        fprintf(stderr, "%c] \E[47;32m\E[47;49mConverting %s\E[m\017", '%', converter_state.path);
+        fprintf(stderr, "%c]\E[m\017 \E[47;32m\E[47;49mConverting \033[1m%s\E[m\017", '%', converter_state.path);
     else
         fprintf(stderr, "%c] Converting `%s`", '%', converter_state.path);
     converter_state.last_prog = prog_int;
@@ -874,6 +877,7 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
                            err, path_in);
             }
             pspl_converter_progress_update(1.0);
+            fprintf(stderr, "\n");
             final_path = conv_path_buf;
         } else {
             if(copy_file(sug_path, path_in))
@@ -906,6 +910,12 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
             if(rename(final_path, final_hash_path_str))
                 pspl_error(-1, "Unable to move file",
                            "unable to move `%s` during conversion", final_path);
+        
+        // Message
+        if (xterm_colour)
+            fprintf(stderr, "\033[1mHash: \E[47;36m\E[47;49m%s\E[m\017\n", final_hash_str);
+        else
+            fprintf(stderr, "Hash: %s\n", final_hash_str);
         
     }
     
@@ -996,6 +1006,7 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
                        err, path_in);
         }
         pspl_converter_progress_update(1.0);
+        fprintf(stderr, "\n");
         if (!conv_buf || !conv_len)
             pspl_error(-1, "Empty conversion buffer returned",
                        "conversion hook returned empty buffer for `%s`", path_in);
@@ -1025,6 +1036,12 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
                        final_hash_path_str);
         fwrite(conv_buf, 1, conv_len, file);
         fclose(file);
+        
+        // Message
+        if (xterm_colour)
+            fprintf(stderr, "\033[1mHash: \E[47;36m\E[47;49m%s\E[m\017\n", final_hash_str);
+        else
+            fprintf(stderr, "Hash: %s\n", final_hash_str);
         
     }
     
