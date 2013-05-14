@@ -97,6 +97,8 @@ static int copy_file(const char* dest_path, const char* src_path) {
             return -1;
     }
     
+    close(in_fd);
+    close(out_fd);
     return 0;
 }
 
