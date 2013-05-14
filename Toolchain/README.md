@@ -9,10 +9,6 @@ to support new functionality end-to-end.
 The toolchain shares the same extension namespace as the runtime,
 so extensions may be written to extend both at the same time.
 
-
-Using PSPL's Toolchain
-======================
-
 If you're less interested in build-system integration, and more interested
 in using PSPL as a simple compiler, 
 [skip to the **Toolchain Driver Usage** section](#toolchain-driver-usage).
