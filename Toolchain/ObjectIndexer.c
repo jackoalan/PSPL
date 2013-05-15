@@ -18,6 +18,7 @@
 #include <sys/uio.h>
 #include <unistd.h>
 #include <errno.h>
+#include <dirent.h>
 
 #include <PSPLInternal.h>
 #include <PSPLHash.h>
@@ -39,7 +40,6 @@ static int is_source_newer_than_object(const char* path, const pspl_hash* hash) 
     char obj_path[MAXPATHLEN];
     obj_path[0] = '\0';
     strcat(obj_path, driver_state.staging_path);
-    strcat(obj_path, "/PSPLFiles/");
     char hash_str[PSPL_HASH_STRING_LEN];
     pspl_hash_fmt(hash_str, hash);
     strcat(obj_path, hash_str);
@@ -57,31 +57,78 @@ static int is_source_newer_than_object(const char* path, const pspl_hash* hash) 
     return 0;
 }
 
-/* Determine if source is newer than set output */
-static int is_source_newer_than_output(const char* path) {
-    // Integrate this later
-    return 1;
+/* Determine if referenced file is newer than its corresponding staged output 
+ * Also copies path hash string out */
+static int is_ref_newer_than_staged_output(const char* abs_ref_path,
+                                           char* abs_ref_path_hash_str_out) {
+
+    // First stat ref path
+    struct stat ref_stat;
+    if (stat(abs_ref_path, &ref_stat))
+        pspl_error(-1, "Unable to stat referenced file",
+                   "file `%s` couldn't be staged; errno: %d (%s)",
+                   abs_ref_path, errno, strerror(errno));
     
-    // Stat source
-    struct stat src_stat;
-    if (stat(path, &src_stat))
-        return 1;
+    // Hash path
+    pspl_hash_ctx_t hash_ctx;
+    pspl_hash_init(&hash_ctx);
+    pspl_hash_write(&hash_ctx, abs_ref_path, strlen(abs_ref_path));
+    pspl_hash* path_hash;
+    pspl_hash_result(&hash_ctx, path_hash);
+    pspl_hash_fmt(abs_ref_path_hash_str_out, path_hash);
     
-    if (!driver_state.out_path)
-        return 1;
+    // Use hash path to find newest existing staged output
+    struct timespec newest_match_mtime = {0,0};
+    char matched_path[MAXPATHLEN];
+    struct stat matched_stat;
+    DIR* staging_dir = opendir(driver_state.staging_path);
+    if (!staging_dir)
+        pspl_error(-1, "Unable to open staging directory",
+                   "error opening `%s`", driver_state.staging_path);
     
-    // Stat object
-    struct stat out_stat;
-    if (stat(driver_state.out_path, &out_stat))
-        pspl_error(-1, "Unable to stat output file",
-                   "can't stat `%s`",
-                   path);
+    struct dirent* dent;
+    while ((dent = readdir(staging_dir))) {
+        if (dent->d_type == DT_REG && dent->d_namlen >= PSPL_HASH_STRING_LEN-1)
+            if (!strncmp(abs_ref_path_hash_str_out, dent->d_name, PSPL_HASH_STRING_LEN-1)) {
+                // Found a match, stat it and set newest
+                matched_path[0] = '\0';
+                strcat(matched_path, driver_state.staging_path);
+                strcat(matched_path, dent->d_name);
+                if (stat(matched_path, &matched_stat))
+                    pspl_error(-1, "Unable to stat matched staged output",
+                               "while staging `%s`, unable to stat matched output `%s`; "
+                               "errno: %d (%s)",
+                               abs_ref_path, matched_path, errno, strerror(errno));
+                if ((matched_stat.st_mtimespec.tv_sec > newest_match_mtime.tv_sec) ||
+                    (matched_stat.st_mtimespec.tv_sec == newest_match_mtime.tv_sec &&
+                     matched_stat.st_mtimespec.tv_nsec > newest_match_mtime.tv_nsec))
+                    newest_match_mtime = matched_stat.st_mtimespec;
+            }
+    }
     
-    // Compare modtimes
-    if (src_stat.st_mtimespec.tv_sec >= out_stat.st_mtimespec.tv_sec)
-        return 1;
+    // Now see if ref is newer
+    int is_newer = 0;
+    if ((ref_stat.st_mtimespec.tv_sec > newest_match_mtime.tv_sec) ||
+        (ref_stat.st_mtimespec.tv_sec == newest_match_mtime.tv_sec &&
+         ref_stat.st_mtimespec.tv_nsec > newest_match_mtime.tv_nsec)) {
+        // It's newer; delete matched files in staging area (they're invalidated)
+        is_newer = 1;
+        rewinddir(staging_dir);
+        while ((dent = readdir(staging_dir))) {
+            if (dent->d_type == DT_REG && dent->d_namlen >= PSPL_HASH_STRING_LEN-1)
+                if (!strncmp(abs_ref_path_hash_str_out, dent->d_name, PSPL_HASH_STRING_LEN-1)) {
+                    // Found a match, delete it
+                    matched_path[0] = '\0';
+                    strcat(matched_path, driver_state.staging_path);
+                    strcat(matched_path, dent->d_name);
+                    unlink(matched_path);
+                }
+        }
+    }
     
-    return 0;
+    closedir(staging_dir);
+    
+    return is_newer;
 }
 
 /* Hash file content */
@@ -799,7 +846,6 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
     
     // Ensure staging directory exists
     strcat(abs_path, driver_state.staging_path);
-    strcat(abs_path, "/PSPLFiles");
     if(mkdir(abs_path, 0755))
         if (errno != EEXIST)
             pspl_error(-1, "Error creating staging directory",
@@ -822,19 +868,7 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
         if (!strcmp(ctx->stubs_array[i]->stub_source_path, path_in))
             return;
     
-    // Hash path for temporary output use
-    pspl_hash_ctx_t hash_ctx;
-    pspl_hash_init(&hash_ctx);
-    pspl_hash_write(&hash_ctx, path_in, strlen(path_in));
-    pspl_hash* path_hash;
-    pspl_hash_result(&hash_ctx, path_hash);
-    char path_hash_str[PSPL_HASH_STRING_LEN];
-    pspl_hash_fmt(path_hash_str, path_hash);
-    char sug_path[MAXPATHLEN];
-    sug_path[0] = '\0';
-    strcat(sug_path, driver_state.staging_path);
-    strcat(sug_path, "/PSPLFiles/tmp_");
-    strcat(sug_path, path_hash_str);
+
     
     // Allocate and add
     ++ctx->stubs_count;
@@ -862,6 +896,16 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
         }
     } else
         new_entry->platform_availability_bits = ~0;
+    
+    // Hash path for temporary output use
+    pspl_hash* path_hash;
+    char path_hash_str[PSPL_HASH_STRING_LEN];
+    pspl_hash_fmt(path_hash_str, path_hash);
+    char sug_path[MAXPATHLEN];
+    sug_path[0] = '\0';
+    strcat(sug_path, driver_state.staging_path);
+    strcat(sug_path, "tmp_");
+    strcat(sug_path, path_hash_str);
     
     if (is_source_newer_than_output(path_in)) {
         
@@ -899,7 +943,6 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
         char final_hash_path_str[MAXPATHLEN];
         final_hash_path_str[0] = '\0';
         strcat(final_hash_path_str, driver_state.staging_path);
-        strcat(final_hash_path_str, "/PSPLFiles/");
         strcat(final_hash_path_str, final_hash_str);
         
         // Copy (or move)
@@ -947,7 +990,6 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
     
     // Ensure staging directory exists
     strcat(abs_path, driver_state.staging_path);
-    strcat(abs_path, "/PSPLFiles");
     if(mkdir(abs_path, 0755))
         if (errno != EEXIST)
             pspl_error(-1, "Error creating staging directory",
@@ -1029,7 +1071,6 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
         char final_hash_path_str[MAXPATHLEN];
         final_hash_path_str[0] = '\0';
         strcat(final_hash_path_str, driver_state.staging_path);
-        strcat(final_hash_path_str, "/PSPLFiles/");
         strcat(final_hash_path_str, final_hash_str);
         
         // Write to staging area

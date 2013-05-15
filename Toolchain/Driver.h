@@ -11,6 +11,7 @@
 #ifdef PSPL_INTERNAL
 
 #include <sys/stat.h>
+#include <sys/param.h>
 
 #include <PSPL/PSPLExtension.h>
 #include "ReferenceGatherer.h"
@@ -191,10 +192,10 @@ typedef struct {
     pspl_indexer_context_t* indexer_ctx;
     
     // Staging area path (set to working dir otherwise)
-    const char* staging_path;
+    char staging_path[MAXPATHLEN];
     
     // Out file path
-    const char* out_path;
+    //const char* out_path;
     
 } pspl_toolchain_driver_state_t;
 

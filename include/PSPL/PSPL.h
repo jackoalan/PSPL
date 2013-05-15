@@ -31,6 +31,7 @@ static inline void pspl_hash_cpy(pspl_hash* dest, const pspl_hash* src) {
 }
 #define PSPL_HASH_STRING_LEN 41
 extern void pspl_hash_fmt(char* out, const pspl_hash* hash);
+extern void pspl_hash_parse(pspl_hash* out, const char* hash_str);
 
 /* Runtime-only structures */
 #ifdef PSPL_RUNTIME

@@ -76,12 +76,22 @@ static char cwd[MAXPATHLEN];
 uint8_t xterm_colour = 0;
 
 
-/* Putting this here */
+/* Putting these here */
 void pspl_hash_fmt(char* out, const pspl_hash* hash) {
     int i;
-    for (i=0 ; i<sizeof(pspl_hash) ; i++) {
+    for (i=0 ; i<sizeof(pspl_hash) ; ++i) {
         sprintf(out, "%02X", (unsigned int)(hash->hash[i]));
         out += 2;
+    }
+}
+void pspl_hash_parse(pspl_hash* out, const char* hash_str) {
+    int i;
+    char byte_str[3];
+    byte_str[2] = '\0';
+    for (i=0 ; i<sizeof(pspl_hash) ; ++i) {
+        strncpy(byte_str, hash_str, 2);
+        out->hash[i] = (uint8_t)strtol(byte_str, NULL, 16);
+        hash_str += 2;
     }
 }
 
@@ -931,7 +941,7 @@ int main(int argc, char** argv) {
     }
     
     // Output file
-    driver_state.out_path = driver_opts.out_path;
+    //driver_state.out_path = driver_opts.out_path;
     if (driver_opts.out_path) {
         FILE* file;
         if ((file = fopen(driver_opts.out_path, "w")))
@@ -955,7 +965,7 @@ int main(int argc, char** argv) {
         pspl_error(-1, "Unable to use requested staging path",
                    "`%s`; path not a directory", driver_opts.staging_path);
     }
-    driver_state.staging_path = driver_opts.staging_path;
+    snprintf(driver_state.staging_path, MAXPATHLEN, "%s/PSPLFiles/", driver_opts.staging_path);
     
     // Set target platform array ref
     driver_opts.platform_a = (const pspl_runtime_platform_t* const *)pspl_platforms;
