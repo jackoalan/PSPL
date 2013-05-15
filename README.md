@@ -1,3 +1,6 @@
+If you need to build PSPL, follow the 
+[CMake usage instructions](https://github.com/jackoalan/PSPL/tree/master/cmake/#readme)
+
 PSPL Shader Language
 ====================
 
@@ -100,7 +103,7 @@ that many digital artists follow, PSPL is designed to serve as an integral
 tool; assisting these procedural tasks. The focus on an *art pipeline* paradigm
 is realised in five stages:
 
-* **Intermediate** – Filesystem-based means of gathering `.pspl` sources and intermediate assets (models, textures, etc...) into a `.pspld` root directory
+* **Intermediate** – Filesystem-based means of gathering `.pspl` sources and intermediate assets (models, textures, etc...)
 * **Preprocessing** – Token-based substitution and external inclusion (think C preprocessor) for `.pspl` sources
 * **Compiling** – Conversion to platform native data formats (including shader code generation and asset conversion)
 * **Packaging** – Gathering of compiled shader objects and native flat-file assets into a `.psplp` package file for runtime
@@ -413,8 +416,10 @@ graphics API of choice.
 Flexible Integrability
 ----------------------
 
+*Read More:* [*CMake usage*](https://github.com/jackoalan/PSPL/tree/master/cmake/#readme)
+
 PSPL is designed to be adaptable beyond what it brings built-in.
 Headings (and sub-headings) are able to trigger routines at the *preprocessing*, 
 *compiling*, and *runtime playback* stages. Commands also exist to programmatically
 invoke processing routines during the same stages. It's also possible to provide 
-syntactic access to more esoteric platform-specific features not 
+syntactic access to more esoteric features not available
