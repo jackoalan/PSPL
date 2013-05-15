@@ -29,29 +29,42 @@
 
 #define PSPL_INDEXER_INITIAL_CAP 50
 
-/* Determine if source is newer than last-known hashed binary object */
-static int is_source_newer_than_object(const char* path, const pspl_hash* hash) {
+
+#pragma mark File Utilities
+
+/* Determine if referenced file is newer than last-known hashed binary object (For PSPLCs) */
+static int is_psplc_ref_newer_than_staged_output(const char* abs_ref_path, const pspl_hash* hash) {
     // Stat source
     struct stat src_stat;
-    if (stat(path, &src_stat))
+    if (stat(abs_ref_path, &src_stat))
         return 1;
+    
+    // Hash path
+    pspl_hash_ctx_t hash_ctx;
+    pspl_hash_init(&hash_ctx);
+    pspl_hash_write(&hash_ctx, abs_ref_path, strlen(abs_ref_path));
+    pspl_hash* path_hash;
+    pspl_hash_result(&hash_ctx, path_hash);
+    char abs_ref_path_hash_str[PSPL_HASH_STRING_LEN];
+    pspl_hash_fmt(abs_ref_path_hash_str, path_hash);
     
     // Stat object
     char obj_path[MAXPATHLEN];
     obj_path[0] = '\0';
     strcat(obj_path, driver_state.staging_path);
-    char hash_str[PSPL_HASH_STRING_LEN];
-    pspl_hash_fmt(hash_str, hash);
-    strcat(obj_path, hash_str);
+    strcat(obj_path, abs_ref_path_hash_str);
+    strcat(obj_path, "_");
+    char data_hash_str[PSPL_HASH_STRING_LEN];
+    pspl_hash_fmt(data_hash_str, hash);
+    strcat(obj_path, data_hash_str);
     struct stat obj_stat;
     if (stat(obj_path, &obj_stat))
-        pspl_error(-1, "Unable to stat object file",
-                   "object `%s` (corresponding to `%s`) doesn't exist;"
-                   " recompilation may be necessary",
-                   hash_str, path);
+        return 1;
     
     // Compare modtimes
-    if (src_stat.st_mtimespec.tv_sec >= obj_stat.st_mtimespec.tv_sec)
+    if ((src_stat.st_mtimespec.tv_sec > obj_stat.st_mtimespec.tv_sec) ||
+        (src_stat.st_mtimespec.tv_sec == obj_stat.st_mtimespec.tv_sec &&
+         src_stat.st_mtimespec.tv_nsec > obj_stat.st_mtimespec.tv_nsec))
         return 1;
     
     return 0;
@@ -59,8 +72,10 @@ static int is_source_newer_than_object(const char* path, const pspl_hash* hash) 
 
 /* Determine if referenced file is newer than its corresponding staged output 
  * Also copies path hash string out */
-static int is_ref_newer_than_staged_output(const char* abs_ref_path,
-                                           char* abs_ref_path_hash_str_out) {
+static int is_source_ref_newer_than_staged_output(const char* abs_ref_path,
+                                                  char* abs_ref_path_hash_str_out,
+                                                  char* newest_ref_data_hash_str_out,
+                                                  int delete_if_newer) {
 
     // First stat ref path
     struct stat ref_stat;
@@ -106,6 +121,13 @@ static int is_ref_newer_than_staged_output(const char* abs_ref_path,
             }
     }
     
+    // Write out newest data hash (if needed)
+    if (newest_ref_data_hash_str_out && newest_match_mtime.tv_sec) {
+        char* d_hash = strrchr(matched_path, '_')+1;
+        strncpy(newest_ref_data_hash_str_out, d_hash, PSPL_HASH_STRING_LEN-1);
+        newest_ref_data_hash_str_out[PSPL_HASH_STRING_LEN-1] = '\0';
+    }
+    
     // Now see if ref is newer
     int is_newer = 0;
     if ((ref_stat.st_mtimespec.tv_sec > newest_match_mtime.tv_sec) ||
@@ -113,16 +135,18 @@ static int is_ref_newer_than_staged_output(const char* abs_ref_path,
          ref_stat.st_mtimespec.tv_nsec > newest_match_mtime.tv_nsec)) {
         // It's newer; delete matched files in staging area (they're invalidated)
         is_newer = 1;
-        rewinddir(staging_dir);
-        while ((dent = readdir(staging_dir))) {
-            if (dent->d_type == DT_REG && dent->d_namlen >= PSPL_HASH_STRING_LEN-1)
-                if (!strncmp(abs_ref_path_hash_str_out, dent->d_name, PSPL_HASH_STRING_LEN-1)) {
-                    // Found a match, delete it
-                    matched_path[0] = '\0';
-                    strcat(matched_path, driver_state.staging_path);
-                    strcat(matched_path, dent->d_name);
-                    unlink(matched_path);
-                }
+        if (delete_if_newer) {
+            rewinddir(staging_dir);
+            while ((dent = readdir(staging_dir))) {
+                if (dent->d_type == DT_REG && dent->d_namlen >= PSPL_HASH_STRING_LEN-1)
+                    if (!strncmp(abs_ref_path_hash_str_out, dent->d_name, PSPL_HASH_STRING_LEN-1)) {
+                        // Found a match, delete it
+                        matched_path[0] = '\0';
+                        strcat(matched_path, driver_state.staging_path);
+                        strcat(matched_path, dent->d_name);
+                        unlink(matched_path);
+                    }
+            }
         }
     }
     
@@ -211,6 +235,9 @@ static int copy_file(const char* dest_path, const char* src_path) {
     fprintf(stderr, "\n");
     return 0;
 }
+
+
+#pragma mark Indexer API
 
 /* Initialise indexer context */
 void pspl_indexer_init(pspl_indexer_context_t* ctx,
@@ -376,8 +403,8 @@ static void __pspl_indexer_stub_file_post_augment(pspl_indexer_context_t* ctx,
         if (!strcmp(ctx->stubs_array[i]->stub_source_path, path_in))
             return;
     
-    // Warn user if the source is newer than the object (necessitating recompile)
-    if (is_source_newer_than_object(path_in, hash_in))
+    // Warn user if the source ref is newer than the newest object (necessitating recompile)
+    if (is_psplc_ref_newer_than_staged_output(path_in, hash_in))
         pspl_warn("Newer data source detected",
                   "PSPL detected that `%s` has changed since `%s` was last compiled. "
                   "Old converted object will be used. Recompile if this is not desired.",
@@ -739,14 +766,11 @@ void pspl_indexer_hash_object_augment(pspl_indexer_context_t* ctx, const pspl_ex
         --plats;
         while (*(++plats)) {
             for (i=0 ; i<ctx->plat_count ; ++i)
-                if (ctx->plat_array[i] == *plats) {
-                    new_entry->platform_availability_bits |= 1<<i;
+                if (ctx->plat_array[i] == *plats)
                     break;
-                }
-            if (i == ctx->plat_count) {
+            if (i == ctx->plat_count)
                 ctx->plat_array[ctx->plat_count++] = *plats;
-                new_entry->platform_availability_bits |= 1<<i;
-            }
+            new_entry->platform_availability_bits |= 1<<i;
         }
     } else
         new_entry->platform_availability_bits = ~0;
@@ -805,14 +829,11 @@ void pspl_indexer_integer_object_augment(pspl_indexer_context_t* ctx, const pspl
         --plats;
         while (*(++plats)) {
             for (i=0 ; i<ctx->plat_count ; ++i)
-                if (ctx->plat_array[i] == *plats) {
-                    new_entry->platform_availability_bits |= 1<<i;
+                if (ctx->plat_array[i] == *plats)
                     break;
-                }
-            if (i == ctx->plat_count) {
+            if (i == ctx->plat_count)
                 ctx->plat_array[ctx->plat_count++] = *plats;
-                new_entry->platform_availability_bits |= 1<<i;
-            }
+            new_entry->platform_availability_bits |= 1<<i;
         }
     } else
         new_entry->platform_availability_bits = ~0;
@@ -910,21 +931,19 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
         --plats;
         while (*(++plats)) {
             for (i=0 ; i<ctx->plat_count ; ++i)
-                if (ctx->plat_array[i] == *plats) {
-                    new_entry->platform_availability_bits |= 1<<i;
+                if (ctx->plat_array[i] == *plats)
                     break;
-                }
-            if (i == ctx->plat_count) {
+            if (i == ctx->plat_count)
                 ctx->plat_array[ctx->plat_count++] = *plats;
-                new_entry->platform_availability_bits |= 1<<i;
-            }
+            new_entry->platform_availability_bits |= 1<<i;
         }
     } else
         new_entry->platform_availability_bits = ~0;
     
     // Determine if reference is newer
     char path_hash_str[PSPL_HASH_STRING_LEN];
-    int is_newer = is_ref_newer_than_staged_output(path_in, path_hash_str);
+    char newest_data_hash_str[PSPL_HASH_STRING_LEN];
+    int is_newer = is_source_ref_newer_than_staged_output(path_in, path_hash_str, newest_data_hash_str, 1);
     char sug_path[MAXPATHLEN];
     sug_path[0] = '\0';
     strcat(sug_path, driver_state.staging_path);
@@ -995,6 +1014,11 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
         else
             fprintf(stderr, "Data Hash: %s\n", final_hash_str);
         
+    } else {
+        
+        // No conversion; just copy newest data hash
+        pspl_hash_parse(&new_entry->object_hash, newest_data_hash_str);
+        
     }
     
     // Populate structure
@@ -1060,21 +1084,19 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
         --plats;
         while (*(++plats)) {
             for (i=0 ; i<ctx->plat_count ; ++i)
-                if (ctx->plat_array[i] == *plats) {
-                    new_entry->platform_availability_bits |= 1<<i;
+                if (ctx->plat_array[i] == *plats)
                     break;
-                }
-            if (i == ctx->plat_count) {
+            if (i == ctx->plat_count)
                 ctx->plat_array[ctx->plat_count++] = *plats;
-                new_entry->platform_availability_bits |= 1<<i;
-            }
+            new_entry->platform_availability_bits |= 1<<i;
         }
     } else
         new_entry->platform_availability_bits = ~0;
     
     // Determine if reference is newer
     char path_hash_str[PSPL_HASH_STRING_LEN];
-    int is_newer = is_ref_newer_than_staged_output(path_in, path_hash_str);
+    char newest_data_hash_str[PSPL_HASH_STRING_LEN];
+    int is_newer = is_source_ref_newer_than_staged_output(path_in, path_hash_str, newest_data_hash_str, 1);
     
     if (is_newer) {
         
@@ -1130,6 +1152,11 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
             fprintf(stderr, "\033[1mData Hash: \E[47;36m\E[47;49m%s\E[m\017\n", final_hash_str);
         else
             fprintf(stderr, "Data Hash: %s\n", final_hash_str);
+        
+    } else {
+        
+        // No conversion; just copy newest data hash
+        pspl_hash_parse(&new_entry->object_hash, newest_data_hash_str);
         
     }
     
