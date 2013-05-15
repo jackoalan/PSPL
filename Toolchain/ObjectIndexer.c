@@ -155,10 +155,40 @@ static int hash_file(pspl_hash* hash_out, const char* path) {
 }
 
 /* Copy file */
+static struct {
+    uint8_t last_prog;
+    const char* path;
+} copy_state;
+static void pspl_copy_progress_update(double progress) {
+    uint8_t prog_int = progress*100;
+    if (prog_int == copy_state.last_prog)
+        return; // Ease load on terminal if nothing is textually changing
+    if (xterm_colour)
+        fprintf(stderr, "\r\033[1m[");
+    else
+        fprintf(stderr, "\r[");
+    if (prog_int >= 100)
+        fprintf(stderr, "100");
+    else if (prog_int >= 10)
+        fprintf(stderr, " %u", prog_int);
+    else
+        fprintf(stderr, "  %u", prog_int);
+    if (xterm_colour)
+        fprintf(stderr, "%c]\E[m\017 \E[47;32m\E[47;49mCopying \033[1m%s\E[m\017", '%', copy_state.path);
+    else
+        fprintf(stderr, "%c] Copying `%s`", '%', copy_state.path);
+    copy_state.last_prog = prog_int;
+}
 static int copy_file(const char* dest_path, const char* src_path) {
+    copy_state.last_prog = 1;
+    pspl_copy_progress_update(0);
     int in_fd = open(src_path, O_RDONLY);
     if (in_fd < 0)
         return -1;
+    off_t len = lseek(in_fd, 0, SEEK_END);
+    off_t cur = 0;
+    lseek(in_fd, 0, SEEK_SET);
+    
     int out_fd = open(dest_path, O_WRONLY|O_CREAT, 0644);
     if (out_fd < 0)
         return -1;
@@ -171,10 +201,14 @@ static int copy_file(const char* dest_path, const char* src_path) {
             return -1;
         if (write(out_fd, &buf[0], result) != result)
             return -1;
+        cur += result;
+        pspl_copy_progress_update((double)cur/(double)len);
     }
     
     close(in_fd);
     close(out_fd);
+    pspl_copy_progress_update(1);
+    fprintf(stderr, "\n");
     return 0;
 }
 
@@ -840,8 +874,9 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
     if(mkdir(abs_path, 0755))
         if (errno != EEXIST)
             pspl_error(-1, "Error creating staging directory",
-                       "unable to create `%s` as staging directory",
-                       abs_path);
+                       "unable to create `%s` as staging directory; "
+                       "errno: %d (%s)",
+                       abs_path, errno, strerror(errno));
     
     
     // Make path absolute
@@ -859,7 +894,6 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
         if (!strcmp(ctx->stubs_array[i]->stub_source_path, path_in))
             return;
     
-
     
     // Allocate and add
     ++ctx->stubs_count;
@@ -888,17 +922,16 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
     } else
         new_entry->platform_availability_bits = ~0;
     
-    // Hash path for temporary output use
-    pspl_hash* path_hash;
+    // Determine if reference is newer
     char path_hash_str[PSPL_HASH_STRING_LEN];
-    pspl_hash_fmt(path_hash_str, path_hash);
+    int is_newer = is_ref_newer_than_staged_output(path_in, path_hash_str);
     char sug_path[MAXPATHLEN];
     sug_path[0] = '\0';
     strcat(sug_path, driver_state.staging_path);
     strcat(sug_path, "tmp_");
     strcat(sug_path, path_hash_str);
     
-    if (is_source_newer_than_output(path_in)) {
+    if (is_newer) {
         
         // Convert data
         const char* final_path;
@@ -916,11 +949,18 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
             fprintf(stderr, "\n");
             final_path = conv_path_buf;
         } else {
+            copy_state.path = converter_state.path;
             if(copy_file(sug_path, path_in))
                 pspl_error(-1, "Unable to copy file",
                            "unable to copy `%s` during conversion", path_in);
             final_path = sug_path;
         }
+        
+        // Message path
+        if (xterm_colour)
+            fprintf(stderr, "\033[1mPath Hash: \E[47;36m\E[47;49m%s\E[m\017\n", path_hash_str);
+        else
+            fprintf(stderr, "Path Hash: %s\n", path_hash_str);
         
         // Hash converted data
         if (hash_file(&new_entry->object_hash, final_path))
@@ -934,10 +974,13 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
         char final_hash_path_str[MAXPATHLEN];
         final_hash_path_str[0] = '\0';
         strcat(final_hash_path_str, driver_state.staging_path);
+        strcat(final_hash_path_str, path_hash_str);
+        strcat(final_hash_path_str, "_");
         strcat(final_hash_path_str, final_hash_str);
         
         // Copy (or move)
         if (converter_hook && !move_output) {
+            copy_state.path = converter_state.path;
             if(copy_file(final_hash_path_str, final_path))
                 pspl_error(-1, "Unable to copy file",
                            "unable to copy `%s` during conversion", final_path);
@@ -946,11 +989,11 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
                 pspl_error(-1, "Unable to move file",
                            "unable to move `%s` during conversion", final_path);
         
-        // Message
+        // Message data
         if (xterm_colour)
-            fprintf(stderr, "\033[1mHash: \E[47;36m\E[47;49m%s\E[m\017\n", final_hash_str);
+            fprintf(stderr, "\033[1mData Hash: \E[47;36m\E[47;49m%s\E[m\017\n", final_hash_str);
         else
-            fprintf(stderr, "Hash: %s\n", final_hash_str);
+            fprintf(stderr, "Data Hash: %s\n", final_hash_str);
         
     }
     
@@ -1029,7 +1072,11 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
     } else
         new_entry->platform_availability_bits = ~0;
     
-    if (is_source_newer_than_output(path_in)) {
+    // Determine if reference is newer
+    char path_hash_str[PSPL_HASH_STRING_LEN];
+    int is_newer = is_ref_newer_than_staged_output(path_in, path_hash_str);
+    
+    if (is_newer) {
         
         // Convert data
         void* conv_buf = NULL;
@@ -1046,6 +1093,12 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
         if (!conv_buf || !conv_len)
             pspl_error(-1, "Empty conversion buffer returned",
                        "conversion hook returned empty buffer for `%s`", path_in);
+        
+        // Message path
+        if (xterm_colour)
+            fprintf(stderr, "\033[1mPath Hash: \E[47;36m\E[47;49m%s\E[m\017\n", path_hash_str);
+        else
+            fprintf(stderr, "Path Hash: %s\n", path_hash_str);
         
         // Hash converted data
         pspl_hash_ctx_t hash_ctx;
@@ -1072,11 +1125,11 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
         fwrite(conv_buf, 1, conv_len, file);
         fclose(file);
         
-        // Message
+        // Message data
         if (xterm_colour)
-            fprintf(stderr, "\033[1mHash: \E[47;36m\E[47;49m%s\E[m\017\n", final_hash_str);
+            fprintf(stderr, "\033[1mData Hash: \E[47;36m\E[47;49m%s\E[m\017\n", final_hash_str);
         else
-            fprintf(stderr, "Hash: %s\n", final_hash_str);
+            fprintf(stderr, "Data Hash: %s\n", final_hash_str);
         
     }
     

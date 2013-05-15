@@ -44,7 +44,7 @@ int BUILTINS_command_call_hook(const pspl_toolchain_context_t* driver_context,
         else {
             fprintf(stderr, "Received: %s\n", command_argv[0]);
             pspl_hash* result_hash;
-            pspl_package_file_augment(NULL, command_argv[0], converter_hook, 1, &result_hash);
+            pspl_package_file_augment(NULL, command_argv[0], NULL, 1, &result_hash);
         }
     }
     
