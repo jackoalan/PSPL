@@ -152,6 +152,13 @@ typedef struct _pspl_toolchain_heading_context {
 } pspl_toolchain_heading_context_t;
 
 
+#pragma mark Heading Context Switch Hooking
+
+/* Called whenever a heading context switch occurs (into the extension's ownership) */
+typedef int(*pspl_toolchain_heading_switch_hook)(const pspl_toolchain_context_t* driver_context,
+                                                 const pspl_toolchain_heading_context_t* current_heading);
+
+
 #pragma mark C-style Command Call Hooking
 
 /* Command call hook type (when C-style command syntax detected)
@@ -267,7 +274,7 @@ __pspl_embed_integer_keyed_object(platforms,key,&object,&object,sizeof(object))
 #pragma mark Add File For Packaging Into PSPLP Flat-File and/or PSPLPD Directory
 
 /* Standard data conversion interface */
-extern void pspl_converter_progress_update(double progress);
+void pspl_converter_progress_update(double progress);
 typedef int(*pspl_converter_file_hook)(char* path_out, const char* path_in, const char* suggested_path);
 typedef int(*pspl_converter_membuf_hook)(void** buf_out, size_t* len_out, const char* path_in);
 
@@ -316,6 +323,7 @@ typedef struct _pspl_toolchain_extension {
     pspl_toolchain_finish_hook finish_hook;
     pspl_toolchain_line_preprocessor_hook line_preprocessor_hook;
     pspl_toolchain_command_call_hook command_call_hook;
+    pspl_toolchain_heading_switch_hook heading_switch_hook;
     pspl_toolchain_whitespace_line_read_hook whitespace_line_read_hook;
     pspl_toolchain_line_read_hook line_read_hook;
     pspl_toolchain_indent_line_read_hook indent_line_read_hook;
