@@ -46,6 +46,9 @@ typedef struct {
     // May also be used to reference file stub source path
     // (unused for objects)
     const char* stub_source_path;
+    
+    // Source path extension
+    const char* stub_source_path_ext;
 
     
 } pspl_indexer_entry_t;
@@ -105,11 +108,13 @@ void pspl_indexer_integer_object_augment(pspl_indexer_context_t* ctx, const pspl
  * (triggering conversion hook if provided and output is outdated) */
 void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
                                     const pspl_runtime_platform_t** plats, const char* path_in,
+                                    const char* path_ext_in,
                                     pspl_converter_file_hook converter_hook, uint8_t move_output,
                                     pspl_hash** hash_out,
                                     pspl_toolchain_driver_source_t* definer);
 void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
                                       const pspl_runtime_platform_t** plats, const char* path_in,
+                                      const char* path_ext_in,
                                       pspl_converter_membuf_hook converter_hook,
                                       pspl_hash** hash_out,
                                       pspl_toolchain_driver_source_t* definer);

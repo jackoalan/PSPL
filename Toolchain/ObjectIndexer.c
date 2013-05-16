@@ -33,16 +33,25 @@
 #pragma mark File Utilities
 
 /* Determine if referenced file is newer than last-known hashed binary object (For PSPLCs) */
-static int is_psplc_ref_newer_than_staged_output(const char* abs_ref_path, const pspl_hash* hash) {
+static int is_psplc_ref_newer_than_staged_output(const char* abs_ref_path,
+                                                 const char* abs_ref_path_ext,
+                                                 const pspl_hash* hash) {
     // Stat source
     struct stat src_stat;
     if (stat(abs_ref_path, &src_stat))
         return 1;
     
     // Hash path
+    char ext_path_str[MAXPATHLEN];
+    ext_path_str[0] = '\0';
+    strcat(ext_path_str, abs_ref_path);
+    if (abs_ref_path_ext) {
+        strcat(ext_path_str, ":");
+        strcat(ext_path_str, abs_ref_path_ext);
+    }
     pspl_hash_ctx_t hash_ctx;
     pspl_hash_init(&hash_ctx);
-    pspl_hash_write(&hash_ctx, abs_ref_path, strlen(abs_ref_path));
+    pspl_hash_write(&hash_ctx, ext_path_str, strlen(ext_path_str));
     pspl_hash* path_hash;
     pspl_hash_result(&hash_ctx, path_hash);
     char abs_ref_path_hash_str[PSPL_HASH_STRING_LEN];
@@ -73,6 +82,7 @@ static int is_psplc_ref_newer_than_staged_output(const char* abs_ref_path, const
 /* Determine if referenced file is newer than its corresponding staged output 
  * Also copies path hash string out */
 static int is_source_ref_newer_than_staged_output(const char* abs_ref_path,
+                                                  const char* abs_ref_path_ext,
                                                   char* abs_ref_path_hash_str_out,
                                                   char* newest_ref_data_hash_str_out,
                                                   int delete_if_newer) {
@@ -85,9 +95,16 @@ static int is_source_ref_newer_than_staged_output(const char* abs_ref_path,
                    abs_ref_path, errno, strerror(errno));
     
     // Hash path
+    char ext_path_str[MAXPATHLEN];
+    ext_path_str[0] = '\0';
+    strcat(ext_path_str, abs_ref_path);
+    if (abs_ref_path_ext) {
+        strcat(ext_path_str, ":");
+        strcat(ext_path_str, abs_ref_path_ext);
+    }
     pspl_hash_ctx_t hash_ctx;
     pspl_hash_init(&hash_ctx);
-    pspl_hash_write(&hash_ctx, abs_ref_path, strlen(abs_ref_path));
+    pspl_hash_write(&hash_ctx, ext_path_str, strlen(ext_path_str));
     pspl_hash* path_hash;
     pspl_hash_result(&hash_ctx, path_hash);
     pspl_hash_fmt(abs_ref_path_hash_str_out, path_hash);
@@ -402,6 +419,7 @@ static void __pspl_indexer_integer_object_post_augment(pspl_indexer_context_t* c
 /* Augment indexer context with file stub (from PSPLC) */
 static void __pspl_indexer_stub_file_post_augment(pspl_indexer_context_t* ctx,
                                                   const pspl_runtime_platform_t** plats, const char* path_in,
+                                                  const char* path_ext_in,
                                                   pspl_hash* hash_in, pspl_toolchain_driver_psplc_t* definer) {
     int i;
     
@@ -411,7 +429,7 @@ static void __pspl_indexer_stub_file_post_augment(pspl_indexer_context_t* ctx,
             return;
     
     // Warn user if the source ref is newer than the newest object (necessitating recompile)
-    if (is_psplc_ref_newer_than_staged_output(path_in, hash_in))
+    if (is_psplc_ref_newer_than_staged_output(path_in, path_ext_in, hash_in))
         pspl_warn("Newer data source detected",
                   "PSPL detected that `%s` has changed since `%s` was last compiled. "
                   "Old converted object will be used. Recompile if this is not desired.",
@@ -448,7 +466,13 @@ static void __pspl_indexer_stub_file_post_augment(pspl_indexer_context_t* ctx,
     char* cpy_path = malloc(cpy_len);
     strncpy(cpy_path, path_in, cpy_len);
     new_entry->stub_source_path = cpy_path;
-    
+    new_entry->stub_source_path_ext = NULL;
+    if (path_ext_in) {
+        cpy_len = strlen(path_ext_in)+1;
+        cpy_path = malloc(cpy_len);
+        strncpy(cpy_path, path_ext_in, cpy_len);
+        new_entry->stub_source_path_ext = cpy_path;
+    }
 }
 
 /* Augment indexer context with stub entries
@@ -702,24 +726,34 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx, pspl_toolchain
         
         const pspl_runtime_platform_t* plats[PSPL_MAX_PLATFORMS+1];
         const char* source_path = NULL;
+        const char* source_path_ext = NULL;
 #       if defined(__LITTLE_ENDIAN__)
         if (pspl_head->endian_flags == PSPL_LITTLE_ENDIAN || pspl_head->endian_flags == PSPL_BI_ENDIAN) {
             __plat_array_from_bits(plats, existing_psplc, stub_array->platform_availability_bits);
             source_path = (char*)(existing_psplc->psplc_data + stub_array->object_source_path_off);
+            if (stub_array->object_source_path_ext_off)
+                source_path_ext = (char*)(existing_psplc->psplc_data + stub_array->object_source_path_ext_off);
         } else if (pspl_head->endian_flags == PSPL_BIG_ENDIAN) {
             __plat_array_from_bits(plats, existing_psplc, swap_uint32(stub_array->platform_availability_bits));
             source_path = (char*)(existing_psplc->psplc_data + swap_uint32(stub_array->object_source_path_off));
+            if (stub_array->object_source_path_ext_off)
+                source_path_ext = (char*)(existing_psplc->psplc_data + swap_uint32(stub_array->object_source_path_ext_off));
         }
 #       elif defined(__BIG_ENDIAN__)
         if (pspl_head->endian_flags == PSPL_BIG_ENDIAN  || pspl_head->endian_flags == PSPL_BI_ENDIAN) {
             __plat_array_from_bits(plats, existing_psplc, stub_array->platform_availability_bits);
             source_path = (char*)(existing_psplc->psplc_data + stub_array->object_source_path_off);
+            if (stub_array->object_source_path_ext_off)
+                source_path_ext = (char*)(existing_psplc->psplc_data + stub_array->object_source_path_ext_off);
         } else if (pspl_head->endian_flags == PSPL_LITTLE_ENDIAN) {
             __plat_array_from_bits(plats, existing_psplc, swap_uint32(stub_array->platform_availability_bits));
             source_path = (char*)(existing_psplc->psplc_data + swap_uint32(stub_array->object_source_path_off));
+            if (stub_array->object_source_path_ext_off)
+                source_path_ext = (char*)(existing_psplc->psplc_data + swap_uint32(stub_array->object_source_path_ext_off));
         }
 #       endif
-        __pspl_indexer_stub_file_post_augment(ctx, plats, source_path, &stub_array->object_hash, existing_psplc);
+        __pspl_indexer_stub_file_post_augment(ctx, plats, source_path, source_path_ext,
+                                              &stub_array->object_hash, existing_psplc);
         stub_array += sizeof(pspl_object_stub_t);
         
     }
@@ -892,6 +926,7 @@ void pspl_indexer_integer_object_augment(pspl_indexer_context_t* ctx, const pspl
 static struct {
     uint8_t last_prog;
     const char* path;
+    const char* path_ext;
 } converter_state;
 void pspl_converter_progress_update(double progress) {
     uint8_t prog_int = progress*100;
@@ -915,10 +950,12 @@ void pspl_converter_progress_update(double progress) {
 }
 void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
                                     const pspl_runtime_platform_t** plats, const char* path_in,
+                                    const char* path_ext_in,
                                     pspl_converter_file_hook converter_hook, uint8_t move_output,
                                     pspl_hash** hash_out,
                                     pspl_toolchain_driver_source_t* definer) {
     converter_state.path = path_in;
+    converter_state.path_ext = path_ext_in;
     converter_state.last_prog = 1;
     char abs_path[MAXPATHLEN];
     abs_path[0] = '\0';
@@ -976,7 +1013,8 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
     // Determine if reference is newer
     char path_hash_str[PSPL_HASH_STRING_LEN];
     char newest_data_hash_str[PSPL_HASH_STRING_LEN];
-    int is_newer = is_source_ref_newer_than_staged_output(path_in, path_hash_str, newest_data_hash_str, 1);
+    int is_newer = is_source_ref_newer_than_staged_output(path_in, path_ext_in,
+                                                          path_hash_str, newest_data_hash_str, 1);
     char sug_path[MAXPATHLEN];
     sug_path[0] = '\0';
     strcat(sug_path, driver_state.staging_path);
@@ -1060,6 +1098,13 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
     char* cpy_path = malloc(cpy_len);
     strncpy(cpy_path, path_in, cpy_len);
     new_entry->stub_source_path = cpy_path;
+    new_entry->stub_source_path_ext = NULL;
+    if (path_ext_in) {
+        cpy_len = strlen(path_ext_in)+1;
+        cpy_path = malloc(cpy_len);
+        strncpy(cpy_path, path_ext_in, cpy_len);
+        new_entry->stub_source_path_ext = cpy_path;
+    }
     if (driver_state.gather_ctx)
         pspl_gather_add_file(driver_state.gather_ctx, cpy_path);
     
@@ -1068,6 +1113,7 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
 }
 void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
                                       const pspl_runtime_platform_t** plats, const char* path_in,
+                                      const char* path_ext_in,
                                       pspl_converter_membuf_hook converter_hook,
                                       pspl_hash** hash_out,
                                       pspl_toolchain_driver_source_t* definer) {
@@ -1075,6 +1121,7 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
         return;
     
     converter_state.path = path_in;
+    converter_state.path_ext = path_ext_in;
     converter_state.last_prog = 1;
     char abs_path[MAXPATHLEN];
     abs_path[0] = '\0';
@@ -1129,7 +1176,8 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
     // Determine if reference is newer
     char path_hash_str[PSPL_HASH_STRING_LEN];
     char newest_data_hash_str[PSPL_HASH_STRING_LEN];
-    int is_newer = is_source_ref_newer_than_staged_output(path_in, path_hash_str, newest_data_hash_str, 1);
+    int is_newer = is_source_ref_newer_than_staged_output(path_in, path_ext_in,
+                                                          path_hash_str, newest_data_hash_str, 1);
     
     if (is_newer) {
         
@@ -1199,6 +1247,13 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
     char* cpy_path = malloc(cpy_len);
     strncpy(cpy_path, path_in, cpy_len);
     new_entry->stub_source_path = cpy_path;
+    new_entry->stub_source_path_ext = NULL;
+    if (path_ext_in) {
+        cpy_len = strlen(path_ext_in)+1;
+        cpy_path = malloc(cpy_len);
+        strncpy(cpy_path, path_ext_in, cpy_len);
+        new_entry->stub_source_path_ext = cpy_path;
+    }
     if (driver_state.gather_ctx)
         pspl_gather_add_file(driver_state.gather_ctx, cpy_path);
     

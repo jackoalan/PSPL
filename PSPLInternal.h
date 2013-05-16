@@ -130,6 +130,11 @@ typedef struct {
     // if the PSPLC is re-compiled over itself)
     uint32_t object_source_path_off;
     
+    // In cases where the source file is provided with a tiered extension,
+    // this will be non-zero; pointing to a string containing the extension
+    // identifier
+    uint32_t object_source_path_ext_off;
+    
 } pspl_object_stub_t;
 typedef DECL_BI_OBJ_TYPE(pspl_object_stub_t) pspl_object_stub_bi_t;
 

@@ -106,16 +106,18 @@ void __pspl_embed_integer_keyed_object(const pspl_runtime_platform_t** platforms
 
 /* Add file for PSPL-packaging */
 void pspl_package_file_augment(const pspl_runtime_platform_t** plats, const char* path_in,
+                               const char* path_ext_in,
                                pspl_converter_file_hook converter_hook, uint8_t move_output,
                                pspl_hash** hash_out) {
-    pspl_indexer_stub_file_augment(driver_state.indexer_ctx, plats, path_in, converter_hook,
-                                   move_output, hash_out, compiler_state.source);
+    pspl_indexer_stub_file_augment(driver_state.indexer_ctx, plats, path_in, path_ext_in,
+                                   converter_hook, move_output, hash_out, compiler_state.source);
 }
 void pspl_package_membuf_augment(const pspl_runtime_platform_t** plats, const char* path_in,
+                                 const char* path_ext_in,
                                  pspl_converter_membuf_hook converter_hook,
                                  pspl_hash** hash_out) {
-    pspl_indexer_stub_membuf_augment(driver_state.indexer_ctx, plats, path_in, converter_hook,
-                                     hash_out, compiler_state.source);
+    pspl_indexer_stub_membuf_augment(driver_state.indexer_ctx, plats, path_in, path_ext_in,
+                                     converter_hook, hash_out, compiler_state.source);
 }
 
 

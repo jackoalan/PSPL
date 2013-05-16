@@ -293,9 +293,11 @@ typedef int(*pspl_converter_membuf_hook)(void** buf_out, size_t* len_out, const 
  
 /* Add file for PSPL-packaging */
 void pspl_package_file_augment(const pspl_runtime_platform_t** platforms, const char* path_in,
+                               const char* path_ext_in,
                                pspl_converter_file_hook converter_hook, uint8_t move_output,
                                pspl_hash** hash_out);
 void pspl_package_membuf_augment(const pspl_runtime_platform_t** platforms, const char* path_in,
+                                 const char* path_ext_in,
                                  pspl_converter_membuf_hook converter_hook,
                                  pspl_hash** hash_out);
 
