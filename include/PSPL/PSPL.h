@@ -102,9 +102,9 @@ typedef struct _pspl_runtime_platform {
     uint8_t padding[3];
     
     // Platform runtime hooks
-    #ifdef PSPL_RUNTIME
+#   ifdef PSPL_RUNTIME
     pspl_runtime_platform_hooks_t* runtime_hooks;
-    #endif
+#   endif
     
     
 } pspl_runtime_platform_t;

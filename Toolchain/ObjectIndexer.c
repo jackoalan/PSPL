@@ -204,6 +204,13 @@ static void pspl_copy_progress_update(double progress) {
     copy_state.last_prog = prog_int;
 }
 static int copy_file(const char* dest_path, const char* src_path) {
+    // Ensure the file is a regular file
+    struct stat file_stat;
+    if (stat(src_path, &file_stat))
+        return -1;
+    if (file_stat.st_mode != S_IFREG)
+        return -1;
+    
     copy_state.last_prog = 1;
     pspl_copy_progress_update(0);
     int in_fd = open(src_path, O_RDONLY);
@@ -771,6 +778,16 @@ void pspl_indexer_hash_object_augment(pspl_indexer_context_t* ctx, const pspl_ex
             if (i == ctx->plat_count)
                 ctx->plat_array[ctx->plat_count++] = *plats;
             new_entry->platform_availability_bits |= 1<<i;
+            
+            // Ensure platform has appropriate data available
+            if ((*plats)->byte_order == PSPL_LITTLE_ENDIAN && !little_data)
+                pspl_error(-1, "Required embedded object data not provided",
+                           "extension embed request specified little-endian platform, "
+                           "but didn't provide little-endian data");
+            else if ((*plats)->byte_order == PSPL_BIG_ENDIAN && !big_data)
+                pspl_error(-1, "Required embedded object data not provided",
+                           "extension embed request specified big-endian platform, "
+                           "but didn't provide big-endian data");
         }
     } else
         new_entry->platform_availability_bits = ~0;
@@ -780,10 +797,13 @@ void pspl_indexer_hash_object_augment(pspl_indexer_context_t* ctx, const pspl_ex
     new_entry->owner_ext = owner;
     pspl_hash_cpy(&new_entry->object_hash, key_hash);
     new_entry->object_len = data_len;
-    void* little_buf = malloc(data_len);
-    memcpy(little_buf, little_data, data_len);
+    void* little_buf = NULL;
+    if (data_len && little_data) {
+        void* little_buf = malloc(data_len);
+        memcpy(little_buf, little_data, data_len);
+    }
     void* big_buf = little_buf;
-    if (little_data != big_data) {
+    if (data_len && little_data != big_data) {
         big_buf = malloc(data_len);
         memcpy(big_buf, big_data, data_len);
     }
@@ -834,6 +854,16 @@ void pspl_indexer_integer_object_augment(pspl_indexer_context_t* ctx, const pspl
             if (i == ctx->plat_count)
                 ctx->plat_array[ctx->plat_count++] = *plats;
             new_entry->platform_availability_bits |= 1<<i;
+            
+            // Ensure platform has appropriate data available
+            if ((*plats)->byte_order == PSPL_LITTLE_ENDIAN && !little_data)
+                pspl_error(-1, "Required embedded object data not provided",
+                           "extension embed request specified little-endian platform, "
+                           "but didn't provide little-endian data");
+            else if ((*plats)->byte_order == PSPL_BIG_ENDIAN && !big_data)
+                pspl_error(-1, "Required embedded object data not provided",
+                           "extension embed request specified big-endian platform, "
+                           "but didn't provide big-endian data");
         }
     } else
         new_entry->platform_availability_bits = ~0;
@@ -843,10 +873,13 @@ void pspl_indexer_integer_object_augment(pspl_indexer_context_t* ctx, const pspl
     new_entry->owner_ext = owner;
     new_entry->object_index = key;
     new_entry->object_len = data_len;
-    void* little_buf = malloc(data_len);
-    memcpy(little_buf, little_data, data_len);
+    void* little_buf = NULL;
+    if (data_len && little_data) {
+        void* little_buf = malloc(data_len);
+        memcpy(little_buf, little_data, data_len);
+    }
     void* big_buf = little_buf;
-    if (little_data != big_data) {
+    if (data_len && little_data != big_data) {
         big_buf = malloc(data_len);
         memcpy(big_buf, big_data, data_len);
     }

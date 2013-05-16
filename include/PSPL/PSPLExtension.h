@@ -24,15 +24,15 @@ typedef struct _pspl_extension {
     // Description of extension (for built-in help)
     const char* extension_desc;
     
-    #ifdef PSPL_TOOLCHAIN
+#   ifdef PSPL_TOOLCHAIN
     // Extension's toolchain extension definition object
     const struct _pspl_toolchain_extension* toolchain_extension;
-    #endif
+#   endif
     
-    #ifdef PSPL_RUNTIME
+#   ifdef PSPL_RUNTIME
     // Extension's runtime extension definition object
     const struct _pspl_runtime_extension* runtime_extension;
-    #endif
+#   endif
     
 } pspl_extension_t;
 
