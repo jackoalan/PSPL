@@ -34,12 +34,12 @@ typedef struct {
     uint8_t padding;
         
     // Count and offset of extension name table
-    DECL_BI_OBJ_TYPE(uint32_t) extension_name_table_c;
-    DECL_BI_OBJ_TYPE(uint32_t) extension_name_table_off;
+    DEF_BI_OBJ_TYPE(uint32_t) extension_name_table_c;
+    DEF_BI_OBJ_TYPE(uint32_t) extension_name_table_off;
     
     // Count and offset of platform name table
-    DECL_BI_OBJ_TYPE(uint32_t) platform_name_table_c;
-    DECL_BI_OBJ_TYPE(uint32_t) platform_name_table_off;
+    DEF_BI_OBJ_TYPE(uint32_t) platform_name_table_c;
+    DEF_BI_OBJ_TYPE(uint32_t) platform_name_table_off;
     
 } pspl_header_t;
 
@@ -87,7 +87,7 @@ typedef struct {
     uint32_t file_stub_array_off;
     
 } pspl_psplc_header_t;
-typedef DECL_BI_OBJ_TYPE(pspl_psplc_header_t) pspl_psplc_header_bi_t;
+typedef DEF_BI_OBJ_TYPE(pspl_psplc_header_t) pspl_psplc_header_bi_t;
 
 
 /* Tier 2 (per-extension) Extension object array table */
@@ -99,14 +99,16 @@ typedef struct {
     
     // Hash-indexed object count
     uint32_t tier2_hash_indexed_object_count;
+    uint32_t tier2_hash_indexed_object_array_off;
     
     // Integer-indexed object count
     uint32_t tier2_int_indexed_object_count;
+    uint32_t tier2_int_indexed_object_array_off;
     
     // Embedded object entry records (tier3) follow this one
     
 } pspl_object_array_tier2_t;
-typedef DECL_BI_OBJ_TYPE(pspl_object_array_tier2_t) pspl_object_array_tier2_bi_t;
+typedef DEF_BI_OBJ_TYPE(pspl_object_array_tier2_t) pspl_object_array_tier2_bi_t;
 
 
 /* Tier 3 (per-object) Extension object entry (stub) 
@@ -115,11 +117,8 @@ typedef DECL_BI_OBJ_TYPE(pspl_object_array_tier2_t) pspl_object_array_tier2_bi_t
  * object entry below. */
 typedef struct {
     
-    // Hash/integer index of object
-    union {
-        pspl_hash object_hash;
-        uint32_t object_index;
-    };
+    // Data hash of object file (before structure)
+    //pspl_hash data_hash;
     
     // Platform availability bitfield
     // Bits indexed from LSB to MSB indicate whether or not this
@@ -138,15 +137,15 @@ typedef struct {
     uint32_t object_source_path_ext_off;
     
 } pspl_object_stub_t;
-typedef DECL_BI_OBJ_TYPE(pspl_object_stub_t) pspl_object_stub_bi_t;
+typedef DEF_BI_OBJ_TYPE(pspl_object_stub_t) pspl_object_stub_bi_t;
 
 
 /* Tier 3 (per-object) Extension object entry (concrete)
  * Used to index embedded objects and archived files. */
 typedef struct {
     
-    // Hash of object
-    pspl_hash object_hash;
+    // Hash of object (just before structure)
+    //pspl_hash object_hash;
     
     // Platform availability bitfield
     // Bits indexed from LSB to MSB indicate whether or not this
@@ -161,7 +160,7 @@ typedef struct {
     uint32_t object_len;
     
 } pspl_object_hash_record_t;
-typedef DECL_BI_OBJ_TYPE(pspl_object_hash_record_t) pspl_object_hash_record_bi_t;
+typedef DEF_BI_OBJ_TYPE(pspl_object_hash_record_t) pspl_object_hash_record_bi_t;
 typedef struct {
     
     // Index of object
@@ -180,7 +179,7 @@ typedef struct {
     uint32_t object_len;
     
 } pspl_object_int_record_t;
-typedef DECL_BI_OBJ_TYPE(pspl_object_int_record_t) pspl_object_int_record_bi_t;
+typedef DEF_BI_OBJ_TYPE(pspl_object_int_record_t) pspl_object_int_record_bi_t;
 
 
 #pragma mark PSPLP Types
@@ -202,7 +201,7 @@ typedef struct {
     uint32_t packaged_file_array_off;
     
 } pspl_psplp_header_t;
-typedef DECL_BI_OBJ_TYPE(pspl_psplp_header_t) pspl_psplp_header_bi_t;
+typedef DEF_BI_OBJ_TYPE(pspl_psplp_header_t) pspl_psplp_header_bi_t;
 
 
 #endif // PSPL_INTERNAL

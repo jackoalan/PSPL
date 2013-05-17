@@ -1170,7 +1170,7 @@ int main(int argc, char** argv) {
         
         // Compile only
         pspl_hash psplc_name_hash;
-        pspl_indexer_write_psplc(driver_state.indexer_ctx, &psplc_name_hash, out_file);
+        pspl_indexer_write_psplc(driver_state.indexer_ctx, &psplc_name_hash, PSPL_LITTLE_ENDIAN, out_file);
         
     } else {
         

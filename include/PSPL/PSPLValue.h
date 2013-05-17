@@ -32,7 +32,7 @@
  * from an already-declared type. */
 #if __LITTLE_ENDIAN__
 
-#define DECL_BI_OBJ_TYPE(source_type) struct {\
+#define DEF_BI_OBJ_TYPE(source_type) struct {\
     union {\
         source_type little;\
         source_type native;\
@@ -45,7 +45,7 @@
 
 #elif __BIG_ENDIAN__
 
-#define DECL_BI_OBJ_TYPE(source_type) struct {\
+#define DEF_BI_OBJ_TYPE(source_type) struct {\
     union {\
         source_type little;\
         source_type swapped;\

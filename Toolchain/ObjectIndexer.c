@@ -586,6 +586,7 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx, pspl_toolchain
         // Parse object records
         
         // Hash objects
+        /*
         pspl_object_hash_record_t* obj_hash_array =
         (pspl_object_hash_record_t*)(ext_array + sizeof(pspl_object_array_tier2_t));
         pspl_object_hash_record_t* obj_hash_use_array = NULL;
@@ -648,6 +649,7 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx, pspl_toolchain
             
             obj_hash_array += sizeof(pspl_object_hash_record_t);
         }
+         */
         
         // Integer objects
         pspl_object_int_record_t* obj_int_array =
@@ -717,6 +719,7 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx, pspl_toolchain
     }
     
     // Last, file entries
+    /*
     pspl_object_stub_t* stub_array = (pspl_object_stub_t*)(existing_psplc->psplc_data + best_head->file_stub_array_off);
     for (i=0 ; i<best_head->file_stub_count ; ++i) {
         
@@ -753,6 +756,7 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx, pspl_toolchain
         stub_array += sizeof(pspl_object_stub_t);
         
     }
+     */
     
 }
 
@@ -1275,27 +1279,47 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
 
 void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
                               pspl_hash* psplc_hash_in,
+                              uint8_t default_endian,
                               FILE* psplc_file_out) {
     
+    int i,j;
+    
     // Determine endianness
-    uint8_t psplc_endianness = 0;
-    int i;
+    uint8_t psplc_endianness = default_endian;
     for (i=0 ; i<ctx->plat_count ; ++i)
         psplc_endianness |= ctx->plat_array[i]->byte_order;
     psplc_endianness &= PSPL_BI_ENDIAN;
+    if (!psplc_endianness)
+        pspl_error(-1, "Unable to produce PSPLC", "invalid endianness specified");
     
-    
-    // String table offset accumulations
+    // Table offset accumulations
     uint32_t reference_name_table_off = sizeof(pspl_header_t);
     reference_name_table_off += sizeof(pspl_hash);
     reference_name_table_off += (psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_psplc_header_bi_t) : sizeof(pspl_psplc_header_t);
     uint32_t extension_array_off = reference_name_table_off;
-    reference_name_table_off += ((psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_array_tier2_t) : sizeof(pspl_object_array_tier2_bi_t)) * ctx->ext_count;
-    reference_name_table_off += ((psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_hash_record_t) : sizeof(pspl_object_hash_record_bi_t)) * ctx->h_objects_count;
-    reference_name_table_off += ((psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_int_record_t) : sizeof(pspl_object_int_record_bi_t)) * ctx->i_objects_count;
+    reference_name_table_off += ((psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_array_tier2_bi_t) : sizeof(pspl_object_array_tier2_t)) * ctx->ext_count;
+    uint32_t extension_obj_array_off = reference_name_table_off;
+    reference_name_table_off += ((psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_hash_record_bi_t) : sizeof(pspl_object_hash_record_t) + sizeof(pspl_hash)) * ctx->h_objects_count;
+    reference_name_table_off += ((psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_int_record_bi_t) : sizeof(pspl_object_int_record_t)) * ctx->i_objects_count;
+    uint32_t extension_obj_data_off = reference_name_table_off;
+    for (i=0 ; i<ctx->h_objects_count ; ++i) {
+        if (ctx->h_objects_array[i]->object_little_data && ctx->h_objects_array[i]->object_big_data &&
+            ctx->h_objects_array[i]->object_little_data != ctx->h_objects_array[i]->object_big_data)
+            reference_name_table_off += ctx->h_objects_array[i]->object_len*2;
+        else
+            reference_name_table_off += ctx->h_objects_array[i]->object_len;
+    }
+    for (i=0 ; i<ctx->i_objects_count ; ++i) {
+        if (ctx->i_objects_array[i]->object_little_data && ctx->i_objects_array[i]->object_big_data &&
+            ctx->i_objects_array[i]->object_little_data != ctx->i_objects_array[i]->object_big_data)
+            reference_name_table_off += ctx->i_objects_array[i]->object_len*2;
+        else
+            reference_name_table_off += ctx->i_objects_array[i]->object_len;
+    }
     uint32_t file_stub_array_off = reference_name_table_off;
-    reference_name_table_off += ((psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_stub_t) : sizeof(pspl_object_stub_bi_t)) * ctx->stubs_count;
+    reference_name_table_off += ((psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_stub_bi_t) : sizeof(pspl_object_stub_t) + sizeof(pspl_hash)) * ctx->stubs_count;
     
+    uint32_t stub_string_table_off = reference_name_table_off;
     uint32_t extension_name_table_off = reference_name_table_off;
     for (i=0 ; i<ctx->stubs_count ; ++i) {
         extension_name_table_off += strlen(ctx->stubs_array[i]->stub_source_path) + 1;
@@ -1354,6 +1378,232 @@ void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
             break;
         default:
             break;
+    }
+    
+    
+    // Populate and write all per-extension array heading structures
+    for (i=0 ; i<ctx->ext_count ; ++i) {
+        const pspl_extension_t* cur_ext = ctx->ext_array[i];
+        uint32_t hash_count = 0, int_count = 0;
+        
+        // Hash object count
+        uint32_t hash_off = extension_obj_array_off;
+        for (j=0 ; j<ctx->h_objects_count ; ++j)
+            if (ctx->h_objects_array[j]->owner_ext == cur_ext) {
+                extension_obj_array_off += sizeof(pspl_hash);
+                extension_obj_array_off += (psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_hash_record_bi_t) : sizeof(pspl_object_hash_record_t);
+                ++hash_count;
+            }
+        
+        // Int object count
+        uint32_t int_off = extension_obj_array_off;
+        for (j=0 ; j<ctx->i_objects_count ; ++j)
+            if (ctx->i_objects_array[j]->owner_ext == cur_ext) {
+                extension_obj_array_off += (psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_int_record_bi_t) : sizeof(pspl_object_int_record_t);
+                ++int_count;
+            }
+        
+        // Populate structure
+        pspl_object_array_tier2_bi_t object_array_tier2;
+        SET_BI_U32(object_array_tier2, tier2_extension_index, i);
+        SET_BI_U32(object_array_tier2, tier2_hash_indexed_object_count, hash_count);
+        SET_BI_U32(object_array_tier2, tier2_hash_indexed_object_array_off, hash_off);
+        SET_BI_U32(object_array_tier2, tier2_int_indexed_object_count, int_count);
+        SET_BI_U32(object_array_tier2, tier2_int_indexed_object_array_off, int_off);
+        
+        // Write structure
+        switch (psplc_endianness) {
+            case PSPL_LITTLE_ENDIAN:
+                fwrite(&object_array_tier2.little, 1, sizeof(pspl_object_array_tier2_t), psplc_file_out);
+                break;
+            case PSPL_BIG_ENDIAN:
+                fwrite(&object_array_tier2.big, 1, sizeof(pspl_object_array_tier2_t), psplc_file_out);
+                break;
+            case PSPL_BI_ENDIAN:
+                fwrite(&object_array_tier2, 1, sizeof(pspl_object_array_tier2_bi_t), psplc_file_out);
+                break;
+            default:
+                break;
+        }
+    }
+    
+    // Populate and write all per-extension array objects
+    for (i=0 ; i<ctx->ext_count ; ++i) {
+        const pspl_extension_t* cur_ext = ctx->ext_array[i];
+        
+        // Hash objects
+        for (j=0 ; j<ctx->h_objects_count ; ++j)
+            if (ctx->h_objects_array[j]->owner_ext == cur_ext) {
+                pspl_indexer_entry_t* ent = ctx->h_objects_array[j];
+                
+                // Populate structure
+                pspl_object_hash_record_bi_t hash_record;
+                SET_BI_U32(hash_record, platform_availability_bits, ent->platform_availability_bits);
+                SET_BI_U32(hash_record, object_off, extension_obj_data_off);
+                if (ent->object_little_data && ent->object_big_data &&
+                    ent->object_little_data != ent->object_big_data) {
+#                   ifdef __LITTLE_ENDIAN__
+                    hash_record.big.object_off = swap_uint32(extension_obj_data_off + (uint32_t)ent->object_len);
+#                   else
+                    hash_record.big.object_off = extension_obj_data_off + (uint32_t)ent->object_len;
+#                   endif
+                }
+                SET_BI_U32(hash_record, object_len, (uint32_t)ent->object_len);
+                
+                // Write hash
+                fwrite(&ent->object_hash, 1, sizeof(pspl_hash), psplc_file_out);
+                
+                // Write structure
+                switch (psplc_endianness) {
+                    case PSPL_LITTLE_ENDIAN:
+                        fwrite(&hash_record.little, 1, sizeof(pspl_object_hash_record_t), psplc_file_out);
+                        break;
+                    case PSPL_BIG_ENDIAN:
+                        fwrite(&hash_record.big, 1, sizeof(pspl_object_hash_record_t), psplc_file_out);
+                        break;
+                    case PSPL_BI_ENDIAN:
+                        fwrite(&hash_record, 1, sizeof(pspl_object_hash_record_bi_t), psplc_file_out);
+                        break;
+                    default:
+                        break;
+                }
+                
+            }
+                
+        
+        // Int objects
+        for (j=0 ; j<ctx->i_objects_count ; ++j)
+            if (ctx->i_objects_array[j]->owner_ext == cur_ext) {
+                pspl_indexer_entry_t* ent = ctx->i_objects_array[j];
+                
+                // Populate structure
+                pspl_object_int_record_bi_t int_record;
+                SET_BI_U32(int_record, object_index, ent->object_index);
+                SET_BI_U32(int_record, platform_availability_bits, ent->platform_availability_bits);
+                SET_BI_U32(int_record, object_off, extension_obj_data_off);
+                if (ent->object_little_data && ent->object_big_data &&
+                    ent->object_little_data != ent->object_big_data) {
+#                   ifdef __LITTLE_ENDIAN__
+                    int_record.big.object_off = swap_uint32(extension_obj_data_off + (uint32_t)ent->object_len);
+#                   else
+                    int_record.big.object_off = extension_obj_data_off + (uint32_t)ent->object_len;
+#                   endif
+                }
+                SET_BI_U32(int_record, object_len, (uint32_t)ent->object_len);
+                
+                // Write structure
+                switch (psplc_endianness) {
+                    case PSPL_LITTLE_ENDIAN:
+                        fwrite(&int_record.little, 1, sizeof(pspl_object_int_record_t), psplc_file_out);
+                        break;
+                    case PSPL_BIG_ENDIAN:
+                        fwrite(&int_record.big, 1, sizeof(pspl_object_int_record_t), psplc_file_out);
+                        break;
+                    case PSPL_BI_ENDIAN:
+                        fwrite(&int_record, 1, sizeof(pspl_object_int_record_bi_t), psplc_file_out);
+                        break;
+                    default:
+                        break;
+                }
+                
+            }
+                
+    }
+    
+    // Write all per-extension array object data blobs
+    for (i=0 ; i<ctx->ext_count ; ++i) {
+        const pspl_extension_t* cur_ext = ctx->ext_array[i];
+        
+        // Hash objects
+        for (j=0 ; j<ctx->h_objects_count ; ++j)
+            if (ctx->h_objects_array[j]->owner_ext == cur_ext) {
+                pspl_indexer_entry_t* ent = ctx->h_objects_array[j];
+
+                if (ent->object_little_data && ent->object_big_data &&
+                    ent->object_little_data != ent->object_big_data) {
+                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+                } else if (ent->object_little_data)
+                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+                else
+                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+                
+            }
+        
+        
+        // Int objects
+        for (j=0 ; j<ctx->i_objects_count ; ++j)
+            if (ctx->i_objects_array[j]->owner_ext == cur_ext) {
+                pspl_indexer_entry_t* ent = ctx->i_objects_array[j];
+                
+                if (ent->object_little_data && ent->object_big_data &&
+                    ent->object_little_data != ent->object_big_data) {
+                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+                } else if (ent->object_little_data)
+                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+                else
+                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+                
+            }
+        
+    }
+    
+    
+    // Populate and write all file-stub objects
+    for (i=0 ; i<ctx->stubs_count ; ++i) {
+        pspl_indexer_entry_t* ent = ctx->stubs_array[i];
+        
+        pspl_object_stub_bi_t stub_record;
+        SET_BI_U32(stub_record, platform_availability_bits, ent->platform_availability_bits);
+        SET_BI_U32(stub_record, object_source_path_off, stub_string_table_off);
+        stub_string_table_off += strlen(ent->stub_source_path) + 1;
+        if (ent->stub_source_path_ext) {
+            SET_BI_U32(stub_record, object_source_path_ext_off, stub_string_table_off);
+            stub_string_table_off += strlen(ent->stub_source_path_ext) + 1;
+        } else
+            SET_BI_U32(stub_record, object_source_path_ext_off, 0);
+        
+        // Write data hash
+        fwrite(&ent->object_hash, 1, sizeof(pspl_hash), psplc_file_out);
+        
+        // Write structure
+        switch (psplc_endianness) {
+            case PSPL_LITTLE_ENDIAN:
+                fwrite(&stub_record.little, 1, sizeof(pspl_object_stub_t), psplc_file_out);
+                break;
+            case PSPL_BIG_ENDIAN:
+                fwrite(&stub_record.big, 1, sizeof(pspl_object_stub_t), psplc_file_out);
+                break;
+            case PSPL_BI_ENDIAN:
+                fwrite(&stub_record, 1, sizeof(pspl_object_stub_bi_t), psplc_file_out);
+                break;
+            default:
+                break;
+        }
+
+    }
+    
+    // Write all file-stub string blobs
+    for (i=0 ; i<ctx->stubs_count ; ++i) {
+        pspl_indexer_entry_t* ent = ctx->stubs_array[i];
+        
+        fwrite(ent->stub_source_path, 1, strlen(ent->stub_source_path)+1, psplc_file_out);
+        if (ent->stub_source_path_ext)
+            fwrite(ent->stub_source_path_ext, 1, strlen(ent->stub_source_path_ext)+1, psplc_file_out);
+        
+    }
+    
+    // Write all Extension name string blobs
+    for (i=0 ; i<ctx->ext_count ; ++i) {
+        const pspl_extension_t* ext = ctx->ext_array[i];
+        fwrite(ext->extension_name, 1, strlen(ext->extension_name)+1, psplc_file_out);
+    }
+    
+    // Write all Platform name string blobs
+    for (i=0 ; i<ctx->plat_count ; ++i) {
+        const pspl_runtime_platform_t* plat = ctx->plat_array[i];
+        fwrite(plat->platform_name, 1, strlen(plat->platform_name)+1, psplc_file_out);
     }
     
 }

@@ -240,7 +240,7 @@ typedef int(*pspl_toolchain_indent_line_read_hook)(const pspl_toolchain_context_
  * This array is provided to the `platforms` argument. `NULL` may be provided
  * instead to indicate inclusion into all platforms */
 
-/* Object types must be generated with DECL_BI_OBJ_TYPE() and the instances
+/* Object types must be generated with DEF_BI_OBJ_TYPE() and the instances
  * must be populated with SET_BI() */
 
 /* Each extension has its own object namespace, so identical key-strings may be 

@@ -124,6 +124,7 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
 
 void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
                               pspl_hash* psplc_hash_in,
+                              uint8_t default_endian,
                               FILE* psplc_file_out);
 
 
