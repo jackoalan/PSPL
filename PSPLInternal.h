@@ -51,7 +51,9 @@ typedef struct {
 typedef struct {
     
     // Hash of this PSPLC object (truncated 32-bit SHA1 of object name)
-    pspl_hash psplc_object_hash;
+    // This actually occurs immediately before this header (not included in
+    // type since it's endian-independent)
+    //pspl_hash psplc_object_hash;
     
     // Tiered object indexing structure:
     //  * Per-extension object array count
@@ -72,11 +74,11 @@ typedef struct {
     //          * Length of object
     
     // Count of extensions referenced by this psplc (count of elements in array below)
-    uint32_t tier1_object_array_count;
+    uint32_t extension_count;
     
     // File-absolute offset to per-extension object subtables,
     // separate tables for each byte-order
-    uint32_t tier1_object_array_off;
+    uint32_t extension_array_off;
     
     // Count of file object stubs
     uint32_t file_stub_count;

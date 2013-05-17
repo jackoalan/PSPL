@@ -45,7 +45,7 @@
 		E4995F3917405785003B06BF /* ReferenceGatherer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReferenceGatherer.h; sourceTree = "<group>"; };
 		E4995F3A1740578E003B06BF /* ReferenceGatherer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ReferenceGatherer.c; sourceTree = "<group>"; };
 		E4995F3C17411617003B06BF /* ObjectIndexer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjectIndexer.h; sourceTree = "<group>"; };
-		E4995F3D17411620003B06BF /* ObjectIndexer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ObjectIndexer.c; sourceTree = "<group>"; };
+		E4995F3D17411620003B06BF /* ObjectIndexer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = ObjectIndexer.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		E4AFAE28171C92B900F7A0BF /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		E4AFAE29171C92BE00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4AFAE2A171C92D100F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
@@ -85,7 +85,7 @@
 		E4AFAE8C1729A9BC00F7A0BF /* SPECIFICATION.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = SPECIFICATION.md; sourceTree = "<group>"; };
 		E4AFAE8D1729A9CC00F7A0BF /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4AFAE8F1729AB3C00F7A0BF /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
-		E4AFAE911729D90E00F7A0BF /* PSPLInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLInternal.h; sourceTree = "<group>"; };
+		E4AFAE911729D90E00F7A0BF /* PSPLInternal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = PSPLInternal.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		E4AFAE93172D5F7900F7A0BF /* Driver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Driver.h; sourceTree = "<group>"; };
 		E4AFAE94172D898100F7A0BF /* Preprocessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Preprocessor.h; sourceTree = "<group>"; };
 		E4AFAE95172D898B00F7A0BF /* Preprocessor.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Preprocessor.c; sourceTree = "<group>"; };

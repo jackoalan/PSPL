@@ -82,7 +82,7 @@ void pspl_gather_referenced_file(const char* file_path) {
 }*/
 
 /* Add data object (keyed with a null-terminated string stored as 32-bit truncated SHA1 hash) */
-void __pspl_embed_hash_keyed_object(const pspl_runtime_platform_t** platforms,
+void pspl_embed_hash_keyed_object(const pspl_runtime_platform_t** platforms,
                                     const char* key,
                                     const void* little_object,
                                     const void* big_object,
@@ -94,7 +94,7 @@ void __pspl_embed_hash_keyed_object(const pspl_runtime_platform_t** platforms,
 
 /* Add data object (keyed with a non-hashed 32-bit unsigned numeric value)
  * Integer keying uses a separate namespace from hashed keying */
-void __pspl_embed_integer_keyed_object(const pspl_runtime_platform_t** platforms,
+void pspl_embed_integer_keyed_object(const pspl_runtime_platform_t** platforms,
                                        uint32_t key,
                                        const void* little_object,
                                        const void* big_object,
@@ -259,7 +259,7 @@ void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
     
     // Determine purpose of each line and handle appropriately
     driver_state.line_num = 0;
-    const char* cur_line = compiler_state.source->original_source;
+    const char* cur_line = compiler_state.source->preprocessed_source;
     const char* cur_chr = NULL;
     
     // Command invocation state

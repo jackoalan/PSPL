@@ -491,35 +491,32 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx, pspl_toolchain
     } else if (pspl_head->endian_flags == PSPL_BIG_ENDIAN) {
         psplc_head_big = (pspl_psplc_header_t*)(existing_psplc->psplc_data + sizeof(pspl_header_t));
         pspl_psplc_header_t swapped_header = {
-            .tier1_object_array_count = swap_uint32(psplc_head_big->tier1_object_array_count),
-            .tier1_object_array_off = swap_uint32(psplc_head_big->tier1_object_array_off),
+            .extension_count = swap_uint32(psplc_head_big->extension_count),
+            .extension_array_off = swap_uint32(psplc_head_big->extension_array_off),
             .file_stub_count = swap_uint32(psplc_head_big->file_stub_count),
             .file_stub_array_off = swap_uint32(psplc_head_big->file_stub_array_off)
         };
-        memcpy(&swapped_header.psplc_object_hash, &psplc_head_little->psplc_object_hash, sizeof(pspl_hash));
         psplc_head_big = &swapped_header;
     } else if (pspl_head->endian_flags == PSPL_BI_ENDIAN) {
         psplc_head_little = &((pspl_psplc_header_bi_t*)(existing_psplc->psplc_data + sizeof(pspl_header_t)))->little;
         psplc_head_big = &((pspl_psplc_header_bi_t*)(existing_psplc->psplc_data + sizeof(pspl_header_t)))->big;
         pspl_psplc_header_t swapped_header = {
-            .tier1_object_array_count = swap_uint32(psplc_head_big->tier1_object_array_count),
-            .tier1_object_array_off = swap_uint32(psplc_head_big->tier1_object_array_off),
+            .extension_count = swap_uint32(psplc_head_big->extension_count),
+            .extension_array_off = swap_uint32(psplc_head_big->extension_array_off),
             .file_stub_count = swap_uint32(psplc_head_big->file_stub_count),
             .file_stub_array_off = swap_uint32(psplc_head_big->file_stub_array_off)
         };
-        memcpy(&swapped_header.psplc_object_hash, &psplc_head_big->psplc_object_hash, sizeof(pspl_hash));
         psplc_head_big = &swapped_header;
     }
 #   elif defined(__BIG_ENDIAN__)
     if (pspl_head->endian_flags == PSPL_LITTLE_ENDIAN) {
         psplc_head_little = (pspl_psplc_header_t*)(existing_psplc->psplc_data + sizeof(pspl_header_t));
         pspl_psplc_header_t swapped_header = {
-            .tier1_object_array_count = swap_uint32(psplc_head_little->tier1_object_array_count),
-            .tier1_object_array_off = swap_uint32(psplc_head_little->tier1_object_array_off),
+            .extension_count = swap_uint32(psplc_head_little->extension_count),
+            .extension_array_off = swap_uint32(psplc_head_little->extension_array_off),
             .file_stub_count = swap_uint32(psplc_head_little->file_stub_count),
             .file_stub_array_off = swap_uint32(psplc_head_little->file_stub_array_off)
         };
-        memcpy(&swapped_header.psplc_object_hash, &psplc_head_little->psplc_object_hash, sizeof(pspl_hash));
         psplc_head_little = &swapped_header;
     } else if (pspl_head->endian_flags == PSPL_BIG_ENDIAN) {
         psplc_head_big = (pspl_psplc_header_t*)(existing_psplc->psplc_data + sizeof(pspl_header_t));
@@ -527,12 +524,11 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx, pspl_toolchain
         psplc_head_big = &((pspl_psplc_header_bi_t*)(existing_psplc->psplc_data + sizeof(pspl_header_t)))->big;
         psplc_head_little = &((pspl_psplc_header_bi_t*)(existing_psplc->psplc_data + sizeof(pspl_header_t)))->little;
         pspl_psplc_header_t swapped_header = {
-            .tier1_object_array_count = swap_uint32(psplc_head_little->tier1_object_array_count),
-            .tier1_object_array_off = swap_uint32(psplc_head_little->tier1_object_array_off),
+            .extension_count = swap_uint32(psplc_head_little->extension_count),
+            .extension_array_off = swap_uint32(psplc_head_little->extension_array_off),
             .file_stub_count = swap_uint32(psplc_head_little->file_stub_count),
             .file_stub_array_off = swap_uint32(psplc_head_little->file_stub_array_off)
         };
-        memcpy(&swapped_header.psplc_object_hash, &psplc_head_little->psplc_object_hash, sizeof(pspl_hash));
         psplc_head_little = &swapped_header;
     }
 #   endif
@@ -547,14 +543,14 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx, pspl_toolchain
     // If bi-endian, calculate little-to-big offset
     size_t ltob_off = 0;
     if (psplc_head_little && psplc_head_big)
-        ltob_off = psplc_head_big->tier1_object_array_off - psplc_head_little->tier1_object_array_off;
+        ltob_off = psplc_head_big->extension_array_off - psplc_head_little->extension_array_off;
     
     
     // Next, embedded objects
     pspl_object_array_tier2_t* ext_array =
-    (pspl_object_array_tier2_t*)(existing_psplc->psplc_data + best_head->tier1_object_array_off);
+    (pspl_object_array_tier2_t*)(existing_psplc->psplc_data + best_head->extension_array_off);
     pspl_object_array_tier2_t* ext_use_array = NULL;
-    for (i=0 ; i<best_head->tier1_object_array_count ; ++i) {
+    for (i=0 ; i<best_head->extension_count ; ++i) {
         check_psplc_underflow(existing_psplc, ext_array+sizeof(pspl_object_array_tier2_t)-1);
         
 #       if defined(__LITTLE_ENDIAN__)
@@ -942,10 +938,21 @@ void pspl_converter_progress_update(double progress) {
         fprintf(stderr, " %u", prog_int);
     else
         fprintf(stderr, "  %u", prog_int);
-    if (xterm_colour)
-        fprintf(stderr, "%c]\E[m\017 \E[47;32m\E[47;49mConverting \033[1m%s\E[m\017", '%', converter_state.path);
-    else
-        fprintf(stderr, "%c] Converting `%s`", '%', converter_state.path);
+    if (converter_state.path_ext) {
+        if (xterm_colour)
+            fprintf(stderr, "%c]\E[m\017 \E[47;32m\E[47;49mConverting "
+                    "\033[1m%s\033[0m:\E[47;35m\E[47;49m%s\E[m\017", '%',
+                    converter_state.path, converter_state.path_ext);
+        else
+            fprintf(stderr, "%c] Converting %s:%s", '%',
+                    converter_state.path, converter_state.path_ext);
+    } else {
+        if (xterm_colour)
+            fprintf(stderr, "%c]\E[m\017 \E[47;32m\E[47;49mConverting "
+                    "\033[1m%s\E[m\017", '%', converter_state.path);
+        else
+            fprintf(stderr, "%c] Converting %s", '%', converter_state.path);
+    }
     converter_state.last_prog = prog_int;
 }
 void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
@@ -1260,3 +1267,110 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
     converter_state.path = NULL;
     
 }
+
+
+#pragma mark File Generators
+
+/* Write out to PSPLC file */
+
+void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
+                              pspl_hash* psplc_hash_in,
+                              FILE* psplc_file_out) {
+    
+    // Determine endianness
+    uint8_t psplc_endianness = 0;
+    int i;
+    for (i=0 ; i<ctx->plat_count ; ++i)
+        psplc_endianness |= ctx->plat_array[i]->byte_order;
+    psplc_endianness &= PSPL_BI_ENDIAN;
+    
+    
+    // String table offset accumulations
+    uint32_t reference_name_table_off = sizeof(pspl_header_t);
+    reference_name_table_off += sizeof(pspl_hash);
+    reference_name_table_off += (psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_psplc_header_bi_t) : sizeof(pspl_psplc_header_t);
+    uint32_t extension_array_off = reference_name_table_off;
+    reference_name_table_off += ((psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_array_tier2_t) : sizeof(pspl_object_array_tier2_bi_t)) * ctx->ext_count;
+    reference_name_table_off += ((psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_hash_record_t) : sizeof(pspl_object_hash_record_bi_t)) * ctx->h_objects_count;
+    reference_name_table_off += ((psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_int_record_t) : sizeof(pspl_object_int_record_bi_t)) * ctx->i_objects_count;
+    uint32_t file_stub_array_off = reference_name_table_off;
+    reference_name_table_off += ((psplc_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_stub_t) : sizeof(pspl_object_stub_bi_t)) * ctx->stubs_count;
+    
+    uint32_t extension_name_table_off = reference_name_table_off;
+    for (i=0 ; i<ctx->stubs_count ; ++i) {
+        extension_name_table_off += strlen(ctx->stubs_array[i]->stub_source_path) + 1;
+        if (ctx->stubs_array[i]->stub_source_path_ext)
+            extension_name_table_off += strlen(ctx->stubs_array[i]->stub_source_path_ext) + 1;
+    }
+    
+    uint32_t platform_name_table_off = extension_name_table_off;
+    for (i=0 ; i<ctx->ext_count ; ++i)
+        platform_name_table_off += strlen(ctx->ext_array[i]->extension_name) + 1;
+    
+    
+    // Populate main header
+    pspl_header_t pspl_header = {
+        .magic = PSPL_MAGIC_DEF,
+        .package_flag = PSPL_PSPLC,
+        .version = PSPL_VERSION,
+        .endian_flags = psplc_endianness,
+        
+        .extension_name_table_c.native = ctx->ext_count,
+        .extension_name_table_c.swapped = swap_uint32(ctx->ext_count),
+        .extension_name_table_off.native = extension_name_table_off,
+        .extension_name_table_off.swapped = swap_uint32(extension_name_table_off),
+        
+        .platform_name_table_c.native = ctx->plat_count,
+        .platform_name_table_c.swapped = swap_uint32(ctx->plat_count),
+        .platform_name_table_off.native = platform_name_table_off,
+        .platform_name_table_off.swapped = swap_uint32(platform_name_table_off)
+    };
+    
+    // Write main header
+    fwrite(&pspl_header, 1, sizeof(pspl_header_t), psplc_file_out);
+    
+    
+    // Write hash
+    fwrite(psplc_hash_in, 1, sizeof(pspl_hash), psplc_file_out);
+    
+    
+    // Populate PSPLC object header
+    pspl_psplc_header_bi_t psplc_header;
+    SET_BI_U32(psplc_header, extension_count, ctx->ext_count);
+    SET_BI_U32(psplc_header, extension_array_off, extension_array_off);
+    SET_BI_U32(psplc_header, file_stub_count, ctx->stubs_count);
+    SET_BI_U32(psplc_header, file_stub_array_off, file_stub_array_off);
+    
+    // Write PSPLC object header
+    switch (psplc_endianness) {
+        case PSPL_LITTLE_ENDIAN:
+            fwrite(&psplc_header.little, 1, sizeof(pspl_psplc_header_t), psplc_file_out);
+            break;
+        case PSPL_BIG_ENDIAN:
+            fwrite(&psplc_header.big, 1, sizeof(pspl_psplc_header_t), psplc_file_out);
+            break;
+        case PSPL_BI_ENDIAN:
+            fwrite(&psplc_header, 1, sizeof(pspl_psplc_header_bi_t), psplc_file_out);
+            break;
+        default:
+            break;
+    }
+    
+}
+
+
+/* Write out to PSPLP file */
+
+void pspl_indexer_write_psplp(pspl_indexer_context_t* ctx,
+                              FILE* psplp_file_out) {
+    
+    // Determine endianness
+    unsigned int psplp_endianness = 0;
+    int i;
+    for (i=0 ; i<ctx->plat_count ; ++i)
+        psplp_endianness |= ctx->plat_array[i]->byte_order;
+    
+    
+    
+}
+

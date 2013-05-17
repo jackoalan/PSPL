@@ -248,27 +248,19 @@ typedef int(*pspl_toolchain_indent_line_read_hook)(const pspl_toolchain_context_
  * results in the previous object being overloaded with the new object */
 
 /* Add data object (keyed with a null-terminated string stored as 32-bit truncated SHA1 hash) */
-void __pspl_embed_hash_keyed_object(const pspl_runtime_platform_t** platforms,
-                                    const char* key,
-                                    const void* little_object,
-                                    const void* big_object,
-                                    size_t object_size);
-#define pspl_embed_hash_keyed_bi_object(platforms,key,object) \
-__pspl_embed_hash_keyed_object(platforms,key,&(object.little),&(object.big),sizeof(object.native))
-#define pspl_embed_hash_keyed_object(platforms,key,object) \
-__pspl_embed_hash_keyed_object(platforms,key,&object,&object,sizeof(object))
+void pspl_embed_hash_keyed_object(const pspl_runtime_platform_t** platforms,
+                                  const char* key,
+                                  const void* little_object,
+                                  const void* big_object,
+                                  size_t object_size);
 
 /* Add data object (keyed with a non-hashed 32-bit unsigned numeric value) 
  * Integer keying uses a separate namespace from hashed keying */
-void __pspl_embed_integer_keyed_object(const pspl_runtime_platform_t** platforms,
-                                       uint32_t key,
-                                       const void* little_object,
-                                       const void* big_object,
-                                       size_t object_size);
-#define pspl_embed_integer_keyed_bi_object(platforms,key,object) \
-__pspl_embed_integer_keyed_object(platforms,key,&(object.little),&(object.big),sizeof(object.native))
-#define pspl_embed_integer_keyed_object(platforms,key,object) \
-__pspl_embed_integer_keyed_object(platforms,key,&object,&object,sizeof(object))
+void pspl_embed_integer_keyed_object(const pspl_runtime_platform_t** platforms,
+                                      uint32_t key,
+                                      const void* little_object,
+                                      const void* big_object,
+                                      size_t object_size);
 
 
 #pragma mark Add File For Packaging Into PSPLP Flat-File and/or PSPLPD Directory

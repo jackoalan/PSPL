@@ -110,11 +110,6 @@ typedef struct {
     
     // Required extension set (NULL-terminated array)
     const pspl_extension_t** required_extension_set;
-    
-    
-    // Compiled object data
-    const uint8_t* psplc_data;
-    size_t psplc_data_len;
 
     
 } pspl_toolchain_driver_source_t;
@@ -138,6 +133,9 @@ typedef struct {
     
     // Required platform set (NULL-terminated array)
     const pspl_runtime_platform_t** required_platform_set;
+    
+    // Name hash of PSPLC
+    pspl_hash psplc_name_hash;
     
     
     // Compiled object data

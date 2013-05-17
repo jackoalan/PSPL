@@ -11,6 +11,7 @@
 #ifdef PSPL_INTERNAL
 
 #include <stdint.h>
+#include <stdio.h>
 #include <PSPL/PSPLExtension.h>
 
 /* This API is used to maintain an index context for gathering
@@ -118,6 +119,19 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
                                       pspl_converter_membuf_hook converter_hook,
                                       pspl_hash** hash_out,
                                       pspl_toolchain_driver_source_t* definer);
+
+/* Write out to PSPLC file */
+
+void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
+                              pspl_hash* psplc_hash_in,
+                              FILE* psplc_file_out);
+
+
+/* Write out to PSPLP file */
+
+void pspl_indexer_write_psplp(pspl_indexer_context_t* ctx,
+                              FILE* psplp_file_out);
+
 
 #endif // PSPL_INTERNAL
 #endif

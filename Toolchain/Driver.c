@@ -1169,7 +1169,8 @@ int main(int argc, char** argv) {
     } else if (driver_opts.pspl_mode_opts & PSPL_MODE_COMPILE_ONLY) {
         
         // Compile only
-        fwrite(sources[0].psplc_data, 1, sources[0].psplc_data_len, out_file);
+        pspl_hash psplc_name_hash;
+        pspl_indexer_write_psplc(driver_state.indexer_ctx, &psplc_name_hash, out_file);
         
     } else {
         
