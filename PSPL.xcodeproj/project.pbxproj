@@ -35,6 +35,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E48CCCBC1747D4D500DDDD63 /* ToolchainCrossDarwinMinGW32.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToolchainCrossDarwinMinGW32.cmake; sourceTree = "<group>"; };
 		E4995F2B173E8BCE003B06BF /* PSPLHash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLHash.h; sourceTree = "<group>"; };
 		E4995F2C173E8C06003B06BF /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E4995F2D173E8C4D003B06BF /* hash_builtin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hash_builtin.h; sourceTree = "<group>"; };
@@ -61,7 +62,7 @@
 		E4AFAE53171CA6C700F7A0BF /* PSPLToolchainExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLToolchainExtension.h; sourceTree = "<group>"; };
 		E4AFAE54171CA6D700F7A0BF /* PSPLExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLExtension.h; sourceTree = "<group>"; };
 		E4AFAE56171CA74A00F7A0BF /* PSPLRuntimeExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLRuntimeExtension.h; sourceTree = "<group>"; };
-		E4AFAE5B171CF46500F7A0BF /* FAKE-TARGET */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "FAKE-TARGET"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E4AFAE5B171CF46500F7A0BF /* TEST-TOOLCHAIN */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "TEST-TOOLCHAIN"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E4AFAE6B171D825400F7A0BF /* gx_offline.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_offline.c; sourceTree = "<group>"; };
 		E4AFAE6D171D82B600F7A0BF /* bytecode_playback.S */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm; path = bytecode_playback.S; sourceTree = "<group>"; usesTabs = 1; };
 		E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_runtime.c; sourceTree = "<group>"; };
@@ -273,7 +274,7 @@
 		E4AFAE5C171CF46500F7A0BF /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				E4AFAE5B171CF46500F7A0BF /* FAKE-TARGET */,
+				E4AFAE5B171CF46500F7A0BF /* TEST-TOOLCHAIN */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -282,6 +283,7 @@
 			isa = PBXGroup;
 			children = (
 				E4AFAE77171EFF7900F7A0BF /* README.md */,
+				E48CCCBC1747D4D500DDDD63 /* ToolchainCrossDarwinMinGW32.cmake */,
 				E4AFAE7C17218D8300F7A0BF /* Templates */,
 				E4AFAE74171EF74600F7A0BF /* PSPLConfig.cmake.in */,
 				E4AFAE76171EF78600F7A0BF /* PSPLExtensionMacros.cmake */,
@@ -363,9 +365,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		E4AFAE5A171CF46500F7A0BF /* FAKE-TARGET */ = {
+		E4AFAE5A171CF46500F7A0BF /* TEST-TOOLCHAIN */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E4AFAE67171CF46600F7A0BF /* Build configuration list for PBXNativeTarget "FAKE-TARGET" */;
+			buildConfigurationList = E4AFAE67171CF46600F7A0BF /* Build configuration list for PBXNativeTarget "TEST-TOOLCHAIN" */;
 			buildPhases = (
 				E4AFAE57171CF46500F7A0BF /* Sources */,
 				E4AFAE58171CF46500F7A0BF /* Frameworks */,
@@ -375,9 +377,9 @@
 			);
 			dependencies = (
 			);
-			name = "FAKE-TARGET";
+			name = "TEST-TOOLCHAIN";
 			productName = "FAKE-TARGET";
-			productReference = E4AFAE5B171CF46500F7A0BF /* FAKE-TARGET */;
+			productReference = E4AFAE5B171CF46500F7A0BF /* TEST-TOOLCHAIN */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -400,7 +402,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				E4AFAE5A171CF46500F7A0BF /* FAKE-TARGET */,
+				E4AFAE5A171CF46500F7A0BF /* TEST-TOOLCHAIN */,
 			);
 		};
 /* End PBXProject section */
@@ -533,7 +535,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E4AFAE67171CF46600F7A0BF /* Build configuration list for PBXNativeTarget "FAKE-TARGET" */ = {
+		E4AFAE67171CF46600F7A0BF /* Build configuration list for PBXNativeTarget "TEST-TOOLCHAIN" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E4AFAE68171CF46600F7A0BF /* Debug */,

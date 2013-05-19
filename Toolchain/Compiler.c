@@ -20,9 +20,15 @@
 #include "ObjectIndexer.h"
 
 /* Generate platform-native bullet enumerations */
+#ifdef _WIN32
+const unsigned long PSPL_BULLET_MASK = 0xC0000000;
+const unsigned long PSPL_BULLET_STAR = (((~0)>>1)&0xC0000000);
+const unsigned long PSPL_BULLET_DASH = (((~0)>>1)&0xC0000000);
+#else
 const unsigned long PSPL_BULLET_MASK = (~(((~0)<<2)>>2));
 const unsigned long PSPL_BULLET_STAR = (((~0)>>1)&PSPL_BULLET_MASK);
 const unsigned long PSPL_BULLET_DASH = (((~0)>>1)&PSPL_BULLET_MASK);
+#endif
 
 /* Name of GLOBAL context */
 static const char* PSPL_GLOBAL_NAME = "GLOBAL";

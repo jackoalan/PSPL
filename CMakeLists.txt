@@ -1,20 +1,55 @@
 cmake_minimum_required(VERSION 2.8)
+
+# Determine which primary platform to build
+option(PSPL_WINDOWS "Build with Windows support using mingw32-gcc (both Toolchain and Runtime)" OFF)
+option(PSPL_WII "Build with Wii support using WiiStep's llvm macros (Runtime only)" OFF)
+if(PSPL_WINDOWS)
+  set(CMAKE_TOOLCHAIN_FILE cmake/ToolchainCrossDarwinMinGW32.cmake)
+  set(PSPL_TOOLCHAIN_TARGET_SYSTEM WINDOWS CACHE STRING
+      "Select which platform to (cross) compile PSPL Toolchain for [NATIVE, WII, WINDOWS] (default WINDOWS)")
+  set(PSPL_RUNTIME_TARGET_SYSTEM WINDOWS CACHE STRING
+      "Select which platform to (cross) compile PSPL Runtime for [NATIVE, WII, WINDOWS] (default WINDOWS)")
+elseif(PSPL_WII)
+  find_package(WiiStep REQUIRED)
+endif()
+
 project(PSPL)
 
 # Codebase `include` directory
 include_directories(include)
 
+# Cross compiling options
+set(PSPL_TOOLCHAIN_TARGET_SYSTEM NATIVE CACHE STRING
+    "Select which platform to (cross) compile PSPL Toolchain for [NATIVE, WII, WINDOWS] (default NATIVE)")
+set(PSPL_RUNTIME_TARGET_SYSTEM NATIVE CACHE STRING
+    "Select which platform to (cross) compile PSPL Runtime for [NATIVE, WII, WINDOWS] (default NATIVE)")
+    
+
 # Hashing library options
-if(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
-  set(PSPL_TOOLCHAIN_HASHING COMMON_CRYPTO CACHE STRING 
-      "Select which hashing library to use for compile-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (COMMON_CRYPTO selected by default)")
-  set(PSPL_RUNTIME_HASHING COMMON_CRYPTO CACHE STRING 
-      "Select which hashing library to use for run-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (COMMON_CRYPTO selected by default)")
+if(PSPL_TOOLCHAIN_TARGET_SYSTEM STREQUAL WINDOWS)
+  set(PSPL_TOOLCHAIN_HASHING WINDOWS CACHE STRING 
+      "Select which hashing library to use for compile-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (WINDOWS selected by default)")
 else()
-  set(PSPL_TOOLCHAIN_HASHING BUILTIN CACHE STRING 
-      "Select which hashing library to use for compile-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (BUILTIN selected by default)")
-  set(PSPL_RUNTIME_HASHING BUILTIN CACHE STRING 
-      "Select which hashing library to use for run-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (BUILTIN selected by default)")
+  if(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
+    set(PSPL_TOOLCHAIN_HASHING COMMON_CRYPTO CACHE STRING 
+        "Select which hashing library to use for compile-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (COMMON_CRYPTO selected by default)")
+  else()
+    set(PSPL_TOOLCHAIN_HASHING BUILTIN CACHE STRING 
+        "Select which hashing library to use for compile-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (BUILTIN selected by default)")
+  endif()
+endif()
+
+if(PSPL_RUNTIME_TARGET_SYSTEM STREQUAL WINDOWS)
+  set(PSPL_RUNTIME_HASHING WINDOWS CACHE STRING 
+      "Select which hashing library to use for run-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (WINDOWS selected by default)")
+else()
+  if(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
+    set(PSPL_RUNTIME_HASHING COMMON_CRYPTO CACHE STRING 
+        "Select which hashing library to use for run-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (COMMON_CRYPTO selected by default)")
+  else()
+    set(PSPL_RUNTIME_HASHING BUILTIN CACHE STRING
+        "Select which hashing library to use for run-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (BUILTIN selected by default)")
+  endif()
 endif()
 
 add_subdirectory(Hash)
@@ -151,6 +186,9 @@ configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_available_extensions.c.in
 if(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
   set(PSPL_RUNTIME_PLATFORM GL2LE CACHE STRING 
       "Select which platform to build runtime for [${pspl_platform_list}] (GL2LE selected by default)")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL Windows)
+  set(PSPL_RUNTIME_PLATFORM D3D9LE CACHE STRING 
+      "Select which platform to build runtime for [${pspl_platform_list}] (D3D9LE selected by default)")
 else()
   set(PSPL_RUNTIME_PLATFORM "" CACHE STRING 
       "Select which platform to build runtime for [${pspl_platform_list}] (Runtime not built by default)")

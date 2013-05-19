@@ -82,17 +82,14 @@ void pspl_preprocessor_add_line(const char* line_text, ...) {
         return;
     
     // Expand format string
-    char* exp_line_text;
+    char exp_line_text[2048];
     va_list va;
     va_start(va, line_text);
-    vasprintf(&exp_line_text, line_text, va);
+    vsprintf(exp_line_text, line_text, va);
     va_end(va);
     
     // Common line add
     _add_line(preprocessor_state.indent_level, exp_line_text);
-    
-    // Done with format-expanded string
-    free(exp_line_text);
 }
 
 /* Convenience function to add line with specified indent level (0 is primary) */
@@ -101,17 +98,14 @@ void pspl_preprocessor_add_indent_line(unsigned int indent_level, const char* li
         return;
     
     // Expand format string
-    char* exp_line_text;
+    char exp_line_text[2048];
     va_list va;
     va_start(va, line_text);
-    vasprintf(&exp_line_text, line_text, va);
+    vsprintf(exp_line_text, line_text, va);
     va_end(va);
     
     // Common line add
     _add_line(preprocessor_state.indent_level+indent_level, exp_line_text);
-    
-    // Done with format-expanded string
-    free(exp_line_text);
 }
 
 /* Convenience function to emit PSPL primary-heading push

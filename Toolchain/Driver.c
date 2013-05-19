@@ -9,13 +9,17 @@
 #define PSPL_TOOLCHAIN
 
 /* Should an error condition print backtrace? */
+#ifndef _WIN32
 #define PSPL_ERROR_PRINT_BACKTRACE 1
+#endif
 
 /* Should PSPL catch system signals as errors on its own? */
 #define PSPL_ERROR_CATCH_SIGNALS 1
 
 #include <stdio.h>
+#ifndef _WIN32
 #include <sys/ioctl.h>
+#endif
 #include <sys/stat.h>
 #include <sys/param.h>
 #include <stdlib.h>
@@ -38,6 +42,13 @@
 #include "Preprocessor.h"
 #include "Compiler.h"
 #include "Packager.h"
+
+#ifdef _WIN32
+char* strtok_r(
+               char *str,
+               const char *delim,
+               char **nextp);
+#endif
 
 
 /* Maximum count of sources */
@@ -100,9 +111,13 @@ void pspl_hash_parse(pspl_hash* out, const char* hash_str) {
 
 /* Way to get terminal width (for line wrapping) */
 static int term_cols() {
+#   if _WIN32
+    return 80;
+#   else
     struct winsize w;
     ioctl(0, TIOCGWINSZ, &w);
     return w.ws_col;
+#   endif
 }
 
 /* Word len (similar to `strlen` but ignores escape sequences) */
@@ -327,10 +342,11 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
     if (msg) {
         va_list va;
         va_start(va, msg);
-        vasprintf(&msg_str, msg, va);
+        char msg_str_buf[1024];
+        char* msg_str = msg_str_buf;
+        vsprintf(msg_str, msg, va);
         va_end(va);
         char* new_msg = wrap_string(msg_str, 1);
-        free(msg_str);
         msg_str = new_msg;
     }
     
@@ -415,10 +431,11 @@ void pspl_warn(const char* brief, const char* msg, ...) {
     if (msg) {
         va_list va;
         va_start(va, msg);
-        vasprintf(&msg_str, msg, va);
+        char msg_str_buf[1024];
+        char* msg_str = msg_str_buf;
+        vsprintf(msg_str, msg, va);
         va_end(va);
         char* new_msg = wrap_string(msg_str, 1);
-        free(msg_str);
         msg_str = new_msg;
     }
     
@@ -576,12 +593,15 @@ static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const cha
     
     // Make path absolute (if it's not already)
     const char* abs_path = psplc->file_path;
-    if (abs_path[0] != '/')
-        asprintf((char**)&abs_path, "%s/%s", cwd, psplc->file_path);
+    if (abs_path[0] != '/') {
+        abs_path = malloc(MAXPATHLEN);
+        sprintf((char*)abs_path, "%s/%s", cwd, psplc->file_path);
+    }
     
     // Enclosing dir
     char* last_slash = strrchr(abs_path, '/');
-    asprintf((char**)&psplc->file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
+    psplc->file_enclosing_dir = malloc(MAXPATHLEN);
+    sprintf((char*)psplc->file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
     
     // File name
     psplc->file_name = last_slash+1;
@@ -743,7 +763,11 @@ int pspl_toolchain_init_other_extension(const char* ext_name) {
 
 #if PSPL_ERROR_CATCH_SIGNALS
 static void catch_sig(int sig) {
+#   ifdef _WIN32
+    pspl_error(-1, "Caught signal", "PSPL caught signal %d", sig);
+#   else
     pspl_error(-1, "Caught signal", "PSPL caught signal %d (%s)", sig, sys_siglist[sig]);
+#   endif
 }
 #endif
 
@@ -943,12 +967,14 @@ int main(int argc, char** argv) {
     // Output file
     //driver_state.out_path = driver_opts.out_path;
     if (driver_opts.out_path) {
-        FILE* file;
-        if ((file = fopen(driver_opts.out_path, "w")))
-            fclose(file);
-        else
-            pspl_error(-1, "Unable to write output", "Can't open `%s` for writing",
-                       driver_opts.out_path);
+        if (driver_opts.out_path[0] != '-') {
+            FILE* file;
+            if ((file = fopen(driver_opts.out_path, "w")))
+                fclose(file);
+            else
+                pspl_error(-1, "Unable to write output", "Can't open `%s` for writing",
+                           driver_opts.out_path);
+        }
     }
     
     // Staging area path (make cwd if not specified)
@@ -1037,12 +1063,15 @@ int main(int argc, char** argv) {
             
             // Make path absolute (if it's not already)
             const char* abs_path = source->file_path;
-            if (abs_path[0] != '/')
-                asprintf((char**)&abs_path, "%s/%s", cwd, source->file_path);
+            if (abs_path[0] != '/') {
+                abs_path = malloc(MAXPATHLEN);
+                sprintf((char*)abs_path, "%s/%s", cwd, source->file_path);
+            }
             
             // Enclosing dir
             char* last_slash = strrchr(abs_path, '/');
-            asprintf((char**)&source->file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
+            source->file_enclosing_dir = malloc(MAXPATHLEN);
+            sprintf((char*)source->file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
             
             // File name
             source->file_name = last_slash+1;
@@ -1155,9 +1184,19 @@ int main(int argc, char** argv) {
 #   pragma mark Output Stage
     
     // Open output file
-    FILE* out_file = stdout;
-    if (driver_opts.out_path)
+    FILE* out_file;
+    if (driver_opts.out_path) {
+        if (driver_opts.out_path[0] == '-')
+            out_file = stdout;
         out_file = fopen(driver_opts.out_path, "w");
+    } else {
+        if (driver_opts.pspl_mode_opts & PSPL_MODE_PREPROCESS_ONLY)
+            out_file = fopen("a.out.pspl", "w");
+        else if (driver_opts.pspl_mode_opts & PSPL_MODE_COMPILE_ONLY)
+            out_file = fopen("a.out.psplc", "w");
+        else
+            out_file = fopen("a.out.psplp", "w");
+    }
     
     // Output selected data
     if (driver_opts.pspl_mode_opts & PSPL_MODE_PREPROCESS_ONLY) {
@@ -1179,7 +1218,7 @@ int main(int argc, char** argv) {
         
     }
     
-    if (driver_opts.out_path)
+    if (driver_opts.out_path && driver_opts.out_path[0] != '-')
         fclose(out_file);
     
     
@@ -1192,4 +1231,55 @@ int main(int argc, char** argv) {
     
 }
 
+
+#pragma mark Windows Support Stuff
+
+#ifdef _WIN32
+
+/*
+ * public domain strtok_r() by Charlie Gordon
+ *
+ *   from comp.lang.c  9/14/2007
+ *
+ *      http://groups.google.com/group/comp.lang.c/msg/2ab1ecbb86646684
+ *
+ *     (Declaration that it's public domain):
+ *      http://groups.google.com/group/comp.lang.c/msg/7c7b39328fefab9c
+ */
+
+char* strtok_r(
+               char *str,
+               const char *delim,
+               char **nextp)
+{
+    char *ret;
+    
+    if (str == NULL)
+    {
+        str = *nextp;
+    }
+    
+    str += strspn(str, delim);
+    
+    if (*str == '\0')
+    {
+        return NULL;
+    }
+    
+    ret = str;
+    
+    str += strcspn(str, delim);
+    
+    if (*str)
+    {
+        *str++ = '\0';
+    }
+    
+    *nextp = str;
+    
+    return ret;
+}
+
+
+#endif
 

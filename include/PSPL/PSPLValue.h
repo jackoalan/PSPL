@@ -24,7 +24,7 @@
 
 /* We must have at least one type of target as well */
 #if !__BIG_ENDIAN__ && !__LITTLE_ENDIAN__
-#  error PSPL cannot compile to a target that is neither big or nor little endian
+#  error PSPL cannot compile to a target that is neither big nor little endian
 #endif
 
 

@@ -15,7 +15,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/types.h>
+#ifndef _WIN32
 #include <sys/uio.h>
+#endif
 #include <unistd.h>
 #include <errno.h>
 #include <dirent.h>
@@ -26,6 +28,18 @@
 #include "ObjectIndexer.h"
 #include "Driver.h"
 #include "ReferenceGatherer.h"
+
+#ifdef _WIN32
+#define A_NEWER_B(a,b) (a.st_mtime > b.st_mtime)
+#define TIME_A_NEWER_B(a,b) (a > b)
+#else
+#define A_NEWER_B(a,b) ((a.st_mtimespec.tv_sec > b.st_mtimespec.tv_sec) || \
+                        (a.st_mtimespec.tv_sec == b.st_mtimespec.tv_sec && \
+                         a.st_mtimespec.tv_nsec > b.st_mtimespec.tv_nsec))
+#define TIME_A_NEWER_B(a,b) ((a.tv_sec > b.tv_sec) || \
+                             (a.tv_sec == b.tv_sec && \
+                              a.tv_nsec > b.tv_nsec))
+#endif
 
 #define PSPL_INDEXER_INITIAL_CAP 50
 
@@ -71,9 +85,7 @@ static int is_psplc_ref_newer_than_staged_output(const char* abs_ref_path,
         return 1;
     
     // Compare modtimes
-    if ((src_stat.st_mtimespec.tv_sec > obj_stat.st_mtimespec.tv_sec) ||
-        (src_stat.st_mtimespec.tv_sec == obj_stat.st_mtimespec.tv_sec &&
-         src_stat.st_mtimespec.tv_nsec > obj_stat.st_mtimespec.tv_nsec))
+    if (A_NEWER_B(src_stat, obj_stat))
         return 1;
     
     return 0;
@@ -110,7 +122,11 @@ static int is_source_ref_newer_than_staged_output(const char* abs_ref_path,
     pspl_hash_fmt(abs_ref_path_hash_str_out, path_hash);
     
     // Use hash path to find newest existing staged output
+#   ifdef _WIN32
+    time_t newest_match_mtime = 0;
+#   else
     struct timespec newest_match_mtime = {0,0};
+#   endif
     char matched_path[MAXPATHLEN];
     struct stat matched_stat;
     DIR* staging_dir = opendir(driver_state.staging_path);
@@ -120,7 +136,11 @@ static int is_source_ref_newer_than_staged_output(const char* abs_ref_path,
     
     struct dirent* dent;
     while ((dent = readdir(staging_dir))) {
+#       ifdef _WIN32
+        if (dent->d_namlen >= PSPL_HASH_STRING_LEN-1)
+#       else
         if (dent->d_type == DT_REG && dent->d_namlen >= PSPL_HASH_STRING_LEN-1)
+#       endif
             if (!strncmp(abs_ref_path_hash_str_out, dent->d_name, PSPL_HASH_STRING_LEN-1)) {
                 // Found a match, stat it and set newest
                 matched_path[0] = '\0';
@@ -131,15 +151,22 @@ static int is_source_ref_newer_than_staged_output(const char* abs_ref_path,
                                "while staging `%s`, unable to stat matched output `%s`; "
                                "errno: %d (%s)",
                                abs_ref_path, matched_path, errno, strerror(errno));
-                if ((matched_stat.st_mtimespec.tv_sec > newest_match_mtime.tv_sec) ||
-                    (matched_stat.st_mtimespec.tv_sec == newest_match_mtime.tv_sec &&
-                     matched_stat.st_mtimespec.tv_nsec > newest_match_mtime.tv_nsec))
+#               ifdef _WIN32
+                if (TIME_A_NEWER_B(matched_stat.st_mtime, newest_match_mtime))
+                    newest_match_mtime = matched_stat.st_mtime;
+#               else
+                if (TIME_A_NEWER_B(matched_stat.st_mtimespec, newest_match_mtime))
                     newest_match_mtime = matched_stat.st_mtimespec;
+#               endif
             }
     }
     
     // Write out newest data hash (if needed)
+#   ifdef _WIN32
+    if (newest_ref_data_hash_str_out && newest_match_mtime) {
+#   else
     if (newest_ref_data_hash_str_out && newest_match_mtime.tv_sec) {
+#   endif
         char* d_hash = strrchr(matched_path, '_')+1;
         strncpy(newest_ref_data_hash_str_out, d_hash, PSPL_HASH_STRING_LEN-1);
         newest_ref_data_hash_str_out[PSPL_HASH_STRING_LEN-1] = '\0';
@@ -147,15 +174,21 @@ static int is_source_ref_newer_than_staged_output(const char* abs_ref_path,
     
     // Now see if ref is newer
     int is_newer = 0;
-    if ((ref_stat.st_mtimespec.tv_sec > newest_match_mtime.tv_sec) ||
-        (ref_stat.st_mtimespec.tv_sec == newest_match_mtime.tv_sec &&
-         ref_stat.st_mtimespec.tv_nsec > newest_match_mtime.tv_nsec)) {
+#   ifdef _WIN32
+    if (TIME_A_NEWER_B(ref_stat.st_mtime, newest_match_mtime)) {
+#   else
+    if (TIME_A_NEWER_B(ref_stat.st_mtimespec, newest_match_mtime)) {
+#   endif
         // It's newer; delete matched files in staging area (they're invalidated)
         is_newer = 1;
         if (delete_if_newer) {
             rewinddir(staging_dir);
             while ((dent = readdir(staging_dir))) {
+#               ifdef _WIN32
+                if (dent->d_namlen >= PSPL_HASH_STRING_LEN-1)
+#               else
                 if (dent->d_type == DT_REG && dent->d_namlen >= PSPL_HASH_STRING_LEN-1)
+#               endif
                     if (!strncmp(abs_ref_path_hash_str_out, dent->d_name, PSPL_HASH_STRING_LEN-1)) {
                         // Found a match, delete it
                         matched_path[0] = '\0';
@@ -482,281 +515,8 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx, pspl_toolchain
     int i,j;
     pspl_header_t* pspl_head = (pspl_header_t*)existing_psplc->psplc_data;
     
-    // First, our PSPLC head
-    pspl_psplc_header_t* psplc_head_little = NULL;
-    pspl_psplc_header_t* psplc_head_big = NULL;
-#   if defined(__LITTLE_ENDIAN__)
-    if (pspl_head->endian_flags == PSPL_LITTLE_ENDIAN) {
-        psplc_head_little = (pspl_psplc_header_t*)(existing_psplc->psplc_data + sizeof(pspl_header_t));
-    } else if (pspl_head->endian_flags == PSPL_BIG_ENDIAN) {
-        psplc_head_big = (pspl_psplc_header_t*)(existing_psplc->psplc_data + sizeof(pspl_header_t));
-        pspl_psplc_header_t swapped_header = {
-            .extension_count = swap_uint32(psplc_head_big->extension_count),
-            .extension_array_off = swap_uint32(psplc_head_big->extension_array_off),
-            .file_stub_count = swap_uint32(psplc_head_big->file_stub_count),
-            .file_stub_array_off = swap_uint32(psplc_head_big->file_stub_array_off)
-        };
-        psplc_head_big = &swapped_header;
-    } else if (pspl_head->endian_flags == PSPL_BI_ENDIAN) {
-        psplc_head_little = &((pspl_psplc_header_bi_t*)(existing_psplc->psplc_data + sizeof(pspl_header_t)))->little;
-        psplc_head_big = &((pspl_psplc_header_bi_t*)(existing_psplc->psplc_data + sizeof(pspl_header_t)))->big;
-        pspl_psplc_header_t swapped_header = {
-            .extension_count = swap_uint32(psplc_head_big->extension_count),
-            .extension_array_off = swap_uint32(psplc_head_big->extension_array_off),
-            .file_stub_count = swap_uint32(psplc_head_big->file_stub_count),
-            .file_stub_array_off = swap_uint32(psplc_head_big->file_stub_array_off)
-        };
-        psplc_head_big = &swapped_header;
-    }
-#   elif defined(__BIG_ENDIAN__)
-    if (pspl_head->endian_flags == PSPL_LITTLE_ENDIAN) {
-        psplc_head_little = (pspl_psplc_header_t*)(existing_psplc->psplc_data + sizeof(pspl_header_t));
-        pspl_psplc_header_t swapped_header = {
-            .extension_count = swap_uint32(psplc_head_little->extension_count),
-            .extension_array_off = swap_uint32(psplc_head_little->extension_array_off),
-            .file_stub_count = swap_uint32(psplc_head_little->file_stub_count),
-            .file_stub_array_off = swap_uint32(psplc_head_little->file_stub_array_off)
-        };
-        psplc_head_little = &swapped_header;
-    } else if (pspl_head->endian_flags == PSPL_BIG_ENDIAN) {
-        psplc_head_big = (pspl_psplc_header_t*)(existing_psplc->psplc_data + sizeof(pspl_header_t));
-    } else if (pspl_head->endian_flags == PSPL_BI_ENDIAN) {
-        psplc_head_big = &((pspl_psplc_header_bi_t*)(existing_psplc->psplc_data + sizeof(pspl_header_t)))->big;
-        psplc_head_little = &((pspl_psplc_header_bi_t*)(existing_psplc->psplc_data + sizeof(pspl_header_t)))->little;
-        pspl_psplc_header_t swapped_header = {
-            .extension_count = swap_uint32(psplc_head_little->extension_count),
-            .extension_array_off = swap_uint32(psplc_head_little->extension_array_off),
-            .file_stub_count = swap_uint32(psplc_head_little->file_stub_count),
-            .file_stub_array_off = swap_uint32(psplc_head_little->file_stub_array_off)
-        };
-        psplc_head_little = &swapped_header;
-    }
-#   endif
-
-    // Select best native psplc head
-#   if defined(__LITTLE_ENDIAN__)
-    pspl_psplc_header_t* best_head = (psplc_head_little)?psplc_head_little:psplc_head_big;
-#   elif defined(__BIG_ENDIAN__)
-    pspl_psplc_header_t* best_head = (psplc_head_big)?psplc_head_big:psplc_head_little;
-#   endif
-    
-    // If bi-endian, calculate little-to-big offset
-    size_t ltob_off = 0;
-    if (psplc_head_little && psplc_head_big)
-        ltob_off = psplc_head_big->extension_array_off - psplc_head_little->extension_array_off;
     
     
-    // Next, embedded objects
-    pspl_object_array_tier2_t* ext_array =
-    (pspl_object_array_tier2_t*)(existing_psplc->psplc_data + best_head->extension_array_off);
-    pspl_object_array_tier2_t* ext_use_array = NULL;
-    for (i=0 ; i<best_head->extension_count ; ++i) {
-        check_psplc_underflow(existing_psplc, ext_array+sizeof(pspl_object_array_tier2_t)-1);
-        
-#       if defined(__LITTLE_ENDIAN__)
-        if (pspl_head->endian_flags == PSPL_LITTLE_ENDIAN) {
-            ext_use_array = ext_array;
-        } else if (pspl_head->endian_flags == PSPL_BIG_ENDIAN) {
-            pspl_object_array_tier2_t swapped = {
-                .tier2_extension_index = swap_uint32(ext_array->tier2_extension_index),
-                .tier2_hash_indexed_object_count = swap_uint32(ext_array->tier2_hash_indexed_object_count),
-                .tier2_int_indexed_object_count = swap_uint32(ext_array->tier2_int_indexed_object_count)
-            };
-            ext_use_array = &swapped;
-        }
-#       elif defined(__BIG_ENDIAN__)
-        if (pspl_head->endian_flags == PSPL_LITTLE_ENDIAN) {
-            pspl_object_array_tier2_t swapped = {
-                .tier2_extension_index = swap_uint32(ext_array->tier2_extension_index),
-                .tier2_hash_indexed_object_count = swap_uint32(ext_array->tier2_hash_indexed_object_count),
-                .tier2_int_indexed_object_count = swap_uint32(ext_array->tier2_int_indexed_object_count)
-            };
-            ext_use_array = &swapped;
-        } else if (pspl_head->endian_flags == PSPL_BIG_ENDIAN) {
-            ext_use_array = ext_array;
-        }
-#       endif
-        else if (pspl_head->endian_flags == PSPL_BI_ENDIAN) {
-            ext_use_array = ext_array;
-        }
-        
-        // Resolve extension
-        const pspl_extension_t* extension = existing_psplc->required_extension_set[ext_use_array->tier2_extension_index];
-        
-        // Parse object records
-        
-        // Hash objects
-        /*
-        pspl_object_hash_record_t* obj_hash_array =
-        (pspl_object_hash_record_t*)(ext_array + sizeof(pspl_object_array_tier2_t));
-        pspl_object_hash_record_t* obj_hash_use_array = NULL;
-        
-        for (j=0 ; j<ext_use_array->tier2_hash_indexed_object_count ; ++j) {
-            check_psplc_underflow(existing_psplc, obj_hash_array+sizeof(pspl_object_hash_record_t)-1);
-            
-            const void* little_data = NULL;
-            const void* big_data = NULL;
-            
-#           if defined(__LITTLE_ENDIAN__)
-            if (pspl_head->endian_flags == PSPL_LITTLE_ENDIAN) {
-                obj_hash_use_array = obj_hash_array;
-                little_data = existing_psplc->psplc_data + obj_hash_use_array->object_off;
-            } else if (pspl_head->endian_flags == PSPL_BIG_ENDIAN) {
-                pspl_object_hash_record_t swapped = {
-                    .platform_availability_bits = swap_uint32(obj_hash_array->platform_availability_bits),
-                    .object_off = swap_uint32(obj_hash_array->object_off),
-                    .object_len = swap_uint32(obj_hash_array->object_len)
-                };
-                memcpy(&swapped.object_hash, &obj_hash_array->object_hash, sizeof(pspl_hash));
-                obj_hash_use_array = &swapped;
-                big_data = existing_psplc->psplc_data + obj_hash_use_array->object_off;
-            }
-#           elif defined(__BIG_ENDIAN__)
-            if (pspl_head->endian_flags == PSPL_LITTLE_ENDIAN) {
-                pspl_object_hash_record_t swapped = {
-                    .platform_availability_bits = swap_uint32(obj_hash_array->platform_availability_bits),
-                    .object_off = swap_uint32(obj_hash_array->object_off),
-                    .object_len = swap_uint32(obj_hash_array->object_len)
-                };
-                memcpy(&swapped.object_hash, &obj_hash_array->object_hash, sizeof(pspl_hash));
-                obj_hash_use_array = &swapped;
-                little_data = existing_psplc->psplc_data + obj_hash_use_array->object_off;
-            } else if (pspl_head->endian_flags == PSPL_BIG_ENDIAN) {
-                obj_hash_use_array = obj_hash_array;
-                big_data = existing_psplc->psplc_data + obj_hash_use_array->object_off;
-            }
-#           endif
-            else if (pspl_head->endian_flags == PSPL_BI_ENDIAN) {
-                obj_hash_use_array = obj_hash_array;
-#               if defined(__LITTLE_ENDIAN__)
-                little_data = existing_psplc->psplc_data + obj_hash_use_array->object_off;
-                pspl_object_hash_record_t* big_record = obj_hash_use_array + ltob_off;
-                big_data = existing_psplc->psplc_data + swap_uint32(big_record->object_off);
-#               elif defined(__BIG_ENDIAN__)
-                big_data = existing_psplc->psplc_data + obj_hash_use_array->object_off;
-                pspl_object_hash_record_t* little_record = obj_hash_use_array - ltob_off;
-                little_data = existing_psplc->psplc_data + swap_uint32(little_record->object_off);
-#               endif
-            }
-            
-            // Add hashed record
-            const pspl_runtime_platform_t* plats[PSPL_MAX_PLATFORMS+1];
-            __plat_array_from_bits(plats, existing_psplc, obj_hash_use_array->platform_availability_bits);
-            __pspl_indexer_hash_object_post_augment(ctx, extension, plats, &obj_hash_use_array->object_hash,
-                                                    little_data, big_data, obj_hash_use_array->object_len,
-                                                    existing_psplc);
-
-            
-            obj_hash_array += sizeof(pspl_object_hash_record_t);
-        }
-         */
-        
-        // Integer objects
-        pspl_object_int_record_t* obj_int_array =
-        (pspl_object_int_record_t*)(ext_array + sizeof(pspl_object_array_tier2_t));
-        pspl_object_int_record_t* obj_int_use_array = NULL;
-        
-        for (j=0 ; j<ext_use_array->tier2_int_indexed_object_count ; ++j) {
-            check_psplc_underflow(existing_psplc, obj_int_array+sizeof(pspl_object_int_record_t)-1);
-            
-            const void* little_data = NULL;
-            const void* big_data = NULL;
-            
-#           if defined(__LITTLE_ENDIAN__)
-            if (pspl_head->endian_flags == PSPL_LITTLE_ENDIAN) {
-                obj_int_use_array = obj_int_array;
-                little_data = existing_psplc->psplc_data + obj_int_use_array->object_off;
-            } else if (pspl_head->endian_flags == PSPL_BIG_ENDIAN) {
-                pspl_object_int_record_t swapped = {
-                    .object_index = swap_uint32(obj_int_array->object_index),
-                    .platform_availability_bits = swap_uint32(obj_int_array->platform_availability_bits),
-                    .object_off = swap_uint32(obj_int_array->object_off),
-                    .object_len = swap_uint32(obj_int_array->object_len)
-                };
-                obj_int_use_array = &swapped;
-                big_data = existing_psplc->psplc_data + obj_int_use_array->object_off;
-            }
-#           elif defined(__BIG_ENDIAN__)
-            if (pspl_head->endian_flags == PSPL_LITTLE_ENDIAN) {
-                pspl_object_int_record_t swapped = {
-                    .object_index = swap_uint32(obj_int_array->object_index),
-                    .platform_availability_bits = swap_uint32(obj_int_array->platform_availability_bits),
-                    .object_off = swap_uint32(obj_int_array->object_off),
-                    .object_len = swap_uint32(obj_int_array->object_len)
-                };
-                obj_int_use_array = &swapped;
-                little_data = existing_psplc->psplc_data + obj_int_use_array->object_off;
-            } else if (pspl_head->endian_flags == PSPL_BIG_ENDIAN) {
-                obj_int_use_array = obj_int_array;
-                big_data = existing_psplc->psplc_data + obj_int_use_array->object_off;
-            }
-#           endif
-            else if (pspl_head->endian_flags == PSPL_BI_ENDIAN) {
-                obj_int_use_array = obj_int_array;
-#               if defined(__LITTLE_ENDIAN__)
-                little_data = existing_psplc->psplc_data + obj_int_use_array->object_off;
-                pspl_object_int_record_t* big_record = obj_int_use_array + ltob_off;
-                big_data = existing_psplc->psplc_data + swap_uint32(big_record->object_off);
-#               elif defined(__BIG_ENDIAN__)
-                big_data = existing_psplc->psplc_data + obj_int_use_array->object_off;
-                pspl_object_int_record_t* little_record = obj_int_use_array - ltob_off;
-                little_data = existing_psplc->psplc_data + swap_uint32(little_record->object_off);
-#               endif
-            }
-            
-            // Add integer record
-            const pspl_runtime_platform_t* plats[PSPL_MAX_PLATFORMS+1];
-            __plat_array_from_bits(plats, existing_psplc, obj_int_use_array->platform_availability_bits);
-            __pspl_indexer_integer_object_post_augment(ctx, extension, plats, obj_int_use_array->object_index,
-                                                       little_data, big_data, obj_int_use_array->object_len,
-                                                       existing_psplc);
-            
-            
-            obj_int_array += sizeof(pspl_object_int_record_t);
-        }
-        
-        ext_array += sizeof(pspl_object_array_tier2_t);
-    }
-    
-    // Last, file entries
-    /*
-    pspl_object_stub_t* stub_array = (pspl_object_stub_t*)(existing_psplc->psplc_data + best_head->file_stub_array_off);
-    for (i=0 ; i<best_head->file_stub_count ; ++i) {
-        
-        const pspl_runtime_platform_t* plats[PSPL_MAX_PLATFORMS+1];
-        const char* source_path = NULL;
-        const char* source_path_ext = NULL;
-#       if defined(__LITTLE_ENDIAN__)
-        if (pspl_head->endian_flags == PSPL_LITTLE_ENDIAN || pspl_head->endian_flags == PSPL_BI_ENDIAN) {
-            __plat_array_from_bits(plats, existing_psplc, stub_array->platform_availability_bits);
-            source_path = (char*)(existing_psplc->psplc_data + stub_array->object_source_path_off);
-            if (stub_array->object_source_path_ext_off)
-                source_path_ext = (char*)(existing_psplc->psplc_data + stub_array->object_source_path_ext_off);
-        } else if (pspl_head->endian_flags == PSPL_BIG_ENDIAN) {
-            __plat_array_from_bits(plats, existing_psplc, swap_uint32(stub_array->platform_availability_bits));
-            source_path = (char*)(existing_psplc->psplc_data + swap_uint32(stub_array->object_source_path_off));
-            if (stub_array->object_source_path_ext_off)
-                source_path_ext = (char*)(existing_psplc->psplc_data + swap_uint32(stub_array->object_source_path_ext_off));
-        }
-#       elif defined(__BIG_ENDIAN__)
-        if (pspl_head->endian_flags == PSPL_BIG_ENDIAN  || pspl_head->endian_flags == PSPL_BI_ENDIAN) {
-            __plat_array_from_bits(plats, existing_psplc, stub_array->platform_availability_bits);
-            source_path = (char*)(existing_psplc->psplc_data + stub_array->object_source_path_off);
-            if (stub_array->object_source_path_ext_off)
-                source_path_ext = (char*)(existing_psplc->psplc_data + stub_array->object_source_path_ext_off);
-        } else if (pspl_head->endian_flags == PSPL_LITTLE_ENDIAN) {
-            __plat_array_from_bits(plats, existing_psplc, swap_uint32(stub_array->platform_availability_bits));
-            source_path = (char*)(existing_psplc->psplc_data + swap_uint32(stub_array->object_source_path_off));
-            if (stub_array->object_source_path_ext_off)
-                source_path_ext = (char*)(existing_psplc->psplc_data + swap_uint32(stub_array->object_source_path_ext_off));
-        }
-#       endif
-        __pspl_indexer_stub_file_post_augment(ctx, plats, source_path, source_path_ext,
-                                              &stub_array->object_hash, existing_psplc);
-        stub_array += sizeof(pspl_object_stub_t);
-        
-    }
-     */
     
 }
 
@@ -973,7 +733,11 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
     
     // Ensure staging directory exists
     strcat(abs_path, driver_state.staging_path);
+#   ifdef _WIN32
+    if(mkdir(abs_path))
+#   else
     if(mkdir(abs_path, 0755))
+#   endif
         if (errno != EEXIST)
             pspl_error(-1, "Error creating staging directory",
                        "unable to create `%s` as staging directory; "
@@ -1139,7 +903,11 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
     
     // Ensure staging directory exists
     strcat(abs_path, driver_state.staging_path);
+#   ifdef _WIN32
+    if(mkdir(abs_path))
+#   else
     if(mkdir(abs_path, 0755))
+#   endif
         if (errno != EEXIST)
             pspl_error(-1, "Error creating staging directory",
                        "unable to create `%s` as staging directory",
@@ -1338,17 +1106,17 @@ void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
         .package_flag = PSPL_PSPLC,
         .version = PSPL_VERSION,
         .endian_flags = psplc_endianness,
-        
-        .extension_name_table_c.native = ctx->ext_count,
-        .extension_name_table_c.swapped = swap_uint32(ctx->ext_count),
-        .extension_name_table_off.native = extension_name_table_off,
-        .extension_name_table_off.swapped = swap_uint32(extension_name_table_off),
-        
-        .platform_name_table_c.native = ctx->plat_count,
-        .platform_name_table_c.swapped = swap_uint32(ctx->plat_count),
-        .platform_name_table_off.native = platform_name_table_off,
-        .platform_name_table_off.swapped = swap_uint32(platform_name_table_off)
     };
+    
+    pspl_header.extension_name_table_c.native = ctx->ext_count;
+    pspl_header.extension_name_table_c.swapped = swap_uint32(ctx->ext_count);
+    pspl_header.extension_name_table_off.native = extension_name_table_off;
+    pspl_header.extension_name_table_off.swapped = swap_uint32(extension_name_table_off);
+    
+    pspl_header.platform_name_table_c.native = ctx->plat_count;
+    pspl_header.platform_name_table_c.swapped = swap_uint32(ctx->plat_count);
+    pspl_header.platform_name_table_off.native = platform_name_table_off;
+    pspl_header.platform_name_table_off.swapped = swap_uint32(platform_name_table_off);
     
     // Write main header
     fwrite(&pspl_header, 1, sizeof(pspl_header_t), psplc_file_out);
