@@ -169,20 +169,20 @@
 			children = (
 				E4AFAE2A171C92D100F7A0BF /* README.md */,
 				E4AFAE8417259A1900F7A0BF /* CMakeLists.txt */,
+				E4AFAEA017315D3800F7A0BF /* Buffer.h */,
+				E4AFAEA117315D4000F7A0BF /* Buffer.c */,
 				E4AFAE93172D5F7900F7A0BF /* Driver.h */,
 				E4AFAE46171CA34700F7A0BF /* Driver.c */,
 				E4AFAE94172D898100F7A0BF /* Preprocessor.h */,
 				E4AFAE95172D898B00F7A0BF /* Preprocessor.c */,
 				E4AFAE97172D899400F7A0BF /* Compiler.h */,
 				E4AFAE98172D899D00F7A0BF /* Compiler.c */,
-				E4AFAE9C172DB2D400F7A0BF /* Packager.h */,
-				E4AFAE9B172DB2D400F7A0BF /* Packager.c */,
-				E4AFAEA017315D3800F7A0BF /* Buffer.h */,
-				E4AFAEA117315D4000F7A0BF /* Buffer.c */,
 				E4995F3917405785003B06BF /* ReferenceGatherer.h */,
 				E4995F3A1740578E003B06BF /* ReferenceGatherer.c */,
 				E4995F3C17411617003B06BF /* ObjectIndexer.h */,
 				E4995F3D17411620003B06BF /* ObjectIndexer.c */,
+				E4AFAE9C172DB2D400F7A0BF /* Packager.h */,
+				E4AFAE9B172DB2D400F7A0BF /* Packager.c */,
 			);
 			path = Toolchain;
 			sourceTree = "<group>";

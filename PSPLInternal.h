@@ -78,7 +78,7 @@ typedef struct {
     
     // File-absolute offset to per-extension object subtables,
     // separate tables for each byte-order
-    uint32_t extension_array_off;
+    //uint32_t extension_array_off;
     
     // Count of file object stubs
     uint32_t file_stub_count;
@@ -88,6 +88,10 @@ typedef struct {
     
 } pspl_psplc_header_t;
 typedef DEF_BI_OBJ_TYPE(pspl_psplc_header_t) pspl_psplc_header_bi_t;
+#define SWAP_PSPL_PSPLC_HEADER_T(ptr) \
+(ptr)->extension_count = swap_uint32((ptr)->extension_count);\
+(ptr)->file_stub_count = swap_uint32((ptr)->file_stub_count);\
+(ptr)->file_stub_array_off = swap_uint32((ptr)->file_stub_array_off)
 
 
 /* Tier 2 (per-extension) Extension object array table */
@@ -95,23 +99,29 @@ typedef struct {
     
     // Index of relevant extension
     // (as positioned in extension name table at bottom of PSPL)
-    uint32_t tier2_extension_index;
+    uint32_t extension_index;
     
     // Hash-indexed object count
-    uint32_t tier2_hash_indexed_object_count;
-    uint32_t tier2_hash_indexed_object_array_off;
+    uint32_t ext_hash_indexed_object_count;
+    uint32_t ext_hash_indexed_object_array_off;
     
     // Integer-indexed object count
-    uint32_t tier2_int_indexed_object_count;
-    uint32_t tier2_int_indexed_object_array_off;
+    uint32_t ext_int_indexed_object_count;
+    uint32_t ext_int_indexed_object_array_off;
     
     // Embedded object entry records (tier3) follow this one
     
-} pspl_object_array_tier2_t;
-typedef DEF_BI_OBJ_TYPE(pspl_object_array_tier2_t) pspl_object_array_tier2_bi_t;
+} pspl_object_array_extension_t;
+typedef DEF_BI_OBJ_TYPE(pspl_object_array_extension_t) pspl_object_array_extension_bi_t;
+#define SWAP_PSPL_OBJECT_ARRAY_EXTENSION_T(ptr) \
+(ptr)->extension_index = swap_uint32((ptr)->extension_index);\
+(ptr)->ext_hash_indexed_object_count = swap_uint32((ptr)->ext_hash_indexed_object_count);\
+(ptr)->ext_hash_indexed_object_array_off = swap_uint32((ptr)->ext_hash_indexed_object_array_off);\
+(ptr)->ext_int_indexed_object_count = swap_uint32((ptr)->ext_int_indexed_object_count);\
+(ptr)->ext_int_indexed_object_array_off = swap_uint32((ptr)->ext_int_indexed_object_array_off)
 
 
-/* Tier 3 (per-object) Extension object entry (stub) 
+/* Tier 3 (per-object) Extension object entry (stub)
  * (actual resource not present). Used in PSPLC files to reference
  * hashes of files to be packaged. Also composed into concrete
  * object entry below. */
@@ -138,6 +148,10 @@ typedef struct {
     
 } pspl_object_stub_t;
 typedef DEF_BI_OBJ_TYPE(pspl_object_stub_t) pspl_object_stub_bi_t;
+#define SWAP_PSPL_OBJECT_STUB_T(ptr) \
+(ptr)->platform_availability_bits = swap_uint32((ptr)->platform_availability_bits);\
+(ptr)->object_source_path_off = swap_uint32((ptr)->object_source_path_off);\
+(ptr)->object_source_path_ext_off = swap_uint32((ptr)->object_source_path_ext_off)
 
 
 /* Tier 3 (per-object) Extension object entry (concrete)
@@ -153,6 +167,9 @@ typedef struct {
     // (as indexed in the platform name table at bottom of PSPL)
     uint32_t platform_availability_bits;
     
+    // Is data bi-endian (logical; no need to swap)
+    uint16_t object_bi;
+    
     // Absolute file-offset to embedded object
     uint32_t object_off;
     
@@ -161,6 +178,10 @@ typedef struct {
     
 } pspl_object_hash_record_t;
 typedef DEF_BI_OBJ_TYPE(pspl_object_hash_record_t) pspl_object_hash_record_bi_t;
+#define SWAP_PSPL_OBJECT_HASH_RECORD_T(ptr) \
+(ptr)->platform_availability_bits = swap_uint32((ptr)->platform_availability_bits);\
+(ptr)->object_off = swap_uint32((ptr)->object_off);\
+(ptr)->object_len = swap_uint32((ptr)->object_len)
 typedef struct {
     
     // Index of object
@@ -172,6 +193,9 @@ typedef struct {
     // (as indexed in the platform name table at bottom of PSPL)
     uint32_t platform_availability_bits;
     
+    // Is data bi-endian (logical; no need to swap)
+    uint16_t object_bi;
+    
     // Absolute file-offset to embedded object
     uint32_t object_off;
     
@@ -180,6 +204,11 @@ typedef struct {
     
 } pspl_object_int_record_t;
 typedef DEF_BI_OBJ_TYPE(pspl_object_int_record_t) pspl_object_int_record_bi_t;
+#define SWAP_PSPL_OBJECT_INT_RECORD_T(ptr) \
+(ptr)->object_index = swap_uint32((ptr)->object_index);\
+(ptr)->platform_availability_bits = swap_uint32((ptr)->platform_availability_bits);\
+(ptr)->object_off = swap_uint32((ptr)->object_off);\
+(ptr)->object_len = swap_uint32((ptr)->object_len)
 
 
 #pragma mark PSPLP Types
@@ -202,6 +231,10 @@ typedef struct {
     
 } pspl_psplp_header_t;
 typedef DEF_BI_OBJ_TYPE(pspl_psplp_header_t) pspl_psplp_header_bi_t;
+#define SWAP_PSPL_PSPLP_HEADER_T(ptr) \
+(ptr)->psplc_array_count = swap_uint32((ptr)->psplc_array_count);\
+(ptr)->packaged_file_array_count = swap_uint32((ptr)->packaged_file_array_count);\
+(ptr)->packaged_file_array_off = swap_uint32((ptr)->packaged_file_array_off)
 
 
 #endif // PSPL_INTERNAL

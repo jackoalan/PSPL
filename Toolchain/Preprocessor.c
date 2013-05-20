@@ -236,9 +236,9 @@ static const pspl_extension_t* get_pp_hook_ext(const char* name) {
 }
 
 /* Main entry point for preprocessing a single PSPL source */
-void _pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
-                            pspl_toolchain_context_t* ext_driver_ctx,
-                            pspl_toolchain_driver_opts_t* driver_opts) {
+void pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
+                           pspl_toolchain_context_t* ext_driver_ctx,
+                           pspl_toolchain_driver_opts_t* driver_opts) {
     
     // Set error-handling phase
     driver_state.pspl_phase = PSPL_PHASE_PREPROCESS;

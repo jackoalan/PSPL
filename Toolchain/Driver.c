@@ -43,13 +43,6 @@
 #include "Compiler.h"
 #include "Packager.h"
 
-#ifdef _WIN32
-char* strtok_r(
-               char *str,
-               const char *delim,
-               char **nextp);
-#endif
-
 
 /* Maximum count of sources */
 #define PSPL_MAX_SOURCES 128
@@ -59,21 +52,6 @@ char* strtok_r(
 
 /* Maximum source file size (512K) */
 #define PSPL_MAX_SOURCE_SIZE (512*1024)
-
-
-
-/* Escape character sequences to control xterm */
-#define NOBKD     "\E[47;49m"
-#define RED       "\E[47;31m"NOBKD
-#define GREEN     "\E[47;32m"NOBKD
-#define YELLOW    "\E[47;33m"NOBKD
-#define BLUE      "\E[47;34m"NOBKD
-#define MAGENTA   "\E[47;35m"NOBKD
-#define CYAN      "\E[47;36m"NOBKD
-#define NORMAL    "\033[0m"
-#define BOLD      "\033[1m"
-#define UNDERLINE "\033[4m"
-#define SGR0      "\E[m\017"
 
 
 /* Global driver state */
@@ -163,6 +141,12 @@ static char* wrap_string(const char* str_in, int indent) {
     // Enumerate words (and keep track of accumulated characters)
     int cur_line_col = 0;
     int cur_line = 0;
+    
+    // All-indent
+    if (indent == 2) {
+        cur_line_col = 6;
+        strcat(result_str, "      ");
+    }
     
     for (;;) {
         if (!word_str) // Done
@@ -343,10 +327,10 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
         va_list va;
         va_start(va, msg);
         char msg_str_buf[1024];
-        char* msg_str = msg_str_buf;
+        msg_str = msg_str_buf;
         vsprintf(msg_str, msg, va);
         va_end(va);
-        char* new_msg = wrap_string(msg_str, 1);
+        char* new_msg = wrap_string(msg_str, 2);
         msg_str = new_msg;
     }
     
@@ -432,10 +416,10 @@ void pspl_warn(const char* brief, const char* msg, ...) {
         va_list va;
         va_start(va, msg);
         char msg_str_buf[1024];
-        char* msg_str = msg_str_buf;
+        msg_str = msg_str_buf;
         vsprintf(msg_str, msg, va);
         va_end(va);
-        char* new_msg = wrap_string(msg_str, 1);
+        char* new_msg = wrap_string(msg_str, 2);
         msg_str = new_msg;
     }
     
@@ -1126,7 +1110,7 @@ int main(int argc, char** argv) {
             
             
             // Now run preprocessor
-            _pspl_run_preprocessor(source, &tool_ctx, &driver_opts);
+            pspl_run_preprocessor(source, &tool_ctx, &driver_opts);
             
             
             // Now run compiler (if not in preprocess-only mode)
@@ -1134,7 +1118,7 @@ int main(int argc, char** argv) {
                 driver_state.pspl_phase = PSPL_PHASE_COMPILE;
                 driver_state.file_name = source->file_name;
                 driver_state.line_num = 0;
-                _pspl_run_compiler(source, &tool_ctx, &driver_opts);
+                pspl_run_compiler(source, &tool_ctx, &driver_opts);
             }
             
             // Finish each extension
@@ -1163,21 +1147,6 @@ int main(int argc, char** argv) {
             
         }
         
-    }
-
-    
-    
-#   pragma mark Perform Packaging
-    driver_state.pspl_phase = PSPL_PHASE_PACKAGE;
-    
-    // Now run packager (if in packaging mode)
-    const void* psplp_data = NULL;
-    size_t psplp_data_len = 0;
-    if (!(driver_opts.pspl_mode_opts & (PSPL_MODE_PREPROCESS_ONLY|PSPL_MODE_COMPILE_ONLY))) {
-        driver_state.file_name = driver_opts.out_path;
-        driver_state.line_num = 0;
-        _pspl_run_packager(sources_c, sources, psplcs_c, psplcs,
-                           &driver_opts, &psplp_data, &psplp_data_len);
     }
     
     
@@ -1214,7 +1183,8 @@ int main(int argc, char** argv) {
     } else {
         
         // Full Package
-        fwrite(psplp_data, 1, psplp_data_len, out_file);
+        driver_state.pspl_phase = PSPL_PHASE_PACKAGE;
+        pspl_packager_write_psplp(driver_state.indexer_ctx, out_file);
         
     }
     
@@ -1247,8 +1217,7 @@ int main(int argc, char** argv) {
  *      http://groups.google.com/group/comp.lang.c/msg/7c7b39328fefab9c
  */
 
-char* strtok_r(
-               char *str,
+char* strtok_r(char *str,
                const char *delim,
                char **nextp)
 {

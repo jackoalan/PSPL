@@ -16,6 +16,25 @@
 #include <PSPL/PSPLExtension.h>
 #include "ReferenceGatherer.h"
 
+#ifdef _WIN32
+char* strtok_r(char *str,
+               const char *delim,
+               char **nextp);
+#endif
+
+/* Escape character sequences to control xterm */
+#define NOBKD     "\E[47;49m"
+#define RED       "\E[47;31m"NOBKD
+#define GREEN     "\E[47;32m"NOBKD
+#define YELLOW    "\E[47;33m"NOBKD
+#define BLUE      "\E[47;34m"NOBKD
+#define MAGENTA   "\E[47;35m"NOBKD
+#define CYAN      "\E[47;36m"NOBKD
+#define NORMAL    "\033[0m"
+#define BOLD      "\033[1m"
+#define UNDERLINE "\033[4m"
+#define SGR0      "\E[m\017"
+
 /* Maximum count of target platforms
  * (logical 32-bit bitfields are used to relate objects to platforms) */
 #define PSPL_MAX_PLATFORMS 32
@@ -139,7 +158,7 @@ typedef struct {
     
     
     // Compiled object data
-    const uint8_t* psplc_data;
+    uint8_t* psplc_data;
     size_t psplc_data_len;
     
     

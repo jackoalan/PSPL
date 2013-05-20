@@ -128,11 +128,5 @@ void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
                               FILE* psplc_file_out);
 
 
-/* Write out to PSPLP file */
-
-void pspl_indexer_write_psplp(pspl_indexer_context_t* ctx,
-                              FILE* psplp_file_out);
-
-
 #endif // PSPL_INTERNAL
 #endif

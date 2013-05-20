@@ -13,9 +13,9 @@
 #include "Driver.h"
 
 /* Main entry point for compiling a single PSPL source */
-void _pspl_run_compiler(pspl_toolchain_driver_source_t* source,
-                        pspl_toolchain_context_t* ext_driver_ctx,
-                        pspl_toolchain_driver_opts_t* driver_opts);
+void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
+                       pspl_toolchain_context_t* ext_driver_ctx,
+                       pspl_toolchain_driver_opts_t* driver_opts);
 
 #endif // PSPL_INTERNAL
 #endif

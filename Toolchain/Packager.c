@@ -17,16 +17,16 @@
 
 #pragma mark Packager Implementation
 
-/* Main entry point for packaging an array of compiled PSPL sources 
- * (whose structure contains the necessary object buffers) */
-void _pspl_run_packager(unsigned int sources_c,
-                        pspl_toolchain_driver_source_t* sources,
-                        unsigned int psplcs_c,
-                        pspl_toolchain_driver_psplc_t* psplcs,
-                        pspl_toolchain_driver_opts_t* driver_opts,
-                        const void** psplp_data_out,
-                        size_t* psplp_data_len_out) {
+/* Write out to PSPLP file */
+void pspl_packager_write_psplp(pspl_indexer_context_t* ctx,
+                               FILE* psplp_file_out) {
+    
+    // Determine endianness
+    unsigned int psplp_endianness = 0;
+    int i;
+    for (i=0 ; i<ctx->plat_count ; ++i)
+        psplp_endianness |= ctx->plat_array[i]->byte_order;
+    
+    
     
 }
-
-
