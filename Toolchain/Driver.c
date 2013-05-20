@@ -727,9 +727,9 @@ static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const cha
 #pragma mark Public Init Other Extension Request
 
 /* Get/set/unset bit state of extension init index */
-#define GET_INIT_BIT(idx) ((driver_state.ext_init_bits[idx/0x20] >> idx%0x20) & 0x1)
-#define SET_INIT_BIT(idx) (driver_state.ext_init_bits[idx/0x20] |= (0x1 << idx%0x20))
-#define UNSET_INIT_BIT(idx) (driver_state.ext_init_bits[idx/0x20] &= ~(0x1 << idx%0x20))
+#define GET_INIT_BIT(idx) ((driver_state.ext_init_bits[(idx)/0x20] >> (idx)%0x20) & 0x1)
+#define SET_INIT_BIT(idx) (driver_state.ext_init_bits[(idx)/0x20] |= (0x1 << (idx)%0x20))
+#define UNSET_INIT_BIT(idx) (driver_state.ext_init_bits[(idx)/0x20] &= ~(0x1 << (idx)%0x20))
 
 /* Request the immediate initialisation of another extension
  * (only valid within init hook) */
