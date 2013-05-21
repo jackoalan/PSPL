@@ -141,8 +141,8 @@ static void prepare_staged_file(pspl_indexer_entry_t* ent) {
     strcat(path, object_hash_str);
     
     // Open file, make sure it still exists
-    ent->file = fopen(path, "r");
-    if (!ent->file)
+    FILE* file = fopen(path, "r");
+    if (!file)
         pspl_error(-1, "Staged file unavailable",
                    "there should be an accessible file at `%s`; derived from `%s`",
                    path, ent->stub_source_path);
@@ -150,7 +150,7 @@ static void prepare_staged_file(pspl_indexer_entry_t* ent) {
     // Record length
     fseek(file, 0, SEEK_END);
     ent->object_len = ftell(file);
-    fseek(file, 0, SEEK_SET);
+    fclose(file);
     
 }
 
@@ -176,6 +176,7 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
     
     for (i=0 ; i<ctx->indexer_count ; ++i) {
         pspl_indexer_context_t* indexer = ctx->indexer_array[i];
+        indexer->extension_obj_base_off = acc;
         acc += sizeof(pspl_hash);
         acc += (psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_psplc_header_bi_t) : sizeof(pspl_psplc_header_t);
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_array_extension_bi_t) : sizeof(pspl_object_array_extension_t)) * ctx->ext_count;
@@ -231,7 +232,7 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
     // Populate main header
     pspl_header_t pspl_header = {
         .magic = PSPL_MAGIC_DEF,
-        .package_flag = PSPL_PSPLC,
+        .package_flag = PSPL_PSPLP,
         .version = PSPL_VERSION,
         .endian_flags = psplp_endianness,
     };
@@ -261,6 +262,58 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
             break;
         default:
             break;
+    }
+    
+    // Write PSPLP header
+    pspl_psplp_header_bi_t psplp_head;
+    SET_BI_U32(psplp_head, psplc_count, ctx->indexer_count);
+    switch (psplp_endianness) {
+        case PSPL_LITTLE_ENDIAN:
+            fwrite(&psplp_head.little, 1, sizeof(pspl_psplp_header_t), psplp_file_out);
+            break;
+        case PSPL_BIG_ENDIAN:
+            fwrite(&psplp_head.big, 1, sizeof(pspl_psplp_header_t), psplp_file_out);
+            break;
+        case PSPL_BI_ENDIAN:
+            fwrite(&psplp_head, 1, sizeof(pspl_psplp_header_bi_t), psplp_file_out);
+            break;
+        default:
+            break;
+    }
+    
+    // Write PSPLC hash and base offsets for indexers
+    for (i=0 ; i<ctx->indexer_count ; ++i) {
+        pspl_indexer_context_t* indexer = ctx->indexer_array[i];
+        fwrite(&indexer->psplc_hash, 1, sizeof(pspl_hash), psplp_file_out);
+        uint32_t base = indexer->extension_obj_base_off;
+        uint32_t base_swapped = swap_uint32(base);
+        switch (psplp_endianness) {
+            case PSPL_LITTLE_ENDIAN:
+#               if __LITTLE_ENDIAN__
+                fwrite(&base, 1, sizeof(uint32_t), psplp_file_out);
+#               elif __BIG_ENDIAN__
+                fwrite(&base_swapped, 1, sizeof(uint32_t), psplp_file_out);
+#               endif
+                break;
+            case PSPL_BIG_ENDIAN:
+#               if __LITTLE_ENDIAN__
+                fwrite(&base_swapped, 1, sizeof(uint32_t), psplp_file_out);
+#               elif __BIG_ENDIAN__
+                fwrite(&base, 1, sizeof(uint32_t), psplp_file_out);
+#               endif
+                break;
+            case PSPL_BI_ENDIAN:
+#               if __LITTLE_ENDIAN__
+                fwrite(&base, 1, sizeof(uint32_t), psplp_file_out);
+                fwrite(&base_swapped, 1, sizeof(uint32_t), psplp_file_out);
+#               elif __BIG_ENDIAN__
+                fwrite(&base_swapped, 1, sizeof(uint32_t), psplp_file_out);
+                fwrite(&base, 1, sizeof(uint32_t), psplp_file_out);
+#               endif
+                break;
+            default:
+                break;
+        }
     }
     
     // Perform bare file write
@@ -313,14 +366,15 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
         uint8_t buf[8196];
         size_t rem_len = ent->object_len;
         size_t read_len;
+        FILE* file = fopen(ent->file_path, "r");
         do {
-            read_len = fread(buf, 1, (rem_len>8196)?8196:rem_len, ent->file);
+            read_len = fread(buf, 1, (rem_len>8196)?8196:rem_len, file);
             if (!read_len)
                 pspl_error(-1, "Unexpected end of staged file", "file ended with %u bytes to go", rem_len);
             fwrite(buf, 1, read_len, psplp_file_out);
             rem_len -= read_len;
         } while (rem_len > 0);
-        fclose(ent->file);
+        fclose(file);
         
         // Post padding
         for (j=0 ; j<ent->file_padding ; ++j)

@@ -1042,8 +1042,13 @@ int main(int argc, char** argv) {
     
 #   pragma mark Begin Toolchain Process
     
+    // Make packager context (if packaging)
+    pspl_packager_context_t packager_ctx;
+    if (!(driver_opts.pspl_mode_opts & (PSPL_MODE_PREPROCESS_ONLY|PSPL_MODE_COMPILE_ONLY)))
+        pspl_packager_init(&packager_ctx, driver_state.ext_count, driver_opts.platform_c, driver_opts.source_c);
+    
     // Initialise object indexer for each input file
-    pspl_indexer_context_t* indexers = calloc(driver_opts.source_c, sizeof(pspl_indexer_context_t*));
+    pspl_indexer_context_t* indexers = calloc(driver_opts.source_c, sizeof(pspl_indexer_context_t));
     
     // Arguments valid, now time to compile each source and/or load PSPLCs for packaging!!
     unsigned int sources_c = 0;
@@ -1177,6 +1182,10 @@ int main(int argc, char** argv) {
             
         }
         
+        // Add Indexer to packager (if packaging)
+        if (!(driver_opts.pspl_mode_opts & (PSPL_MODE_PREPROCESS_ONLY|PSPL_MODE_COMPILE_ONLY)))
+            pspl_packager_indexer_augment(&packager_ctx, indexer);
+        
     }
     
     
@@ -1213,7 +1222,7 @@ int main(int argc, char** argv) {
         
         // Full Package
         driver_state.pspl_phase = PSPL_PHASE_PACKAGE;
-        //pspl_packager_write_psplp(driver_state.indexer_ctx, out_file);
+        pspl_packager_write_psplp(&packager_ctx, PSPL_BIG_ENDIAN, out_file);
         
     }
     
