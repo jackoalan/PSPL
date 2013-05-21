@@ -569,6 +569,12 @@ static pspl_runtime_platform_t* lookup_target_platform(const char* plat_name) {
 }
 
 /* Initialise psplc structure from file */
+#define IS_PSPLC_BI pspl_head->endian_flags == PSPL_BI_ENDIAN
+#if __LITTLE_ENDIAN__
+#define IS_PSPLC_SWAPPED pspl_head->endian_flags == PSPL_BIG_ENDIAN
+#elif __BIG_ENDIAN__
+#define IS_PSPLC_SWAPPED pspl_head->endian_flags == PSPL_LITTLE_ENDIAN
+#endif
 static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const char* path) {
     int j;
     
@@ -619,23 +625,39 @@ static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const cha
                    "`%s` is not a valid PSPLC file", psplc->file_path);
     
     // Set Header and verify magic
-    const pspl_header_t* psplc_header = (pspl_header_t*)psplc->psplc_data;
-    if (memcmp(psplc_header->magic, "PSPL", 4))
+    const pspl_header_t* pspl_head = (pspl_header_t*)psplc->psplc_data;
+    if (memcmp(pspl_head->magic, "PSPL", 4))
         pspl_error(-1, "Invalid PSPLC magic",
                    "`%s` is not a valid PSPLC file", psplc->file_path);
+    // Verify version
+    if (pspl_head->version != 1)
+        pspl_error(-1, "Invalid PSPLC version",
+                   "file `%s` is version %u; expected version %u",
+                   psplc->file_path, pspl_head->version, PSPL_VERSION);
     // Verify not package
-    if (psplc_header->package_flag)
+    if (pspl_head->package_flag)
         pspl_error(-1, "Unable to import PSPLP packages",
                    "`%s` is a PSPLP package, not a PSPLC object file", psplc->file_path);
     // Verify endianness
-    if (!(psplc_header->endian_flags & 0x3))
+    if (!(pspl_head->endian_flags & 0x3))
         pspl_error(-1, "Invalid endian flag",
                    "`%s` has invalid endian flag", psplc->file_path);
     
     
+    // Parse offset header
+    pspl_off_header_t* pspl_off_head = NULL;
+    if (IS_PSPLC_BI) {
+        pspl_off_header_bi_t* bi_head = (pspl_off_header_bi_t*)(psplc->psplc_data + sizeof(pspl_header_t));
+        pspl_off_head = &bi_head->native;
+    } else {
+        pspl_off_head = (pspl_off_header_t*)(psplc->psplc_data + sizeof(pspl_header_t));
+        if (IS_PSPLC_SWAPPED)
+            SWAP_PSPL_OFF_HEADER_T(pspl_off_head);
+    }
+    
     // Populate extension set
-    unsigned int psplc_extension_count = psplc_header->extension_name_table_c.native;
-    unsigned int psplc_extension_off = psplc_header->extension_name_table_off.native;
+    unsigned int psplc_extension_count = pspl_off_head->extension_name_table_c;
+    unsigned int psplc_extension_off = pspl_off_head->extension_name_table_off;
     const char* psplc_extension_name = (char*)(psplc->psplc_data + psplc_extension_off);
     psplc->required_extension_set = calloc(psplc_extension_count+1, sizeof(pspl_extension_t*));
     for (j=0 ; j<psplc_extension_count ; ++j) {
@@ -671,8 +693,8 @@ static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const cha
     
     
     // Populate platform set
-    unsigned int psplc_platform_count = psplc_header->platform_name_table_c.native;
-    unsigned int psplc_platform_off = psplc_header->platform_name_table_off.native;
+    unsigned int psplc_platform_count = pspl_off_head->platform_name_table_c;
+    unsigned int psplc_platform_off = pspl_off_head->platform_name_table_off;
     const char* psplc_platform_name = (char*)(psplc->psplc_data + psplc_platform_off);
     psplc->required_platform_set = calloc(psplc_platform_count+1, sizeof(pspl_runtime_platform_t*));
     for (j=0 ; j<psplc_platform_count ; ++j) {
@@ -725,23 +747,27 @@ int pspl_toolchain_init_other_extension(const char* ext_name) {
     unsigned int idx;
     const pspl_extension_t* ext = lookup_ext(ext_name, &idx);
     if (!ext) {
-        pspl_warn("Unable to locate extension requested by other extension",
-                  "extension '%s' requested initialising '%s' which is not available in this build of PSPL",
+        pspl_warn("Unable to locate extension",
+                  "extension '%s' requested initialising '%s' early; latter not available in this build of PSPL",
                   driver_state.proc_extension->extension_name, ext_name);
         return -1;
     }
     
     // Run init hook of other extension if its not yet initialised
-    int good = 0;
     if (ext->toolchain_extension && ext->toolchain_extension->init_hook && !GET_INIT_BIT(idx)) {
         const pspl_extension_t* save_ext = driver_state.proc_extension;
         driver_state.proc_extension = ext;
-        good = ext->toolchain_extension->init_hook(driver_state.tool_ctx);
+        int err;
+        err = ext->toolchain_extension->init_hook(driver_state.tool_ctx);
+        if (err)
+            pspl_error(-1, "Extension failed to init",
+                       "extension '%s' returned %d error code when requested to initialise early by '%s'",
+                       ext->extension_name, err, save_ext->extension_name);
         driver_state.proc_extension = save_ext;
         SET_INIT_BIT(idx);
     }
     
-    return good;
+    return 0;
 }
 
 
@@ -1016,13 +1042,8 @@ int main(int argc, char** argv) {
     
 #   pragma mark Begin Toolchain Process
     
-    // Initialise object indexer
-    driver_state.indexer_ctx = NULL;
-    if (!(driver_opts.pspl_mode_opts & PSPL_MODE_PREPROCESS_ONLY)) {
-        pspl_indexer_context_t indexer;
-        pspl_indexer_init(&indexer, driver_state.ext_count, driver_opts.platform_c);
-        driver_state.indexer_ctx = &indexer;
-    }
+    // Initialise object indexer for each input file
+    pspl_indexer_context_t* indexers = calloc(driver_opts.source_c, sizeof(pspl_indexer_context_t*));
     
     // Arguments valid, now time to compile each source and/or load PSPLCs for packaging!!
     unsigned int sources_c = 0;
@@ -1033,6 +1054,12 @@ int main(int argc, char** argv) {
     
     // Run through sources and objects
     for (i=0 ; i<driver_opts.source_c ; ++i) {
+        pspl_indexer_context_t* indexer = &indexers[i];
+        driver_state.indexer_ctx = NULL;
+        if (!(driver_opts.pspl_mode_opts & PSPL_MODE_PREPROCESS_ONLY)) {
+            pspl_indexer_init(indexer, driver_state.ext_count, driver_opts.platform_c);
+            driver_state.indexer_ctx = indexer;
+        }
         int j;
         
         const char* file_ext = strrchr(driver_opts.source_a[i], '.') + 1;
@@ -1078,7 +1105,10 @@ int main(int argc, char** argv) {
             while ((ext = pspl_available_extensions[j++])) {
                 driver_state.proc_extension = ext;
                 if (ext->toolchain_extension && ext->toolchain_extension->init_hook && !GET_INIT_BIT(j-1)) {
-                    ext->toolchain_extension->init_hook(&tool_ctx);
+                    int err;
+                    if ((err = ext->toolchain_extension->init_hook(&tool_ctx)))
+                        pspl_error(-1, "Extension failed to init",
+                                   "extension '%s' returned %d error code", ext->extension_name, err);
                     SET_INIT_BIT(j-1);
                 }
             }
@@ -1177,18 +1207,17 @@ int main(int argc, char** argv) {
     } else if (driver_opts.pspl_mode_opts & PSPL_MODE_COMPILE_ONLY) {
         
         // Compile only
-        pspl_hash psplc_name_hash;
-        pspl_indexer_write_psplc(driver_state.indexer_ctx, &psplc_name_hash, PSPL_LITTLE_ENDIAN, out_file);
+        pspl_indexer_write_psplc(driver_state.indexer_ctx, PSPL_BIG_ENDIAN, out_file);
         
     } else {
         
         // Full Package
         driver_state.pspl_phase = PSPL_PHASE_PACKAGE;
-        pspl_packager_write_psplp(driver_state.indexer_ctx, out_file);
+        //pspl_packager_write_psplp(driver_state.indexer_ctx, out_file);
         
     }
     
-    if (driver_opts.out_path && driver_opts.out_path[0] != '-')
+    if (!driver_opts.out_path || (driver_opts.out_path && driver_opts.out_path[0] != '-'))
         fclose(out_file);
     
     

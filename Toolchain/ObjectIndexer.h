@@ -23,8 +23,8 @@
 /* PSPLC embedded object/file stub index structure */
 typedef struct {
     
-    // "Definer" (for error reporting)
-    const char* definer;
+    // Parent indexer
+    struct _pspl_indexer_context* parent;
     
     // "Owner" extension (unused for stubs)
     const pspl_extension_t* owner_ext;
@@ -51,11 +51,22 @@ typedef struct {
     // Source path extension
     const char* stub_source_path_ext;
 
+    // Indirectly used offset variables for PSPLP
+    // packager during file write (volatile)
+    FILE* file;
+    uint32_t file_off;
+    uint32_t file_padding;
     
 } pspl_indexer_entry_t;
 
-/* Indexer context type */
-typedef struct {
+/* PSPLC Indexer context type */
+typedef struct _pspl_indexer_context {
+    
+    // "Definer" (for error reporting)
+    const char* definer;
+    
+    // PSPLC name hash
+    pspl_hash psplc_hash;
     
     // Using which extensions
     unsigned int ext_count;
@@ -80,7 +91,26 @@ typedef struct {
     unsigned int stubs_cap;
     pspl_indexer_entry_t** stubs_array;
     
+    // Indirectly used offset variables for PSPLP
+    // packager during file write (volatile)
+    uint32_t extension_obj_array_off;
+    uint32_t extension_obj_data_off;
+    
 } pspl_indexer_context_t;
+
+/* This type is castable from `pspl_indexer_context_t` *and* `pspl_packager_context_t` */
+typedef struct {
+    
+    // Using which extensions
+    unsigned int ext_count;
+    const pspl_extension_t** ext_array;
+    
+    // Using which platforms
+    unsigned int plat_count;
+    const pspl_runtime_platform_t** plat_array;
+    
+} pspl_indexer_globals_t;
+
 
 #include "Driver.h"
 
@@ -91,7 +121,8 @@ void pspl_indexer_init(pspl_indexer_context_t* ctx,
 
 /* Augment indexer context with stub entries
  * from an existing PSPLC file */
-void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx, pspl_toolchain_driver_psplc_t* existing_psplc);
+void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx,
+                                     pspl_toolchain_driver_psplc_t* existing_psplc);
 
 /* Augment indexer context with embedded hash-indexed object */
 void pspl_indexer_hash_object_augment(pspl_indexer_context_t* ctx, const pspl_extension_t* owner,
@@ -120,10 +151,18 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
                                       pspl_hash** hash_out,
                                       pspl_toolchain_driver_source_t* definer);
 
-/* Write out to PSPLC file */
+/* Translates local per-psplc bits to global per-psplp bits */
+uint32_t union_plat_bits(pspl_indexer_globals_t* globals,
+                         pspl_indexer_context_t* locals, uint32_t bits);
 
+/* Write out bare PSPLC object (separate for direct PSPLP writing) */
+void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
+                                   uint8_t psplc_endianness,
+                                   pspl_indexer_globals_t* globals,
+                                   FILE* psplc_file_out);
+
+/* Write out to PSPLC file */
 void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
-                              pspl_hash* psplc_hash_in,
                               uint8_t default_endian,
                               FILE* psplc_file_out);
 
