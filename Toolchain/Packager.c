@@ -141,8 +141,8 @@ static void prepare_staged_file(pspl_indexer_entry_t* ent) {
     strcat(path, object_hash_str);
     
     // Open file, make sure it still exists
-    FILE* file = fopen(path, "r");
-    if (!file)
+    ent->file = fopen(path, "r");
+    if (!ent->file)
         pspl_error(-1, "Staged file unavailable",
                    "there should be an accessible file at `%s`; derived from `%s`",
                    path, ent->stub_source_path);
