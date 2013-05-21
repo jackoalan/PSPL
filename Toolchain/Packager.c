@@ -114,7 +114,7 @@ void pspl_packager_indexer_augment(pspl_packager_context_t* ctx,
 static void prepare_staged_file(pspl_indexer_entry_t* ent) {
     
     // Concatenate together path
-    char path[MAXPATHLEN];
+    char* path = ent->file_path;
     path[0] = '\0';
     strcat(path, ent->stub_source_path);
     if (ent->stub_source_path_ext) {

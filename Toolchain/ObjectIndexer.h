@@ -53,7 +53,7 @@ typedef struct {
 
     // Indirectly used offset variables for PSPLP
     // packager during file write (volatile)
-    FILE* file;
+    char file_path[MAXPATHLEN];
     uint32_t file_off;
     uint32_t file_padding;
     
