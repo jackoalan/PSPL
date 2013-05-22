@@ -226,7 +226,7 @@ static void print_help(const char* prog_name) {
                 "\n"
                 "\n"
                 BOLD"Available Target Platforms:\n"NORMAL);
-        pspl_runtime_platform_t* plat = NULL;
+        pspl_platform_t* plat = NULL;
         i = 0;
         while ((plat = pspl_available_target_platforms[i++])) {
             fprintf(stderr, "  "BOLD"* %s"NORMAL" - %s",
@@ -244,7 +244,7 @@ static void print_help(const char* prog_name) {
         // Now print usage info
         fprintf(stderr, BOLD BLUE"Command Synopsis:\n"NORMAL);
         const char* help =
-        wrap_string("pspl ["BOLD"-o"NORMAL" "UNDERLINE"out-path"NORMAL"] ["BOLD"-E"NORMAL"|"BOLD"-c"NORMAL"] ["BOLD"-G"NORMAL" "UNDERLINE"reflist-out-path"NORMAL"] ["BOLD"-S"NORMAL" "UNDERLINE"staging-root-path"NORMAL"] ["BOLD"-D"NORMAL" "UNDERLINE"def-name"NORMAL"[="UNDERLINE"def-value"NORMAL"]]... ["BOLD"-T"NORMAL" "UNDERLINE"target-platform"NORMAL"]... "UNDERLINE"source1"NORMAL" ["UNDERLINE"source2"NORMAL" ["UNDERLINE"sourceN"NORMAL"]]...", 1);
+        wrap_string("pspl ["BOLD"-o"NORMAL" "UNDERLINE"out-path"NORMAL"] ["BOLD"-E"NORMAL"|"BOLD"-c"NORMAL"] ["BOLD"-G"NORMAL" "UNDERLINE"reflist-out-path"NORMAL"] ["BOLD"-S"NORMAL" "UNDERLINE"staging-root-path"NORMAL"] ["BOLD"-D"NORMAL" "UNDERLINE"def-name"NORMAL"[="UNDERLINE"def-value"NORMAL"]]... ["BOLD"-T"NORMAL" "UNDERLINE"target-platform"NORMAL"]... ["BOLD"-e"NORMAL" <"UNDERLINE"LITTLE"NORMAL", "UNDERLINE"BIG"NORMAL", "UNDERLINE"BI"NORMAL">] "UNDERLINE"source1"NORMAL" ["UNDERLINE"source2"NORMAL" ["UNDERLINE"sourceN"NORMAL"]]...", 1);
         fprintf(stderr, "%s\n\n\n", help);
         free((char*)help);
         
@@ -271,7 +271,7 @@ static void print_help(const char* prog_name) {
                 "\n"
                 "\n"
                 "Available Target Platforms:\n");
-        pspl_runtime_platform_t* plat = NULL;
+        pspl_platform_t* plat = NULL;
         i = 0;
         while ((plat = pspl_available_target_platforms[i++])) {
             fprintf(stderr, "  * %s - %s",
@@ -518,7 +518,7 @@ static void add_def(pspl_toolchain_driver_opts_t* driver_opts,
 }
 
 /* Insert target platform into driver opts */
-static pspl_runtime_platform_t* pspl_platforms[PSPL_MAX_PLATFORMS];
+static pspl_platform_t* pspl_platforms[PSPL_MAX_PLATFORMS];
 static void add_target_platform(pspl_toolchain_driver_opts_t* driver_opts,
                                 const char* name) {
     if (driver_opts->platform_c >= PSPL_MAX_PLATFORMS) {
@@ -527,7 +527,7 @@ static void add_target_platform(pspl_toolchain_driver_opts_t* driver_opts,
     }
     
     // Look up platform
-    pspl_runtime_platform_t* plat = NULL;
+    pspl_platform_t* plat = NULL;
     int i = 0;
     while ((plat = pspl_available_target_platforms[i++])) {
         if (!strcmp(plat->platform_name, name)) {
@@ -541,6 +541,22 @@ static void add_target_platform(pspl_toolchain_driver_opts_t* driver_opts,
                    "requested `%s`", name);
     
     ++driver_opts->platform_c;
+}
+
+/* Accept default endianness argument */
+static void set_default_endianness(pspl_toolchain_driver_opts_t* driver_opts,
+                                   const char* arg) {
+    
+    if (!strcasecmp(arg, "little"))
+        driver_opts->default_endianness = PSPL_LITTLE_ENDIAN;
+    else if (!strcasecmp(arg, "big"))
+        driver_opts->default_endianness = PSPL_BIG_ENDIAN;
+    else if (!strcasecmp(arg, "bi"))
+        driver_opts->default_endianness = PSPL_BI_ENDIAN;
+    else
+        pspl_error(-1, "Invalid default endianness",
+                   "'%s' is not a valid endianness; please use one of [LITTLE, BIG, BI]", arg);
+    
 }
 
 /* Lookup target extension by name */
@@ -558,8 +574,8 @@ static pspl_extension_t* lookup_ext(const char* ext_name, unsigned int* idx_out)
 }
 
 /* Lookup target platform by name */
-static pspl_runtime_platform_t* lookup_target_platform(const char* plat_name) {
-    pspl_runtime_platform_t* plat = NULL;
+static pspl_platform_t* lookup_target_platform(const char* plat_name) {
+    pspl_platform_t* plat = NULL;
     unsigned int i = 0;
     while ((plat = pspl_available_target_platforms[i++])) {
         if (!strcmp(plat->platform_name, plat_name))
@@ -696,12 +712,12 @@ static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const cha
     unsigned int psplc_platform_count = pspl_off_head->platform_name_table_c;
     unsigned int psplc_platform_off = pspl_off_head->platform_name_table_off;
     const char* psplc_platform_name = (char*)(psplc->psplc_data + psplc_platform_off);
-    psplc->required_platform_set = calloc(psplc_platform_count+1, sizeof(pspl_runtime_platform_t*));
+    psplc->required_platform_set = calloc(psplc_platform_count+1, sizeof(pspl_platform_t*));
     for (j=0 ; j<psplc_platform_count ; ++j) {
         check_psplc_underflow(psplc, psplc_platform_name);
         
         // Lookup
-        const pspl_runtime_platform_t* plat = lookup_target_platform(psplc_platform_name);
+        const pspl_platform_t* plat = lookup_target_platform(psplc_platform_name);
         if (!plat)
             pspl_error(-1, "PSPLC-required target platform not available",
                        "PSPLC `%s` requested `%s` which is not available in this build of PSPL",
@@ -821,6 +837,12 @@ int main(int argc, char** argv) {
         return 0;
     }
     
+    // Default endianness
+#   if __LITTLE_ENDIAN__
+    driver_opts.default_endianness = PSPL_LITTLE_ENDIAN;
+#   elif __BIG_ENDIAN__
+    driver_opts.default_endianness = PSPL_BIG_ENDIAN;
+#   endif
     
     // Initial argument pass
     char expected_arg = 0;
@@ -878,6 +900,13 @@ int main(int argc, char** argv) {
                 else
                     expected_arg = token_char;
                 
+            } else if (token_char == 'e') {
+                
+                if (argv[i][2])
+                    set_default_endianness(&driver_opts, &argv[i][2]);
+                else
+                    expected_arg = token_char;
+                
             } else
                 pspl_error(-1, "Unrecognised argument flag",
                            "`-%c` flag not recognised by PSPL", token_char);
@@ -911,6 +940,10 @@ int main(int argc, char** argv) {
                     
                     // Add target platform
                     add_target_platform(&driver_opts, str_arg);
+                    
+                } else if (expected_arg == 'e') {
+                    
+                    set_default_endianness(&driver_opts, str_arg);
                     
                 }
                 
@@ -953,6 +986,11 @@ int main(int argc, char** argv) {
         if (!file_ext || (strcasecmp(file_ext, "pspl") && strcasecmp(file_ext, "psplc")))
             pspl_error(-1, "Source file extension matters!!",
                        "please provide PSPL sources with '.pspl' extension and compiled objects with '.psplc' extension; `%s` does not follow this convention", driver_opts.source_a[i]);
+        if (!strcasecmp(file_ext, "psplc") && ((driver_opts.pspl_mode_opts & PSPL_MODE_PREPROCESS_ONLY) ||
+                                               (driver_opts.pspl_mode_opts & PSPL_MODE_COMPILE_ONLY)))
+            pspl_error(-1, "Unable to accept PSPLC",
+                       "unable to accept `%s` when in compile-only or preprocess-only mode",
+                       driver_opts.source_a[i]);
         
         FILE* file;
         if ((file = fopen(driver_opts.source_a[i], "r")))
@@ -1004,7 +1042,7 @@ int main(int argc, char** argv) {
     snprintf(driver_state.staging_path, MAXPATHLEN, "%s/PSPLFiles/", driver_opts.staging_path);
     
     // Set target platform array ref
-    driver_opts.platform_a = (const pspl_runtime_platform_t* const *)pspl_platforms;
+    driver_opts.platform_a = (const pspl_platform_t* const *)pspl_platforms;
     
     // Populate toolchain context
     pspl_toolchain_context_t tool_ctx = {
@@ -1216,13 +1254,13 @@ int main(int argc, char** argv) {
     } else if (driver_opts.pspl_mode_opts & PSPL_MODE_COMPILE_ONLY) {
         
         // Compile only
-        pspl_indexer_write_psplc(driver_state.indexer_ctx, PSPL_BIG_ENDIAN, out_file);
+        pspl_indexer_write_psplc(driver_state.indexer_ctx, driver_opts.default_endianness, out_file);
         
     } else {
         
         // Full Package
         driver_state.pspl_phase = PSPL_PHASE_PACKAGE;
-        pspl_packager_write_psplp(&packager_ctx, PSPL_BIG_ENDIAN, out_file);
+        pspl_packager_write_psplp(&packager_ctx, driver_opts.default_endianness, out_file);
         
     }
     

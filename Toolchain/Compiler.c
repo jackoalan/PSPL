@@ -88,7 +88,7 @@ void pspl_gather_referenced_file(const char* file_path) {
 }*/
 
 /* Add data object (keyed with a null-terminated string stored as 32-bit truncated SHA1 hash) */
-void pspl_embed_hash_keyed_object(const pspl_runtime_platform_t** platforms,
+void pspl_embed_hash_keyed_object(const pspl_platform_t** platforms,
                                     const char* key,
                                     const void* little_object,
                                     const void* big_object,
@@ -100,7 +100,7 @@ void pspl_embed_hash_keyed_object(const pspl_runtime_platform_t** platforms,
 
 /* Add data object (keyed with a non-hashed 32-bit unsigned numeric value)
  * Integer keying uses a separate namespace from hashed keying */
-void pspl_embed_integer_keyed_object(const pspl_runtime_platform_t** platforms,
+void pspl_embed_integer_keyed_object(const pspl_platform_t** platforms,
                                        uint32_t key,
                                        const void* little_object,
                                        const void* big_object,
@@ -111,14 +111,14 @@ void pspl_embed_integer_keyed_object(const pspl_runtime_platform_t** platforms,
 }
 
 /* Add file for PSPL-packaging */
-void pspl_package_file_augment(const pspl_runtime_platform_t** plats, const char* path_in,
+void pspl_package_file_augment(const pspl_platform_t** plats, const char* path_in,
                                const char* path_ext_in,
                                pspl_converter_file_hook converter_hook, uint8_t move_output,
                                pspl_hash** hash_out) {
     pspl_indexer_stub_file_augment(driver_state.indexer_ctx, plats, path_in, path_ext_in,
                                    converter_hook, move_output, hash_out, compiler_state.source);
 }
-void pspl_package_membuf_augment(const pspl_runtime_platform_t** plats, const char* path_in,
+void pspl_package_membuf_augment(const pspl_platform_t** plats, const char* path_in,
                                  const char* path_ext_in,
                                  pspl_converter_membuf_hook converter_hook,
                                  pspl_hash** hash_out) {

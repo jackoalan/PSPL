@@ -68,7 +68,7 @@ void pspl_warn(const char* brief, const char* msg, ...);
 typedef struct {
     // Array of current target runtime platform(s) for toolchain driver
     unsigned int target_runtime_platforms_c; // Count of target platforms
-    const pspl_runtime_platform_t* const * target_runtime_platforms; // Platform array
+    const pspl_platform_t* const * target_runtime_platforms; // Platform array
     
     // Name of PSPL source (including extension)
     const char* pspl_name;
@@ -82,6 +82,10 @@ typedef struct {
     const char** def_v; // Array (of length `def_c`) containing index-associated values (or NULL if no values)
     
 } pspl_toolchain_context_t;
+
+#pragma mark -
+
+#pragma mark Toolchain Extension Hook Types
 
 /* Init hook type */
 typedef int(*pspl_toolchain_init_hook)(const pspl_toolchain_context_t* driver_context);
@@ -234,7 +238,7 @@ typedef int(*pspl_toolchain_indent_line_read_hook)(const pspl_toolchain_context_
  * (including init, preprocessor, and finish) */
 
 /* Objects may be inclusively specified for specific platforms by 
- * providing a NULL-terminated array of `pspl_runtime_platform_t` references 
+ * providing a NULL-terminated array of `pspl_platform_t` references 
  * sourced from the driver-context's `target_runtime_platforms`.
  *
  * This array is provided to the `platforms` argument. `NULL` may be provided
@@ -248,7 +252,7 @@ typedef int(*pspl_toolchain_indent_line_read_hook)(const pspl_toolchain_context_
  * results in the previous object being overloaded with the new object */
 
 /* Add data object (keyed with a null-terminated string stored as 32-bit truncated SHA1 hash) */
-void pspl_embed_hash_keyed_object(const pspl_runtime_platform_t** platforms,
+void pspl_embed_hash_keyed_object(const pspl_platform_t** platforms,
                                   const char* key,
                                   const void* little_object,
                                   const void* big_object,
@@ -256,7 +260,7 @@ void pspl_embed_hash_keyed_object(const pspl_runtime_platform_t** platforms,
 
 /* Add data object (keyed with a non-hashed 32-bit unsigned numeric value) 
  * Integer keying uses a separate namespace from hashed keying */
-void pspl_embed_integer_keyed_object(const pspl_runtime_platform_t** platforms,
+void pspl_embed_integer_keyed_object(const pspl_platform_t** platforms,
                                       uint32_t key,
                                       const void* little_object,
                                       const void* big_object,
@@ -284,17 +288,17 @@ typedef int(*pspl_converter_membuf_hook)(void** buf_out, size_t* len_out, const 
  * That file's contents using PSPL's runtime extension API */
  
 /* Add file for PSPL-packaging */
-void pspl_package_file_augment(const pspl_runtime_platform_t** platforms, const char* path_in,
+void pspl_package_file_augment(const pspl_platform_t** platforms, const char* path_in,
                                const char* path_ext_in,
                                pspl_converter_file_hook converter_hook, uint8_t move_output,
                                pspl_hash** hash_out);
-void pspl_package_membuf_augment(const pspl_runtime_platform_t** platforms, const char* path_in,
+void pspl_package_membuf_augment(const pspl_platform_t** platforms, const char* path_in,
                                  const char* path_ext_in,
                                  pspl_converter_membuf_hook converter_hook,
                                  pspl_hash** hash_out);
 
 
-#pragma mark Main Extension Composition Structure (every extension needs one)
+#pragma mark Main Toolchain Extension Structure (every extension needs one)
 
 /* Main toolchain extension structure */
 typedef struct _pspl_toolchain_extension {
@@ -324,26 +328,44 @@ typedef struct _pspl_toolchain_extension {
     
 } pspl_toolchain_extension_t;
 
-/* A macro to abstract the global details of extension namespacing */
-#define _PSPL_INSTALLED_TOOLCHAIN_EXT_CAT2(a) a ## _extension
-#define _PSPL_INSTALLED_TOOLCHAIN_EXT_CAT(a) _PSPL_INSTALLED_TOOLCHAIN_EXT_CAT2(a)
-#define PSPL_INSTALLED_TOOLCHAIN_EXT static const pspl_toolchain_extension_t _PSPL_INSTALLED_TOOLCHAIN_EXT_CAT(PSPL_EXT_NAME)
 
-/* A sample toolchain extension installation (all NULL hooks) */
-/*
-static const char* claimed_heading_names[] = {"VERTEX", "FRAGMENT", NULL};
+#pragma mark -
 
-PSPL_INSTALLED_TOOLCHAIN_EXT = {
+#pragma mark Toolchain Platform Hook Types
+
+/* Platform generator instruction structure */
+typedef struct {
     
-    .claimed_heading_names = claimed_heading_names,
+    // Where instruction originated from
+    const pspl_extension_t* source_ext;
     
-    .init_hook = NULL,
-    .finish_hook = NULL,
-    .command_call_hook = NULL,
-    .line_read_hook = NULL,
-    .indent_line_read_hook = NULL
-};
- */
+    // Instruction operation
+    const char* operation;
+    
+    // Instruction data
+    const void* data;
+    
+} pspl_toolchain_platform_generator_instruction_t;
+
+/* Platform generator hook
+ * `instructions` is a NULL-terminated array of generator instructions */
+typedef void(*pspl_toolchain_platform_generator_hook)(const pspl_toolchain_context_t* driver_context,
+                                                      const pspl_toolchain_platform_generator_instruction_t* instructions);
+
+
+#pragma mark Main Toolchain Platform Structure (every platform needs one)
+
+/* Main toolchain platform structure */
+typedef struct _pspl_toolchain_platform {
+    
+    // All fields are optional and may be set `NULL`
+    
+    // Hook fields
+    pspl_toolchain_platform_generator_hook generator_hook;
+    
+    
+} pspl_toolchain_platform_t;
+
 
 #endif // PSPL_TOOLCHAIN
 #endif

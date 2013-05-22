@@ -86,28 +86,7 @@ typedef struct {
 
 #endif
 
-/* Runtime platform description structure */
-typedef struct _pspl_runtime_platform {
-    
-    // Short platform name
-    const char* platform_name;
-    
-    // Platform description
-    const char* platform_desc;
-    
-    // Native byte-order [PSPL_LITTLE_ENDIAN, PSPL_BIG_ENDIAN]
-    uint8_t byte_order;
-    
-    // Padding
-    uint8_t padding[3];
-    
-    // Platform runtime hooks
-#   ifdef PSPL_RUNTIME
-    pspl_runtime_platform_hooks_t* runtime_hooks;
-#   endif
-    
-    
-} pspl_runtime_platform_t;
+
 
 
 

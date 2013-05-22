@@ -1,5 +1,5 @@
-#ifndef _PSPL_RUNTIME_PLATFORM_TYPEFILE_
-#define _PSPL_RUNTIME_PLATFORM_TYPEFILE_
+#ifndef _PSPL_PLATFORM_TYPEFILE_
+#define _PSPL_PLATFORM_TYPEFILE_
 
 /* This file is used during runtime compilation to
  * define common types of all platform-specific object classes */
@@ -10,5 +10,5 @@ typedef union {
     @PSPL_RUNTIME_PLATFORM@_shader_object_t @PSPL_RUNTIME_PLATFORM@_shader;
 } pspl_runtime_platform_shader_object_t;
 
-#endif // _PSPL_RUNTIME_PLATFORM_TYPEFILE_
+#endif // _PSPL_PLATFORM_TYPEFILE_
 

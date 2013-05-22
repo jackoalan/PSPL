@@ -91,6 +91,9 @@ typedef struct {
     // Count of extensions referenced by this psplc (count of elements in array below)
     uint32_t extension_count;
     
+    // Count of platforms referenced by this psplc
+    uint32_t platform_count;
+    
     // File-absolute offset to per-extension object subtables,
     // separate tables for each byte-order
     //uint32_t extension_array_off;
@@ -101,14 +104,18 @@ typedef struct {
 typedef DEF_BI_OBJ_TYPE(pspl_psplc_header_t) pspl_psplc_header_bi_t;
 #define SWAP_PSPL_PSPLC_HEADER_T(ptr) \
 (ptr)->extension_count = swap_uint32((ptr)->extension_count);\
+(ptr)->platform_count = swap_uint32((ptr)->platform_count)
 
 
 /* Tier 2 (per-extension) Extension object array table */
 typedef struct {
     
-    // Index of relevant extension
+    // Index of relevant extension (or platform)
     // (as positioned in extension name table at bottom of PSPL)
-    uint32_t extension_index;
+    union {
+        uint32_t extension_index;
+        uint32_t platform_index;
+    };
     
     // Hash-indexed object count
     uint32_t ext_hash_indexed_object_count;

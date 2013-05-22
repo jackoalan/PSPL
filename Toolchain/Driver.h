@@ -46,10 +46,10 @@ char* strtok_r(char *str,
 extern pspl_extension_t* pspl_available_extensions[];
 
 /* Available target platforms (NULL-terminated array) */
-extern pspl_runtime_platform_t* pspl_available_target_platforms[];
+extern pspl_platform_t* pspl_available_target_platforms[];
 
 /* Default target platform */
-extern pspl_runtime_platform_t* pspl_default_target_platform;
+extern pspl_platform_t* pspl_default_target_platform;
 
 /* xterm Colour */
 extern uint8_t xterm_colour;
@@ -96,7 +96,10 @@ typedef struct {
     unsigned int platform_c;
     
     // Array of target platforms
-    const pspl_runtime_platform_t* const * platform_a;
+    const pspl_platform_t* const * platform_a;
+    
+    // Default endianness
+    unsigned int default_endianness;
     
 } pspl_toolchain_driver_opts_t;
 
@@ -151,7 +154,7 @@ typedef struct {
     const pspl_extension_t** required_extension_set;
     
     // Required platform set (NULL-terminated array)
-    const pspl_runtime_platform_t** required_platform_set;
+    const pspl_platform_t** required_platform_set;
     
     // Name hash of PSPLC
     pspl_hash psplc_name_hash;

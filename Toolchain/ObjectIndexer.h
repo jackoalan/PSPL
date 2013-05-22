@@ -26,8 +26,12 @@ typedef struct {
     // Parent indexer
     struct _pspl_indexer_context* parent;
     
-    // "Owner" extension (unused for stubs)
-    const pspl_extension_t* owner_ext;
+    union {
+        // "Owner" extension (unused for stubs)
+        const pspl_extension_t* owner_ext;
+        // "Owner" platform (for platform data objects)
+        const pspl_platform_t* owner_plat;
+    };
     
     // Object index/hash
     union {
@@ -74,7 +78,7 @@ typedef struct _pspl_indexer_context {
     
     // Using which platforms
     unsigned int plat_count;
-    const pspl_runtime_platform_t** plat_array;
+    const pspl_platform_t** plat_array;
     
     // Embedded PSPLC hash objects
     unsigned int h_objects_count;
@@ -85,6 +89,16 @@ typedef struct _pspl_indexer_context {
     unsigned int i_objects_count;
     unsigned int i_objects_cap;
     pspl_indexer_entry_t** i_objects_array;
+    
+    // Embedded PLATFORM PSPLC hash objects
+    unsigned int ph_objects_count;
+    unsigned int ph_objects_cap;
+    pspl_indexer_entry_t** ph_objects_array;
+    
+    // Embedded PLATFORM PSPLC integer objects
+    unsigned int pi_objects_count;
+    unsigned int pi_objects_cap;
+    pspl_indexer_entry_t** pi_objects_array;
     
     // Embedded PSPLC File stubs
     unsigned int stubs_count;
@@ -108,7 +122,7 @@ typedef struct {
     
     // Using which platforms
     unsigned int plat_count;
-    const pspl_runtime_platform_t** plat_array;
+    const pspl_platform_t** plat_array;
     
 } pspl_indexer_globals_t;
 
@@ -127,26 +141,26 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx,
 
 /* Augment indexer context with embedded hash-indexed object */
 void pspl_indexer_hash_object_augment(pspl_indexer_context_t* ctx, const pspl_extension_t* owner,
-                                      const pspl_runtime_platform_t** plats, const char* key,
+                                      const pspl_platform_t** plats, const char* key,
                                       const void* little_data, const void* big_data, size_t data_len,
                                       pspl_toolchain_driver_source_t* definer);
 
 /* Augment indexer context with embedded integer-indexed object */
 void pspl_indexer_integer_object_augment(pspl_indexer_context_t* ctx, const pspl_extension_t* owner,
-                                         const pspl_runtime_platform_t** plats, uint32_t key,
+                                         const pspl_platform_t** plats, uint32_t key,
                                          const void* little_data, const void* big_data, size_t data_len,
                                          pspl_toolchain_driver_source_t* definer);
 
 /* Augment indexer context with file-stub 
  * (triggering conversion hook if provided and output is outdated) */
 void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
-                                    const pspl_runtime_platform_t** plats, const char* path_in,
+                                    const pspl_platform_t** plats, const char* path_in,
                                     const char* path_ext_in,
                                     pspl_converter_file_hook converter_hook, uint8_t move_output,
                                     pspl_hash** hash_out,
                                     pspl_toolchain_driver_source_t* definer);
 void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
-                                      const pspl_runtime_platform_t** plats, const char* path_in,
+                                      const pspl_platform_t** plats, const char* path_in,
                                       const char* path_ext_in,
                                       pspl_converter_membuf_hook converter_hook,
                                       pspl_hash** hash_out,

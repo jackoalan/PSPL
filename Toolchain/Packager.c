@@ -12,6 +12,7 @@
 #include <PSPL/PSPLExtension.h>
 #include <PSPLInternal.h>
 #include <PSPLHash.h>
+#include <errno.h>
 
 #include "Packager.h"
 #include "ObjectIndexer.h"
@@ -31,7 +32,7 @@ void pspl_packager_init(pspl_packager_context_t* ctx,
     ctx->ext_array = calloc(max_extension_count, sizeof(pspl_extension_t*));
     
     ctx->plat_count = 0;
-    ctx->plat_array = calloc(max_platform_count, sizeof(pspl_runtime_platform_t*));
+    ctx->plat_array = calloc(max_platform_count, sizeof(pspl_platform_t*));
     
     ctx->indexer_count = 0;
     ctx->indexer_cap = psplc_count;
@@ -73,9 +74,9 @@ void pspl_packager_indexer_augment(pspl_packager_context_t* ctx,
     // Unify platform array
     for (i=0 ; i<indexer->plat_count ; ++i) {
         needs_add = 1;
-        const pspl_runtime_platform_t* index_plat = indexer->plat_array[i];
+        const pspl_platform_t* index_plat = indexer->plat_array[i];
         for (j=0 ; j<ctx->plat_count ; ++j) {
-            const pspl_runtime_platform_t* pack_plat = ctx->plat_array[j];
+            const pspl_platform_t* pack_plat = ctx->plat_array[j];
             if (index_plat == pack_plat) {
                 needs_add = 0;
                 break;
@@ -144,8 +145,8 @@ static void prepare_staged_file(pspl_indexer_entry_t* ent) {
     FILE* file = fopen(path, "r");
     if (!file)
         pspl_error(-1, "Staged file unavailable",
-                   "there should be an accessible file at `%s`; derived from `%s`",
-                   path, ent->stub_source_path);
+                   "there should be an accessible file at `%s`; derived from `%s`; errno %d (%s)",
+                   path, ent->stub_source_path, errno, strerror(errno));
     
     // Record length
     fseek(file, 0, SEEK_END);
@@ -183,6 +184,8 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
         indexer->extension_obj_array_off = acc;
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_hash_record_bi_t) : sizeof(pspl_object_hash_record_t) + sizeof(pspl_hash)) * indexer->h_objects_count;
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_int_record_bi_t) : sizeof(pspl_object_int_record_t)) * indexer->i_objects_count;
+        acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_hash_record_bi_t) : sizeof(pspl_object_hash_record_t) + sizeof(pspl_hash)) * indexer->ph_objects_count;
+        acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_int_record_bi_t) : sizeof(pspl_object_int_record_t)) * indexer->pi_objects_count;
         indexer->extension_obj_data_off = acc;
         for (j=0 ; j<indexer->h_objects_count ; ++j) {
             if (indexer->h_objects_array[j]->object_little_data && indexer->h_objects_array[j]->object_big_data &&
@@ -197,6 +200,20 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
                 acc += indexer->i_objects_array[j]->object_len*2;
             else
                 acc += indexer->i_objects_array[j]->object_len;
+        }
+        for (j=0 ; j<indexer->ph_objects_count ; ++j) {
+            if (indexer->ph_objects_array[j]->object_little_data && indexer->ph_objects_array[j]->object_big_data &&
+                indexer->ph_objects_array[j]->object_little_data != indexer->ph_objects_array[j]->object_big_data)
+                acc += indexer->ph_objects_array[j]->object_len*2;
+            else
+                acc += indexer->ph_objects_array[j]->object_len;
+        }
+        for (j=0 ; j<indexer->pi_objects_count ; ++j) {
+            if (indexer->pi_objects_array[j]->object_little_data && indexer->pi_objects_array[j]->object_big_data &&
+                indexer->pi_objects_array[j]->object_little_data != indexer->pi_objects_array[j]->object_big_data)
+                acc += indexer->pi_objects_array[j]->object_len*2;
+            else
+                acc += indexer->pi_objects_array[j]->object_len;
         }
     }
 
@@ -367,10 +384,16 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
         size_t rem_len = ent->object_len;
         size_t read_len;
         FILE* file = fopen(ent->file_path, "r");
+        if (!file)
+            pspl_error(-1, "File suddenly unavailable",
+                       "`%s` is unable to be re-opened; errno %d (%s)",
+                       ent->file_path, errno, strerror(errno));
         do {
             read_len = fread(buf, 1, (rem_len>8196)?8196:rem_len, file);
             if (!read_len)
-                pspl_error(-1, "Unexpected end of staged file", "file ended with %u bytes to go", rem_len);
+                pspl_error(-1, "Unexpected end of staged file",
+                           "`%s` ended with %u bytes to go",
+                           ent->file_path, rem_len);
             fwrite(buf, 1, read_len, psplp_file_out);
             rem_len -= read_len;
         } while (rem_len > 0);
@@ -390,7 +413,7 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
     
     // Write all Platform name string blobs
     for (i=0 ; i<ctx->plat_count ; ++i) {
-        const pspl_runtime_platform_t* plat = ctx->plat_array[i];
+        const pspl_platform_t* plat = ctx->plat_array[i];
         fwrite(plat->platform_name, 1, strlen(plat->platform_name)+1, psplp_file_out);
     }
     

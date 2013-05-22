@@ -21,7 +21,7 @@ typedef struct {
     
     // Using which platforms
     unsigned int plat_count;
-    const pspl_runtime_platform_t** plat_array;
+    const pspl_platform_t** plat_array;
     
     // PSPLC indexers
     unsigned int indexer_count;
