@@ -78,6 +78,10 @@ set(pspl_toolchain_extension_list "" CACHE INTERNAL
     "Ordered toolchain extension name list, augmented by `pspl_add_extension_toolchain`")
 set(pspl_runtime_extension_list "" CACHE INTERNAL
     "Ordered runtime extension name list, augmented by `pspl_add_extension_runtime`")
+    
+# Final link lists for core targets
+set(pspl_extension_toolchain_link_list "")
+set(pspl_extension_runtime_link_list "")
 
 # Include Extension authoring macros here
 include(${PSPL_SOURCE_DIR}/cmake/PSPLExtensionMacros.cmake)
@@ -98,16 +102,18 @@ if(len GREATER 0)
     list(GET pspl_platform_list ${platform} PLAT_NAME)
     list(GET pspl_platform_desc_list ${platform} PLAT_DESC)
     list(GET pspl_platform_bo_list ${platform} PLAT_BO)
-    
+        
     string(TOLOWER ${PLAT_BO} PLAT_BO)
     if(PLAT_BO STREQUAL "little")
       set(CONF_PLAT_BYTE_ORDER "PSPL_LITTLE_ENDIAN")
     elseif(PLAT_BO STREQUAL "big")
       set(CONF_PLAT_BYTE_ORDER "PSPL_BIG_ENDIAN")
     else()
-      set(CONF_PLAT_BYTE_ORDER "PSPL_LITTLE_ENDIAN")
-      message(AUTHOR_WARNING "WARNING: Platform '${PLAT_NAME}' specified invalid byte-order; it must be specified as 'LITTLE' or 'BIG'; 'LITTLE' will be used by default")
+      set(CONF_PLAT_BYTE_ORDER "PSPL_UNSPEC_ENDIAN")
     endif()
+    
+    list(APPEND pspl_extension_toolchain_link_list ${PLAT_NAME}_toolplat)
+    list(APPEND pspl_extension_runtime_link_list ${PLAT_NAME}_runplat)
 
     # Generate extension definition
     configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_platform_def.h.in
@@ -123,8 +129,6 @@ endif()
 # Assemble extension definitions together
 set(CONF_EXT_DEF_INCLUDES "")
 set(CONF_EXT_ARRAY_INIT_LIST "")
-set(pspl_extension_toolchain_link_list "")
-set(pspl_extension_runtime_link_list "")
 list(LENGTH pspl_extension_list len)
 if(len GREATER 0)
   math(EXPR len ${len}-1)
@@ -139,7 +143,7 @@ if(len GREATER 0)
     list(FIND pspl_toolchain_extension_list ${EXT_NAME} TOOLEXT_EXIST)
     if(TOOLEXT_EXIST GREATER -1)
       set(CONF_EXT_TOOLCHAIN "&${EXT_NAME}_toolext")
-      set(CONF_EXT_EXTERNS "${CONF_EXT_EXTERNS}extern pspl_toolchain_extension_t ${EXT_NAME}_toolext;\n")
+      set(CONF_EXT_EXTERNS "${CONF_EXT_EXTERNS}\n#ifdef PSPL_TOOLCHAIN\nextern pspl_toolchain_extension_t ${EXT_NAME}_toolext;\n#endif\n")
       list(APPEND pspl_extension_toolchain_link_list ${EXT_NAME}_toolext)
     else()
       set(CONF_EXT_TOOLCHAIN "NULL")
@@ -148,7 +152,7 @@ if(len GREATER 0)
     list(FIND pspl_runtime_extension_list ${EXT_NAME} RUNEXT_EXIST)
     if(RUNEXT_EXIST GREATER -1)
       set(CONF_EXT_RUNTIME "&${EXT_NAME}_runext")
-      set(CONF_EXT_EXTERNS "${CONF_EXT_EXTERNS}extern pspl_toolchain_extension_t ${EXT_NAME}_runext;\n")
+      set(CONF_EXT_EXTERNS "${CONF_EXT_EXTERNS}\n#ifdef PSPL_RUNTIME\nextern pspl_toolchain_extension_t ${EXT_NAME}_runext;\n#endif\n")
       list(APPEND pspl_extension_runtime_link_list ${EXT_NAME}_runext)
     else()
       set(CONF_EXT_RUNTIME "NULL")
@@ -164,9 +168,6 @@ if(len GREATER 0)
 
   endforeach(extension)
 endif()
-
-# Default target platform
-set(DEF_PLAT GX)
 
 # Generate the C config file
 configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_available_extensions.c.in

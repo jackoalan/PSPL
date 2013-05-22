@@ -1,7 +1,20 @@
- 
+
+#ifdef PSPL_TOOLCHAIN
+extern pspl_toolchain_platform_t @PLAT_NAME@_toolplat;
+#endif
+#ifdef PSPL_RUNTIME
+extern pspl_runtime_platform_t @PLAT_NAME@_runplat;
+#endif
+
 static pspl_platform_t @PLAT_NAME@_platform = {
     .platform_name = "@PLAT_NAME@",
     .platform_desc = "@PLAT_DESC@",
-    .byte_order = @CONF_PLAT_BYTE_ORDER@
+    .byte_order = @CONF_PLAT_BYTE_ORDER@,
+#   ifdef PSPL_TOOLCHAIN
+    .toolchain_platform = &@PLAT_NAME@_toolplat,
+#   endif
+#   ifdef PSPL_RUNTIME
+    .runtime_platform = &@PLAT_NAME@_runplat
+#   endif
 };
 

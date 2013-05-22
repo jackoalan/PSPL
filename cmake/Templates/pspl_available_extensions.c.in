@@ -25,6 +25,3 @@ pspl_extension_t* pspl_available_extensions[] =
     NULL
 };
 
-
-/* Default target platform */
-pspl_platform_t* pspl_default_target_platform = &@DEF_PLAT@_platform;

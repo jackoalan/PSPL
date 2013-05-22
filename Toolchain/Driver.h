@@ -48,9 +48,6 @@ extern pspl_extension_t* pspl_available_extensions[];
 /* Available target platforms (NULL-terminated array) */
 extern pspl_platform_t* pspl_available_target_platforms[];
 
-/* Default target platform */
-extern pspl_platform_t* pspl_default_target_platform;
-
 /* xterm Colour */
 extern uint8_t xterm_colour;
 
@@ -183,8 +180,9 @@ typedef struct {
         PSPL_PHASE_PREPROCESS_EXTENSION  = 5,
         PSPL_PHASE_COMPILE               = 6,
         PSPL_PHASE_COMPILE_EXTENSION     = 7,
-        PSPL_PHASE_PACKAGE               = 8,
-        PSPL_PHASE_FINISH_EXTENSION      = 9
+        PSPL_PHASE_COMPILE_PLATFORM      = 8,
+        PSPL_PHASE_PACKAGE               = 9,
+        PSPL_PHASE_FINISH_EXTENSION      = 10
     } pspl_phase;
     
     // File name
@@ -194,7 +192,10 @@ typedef struct {
     unsigned int line_num;
     
     // Processing extension
-    const pspl_extension_t* proc_extension;
+    union {
+        const pspl_extension_t* proc_extension;
+        const pspl_platform_t* proc_platform;
+    };
     
     // Count of available extensions
     unsigned int ext_count;

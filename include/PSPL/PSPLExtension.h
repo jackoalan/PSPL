@@ -49,12 +49,12 @@ typedef struct _pspl_runtime_platform {
     
     // Platform toolchain structure
 #   ifdef PSPL_TOOLCHAIN
-    const struct _pspl_toolchain_platform* runtime_hooks;
+    const struct _pspl_toolchain_platform* toolchain_platform;
 #   endif
     
     // Platform runtime structure
 #   ifdef PSPL_RUNTIME
-    const struct _pspl_runtime_platform* runtime_hooks;
+    const struct _pspl_runtime_platform* runtime_platform;
 #   endif
     
     

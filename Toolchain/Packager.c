@@ -17,6 +17,9 @@
 #include "Packager.h"
 #include "ObjectIndexer.h"
 
+/* Round up to nearest 4 multiple */
+#define ROUND_UP_4(val) ((val)%4)?((((val)>>2)<<2)+4):(val)
+
 /* Round up to nearest 32 multiple */
 #define ROUND_UP_32(val) ((val)%32)?((((val)>>5)<<5)+32):(val)
 
@@ -188,32 +191,40 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_int_record_bi_t) : sizeof(pspl_object_int_record_t)) * indexer->pi_objects_count;
         indexer->extension_obj_data_off = acc;
         for (j=0 ; j<indexer->h_objects_count ; ++j) {
-            if (indexer->h_objects_array[j]->object_little_data && indexer->h_objects_array[j]->object_big_data &&
-                indexer->h_objects_array[j]->object_little_data != indexer->h_objects_array[j]->object_big_data)
-                acc += indexer->h_objects_array[j]->object_len*2;
+            pspl_indexer_entry_t* ent = indexer->h_objects_array[j];
+            ent->object_padding = ROUND_UP_4(acc) - acc;
+            if (ent->object_little_data && ent->object_big_data &&
+                ent->object_little_data != ent->object_big_data)
+                acc += (ent->object_len+ent->object_padding)*2;
             else
-                acc += indexer->h_objects_array[j]->object_len;
+                acc += ent->object_len+ent->object_padding;
         }
         for (j=0 ; j<indexer->i_objects_count ; ++j) {
-            if (indexer->i_objects_array[j]->object_little_data && indexer->i_objects_array[j]->object_big_data &&
-                indexer->i_objects_array[j]->object_little_data != indexer->i_objects_array[j]->object_big_data)
-                acc += indexer->i_objects_array[j]->object_len*2;
+            pspl_indexer_entry_t* ent = indexer->i_objects_array[j];
+            ent->object_padding = ROUND_UP_4(acc) - acc;
+            if (ent->object_little_data && ent->object_big_data &&
+                ent->object_little_data != ent->object_big_data)
+                acc += (ent->object_len+ent->object_padding)*2;
             else
-                acc += indexer->i_objects_array[j]->object_len;
+                acc += ent->object_len+ent->object_padding;
         }
         for (j=0 ; j<indexer->ph_objects_count ; ++j) {
-            if (indexer->ph_objects_array[j]->object_little_data && indexer->ph_objects_array[j]->object_big_data &&
-                indexer->ph_objects_array[j]->object_little_data != indexer->ph_objects_array[j]->object_big_data)
-                acc += indexer->ph_objects_array[j]->object_len*2;
+            pspl_indexer_entry_t* ent = indexer->ph_objects_array[j];
+            ent->object_padding = ROUND_UP_4(acc) - acc;
+            if (ent->object_little_data && ent->object_big_data &&
+                ent->object_little_data != ent->object_big_data)
+                acc += (ent->object_len+ent->object_padding)*2;
             else
-                acc += indexer->ph_objects_array[j]->object_len;
+                acc += ent->object_len+ent->object_padding;
         }
         for (j=0 ; j<indexer->pi_objects_count ; ++j) {
-            if (indexer->pi_objects_array[j]->object_little_data && indexer->pi_objects_array[j]->object_big_data &&
-                indexer->pi_objects_array[j]->object_little_data != indexer->pi_objects_array[j]->object_big_data)
-                acc += indexer->pi_objects_array[j]->object_len*2;
+            pspl_indexer_entry_t* ent = indexer->pi_objects_array[j];
+            ent->object_padding = ROUND_UP_4(acc) - acc;
+            if (ent->object_little_data && ent->object_big_data &&
+                ent->object_little_data != ent->object_big_data)
+                acc += (ent->object_len+ent->object_padding)*2;
             else
-                acc += indexer->pi_objects_array[j]->object_len;
+                acc += ent->object_len+ent->object_padding;
         }
     }
 

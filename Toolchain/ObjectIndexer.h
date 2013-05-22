@@ -45,6 +45,7 @@ typedef struct {
     // Embedded object length and buffer
     // (unused for file stubs)
     size_t object_len;
+    size_t object_padding;
     const void* object_little_data;
     const void* object_big_data;
     
@@ -150,6 +151,18 @@ void pspl_indexer_integer_object_augment(pspl_indexer_context_t* ctx, const pspl
                                          const pspl_platform_t** plats, uint32_t key,
                                          const void* little_data, const void* big_data, size_t data_len,
                                          pspl_toolchain_driver_source_t* definer);
+
+/* Augment indexer context with embedded hash-indexed platform object */
+void pspl_indexer_platform_hash_object_augment(pspl_indexer_context_t* ctx, const pspl_platform_t* owner,
+                                               const char* key, const void* little_data,
+                                               const void* big_data, size_t data_len,
+                                               pspl_toolchain_driver_source_t* definer);
+
+/* Augment indexer context with embedded integer-indexed platform object */
+void pspl_indexer_platform_integer_object_augment(pspl_indexer_context_t* ctx, const pspl_platform_t* owner,
+                                                  uint32_t key, const void* little_data,
+                                                  const void* big_data, size_t data_len,
+                                                  pspl_toolchain_driver_source_t* definer);
 
 /* Augment indexer context with file-stub 
  * (triggering conversion hook if provided and output is outdated) */

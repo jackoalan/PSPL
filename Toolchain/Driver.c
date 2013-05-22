@@ -231,8 +231,6 @@ static void print_help(const char* prog_name) {
         while ((plat = pspl_available_target_platforms[i++])) {
             fprintf(stderr, "  "BOLD"* %s"NORMAL" - %s",
                     plat->platform_name, plat->platform_desc);
-            if (plat == pspl_default_target_platform)
-                fprintf(stderr, " "BOLD"[DEFAULT]"NORMAL);
             fprintf(stderr, "\n");
         }
         if (i==1)
@@ -244,7 +242,7 @@ static void print_help(const char* prog_name) {
         // Now print usage info
         fprintf(stderr, BOLD BLUE"Command Synopsis:\n"NORMAL);
         const char* help =
-        wrap_string("pspl ["BOLD"-o"NORMAL" "UNDERLINE"out-path"NORMAL"] ["BOLD"-E"NORMAL"|"BOLD"-c"NORMAL"] ["BOLD"-G"NORMAL" "UNDERLINE"reflist-out-path"NORMAL"] ["BOLD"-S"NORMAL" "UNDERLINE"staging-root-path"NORMAL"] ["BOLD"-D"NORMAL" "UNDERLINE"def-name"NORMAL"[="UNDERLINE"def-value"NORMAL"]]... ["BOLD"-T"NORMAL" "UNDERLINE"target-platform"NORMAL"]... ["BOLD"-e"NORMAL" <"UNDERLINE"LITTLE"NORMAL", "UNDERLINE"BIG"NORMAL", "UNDERLINE"BI"NORMAL">] "UNDERLINE"source1"NORMAL" ["UNDERLINE"source2"NORMAL" ["UNDERLINE"sourceN"NORMAL"]]...", 1);
+        wrap_string("pspl ["BOLD"-o"NORMAL" "UNDERLINE"out-path"NORMAL"] ["BOLD"-E"NORMAL"|"BOLD"-c"NORMAL"] ["BOLD"-G"NORMAL" "UNDERLINE"reflist-out-path"NORMAL"] ["BOLD"-S"NORMAL" "UNDERLINE"staging-root-path"NORMAL"] ["BOLD"-D"NORMAL" "UNDERLINE"def-name"NORMAL"[="UNDERLINE"def-value"NORMAL"]]... ["BOLD"-T"NORMAL" "UNDERLINE"target-platform"NORMAL"]... ["BOLD"-e"NORMAL" <"UNDERLINE"LITTLE"NORMAL","UNDERLINE"BIG"NORMAL","UNDERLINE"BI"NORMAL">] "UNDERLINE"source1"NORMAL" ["UNDERLINE"source2"NORMAL" ["UNDERLINE"sourceN"NORMAL"]]...", 1);
         fprintf(stderr, "%s\n\n\n", help);
         free((char*)help);
         
@@ -276,8 +274,6 @@ static void print_help(const char* prog_name) {
         while ((plat = pspl_available_target_platforms[i++])) {
             fprintf(stderr, "  * %s - %s",
                     plat->platform_name, plat->platform_desc);
-            if (plat == pspl_default_target_platform)
-                fprintf(stderr, " [DEFAULT]");
             fprintf(stderr, "\n");
         }
         if (i==1)

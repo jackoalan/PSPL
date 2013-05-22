@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 2.8)
 
 
 # Add a PSPL Platform
-macro(pspl_add_platform platform_name platform_desc byte_order)
+macro(pspl_add_platform platform_name platform_desc)
   
   list(FIND pspl_platform_list ${platform_name} existing)
   if(existing GREATER -1)
@@ -20,6 +20,11 @@ macro(pspl_add_platform platform_name platform_desc byte_order)
     else()
       list(APPEND pspl_platform_list ${platform_name})
       list(APPEND pspl_platform_desc_list ${platform_desc})
+      if(${ARGC} GREATER 2)
+        set(byte_order ${ARGN})
+      else()
+        set(byte_order "UNSPEC")
+      endif()
       list(APPEND pspl_platform_bo_list ${byte_order})
       list(APPEND pspl_platform_typefile_list ${typefile})
       set(pspl_platform_list ${pspl_platform_list} CACHE INTERNAL

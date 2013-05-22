@@ -15,6 +15,7 @@
 #include <PSPL/PSPLValue.h>
 
 /* Endianness enumerations */
+#define PSPL_UNSPEC_ENDIAN 0
 #define PSPL_LITTLE_ENDIAN 1
 #define PSPL_BIG_ENDIAN    2
 #define PSPL_BI_ENDIAN     3

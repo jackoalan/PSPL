@@ -352,6 +352,21 @@ typedef struct {
 typedef void(*pspl_toolchain_platform_generator_hook)(const pspl_toolchain_context_t* driver_context,
                                                       const pspl_toolchain_platform_generator_instruction_t* instructions);
 
+/* Embed data objects for generator */
+
+/* Add data object (keyed with a null-terminated string stored as 32-bit truncated SHA1 hash) */
+void pspl_embed_platform_hash_keyed_object(const char* key,
+                                           const void* little_object,
+                                           const void* big_object,
+                                           size_t object_size);
+
+/* Add data object (keyed with a non-hashed 32-bit unsigned numeric value)
+ * Integer keying uses a separate namespace from hashed keying */
+void pspl_embed_platform_integer_keyed_object(uint32_t key,
+                                              const void* little_object,
+                                              const void* big_object,
+                                              size_t object_size);
+
 
 #pragma mark Main Toolchain Platform Structure (every platform needs one)
 

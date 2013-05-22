@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		E45591D6174ADA8F00CE0A08 /* Packager.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE9B172DB2D400F7A0BF /* Packager.c */; };
+		E45591D8174D60C100CE0A08 /* gx_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E45591D7174D60C100CE0A08 /* gx_toolchain.c */; settings = {COMPILER_FLAGS = "-DPSPL_TOOLCHAIN"; }; };
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
 		E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3A1740578E003B06BF /* ReferenceGatherer.c */; };
 		E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3D17411620003B06BF /* ObjectIndexer.c */; };
@@ -35,6 +36,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
+		E45591D9174D60CB00CE0A08 /* gx_toolchain.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gx_toolchain.h; sourceTree = "<group>"; };
 		E48CCCBC1747D4D500DDDD63 /* ToolchainCrossDarwinMinGW32.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToolchainCrossDarwinMinGW32.cmake; sourceTree = "<group>"; };
 		E4995F2B173E8BCE003B06BF /* PSPLHash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLHash.h; sourceTree = "<group>"; };
 		E4995F2C173E8C06003B06BF /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -248,6 +251,8 @@
 				E4AFAE7A1720DA7900F7A0BF /* gx_regdef.h */,
 				E4AFAE791720D49B00F7A0BF /* gx_offline.h */,
 				E4AFAE6B171D825400F7A0BF /* gx_offline.c */,
+				E45591D9174D60CB00CE0A08 /* gx_toolchain.h */,
+				E45591D7174D60C100CE0A08 /* gx_toolchain.c */,
 				E4AFAE71171D841500F7A0BF /* gx_runtime.h */,
 				E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */,
 				E4AFAE6D171D82B600F7A0BF /* bytecode_playback.S */,
@@ -425,6 +430,7 @@
 				E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */,
 				E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */,
 				E45591D6174ADA8F00CE0A08 /* Packager.c in Sources */,
+				E45591D8174D60C100CE0A08 /* gx_toolchain.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
