@@ -394,273 +394,282 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             end_of_line = strchr(cur_line, '\0');
         
         
-        
-        
-#       pragma mark Scan For Whitespace
-        
-        // This line is whitespace if first character is newline
-        if (*cur_line == '\n') {
+        char* line_buf = NULL;
+        if (!in_com) {
             
-            ++white_line_count;
-            continue;
+#           pragma mark Scan For Whitespace
             
-        } else if (white_line_count && compiler_state.heading_extension &&
-                   compiler_state.heading_extension->toolchain_extension) {
-            
-            pspl_toolchain_whitespace_line_read_hook ws_hook =
-            compiler_state.heading_extension->toolchain_extension->whitespace_line_read_hook;
-            
-            // Advise current heading extension that whitespace has occured
-            if (ws_hook) {
+            // This line is whitespace if first character is newline
+            if (*cur_line == '\n') {
                 
-                // Set callout context accordingly
-                driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
-                driver_state.proc_extension = compiler_state.heading_extension;
+                ++white_line_count;
+                continue;
                 
-                // Call hook
-                ws_hook(ext_driver_ctx, compiler_state.heading_context, white_line_count);
+            } else if (white_line_count && compiler_state.heading_extension &&
+                       compiler_state.heading_extension->toolchain_extension) {
                 
-                // Unset callout context
-                driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+                pspl_toolchain_whitespace_line_read_hook ws_hook =
+                compiler_state.heading_extension->toolchain_extension->whitespace_line_read_hook;
+                
+                // Advise current heading extension that whitespace has occured
+                if (ws_hook) {
+                    
+                    // Set callout context accordingly
+                    driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
+                    driver_state.proc_extension = compiler_state.heading_extension;
+                    
+                    // Call hook
+                    ws_hook(ext_driver_ctx, compiler_state.heading_context, white_line_count);
+                    
+                    // Unset callout context
+                    driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+                    
+                }
                 
             }
+            white_line_count = 0;
             
-        }
-        white_line_count = 0;
-
-        
-        
-#       pragma mark Indent Context
-        
-        // Set indent context accordingly (after whitespace since it doesn't count)
-        if (indent_level > compiler_state.indent_context->indent_level)
-            indent_level = compiler_state.indent_context->indent_level + 1;
-        else { // Deallocate same-and-higher-level contexts and bring stack down
-            int down_level = compiler_state.indent_context->indent_level;
-            while (indent_level <= down_level) {
-                pspl_toolchain_indent_read_t* de_ctx = &indent_ctx_stack[down_level];
-                free((void*)de_ctx->line_text);
-                --down_level;
-            }
-        }
-        if (indent_level >= PSPL_INDENT_CTX_STACK_SIZE)
-            pspl_error(-1, "Unsupported indent level",
-                       "specified indent level would cause stack overflow; maximum level count: %u",
-                       PSPL_INDENT_CTX_STACK_SIZE);
-        
-        // Target indent context
-        pspl_toolchain_indent_read_t* target_ctx = &indent_ctx_stack[indent_level];
-        compiler_state.indent_context = target_ctx;
-        target_ctx->indent_level = indent_level;
-        target_ctx->indent_trace = (indent_level)?&indent_ctx_stack[indent_level-1]:NULL;
-        
-        // Generate unchomped line buffer
-        size_t line_len = end_of_line-cur_line_unchomped;
-        if (line_len)
-            --line_len;
-        char* line_buf = malloc(line_len+1);
-        strncpy(line_buf, cur_line_unchomped, line_len);
-        line_buf[line_len] = '\0';
-        target_ctx->line_text = line_buf;
-        
-        // Chomp leading and end whitespace
-        char* line_start = line_buf;
-        while (*line_start == ' ' || *line_start == '\t')
-            ++line_start;
-        
-        char* line_end = line_buf + line_len;
-        while (line_end > line_start &&
-               (*line_end == '\0' || *line_end == ' ' || *line_end == '\t'))
-            --line_end;
-        *(line_end+1) = '\0';
-        
-        // See if there is a bullet or number
-        unsigned long bullet = 0;
-        if (*line_start == '*')
-            bullet = PSPL_BULLET_STAR;
-        else if (*line_start == '-')
-            bullet = PSPL_BULLET_DASH;
-        else if ((bullet = atoi(line_start))) {
-            bullet &= ~PSPL_BULLET_MASK;
-            char* dot = strchr(line_start, '.');
-            if (dot)
-                line_start = dot;
-            else
-                bullet = 0;
-        }
-        
-        // Chomp leading whitespace again if bullet present
-        if (bullet) {
-            ++line_start;
-            while (*line_start == ' ' || *line_start == '\t')
-                ++line_start;
-        }
-                
-        
-        target_ctx->bullet_value = bullet;
-        target_ctx->line_text_stripped = line_start;
-        
-        
-#       pragma mark Scan For Heading
-
-        // Heading scan state
-        uint8_t is_heading = 0;
-        int level = 0;
-        
-        // Determine if we are entering a new heading with '#'s
-        if (*cur_line == '#') {
-            ++cur_line;
-            is_heading = 1;
-            while (*cur_line == '#') {
-                ++cur_line;
-                ++level;
-            }
-            while (*cur_line == ' ' || *cur_line == '\t')
-                ++cur_line;
-        }
-        
-        // Determine if we are entering a new heading with '='s or '-'s
-        else if (*end_of_line == '\n') {
-            const char* next_line = end_of_line + 1;
-            while (*next_line == ' ' || *next_line == '\t')
-                ++next_line;
-            if (*next_line == '=') {
-                is_heading = 2;
-                level = 0;
-            } else if (*next_line == '-') {
-                is_heading = 2;
-                level = 1;
-            }
-        }
-        
-        if (is_heading) { // This is a heading spec
-        
-            // Validate heading level (and push one level if level greater)
-            if (level > compiler_state.heading_context->heading_level)
-                level = compiler_state.heading_context->heading_level + 1;
+            
+            
+#           pragma mark Indent Context
+            
+            // Set indent context accordingly (after whitespace since it doesn't count)
+            if (indent_level > compiler_state.indent_context->indent_level)
+                indent_level = compiler_state.indent_context->indent_level + 1;
             else { // Deallocate same-and-higher-level contexts and bring stack down
-                int down_level = compiler_state.heading_context->heading_level;
-                while (level <= down_level) {
-                    pspl_toolchain_heading_context_t* de_ctx = &heading_ctx_stack[down_level];
-                    if (de_ctx->heading_name != PSPL_GLOBAL_NAME)
-                        free((void*)de_ctx->heading_name);
-                    if (de_ctx->heading_argc)
-                        free((void*)de_ctx->heading_argv[0]);
+                int down_level = compiler_state.indent_context->indent_level;
+                while (indent_level <= down_level) {
+                    pspl_toolchain_indent_read_t* de_ctx = &indent_ctx_stack[down_level];
+                    free((void*)de_ctx->line_text);
                     --down_level;
                 }
             }
-            if (level >= PSPL_HEADING_CTX_STACK_SIZE)
-                pspl_error(-1, "Unsupported heading level",
-                           "specified heading level would cause stack overflow; maximum level count: %u",
-                           PSPL_HEADING_CTX_STACK_SIZE);
+            if (indent_level >= PSPL_INDENT_CTX_STACK_SIZE)
+                pspl_error(-1, "Unsupported indent level",
+                           "specified indent level would cause stack overflow; maximum level count: %u",
+                           PSPL_INDENT_CTX_STACK_SIZE);
             
-            // Target heading context
-            pspl_toolchain_heading_context_t* target_ctx = &heading_ctx_stack[level];
-            compiler_state.heading_context = target_ctx;
-            target_ctx->heading_argc = 0;
-            target_ctx->heading_level = level;
-            target_ctx->heading_trace = (level)?&heading_ctx_stack[level-1]:NULL;
+            // Target indent context
+            pspl_toolchain_indent_read_t* target_ctx = &indent_ctx_stack[indent_level];
+            compiler_state.indent_context = target_ctx;
+            target_ctx->indent_level = indent_level;
+            target_ctx->indent_trace = (indent_level)?&indent_ctx_stack[indent_level-1]:NULL;
             
-            // Parse heading characters and (possibly) argument array
-            const char* name_start = cur_line;
-            const char* name_end = end_of_line;
-            --cur_line;
-            while (++cur_line < end_of_line) { // Scan for arguments (end name there)
-                
-                if (*cur_line == '(' && name_end == end_of_line) { // Check for arguments
-                    
-                    // Validate argument set
-                    name_end = cur_line;
-                    const char* end_args = strchr(cur_line, ')');
-                    if (end_args >= end_of_line)
-                        pspl_error(-1, "Unclosed heading arguments",
-                                   "please add closing ')' on same line");
+            // Generate unchomped line buffer
+            size_t line_len = end_of_line-cur_line_unchomped;
+            if (line_len)
+                --line_len;
+            line_buf = malloc(line_len+1);
+            strncpy(line_buf, cur_line_unchomped, line_len);
+            line_buf[line_len] = '\0';
+            target_ctx->line_text = line_buf;
+            
+            // Chomp leading and end whitespace
+            char* line_start = line_buf;
+            while (*line_start == ' ' || *line_start == '\t')
+                ++line_start;
+            
+            char* line_end = line_buf + line_len;
+            while (line_end > line_start &&
+                   (*line_end == '\0' || *line_end == ' ' || *line_end == '\t'))
+                --line_end;
+            *(line_end+1) = '\0';
+            
+            // See if there is a bullet or number
+            unsigned long bullet = 0;
+            if (*line_start == '*')
+                bullet = PSPL_BULLET_STAR;
+            else if (*line_start == '-')
+                bullet = PSPL_BULLET_DASH;
+            else if ((bullet = atoi(line_start))) {
+                bullet &= ~PSPL_BULLET_MASK;
+                char* dot = strchr(line_start, '.');
+                if (dot)
+                    line_start = dot;
+                else
+                    bullet = 0;
+            }
+            
+            // Chomp leading whitespace again if bullet present
+            if (bullet) {
+                ++line_start;
+                while (*line_start == ' ' || *line_start == '\t')
+                    ++line_start;
+            }
+            
+            
+            target_ctx->bullet_value = bullet;
+            target_ctx->line_text_stripped = line_start;
+            
+            
+#           pragma mark Scan For Heading
+            
+            // Heading scan state
+            uint8_t is_heading = 0;
+            int level = 0;
+            
+            // Determine if we are entering a new heading with '#'s
+            if (*cur_line == '#') {
+                ++cur_line;
+                is_heading = 1;
+                while (*cur_line == '#') {
                     ++cur_line;
-                    while (*cur_line == ' ' || *cur_line == '\t')
-                        ++cur_line;
-                    if (end_args > cur_line) {
+                    ++level;
+                }
+                while (*cur_line == ' ' || *cur_line == '\t')
+                    ++cur_line;
+            }
+            
+            // Determine if we are entering a new heading with '='s or '-'s
+            else if (*end_of_line == '\n') {
+                const char* next_line = end_of_line + 1;
+                while (*next_line == ' ' || *next_line == '\t')
+                    ++next_line;
+                if (*next_line == '=') {
+                    while (*next_line == '=' || *next_line == ' ' || *next_line == '\t')
+                        ++next_line;
+                    if (*next_line == '\n' || *next_line == '\0') {
+                        is_heading = 2;
+                        level = 0;
+                    }
+                } else if (*next_line == '-') {
+                    while (*next_line == '-' || *next_line == ' ' || *next_line == '\t')
+                        ++next_line;
+                    if (*next_line == '\n' || *next_line == '\0') {
+                        is_heading = 2;
+                        level = 1;
+                    }
+                }
+            }
+            
+            if (is_heading) { // This is a heading spec
+                
+                // Validate heading level (and push one level if level greater)
+                if (level > compiler_state.heading_context->heading_level)
+                    level = compiler_state.heading_context->heading_level + 1;
+                else { // Deallocate same-and-higher-level contexts and bring stack down
+                    int down_level = compiler_state.heading_context->heading_level;
+                    while (level <= down_level) {
+                        pspl_toolchain_heading_context_t* de_ctx = &heading_ctx_stack[down_level];
+                        if (de_ctx->heading_name != PSPL_GLOBAL_NAME)
+                            free((void*)de_ctx->heading_name);
+                        if (de_ctx->heading_argc)
+                            free((void*)de_ctx->heading_argv[0]);
+                        --down_level;
+                    }
+                }
+                if (level >= PSPL_HEADING_CTX_STACK_SIZE)
+                    pspl_error(-1, "Unsupported heading level",
+                               "specified heading level would cause stack overflow; maximum level count: %u",
+                               PSPL_HEADING_CTX_STACK_SIZE);
+                
+                // Target heading context
+                pspl_toolchain_heading_context_t* target_ctx = &heading_ctx_stack[level];
+                compiler_state.heading_context = target_ctx;
+                target_ctx->heading_argc = 0;
+                target_ctx->heading_level = level;
+                target_ctx->heading_trace = (level)?&heading_ctx_stack[level-1]:NULL;
+                
+                // Parse heading characters and (possibly) argument array
+                const char* name_start = cur_line;
+                const char* name_end = end_of_line;
+                --cur_line;
+                while (++cur_line < end_of_line) { // Scan for arguments (end name there)
+                    
+                    if (*cur_line == '(' && name_end == end_of_line) { // Check for arguments
                         
-                        // Make argument buffer
-                        char* arg_buf = malloc(end_args-cur_line+1);
-                        strncpy(arg_buf, cur_line, end_args-cur_line);
-                        arg_buf[end_args-cur_line] = '\0';
-                        char* space = strchr(cur_line, ' ');
-                        if (space < end_args) {
-                            char* save_ptr;
-                            char* token = strtok_r(arg_buf, " ", &save_ptr);
-                            do {
-                                if (*token == ' ')
-                                    continue;
-                                if (target_ctx->heading_argc >= PSPL_MAX_HEADING_ARGS)
-                                    pspl_error(-1, "Maximum heading arguments exceeded",
-                                               "up to %u heading arguments may be specified",
-                                               PSPL_MAX_HEADING_ARGS);
-                                target_ctx->heading_argv[target_ctx->heading_argc] = token;
-                                ++target_ctx->heading_argc;
-                            } while ((token = strtok_r(save_ptr, " ", &save_ptr)));
-                        } else {
-                            target_ctx->heading_argc = 1;
-                            target_ctx->heading_argv[0] = arg_buf;
+                        // Validate argument set
+                        name_end = cur_line;
+                        const char* end_args = strchr(cur_line, ')');
+                        if (end_args >= end_of_line)
+                            pspl_error(-1, "Unclosed heading arguments",
+                                       "please add closing ')' on same line");
+                        ++cur_line;
+                        while (*cur_line == ' ' || *cur_line == '\t')
+                            ++cur_line;
+                        if (end_args > cur_line) {
+                            
+                            // Make argument buffer
+                            char* arg_buf = malloc(end_args-cur_line+1);
+                            strncpy(arg_buf, cur_line, end_args-cur_line);
+                            arg_buf[end_args-cur_line] = '\0';
+                            char* space = strchr(cur_line, ' ');
+                            if (space < end_args) {
+                                char* save_ptr;
+                                char* token = strtok_r(arg_buf, " ", &save_ptr);
+                                do {
+                                    if (*token == ' ')
+                                        continue;
+                                    if (target_ctx->heading_argc >= PSPL_MAX_HEADING_ARGS)
+                                        pspl_error(-1, "Maximum heading arguments exceeded",
+                                                   "up to %u heading arguments may be specified",
+                                                   PSPL_MAX_HEADING_ARGS);
+                                    target_ctx->heading_argv[target_ctx->heading_argc] = token;
+                                    ++target_ctx->heading_argc;
+                                } while ((token = strtok_r(save_ptr, " ", &save_ptr)));
+                            } else {
+                                target_ctx->heading_argc = 1;
+                                target_ctx->heading_argv[0] = arg_buf;
+                            }
+                            
                         }
+                        break; // Done with heading args
                         
                     }
-                    break; // Done with heading args
                     
                 }
                 
-            }
-            
-            // Chomp whitespace off end of name
-            while (name_end > name_start &&
-                   (*name_end == ' ' || *name_end == '\n' || *name_end == '\0' || *name_end == '('))
-                --name_end;
-            if (name_end == name_start)
-                pspl_error(-1, "No-name heading",
-                           "headings must have a name in PSPL");
-            
-            // Add name to context
-            char* name = malloc(name_end-name_start+1);
-            strncpy(name, name_start, name_end-name_start);
-            name[name_end-name_start] = '\0';
-            target_ctx->heading_name = name;
-            
-            
-            // Skip line if using '='s or '-'s in heading
-            if (is_heading == 2)
-                cur_line = end_of_line + 1;
-            
-            // Resolve "owner" extension from primary heading name
-            if (!level) {
-                if (!strcasecmp(name, "GLOBAL"))
-                    compiler_state.heading_extension = NULL;
-                else {
-                    compiler_state.heading_extension = get_heading_ext(name);
-                    
-                    // Notify extension that it is now active
-                    if (compiler_state.heading_extension &&
-                        compiler_state.heading_extension->toolchain_extension &&
-                        compiler_state.heading_extension->toolchain_extension->heading_switch_hook) {
+                // Chomp whitespace off end of name
+                while (name_end > name_start &&
+                       (*name_end == ' ' || *name_end == '\n' || *name_end == '\0' || *name_end == '('))
+                    --name_end;
+                if (name_end == name_start)
+                    pspl_error(-1, "No-name heading",
+                               "headings must have a name in PSPL");
+                
+                // Add name to context
+                char* name = malloc(name_end-name_start+1);
+                strncpy(name, name_start, name_end-name_start);
+                name[name_end-name_start] = '\0';
+                target_ctx->heading_name = name;
+                
+                
+                // Skip line if using '='s or '-'s in heading
+                if (is_heading == 2)
+                    cur_line = end_of_line + 1;
+                
+                // Resolve "owner" extension from primary heading name
+                if (!level) {
+                    if (!strcasecmp(name, "GLOBAL"))
+                        compiler_state.heading_extension = NULL;
+                    else {
+                        compiler_state.heading_extension = get_heading_ext(name);
                         
-                        // Set callout context accordingly
-                        driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
-                        driver_state.proc_extension = compiler_state.heading_extension;
-                        
-                        // Callout to hook
-                        compiler_state.heading_extension->toolchain_extension->
-                        heading_switch_hook(ext_driver_ctx, compiler_state.heading_context);
-                        
-                        // Unset callout context
-                        driver_state.pspl_phase = PSPL_PHASE_COMPILE;
-                        
+                        // Notify extension that it is now active
+                        if (compiler_state.heading_extension &&
+                            compiler_state.heading_extension->toolchain_extension &&
+                            compiler_state.heading_extension->toolchain_extension->heading_switch_hook) {
+                            
+                            // Set callout context accordingly
+                            driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
+                            driver_state.proc_extension = compiler_state.heading_extension;
+                            
+                            // Callout to hook
+                            compiler_state.heading_extension->toolchain_extension->
+                            heading_switch_hook(ext_driver_ctx, compiler_state.heading_context);
+                            
+                            // Unset callout context
+                            driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+                            
+                        }
                     }
                 }
-            }
-            
-            continue; // On to next line
-            
-        } // Done with heading spec
-        
-        
+                
+                continue; // On to next line
+                
+            } // Done with heading spec
+        }
+    
 #       pragma mark Scan For Command
         
         if (!in_com) { // Open parenthesis test
