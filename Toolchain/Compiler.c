@@ -628,9 +628,9 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
                                "headings must have a name in PSPL");
                 
                 // Add name to context
-                char* name = malloc(name_end-name_start+1);
-                strncpy(name, name_start, name_end-name_start);
-                name[name_end-name_start] = '\0';
+                char* name = malloc(name_end-name_start+2);
+                strncpy(name, name_start, name_end-name_start+1);
+                name[name_end-name_start+1] = '\0';
                 target_ctx->heading_name = name;
                 
                 
