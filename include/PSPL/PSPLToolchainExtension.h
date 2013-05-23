@@ -16,39 +16,6 @@
 #define PSPL_MAX_HEADING_ARGS 16
 
 
-/* This will be set by build system. Contains unique extension ID.
- * The toolchain and runtime use this (in conjunction with preprocessor macros) 
- * to transparently maintain an extension namespace system */
-//#define PSPL_EXT_NAME TEST_EXT
-
-
-
-
-/* The PSPL toolchain driver uses a two-pass, phase-based execution model
- * in order to prepare data for the `psplc` file and resulting package.
- *
- * The extension uses C function pointers to declare hooks
- * to be executed for each phase; providing relevant data where needed.
- *
- * From the toolchain extension's perspective, the phases include the following:
- *  * Init - called once for each extension when driver begins parsing a PSPL source (in no particular order)
- *      * Within an extension init, the extension may manually request the PSPL toolchain to initialise another extension right then and there (thereby implementing a simple dependency resolution system)
- *  * Global command call - when the extension claims a command signature, and it's called within the global heading context, this hook is activated
- *  * Context line read - when a claimed context is present, this hook is activated once for each line provided
- *  * Context line indent-sensitive read - overrides regular line read, provides indent context structure
- *  * Finish - called once for each extension before driver ends (in no particular order)
- *
- *
- * In addition to the phase hooks, a toolchain extension is responsible for defining
- * some metadata values to stipulate the extension's responsibility in the toolchain.
- *
- * Here are the types of metadata entries the class may provide:
- *  * Claimed heading names (sub headings implicitly also claimed, able to specify as weak)
- *  * Claimed global command names (able to specify as weak)
- *  * Claimed global preprocessor directives
- */
-
-
 #pragma mark Error Reporting
 
 /* During the toolchain execution phases, the extension may wish to notify
@@ -226,12 +193,6 @@ typedef int(*pspl_toolchain_indent_line_read_hook)(const pspl_toolchain_context_
                                                    const pspl_toolchain_indent_read_t* indent_line_read);
 
 
-#pragma mark Notify Toolchain of Referenced File Dependency
-
-/* Add referenced source file to Reference Gathering list */
-//void pspl_gather_referenced_file(const char* file_path);
-
-
 #pragma mark Add PSPLC-Embedded Bi-endian Data Object (for transit to runtime)
 
 /* These embed routines may be called within any toolchain-extension hook
@@ -261,10 +222,23 @@ void pspl_embed_hash_keyed_object(const pspl_platform_t** platforms,
 /* Add data object (keyed with a non-hashed 32-bit unsigned numeric value) 
  * Integer keying uses a separate namespace from hashed keying */
 void pspl_embed_integer_keyed_object(const pspl_platform_t** platforms,
-                                      uint32_t key,
-                                      const void* little_object,
-                                      const void* big_object,
-                                      size_t object_size);
+                                     uint32_t key,
+                                     const void* little_object,
+                                     const void* big_object,
+                                     size_t object_size);
+
+
+#pragma mark Send Instruction to Target Platform(s)
+
+/* Way for compiler extensions to send a named instruction
+ * (with operation string and instruction data) to a set of
+ * target platforms. This will result in an immediate invocation
+ * of each platform's `receive` hook.
+ * `platforms` is a NULL-terminated array;
+ * if not set, all platforms receive instruction. */
+void pspl_send_platform_instruction(const pspl_platform_t** platforms,
+                                    const char* operation,
+                                    const void* data);
 
 
 #pragma mark Add File For Packaging Into PSPLP Flat-File and/or PSPLPD Directory
@@ -296,6 +270,7 @@ void pspl_package_membuf_augment(const pspl_platform_t** platforms, const char* 
                                  const char* path_ext_in,
                                  pspl_converter_membuf_hook converter_hook,
                                  pspl_hash** hash_out);
+
 
 
 #pragma mark Main Toolchain Extension Structure (every extension needs one)
@@ -333,24 +308,17 @@ typedef struct _pspl_toolchain_extension {
 
 #pragma mark Toolchain Platform Hook Types
 
-/* Platform generator instruction structure */
-typedef struct {
-    
-    // Where instruction originated from
-    const pspl_extension_t* source_ext;
-    
-    // Instruction operation
-    const char* operation;
-    
-    // Instruction data
-    const void* data;
-    
-} pspl_toolchain_platform_generator_instruction_t;
-
-/* Platform generator hook
+/* Platform instruction receive hook (called many times per PSPLC compile)
  * `instructions` is a NULL-terminated array of generator instructions */
-typedef void(*pspl_toolchain_platform_generator_hook)(const pspl_toolchain_context_t* driver_context,
-                                                      const pspl_toolchain_platform_generator_instruction_t* instructions);
+typedef void(*pspl_toolchain_platform_receive_hook)(const pspl_toolchain_context_t* driver_context,
+                                                    const pspl_extension_t* source_ext,
+                                                    const char* operation,
+                                                    const void* data);
+
+/* Platform generator hook (called once per PSPLC compile after all receive calls)
+ * actually generates final data objects for storage into PSPLC 
+ * also serves as a finish routine */
+typedef void(*pspl_toolchain_platform_generate_hook)(const pspl_toolchain_context_t* driver_context);
 
 /* Embed data objects for generator */
 
@@ -376,8 +344,9 @@ typedef struct _pspl_toolchain_platform {
     // All fields are optional and may be set `NULL`
     
     // Hook fields
-    pspl_toolchain_platform_generator_hook generator_hook;
-    
+    pspl_toolchain_init_hook init_hook;
+    pspl_toolchain_platform_receive_hook receive_hook;
+    pspl_toolchain_platform_generate_hook generate_hook;
     
 } pspl_toolchain_platform_t;
 

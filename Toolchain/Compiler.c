@@ -89,6 +89,41 @@ void pspl_embed_integer_keyed_object(const pspl_platform_t** platforms,
                                         compiler_state.source);
 }
 
+/* Way for compiler extensions to send a named instruction
+ * (with operation string and instruction data) to a set of
+ * target platforms. This will result in an immediate invocation
+ * of each platform's `receive` hook.
+ * `platforms` is a NULL-terminated array; 
+ * if not set, all platforms receive instruction. */
+void pspl_send_platform_instruction(const pspl_platform_t** platforms,
+                                    const char* operation,
+                                    const void* data) {
+    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
+        return;
+    const pspl_extension_t* save_ext = driver_state.proc_extension;
+    driver_state.pspl_phase = PSPL_PHASE_COMPILE_PLATFORM;
+    const pspl_platform_t* plat;
+    if (platforms) {
+        while ((plat = *platforms++)) {
+            if (plat->toolchain_platform && plat->toolchain_platform->receive_hook) {
+                driver_state.proc_platform = plat;
+                plat->toolchain_platform->receive_hook(driver_state.tool_ctx, save_ext, operation, data);
+            }
+        }
+    } else {
+        int i;
+        for (i=0 ; i<driver_state.tool_ctx->target_runtime_platforms_c ; ++i) {
+            plat = driver_state.tool_ctx->target_runtime_platforms[i];
+            if (plat->toolchain_platform && plat->toolchain_platform->receive_hook) {
+                driver_state.proc_platform = plat;
+                plat->toolchain_platform->receive_hook(driver_state.tool_ctx, save_ext, operation, data);
+            }
+        }
+    }
+    driver_state.proc_extension = save_ext;
+    driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
+}
+
 /* Same functions for platform data objects
  * These may only be called from *platform* codebases (not *extension* codebases) */
 
@@ -266,6 +301,21 @@ static const pspl_extension_t* get_com_hook_ext(const char* name) {
 void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
                        pspl_toolchain_context_t* ext_driver_ctx,
                        pspl_toolchain_driver_opts_t* driver_opts) {
+    
+    // Initialise target platforms
+    driver_state.pspl_phase = PSPL_PHASE_COMPILE_PLATFORM;
+    int i;
+    for (i=0 ; i<driver_opts->platform_c ; ++i) {
+        const pspl_platform_t* plat = driver_opts->platform_a[i];
+        if (plat && plat->toolchain_platform && plat->toolchain_platform->init_hook) {
+            driver_state.proc_platform = plat;
+            int err;
+            if ((err = plat->toolchain_platform->init_hook(ext_driver_ctx)))
+                pspl_error(-1, "Platform threw error on init",
+                           "platform named '%s' gave error %d on init",
+                           plat->platform_name, err);
+        }
+    }
     
     // Set error-handling phase
     driver_state.pspl_phase = PSPL_PHASE_COMPILE;
@@ -796,6 +846,18 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
         
     } while ((cur_line = strchr(cur_line, '\n')) && ++driver_state.line_num);
     
+    
+#   pragma mark Platform Object Generation
+    
+    // Instruct platforms to generate objects
+    driver_state.pspl_phase = PSPL_PHASE_COMPILE_PLATFORM;
+    for (i=0 ; i<driver_opts->platform_c ; ++i) {
+        const pspl_platform_t* plat = driver_opts->platform_a[i];
+        if (plat && plat->toolchain_platform && plat->toolchain_platform->generate_hook) {
+            driver_state.proc_platform = plat;
+            plat->toolchain_platform->generate_hook(ext_driver_ctx);
+        }
+    }
     
 }
 
