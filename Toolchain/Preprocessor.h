@@ -15,7 +15,8 @@
 /* Main entry point for preprocessing a single PSPL source */
 void pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
                            pspl_toolchain_context_t* ext_driver_ctx,
-                           pspl_toolchain_driver_opts_t* driver_opts);
+                           pspl_toolchain_driver_opts_t* driver_opts,
+                           uint8_t root);
 
 #endif // PSPL_INTERNAL
 #endif

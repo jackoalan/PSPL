@@ -22,6 +22,23 @@ static const char* claimed_headings[] = {
 /* Preprocessor directives */
 static const char* claimed_pp_direc[] = {
     "MESSAGE",
+    "MSG",
+    "ERROR",
+    "ERR",
+    "WARNING",
+    "WARN",
+    "DEFINE",
+    "DEF",
+    "UNDEF",
+    "IF",
+    "ELSEIF",
+    "ELIF",
+    "ELSE",
+    "ENDIF",
+    "FI",
+    NULL};
+
+static const char* weak_claimed_pp_direc[] = {
     "SAMPLE",
     NULL};
 
@@ -37,8 +54,10 @@ static const char* claimed_commands[] = {
 /* Main extension bindings */
 pspl_toolchain_extension_t BUILTINS_toolext = {
     .claimed_global_preprocessor_directives = claimed_pp_direc,
+    .weak_claimed_global_preprocessor_directives = weak_claimed_pp_direc,
     .claimed_global_command_names = claimed_commands,
     .claimed_heading_names = claimed_headings,
+    .init_hook = BUILTINS_init,
     .line_preprocessor_hook = BUILTINS_pp_hook,
     .command_call_hook = BUILTINS_command_call_hook};
 

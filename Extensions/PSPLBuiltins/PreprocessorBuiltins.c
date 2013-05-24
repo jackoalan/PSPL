@@ -24,6 +24,36 @@ static void message(unsigned int directive_argc,
     fprintf(stderr, "\n");
 }
 
+static void error(unsigned int directive_argc,
+                  const char** directive_argv) {
+    char err_buf[1024];
+    err_buf[0] = '\0';
+    int i;
+    uint8_t print_space = 0;
+    for (i=1 ; i<directive_argc ; ++i) {
+        if (print_space)
+            strcat(err_buf, " ");
+        strcat(err_buf, directive_argv[i]);
+        print_space = 1;
+    }
+    pspl_error(-1, "User-defined [ERROR] in source", err_buf);
+}
+
+static void warn(unsigned int directive_argc,
+                 const char** directive_argv) {
+    char err_buf[1024];
+    err_buf[0] = '\0';
+    int i;
+    uint8_t print_space = 0;
+    for (i=1 ; i<directive_argc ; ++i) {
+        if (print_space)
+            strcat(err_buf, " ");
+        strcat(err_buf, directive_argv[i]);
+        print_space = 1;
+    }
+    pspl_warn("User-defined [WARNING] in source", err_buf);
+}
+
 /* Process a hook call from the preprocessor */
 void BUILTINS_pp_hook(const pspl_toolchain_context_t* driver_context,
                       unsigned int directive_argc,
@@ -31,5 +61,11 @@ void BUILTINS_pp_hook(const pspl_toolchain_context_t* driver_context,
     
     if (!strcasecmp(directive_argv[0], "MESSAGE"))
         message(directive_argc, directive_argv);
+    else if (!strcasecmp(directive_argv[0], "ERROR"))
+        error(directive_argc, directive_argv);
+    else if (!strcasecmp(directive_argv[0], "WARN"))
+        warn(directive_argc, directive_argv);
+    else if (!strcasecmp(directive_argv[0], "WARNING"))
+        warn(directive_argc, directive_argv);
     
 }

@@ -42,6 +42,9 @@ char* strtok_r(char *str,
 /* How many spaces equates to an indent level? */
 #define PSPL_INDENT_SPACES 4
 
+/* Maximum source file size (512K) */
+#define PSPL_MAX_SOURCE_SIZE (512*1024)
+
 /* Available extensions (NULL-terminated array) */
 extern pspl_extension_t* pspl_available_extensions[];
 
@@ -101,9 +104,8 @@ typedef struct {
 } pspl_toolchain_driver_opts_t;
 
 
-
 /* Source file state */
-typedef struct {
+typedef struct _pspl_toolchain_driver_source {
     
     // File path (as provided)
     const char* file_path;
@@ -124,8 +126,10 @@ typedef struct {
     // Array of individual preprocessor expansion line counts
     // (mapping each original line to a count of expanded lines)
     // (an array of all 1s will indicate a preprocessed file of the same length as original)
-    unsigned int* expansion_line_counts;
+    unsigned int* expansion_line_count;
     
+    // Parent source (for preprocessor inclusion backtrace)
+    struct _pspl_toolchain_driver_source* parent_source;
     
     // Required extension set (NULL-terminated array)
     const pspl_extension_t** required_extension_set;

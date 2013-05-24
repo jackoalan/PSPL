@@ -50,9 +50,6 @@
 /* Maximum count of defs */
 #define PSPL_MAX_DEFS 128
 
-/* Maximum source file size (512K) */
-#define PSPL_MAX_SOURCE_SIZE (512*1024)
-
 
 /* Global driver state */
 pspl_toolchain_driver_state_t driver_state;
@@ -604,6 +601,8 @@ static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const cha
     char* last_slash = strrchr(abs_path, '/');
     psplc->file_enclosing_dir = malloc(MAXPATHLEN);
     sprintf((char*)psplc->file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
+    if (abs_path != psplc->file_path)
+        free((void*)abs_path);
     
     // File name
     psplc->file_name = last_slash+1;
@@ -1107,6 +1106,7 @@ int main(int argc, char** argv) {
             
 #           pragma mark Process PSPL Source
             pspl_toolchain_driver_source_t* source = &sources[sources_c++];
+            source->parent_source = NULL;
             
             // Populate filename members
             source->file_path = driver_opts.source_a[i];
@@ -1122,6 +1122,8 @@ int main(int argc, char** argv) {
             char* last_slash = strrchr(abs_path, '/');
             source->file_enclosing_dir = malloc(MAXPATHLEN);
             sprintf((char*)source->file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
+            if (abs_path != source->file_path)
+                free((void*)abs_path);
             
             // File name
             source->file_name = last_slash+1;
@@ -1157,6 +1159,10 @@ int main(int argc, char** argv) {
             
             // Load original source
             FILE* source_file = fopen(driver_opts.source_a[i], "r");
+            if (!source_file)
+                pspl_error(-1, "Unable to open PSPL source",
+                           "`%s` is unavailable for reading; errno %d (%s)",
+                           driver_opts.source_a[i], errno, strerror(errno));
             fseek(source_file, 0, SEEK_END);
             long source_len = ftell(source_file);
             fseek(source_file, 0, SEEK_SET);
@@ -1179,7 +1185,7 @@ int main(int argc, char** argv) {
             
             
             // Now run preprocessor
-            pspl_run_preprocessor(source, &tool_ctx, &driver_opts);
+            pspl_run_preprocessor(source, &tool_ctx, &driver_opts, 1);
             
             
             // Now run compiler (if not in preprocess-only mode)

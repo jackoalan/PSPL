@@ -11,6 +11,10 @@
 #include <string.h>
 #include <stdio.h>
 
+int BUILTINS_init(const pspl_toolchain_context_t* driver_context) {
+    return 0;
+}
+
 static int converter_hook(char* path_out, const char* path_in, const char* suggested_path) {
     strcpy(path_out, suggested_path);
     FILE* file = fopen(suggested_path, "w");
