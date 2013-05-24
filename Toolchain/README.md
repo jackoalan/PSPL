@@ -150,7 +150,7 @@ To target multiple platforms, repeat the `-T` flag for each platform.
 Note that it is valid to generate *platform-free* PSPL files by not using this option.
 Platform-free files will not be bindable using the PSPL runtime's common shader
 binding API. This may be used to create functional PSPL packages that 
-*have nothing to do* with shaders. In these cases, the functionality relies on 
+*have nothing to do with shaders*. In these cases, the functionality relies on 
 a comprehensive usage of PSPL extensions. The file-packaging mechanic of PSPL continues
 to be available.
 
