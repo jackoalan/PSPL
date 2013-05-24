@@ -503,8 +503,7 @@ static void add_def(pspl_toolchain_driver_opts_t* driver_opts,
     if (eq_ptr) {
         *eq_ptr = '\0';
         ++eq_ptr;
-        if (*eq_ptr)
-            driver_opts->def_v[driver_opts->def_c] = eq_ptr;
+        driver_opts->def_v[driver_opts->def_c] = eq_ptr;
     }
     
     ++driver_opts->def_c;
