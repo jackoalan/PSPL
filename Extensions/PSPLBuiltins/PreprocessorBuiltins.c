@@ -24,16 +24,18 @@ static void message(unsigned int directive_argc,
     fprintf(stderr, "\n");
 }
 
+#define ERR_BUF_LEN 1024
+
 static void error(unsigned int directive_argc,
                   const char** directive_argv) {
-    char err_buf[1024];
+    char err_buf[ERR_BUF_LEN];
     err_buf[0] = '\0';
     int i;
     uint8_t print_space = 0;
     for (i=1 ; i<directive_argc ; ++i) {
         if (print_space)
-            strcat(err_buf, " ");
-        strcat(err_buf, directive_argv[i]);
+            strlcat(err_buf, " ", ERR_BUF_LEN);
+        strlcat(err_buf, directive_argv[i], ERR_BUF_LEN);
         print_space = 1;
     }
     pspl_error(-1, "User-defined [ERROR] in source", err_buf);
@@ -47,8 +49,8 @@ static void warn(unsigned int directive_argc,
     uint8_t print_space = 0;
     for (i=1 ; i<directive_argc ; ++i) {
         if (print_space)
-            strcat(err_buf, " ");
-        strcat(err_buf, directive_argv[i]);
+            strlcat(err_buf, " ", ERR_BUF_LEN);
+        strlcat(err_buf, directive_argv[i], ERR_BUF_LEN);
         print_space = 1;
     }
     pspl_warn("User-defined [WARNING] in source", err_buf);

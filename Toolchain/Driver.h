@@ -103,6 +103,16 @@ typedef struct {
     
 } pspl_toolchain_driver_opts_t;
 
+/* State for a per-line preprocessor run */
+struct _pspl_expansion_line_node {
+    
+    // Number of lines expanded
+    unsigned int expanded_line_count;
+    
+    // Child source if this is an include (otherwise NULL)
+    struct _pspl_toolchain_driver_source* included_source;
+    
+};
 
 /* Source file state */
 typedef struct _pspl_toolchain_driver_source {
@@ -126,7 +136,7 @@ typedef struct _pspl_toolchain_driver_source {
     // Array of individual preprocessor expansion line counts
     // (mapping each original line to a count of expanded lines)
     // (an array of all 1s will indicate a preprocessed file of the same length as original)
-    unsigned int* expansion_line_count;
+    struct _pspl_expansion_line_node* expansion_line_nodes;
     
     // Parent source (for preprocessor inclusion backtrace)
     struct _pspl_toolchain_driver_source* parent_source;

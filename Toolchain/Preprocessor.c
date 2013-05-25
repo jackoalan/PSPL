@@ -69,7 +69,7 @@ static void _add_line(unsigned int indent_level, char* exp_line_text) {
         pspl_buffer_addchar(&preprocessor_state.out_buf, '\n');
         
         // Add a line to expansion count
-        ++preprocessor_state.source->expansion_line_count[driver_state.line_num];
+        ++preprocessor_state.source->expansion_line_nodes[driver_state.line_num].expanded_line_count;
         
     } while ((line_str = strtok_r(save_ptr, "\n", &save_ptr)));
     
@@ -127,7 +127,7 @@ void pspl_preprocessor_add_heading_push(const char* primary_heading_name) {
     pspl_buffer_addstr(&preprocessor_state.out_buf, ")\n");
     
     // Add a line to expansion count
-    ++preprocessor_state.source->expansion_line_count[driver_state.line_num];
+    ++preprocessor_state.source->expansion_line_nodes[driver_state.line_num].expanded_line_count;
 }
 
 /* Convenience function to emit PSPL primary-heading push
@@ -146,7 +146,7 @@ void pspl_preprocessor_add_heading_pop() {
     pspl_buffer_addstr(&preprocessor_state.out_buf, "PSPL_HEADING_POP()\n");
     
     // Add a line to expansion count
-    ++preprocessor_state.source->expansion_line_count[driver_state.line_num];
+    ++preprocessor_state.source->expansion_line_nodes[driver_state.line_num].expanded_line_count;
 }
 
 /* Convenience function to emit command call with arguments.
@@ -174,7 +174,7 @@ void _pspl_preprocessor_add_command_call(const char* command_name, ...) {
     va_end(va);
     
     // Add a line to expansion count
-    ++preprocessor_state.source->expansion_line_count[driver_state.line_num];
+    ++preprocessor_state.source->expansion_line_nodes[driver_state.line_num].expanded_line_count;
 }
 
 
@@ -187,12 +187,13 @@ static void pspl_include(const char* path,
     pspl_toolchain_driver_source_t* save_source = preprocessor_state.source;
     unsigned int line_num_save = driver_state.line_num;
     
-    // New source state on stack for included PSPL
-    pspl_toolchain_driver_source_t include_source;
-    include_source.parent_source = save_source;
+    // New source in heap for included PSPL
+    pspl_toolchain_driver_source_t* include_source = malloc(sizeof(pspl_toolchain_driver_source_t));
+    include_source->parent_source = save_source;
+    save_source->expansion_line_nodes[line_num_save].included_source = include_source;
     
     // Populate filename members
-    include_source.file_path = path;
+    include_source->file_path = path;
     
     // Make path absolute (if it's not already)
     const char* abs_path = path;
@@ -203,11 +204,11 @@ static void pspl_include(const char* path,
     
     // Enclosing dir
     char* last_slash = strrchr(abs_path, '/');
-    include_source.file_enclosing_dir = malloc(MAXPATHLEN);
-    sprintf((char*)include_source.file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
+    include_source->file_enclosing_dir = malloc(MAXPATHLEN);
+    sprintf((char*)include_source->file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
     
     // File name
-    include_source.file_name = last_slash+1;
+    include_source->file_name = last_slash+1;
     
     // Load original source
     FILE* source_file = fopen(abs_path, "r");
@@ -228,19 +229,19 @@ static void pspl_include(const char* path,
                    "errno %d - `%s`", errno, strerror(errno));
     size_t read_len = fread(source_buf, 1, source_len, source_file);
     source_buf[source_len] = '\0';
-    include_source.original_source = source_buf;
+    include_source->original_source = source_buf;
     fclose(source_file);
     if (read_len != source_len)
         pspl_error(-1, "Didn't read expected amount from PSPL source",
                    "expected %u bytes; read %u bytes", source_len, read_len);
     
     // Run preprocessor recursively
-    pspl_run_preprocessor(&include_source, ext_driver_ctx, driver_opts, 0);
+    pspl_run_preprocessor(include_source, ext_driver_ctx, driver_opts, 0);
     
     if (abs_path != path)
         free((void*)abs_path);
     free(source_buf);
-    free((void*)include_source.file_enclosing_dir);
+    free((void*)include_source->file_enclosing_dir);
     
     // Restore
     preprocessor_state.source = save_source;
@@ -330,7 +331,7 @@ void pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
     }
     
     // Allocate expansion line count array
-    preprocessor_state.source->expansion_line_count = calloc(line_count, sizeof(unsigned int));
+    preprocessor_state.source->expansion_line_nodes = calloc(line_count, sizeof(struct _pspl_expansion_line_node));
     
     // Examine each line for preprocessor invocation ('[')
     driver_state.line_num = 0;
@@ -368,7 +369,8 @@ void pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
         preprocessor_state.indent_level = added_spaces/PSPL_INDENT_SPACES + added_tabs;
         
         // Start expansion line count at 0
-        preprocessor_state.source->expansion_line_count[driver_state.line_num] = 0;
+        preprocessor_state.source->expansion_line_nodes[driver_state.line_num].expanded_line_count = 0;
+        preprocessor_state.source->expansion_line_nodes[driver_state.line_num].included_source = NULL;
         
         if (in_pp || *cur_line == '[') { // Invoke preprocessor for this line
             
@@ -584,7 +586,7 @@ void pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
                 pspl_buffer_addstrn(&preprocessor_state.out_buf, cur_line, end_of_line-cur_line);
             
             pspl_buffer_addchar(&preprocessor_state.out_buf, '\n');
-            preprocessor_state.source->expansion_line_count[driver_state.line_num] = 1;
+            preprocessor_state.source->expansion_line_nodes[driver_state.line_num].expanded_line_count = 1;
             
         }
         

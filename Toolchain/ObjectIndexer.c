@@ -63,10 +63,10 @@ static int is_psplc_ref_newer_than_staged_output(const char* abs_ref_path,
     // Hash path
     char ext_path_str[MAXPATHLEN];
     ext_path_str[0] = '\0';
-    strcat(ext_path_str, abs_ref_path);
+    strlcat(ext_path_str, abs_ref_path, MAXPATHLEN);
     if (abs_ref_path_ext) {
-        strcat(ext_path_str, ":");
-        strcat(ext_path_str, abs_ref_path_ext);
+        strlcat(ext_path_str, ":", MAXPATHLEN);
+        strlcat(ext_path_str, abs_ref_path_ext, MAXPATHLEN);
     }
     pspl_hash_ctx_t hash_ctx;
     pspl_hash_init(&hash_ctx);
@@ -79,12 +79,12 @@ static int is_psplc_ref_newer_than_staged_output(const char* abs_ref_path,
     // Stat object
     char obj_path[MAXPATHLEN];
     obj_path[0] = '\0';
-    strcat(obj_path, driver_state.staging_path);
-    strcat(obj_path, abs_ref_path_hash_str);
-    strcat(obj_path, "_");
+    strlcat(obj_path, driver_state.staging_path, MAXPATHLEN);
+    strlcat(obj_path, abs_ref_path_hash_str, MAXPATHLEN);
+    strlcat(obj_path, "_", MAXPATHLEN);
     char data_hash_str[PSPL_HASH_STRING_LEN];
     pspl_hash_fmt(data_hash_str, hash);
-    strcat(obj_path, data_hash_str);
+    strlcat(obj_path, data_hash_str, MAXPATHLEN);
     struct stat obj_stat;
     if (stat(obj_path, &obj_stat))
         return 1;
@@ -121,10 +121,10 @@ static int is_source_ref_newer_than_staged_output(const char* abs_ref_path,
     // Hash path
     char ext_path_str[MAXPATHLEN];
     ext_path_str[0] = '\0';
-    strcat(ext_path_str, abs_ref_path);
+    strlcat(ext_path_str, abs_ref_path, MAXPATHLEN);
     if (abs_ref_path_ext) {
-        strcat(ext_path_str, ":");
-        strcat(ext_path_str, abs_ref_path_ext);
+        strlcat(ext_path_str, ":", MAXPATHLEN);
+        strlcat(ext_path_str, abs_ref_path_ext, MAXPATHLEN);
     }
     pspl_hash_ctx_t hash_ctx;
     pspl_hash_init(&hash_ctx);
@@ -156,8 +156,8 @@ static int is_source_ref_newer_than_staged_output(const char* abs_ref_path,
             if (!strncmp(abs_ref_path_hash_str_out, dent->d_name, PSPL_HASH_STRING_LEN-1)) {
                 // Found a match, stat it and set newest
                 matched_path[0] = '\0';
-                strcat(matched_path, driver_state.staging_path);
-                strcat(matched_path, dent->d_name);
+                strlcat(matched_path, driver_state.staging_path, MAXPATHLEN);
+                strlcat(matched_path, dent->d_name, MAXPATHLEN);
                 if (stat(matched_path, &matched_stat))
                     pspl_error(-1, "Unable to stat matched staged output",
                                "while staging `%s`, unable to stat matched output `%s`; "
@@ -191,8 +191,8 @@ static int is_source_ref_newer_than_staged_output(const char* abs_ref_path,
                     if (!strncmp(abs_ref_path_hash_str_out, dent->d_name, PSPL_HASH_STRING_LEN-1)) {
                         // Found a match, delete it
                         matched_path[0] = '\0';
-                        strcat(matched_path, driver_state.staging_path);
-                        strcat(matched_path, dent->d_name);
+                        strlcat(matched_path, driver_state.staging_path, MAXPATHLEN);
+                        strlcat(matched_path, dent->d_name, MAXPATHLEN);
                         unlink(matched_path);
                     }
             }
@@ -1174,7 +1174,7 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
     abs_path[0] = '\0';
     
     // Ensure staging directory exists
-    strcat(abs_path, driver_state.staging_path);
+    strlcat(abs_path, driver_state.staging_path, MAXPATHLEN);
 #   ifdef _WIN32
     if(mkdir(abs_path))
 #   else
@@ -1190,8 +1190,8 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
     // Make path absolute
     if (*path_in != '/') {
         abs_path[0] = '\0';
-        strcat(abs_path, definer->file_enclosing_dir);
-        strcat(abs_path, path_in);
+        strlcat(abs_path, definer->file_enclosing_dir, MAXPATHLEN);
+        strlcat(abs_path, path_in, MAXPATHLEN);
         path_in = abs_path;
     }
     
@@ -1235,9 +1235,9 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
                                                           path_hash_str, newest_data_hash_str, 1);
     char sug_path[MAXPATHLEN];
     sug_path[0] = '\0';
-    strcat(sug_path, driver_state.staging_path);
-    strcat(sug_path, "tmp_");
-    strcat(sug_path, path_hash_str);
+    strlcat(sug_path, driver_state.staging_path, MAXPATHLEN);
+    strlcat(sug_path, "tmp_", MAXPATHLEN);
+    strlcat(sug_path, path_hash_str, MAXPATHLEN);
     
     if (is_newer) {
         
@@ -1281,10 +1281,10 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
         pspl_hash_fmt(final_hash_str, &new_entry->object_hash);
         char final_hash_path_str[MAXPATHLEN];
         final_hash_path_str[0] = '\0';
-        strcat(final_hash_path_str, driver_state.staging_path);
-        strcat(final_hash_path_str, path_hash_str);
-        strcat(final_hash_path_str, "_");
-        strcat(final_hash_path_str, final_hash_str);
+        strlcat(final_hash_path_str, driver_state.staging_path, MAXPATHLEN);
+        strlcat(final_hash_path_str, path_hash_str, MAXPATHLEN);
+        strlcat(final_hash_path_str, "_", MAXPATHLEN);
+        strlcat(final_hash_path_str, final_hash_str, MAXPATHLEN);
         
         // Copy (or move)
         if (converter_hook && !move_output) {
@@ -1345,7 +1345,7 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
     abs_path[0] = '\0';
     
     // Ensure staging directory exists
-    strcat(abs_path, driver_state.staging_path);
+    strlcat(abs_path, driver_state.staging_path, MAXPATHLEN);
 #   ifdef _WIN32
     if(mkdir(abs_path))
 #   else
@@ -1359,8 +1359,8 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
     // Make path absolute
     if (*path_in != '/') {
         abs_path[0] = '\0';
-        strcat(abs_path, definer->file_enclosing_dir);
-        strcat(abs_path, path_in);
+        strlcat(abs_path, definer->file_enclosing_dir, MAXPATHLEN);
+        strlcat(abs_path, path_in, MAXPATHLEN);
         path_in = abs_path;
     }
     
@@ -1440,8 +1440,8 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
         pspl_hash_fmt(final_hash_str, &new_entry->object_hash);
         char final_hash_path_str[MAXPATHLEN];
         final_hash_path_str[0] = '\0';
-        strcat(final_hash_path_str, driver_state.staging_path);
-        strcat(final_hash_path_str, final_hash_str);
+        strlcat(final_hash_path_str, driver_state.staging_path, MAXPATHLEN);
+        strlcat(final_hash_path_str, final_hash_str, MAXPATHLEN);
         
         // Write to staging area
         FILE* file = fopen(final_hash_path_str, "w");

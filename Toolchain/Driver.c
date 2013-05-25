@@ -125,11 +125,11 @@ static char* wrap_string(const char* str_in, int indent) {
         num_cols -= 6;
     
     // Space for strings
-    char* cpy_str = malloc(1024);
+    char cpy_str[1024];
     char* result_str = malloc(1024);
     
     // Copy string
-    strcpy(cpy_str, str_in);
+    strlcpy(cpy_str, str_in, 1024);
     
     // Initialise space-tokeniser
     char* save_ptr;
@@ -142,7 +142,7 @@ static char* wrap_string(const char* str_in, int indent) {
     // All-indent
     if (indent == 2) {
         cur_line_col = 6;
-        strcat(result_str, "      ");
+        strlcat(result_str, "      ", 1024);
     }
     
     for (;;) {
@@ -161,10 +161,10 @@ static char* wrap_string(const char* str_in, int indent) {
         if (word_length >= avail_line_space) {
             if (indent) {
                 cur_line_col = 6;
-                strcat(result_str, "\n      ");
+                strlcat(result_str, "\n      ", 1024);
             } else {
                 cur_line_col = 0;
-                strcat(result_str, "\n");
+                strlcat(result_str, "\n", 1024);
             }
             avail_line_space = num_cols-cur_line_col;
             //if (!cur_line)
@@ -176,18 +176,17 @@ static char* wrap_string(const char* str_in, int indent) {
         if (word_length >= avail_line_space) {
             char truncated_word[512];
             truncate_string(word_str, (avail_line_space>500)?500:avail_line_space, truncated_word);
-            strcat(result_str, truncated_word);
+            strlcat(result_str, truncated_word, 1024);
             cur_line_col = num_cols;
         } else {
-            strcat(result_str, word_str);
-            strcat(result_str, " ");
+            strlcat(result_str, word_str, 1024);
+            strlcat(result_str, " ", 1024);
             cur_line_col += word_length+1;
         }
         
         word_str = strtok_r(save_ptr, " ", &save_ptr);
     }
     
-    free(cpy_str);
     char* last_space = strrchr(result_str, ' ');
     if (last_space)
         *last_space = '\0';
@@ -959,6 +958,16 @@ int main(int argc, char** argv) {
             }
             
         }
+    }
+    
+    // We need at least one source
+    if (!driver_opts.source_c) {
+        if (xterm_colour)
+            fprintf(stderr, "Please provide "BOLD"at least one"SGR0" input source\n\n");
+        else
+            fprintf(stderr, "Please provide at least one input source\n\n");
+        print_help(argv[0]);
+        return -1;
     }
     
     // We can't compile *and* preprocess

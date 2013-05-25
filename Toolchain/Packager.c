@@ -120,10 +120,10 @@ static void prepare_staged_file(pspl_indexer_entry_t* ent) {
     // Concatenate together path
     char* path = ent->file_path;
     path[0] = '\0';
-    strcat(path, ent->stub_source_path);
+    strlcat(path, ent->stub_source_path, MAXPATHLEN);
     if (ent->stub_source_path_ext) {
-        strcat(path, ":");
-        strcat(path, ent->stub_source_path_ext);
+        strlcat(path, ":", MAXPATHLEN);
+        strlcat(path, ent->stub_source_path_ext, MAXPATHLEN);
     }
     
     // Hash path
@@ -137,12 +137,12 @@ static void prepare_staged_file(pspl_indexer_entry_t* ent) {
     
     // Now concatenate staged path
     path[0] = '\0';
-    strcat(path, driver_state.staging_path);
-    strcat(path, path_hash_str);
-    strcat(path, "_");
+    strlcat(path, driver_state.staging_path, MAXPATHLEN);
+    strlcat(path, path_hash_str, MAXPATHLEN);
+    strlcat(path, "_", MAXPATHLEN);
     char object_hash_str[PSPL_HASH_STRING_LEN];
     pspl_hash_fmt(object_hash_str, &ent->object_hash);
-    strcat(path, object_hash_str);
+    strlcat(path, object_hash_str, MAXPATHLEN);
     
     // Open file, make sure it still exists
     FILE* file = fopen(path, "r");
