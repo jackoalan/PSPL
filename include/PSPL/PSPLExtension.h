@@ -33,7 +33,7 @@ typedef struct _pspl_extension {
 
 
 /* Common platform description structure */
-typedef struct _pspl_runtime_platform {
+typedef struct _pspl_platform {
     
     // Short platform name
     const char* platform_name;

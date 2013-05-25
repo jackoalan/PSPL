@@ -1,6 +1,49 @@
+include_directories(${PSPL_SOURCE_DIR})
+
+# Hashing library define
+unset(HASH_LIB)
+if(PSPL_RUNTIME_HASHING STREQUAL BUILTIN)
+  add_definitions(-D PSPL_HASHING_BUILTIN)
+  set(HASH_LIB hash_builtin)
+elseif(PSPL_RUNTIME_HASHING STREQUAL COMMON_CRYPTO)
+  add_definitions(-D PSPL_HASHING_COMMON_CRYPTO)
+elseif(PSPL_RUNTIME_HASHING STREQUAL OPENSSL)
+  add_definitions(-D PSPL_HASHING_OPENSSL)
+  find_library(HASH_LIB crypto)
+elseif(PSPL_RUNTIME_HASHING STREQUAL WINDOWS)
+  add_definitions(-D PSPL_HASHING_WINDOWS)
+endif()
 
 # Ensure typefile for *specified runtime platform only* is included in runtime sources
 list(GET pspl_platform_typefile_list ${runtime_idx} CONF_RUNTIME_PLATFORM_TYPEFILE)
-configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_platform_typefile.h.in
-               pspl_platform_typefile.h)
+configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_runtime_platform_typefile.h.in
+               pspl_runtime_platform_typefile.h)
                
+# Ensure toolchain macro set for `pspl_available_extensions`
+set_source_files_properties(${PSPL_BINARY_DIR}/pspl_available_extensions.c PROPERTIES 
+                            COMPILE_DEFINITIONS PSPL_RUNTIME=1 
+                            COMPILE_FLAGS "-include pspl_runtime_platform_typefile.h")
+
+# Define runtime library
+add_library(pspl-rt STATIC
+            RuntimeCore.c
+            ${PSPL_BINARY_DIR}/pspl_available_extensions.c)
+
+# Link runtime extensions
+target_link_libraries(pspl-rt 
+                      ${PSPL_RUNTIME_PLATFORM}_runplat 
+                      ${pspl_extension_runtime_link_list} 
+                      ${HASH_LIB} 
+                      pspl_common)
+
+# Export runtime for use in other CMake Projects
+export(TARGETS pspl-rt
+       ${PSPL_RUNTIME_PLATFORM}_runplat 
+       ${pspl_extension_runtime_link_list} 
+       ${HASH_LIB} 
+       pspl_common 
+       FILE pspl-rt-targets.cmake)
+file(TO_CMAKE_PATH pspl-rt-targets.cmake PSPL_RT_TARGET_FILE)
+configure_file(${PSPL_SOURCE_DIR}/cmake/PSPLConfig.cmake.in
+               PSPLConfig.cmake)
+export(PACKAGE PSPL)

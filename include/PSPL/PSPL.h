@@ -46,7 +46,7 @@ typedef struct {
     
     // Platform-specific shader object
     // (initialised by load hook, freed by unload hook, bound by bind hook)
-    pspl_runtime_platform_shader_object_t native_shader;
+    pspl_shader_object_t native_shader;
     
     // Opaque object pointer used by PSPL's runtime internals
     const void* pspl_shader_internals;

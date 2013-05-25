@@ -54,10 +54,25 @@ endif()
 
 add_subdirectory(Hash)
 
+# Common routines
+add_library(pspl_common STATIC PSPLCommon.c)
+
 
 ############################
 # Platforms and Extensions #
 ############################
+
+# Runtime platform options
+if(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
+  set(PSPL_RUNTIME_PLATFORM GL2 CACHE STRING 
+      "Select which platform to build runtime for [${pspl_platform_list}] (GL2 selected by default)")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL Windows)
+  set(PSPL_RUNTIME_PLATFORM D3D9 CACHE STRING 
+      "Select which platform to build runtime for [${pspl_platform_list}] (D3D9 selected by default)")
+else()
+  set(PSPL_RUNTIME_PLATFORM "" CACHE STRING 
+      "Select which platform to build runtime for [${pspl_platform_list}] (Runtime not built by default)")
+endif()
 
 # Set out platform list scope here
 set(pspl_platform_list "" CACHE INTERNAL
@@ -113,7 +128,6 @@ if(len GREATER 0)
     endif()
     
     list(APPEND pspl_extension_toolchain_link_list ${PLAT_NAME}_toolplat)
-    list(APPEND pspl_extension_runtime_link_list ${PLAT_NAME}_runplat)
 
     # Generate extension definition
     configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_platform_def.h.in
@@ -180,20 +194,6 @@ configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_available_extensions.c.in
 ################
 # Core Targets #
 ################
-
-
-
-# Runtime platform options
-if(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
-  set(PSPL_RUNTIME_PLATFORM GL2LE CACHE STRING 
-      "Select which platform to build runtime for [${pspl_platform_list}] (GL2LE selected by default)")
-elseif(${CMAKE_SYSTEM_NAME} STREQUAL Windows)
-  set(PSPL_RUNTIME_PLATFORM D3D9LE CACHE STRING 
-      "Select which platform to build runtime for [${pspl_platform_list}] (D3D9LE selected by default)")
-else()
-  set(PSPL_RUNTIME_PLATFORM "" CACHE STRING 
-      "Select which platform to build runtime for [${pspl_platform_list}] (Runtime not built by default)")
-endif()
 
 
 

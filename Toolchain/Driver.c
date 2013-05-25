@@ -62,26 +62,6 @@ static char cwd[MAXPATHLEN];
 uint8_t xterm_colour = 0;
 
 
-/* Putting these here */
-void pspl_hash_fmt(char* out, const pspl_hash* hash) {
-    int i;
-    for (i=0 ; i<sizeof(pspl_hash) ; ++i) {
-        sprintf(out, "%02X", (unsigned int)(hash->hash[i]));
-        out += 2;
-    }
-}
-void pspl_hash_parse(pspl_hash* out, const char* hash_str) {
-    int i;
-    char byte_str[3];
-    byte_str[2] = '\0';
-    for (i=0 ; i<sizeof(pspl_hash) ; ++i) {
-        strncpy(byte_str, hash_str, 2);
-        out->hash[i] = (uint8_t)strtol(byte_str, NULL, 16);
-        hash_str += 2;
-    }
-}
-
-
 #pragma mark Terminal Utils
 
 /* Way to get terminal width (for line wrapping) */
@@ -628,6 +608,7 @@ static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const cha
     
     // Set Header and verify magic
     const pspl_header_t* pspl_head = (pspl_header_t*)psplc->psplc_data;
+    check_psplc_underflow(psplc, pspl_head+sizeof(pspl_header_t));
     if (memcmp(pspl_head->magic, "PSPL", 4))
         pspl_error(-1, "Invalid PSPLC magic",
                    "`%s` is not a valid PSPLC file", psplc->file_path);
@@ -650,9 +631,11 @@ static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const cha
     pspl_off_header_t* pspl_off_head = NULL;
     if (IS_PSPLC_BI) {
         pspl_off_header_bi_t* bi_head = (pspl_off_header_bi_t*)(psplc->psplc_data + sizeof(pspl_header_t));
+        check_psplc_underflow(psplc, bi_head+sizeof(pspl_off_header_bi_t));
         pspl_off_head = &bi_head->native;
     } else {
         pspl_off_head = (pspl_off_header_t*)(psplc->psplc_data + sizeof(pspl_header_t));
+        check_psplc_underflow(psplc, pspl_off_head+sizeof(pspl_off_header_t));
         if (IS_PSPLC_SWAPPED)
             SWAP_PSPL_OFF_HEADER_T(pspl_off_head);
     }
@@ -671,19 +654,6 @@ static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const cha
             pspl_error(-1, "PSPLC-required extension not available",
                        "PSPLC `%s` requested `%s` which is not available in this build of PSPL",
                        psplc->file_path, psplc_extension_name);
-        
-        // Ensure this isn't a redundant add (set enforcement)
-        /*
-        for (k=0 ; k<j ; ++k) {
-            if (psplc->required_extension_set[k] == ext) {
-                --j;
-                --psplc_extension_count;
-                break;
-            }
-        }
-        if (k<j)
-            continue;
-         */
         
         // Add to set
         psplc->required_extension_set[j] = ext;
@@ -708,19 +678,6 @@ static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const cha
             pspl_error(-1, "PSPLC-required target platform not available",
                        "PSPLC `%s` requested `%s` which is not available in this build of PSPL",
                        psplc->file_path, psplc_platform_name);
-        
-        // Ensure this isn't a redundant add (set enforcement)
-        /*
-        for (k=0 ; k<j ; ++k) {
-            if (psplc->required_platform_set[k] == plat) {
-                --j;
-                --psplc_platform_count;
-                break;
-            }
-        }
-        if (k<j)
-            continue;
-         */
         
         // Add to set
         psplc->required_platform_set[j] = plat;

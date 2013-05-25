@@ -166,6 +166,7 @@ typedef void(*pspl_toolchain_line_read_hook)(const pspl_toolchain_context_t* dri
 extern const unsigned long PSPL_BULLET_MASK;
 extern const unsigned long PSPL_BULLET_STAR;
 extern const unsigned long PSPL_BULLET_DASH;
+#define PSPL_BULLET_PLUS PSPL_BULLET_MASK
 
 /* Indentation context type */
 typedef struct _pspl_toolchain_indent_read {
