@@ -186,6 +186,7 @@ static void pspl_include(const char* path,
                          pspl_toolchain_driver_opts_t* driver_opts) {
     pspl_toolchain_driver_source_t* save_source = preprocessor_state.source;
     unsigned int line_num_save = driver_state.line_num;
+    const char* file_name_save = driver_state.file_name;
     
     // New source in heap for included PSPL
     pspl_toolchain_driver_source_t* include_source = malloc(sizeof(pspl_toolchain_driver_source_t));
@@ -209,6 +210,7 @@ static void pspl_include(const char* path,
     
     // File name
     include_source->file_name = last_slash+1;
+    driver_state.file_name = include_source->file_name;
     
     // Load original source
     FILE* source_file = fopen(abs_path, "r");
@@ -217,11 +219,11 @@ static void pspl_include(const char* path,
                    "`%s` is unavailable for reading; errno %d (%s)",
                    abs_path, errno, strerror(errno));
     fseek(source_file, 0, SEEK_END);
-    long source_len = ftell(source_file);
+    size_t source_len = ftell(source_file);
     fseek(source_file, 0, SEEK_SET);
     if (source_len > PSPL_MAX_SOURCE_SIZE)
         pspl_error(-1, "PSPL Source file exceeded filesize limit",
-                   "source file `%s` is %l bytes in length; exceeding %u byte limit",
+                   "source file `%s` is %zu bytes in length; exceeding %u byte limit",
                    abs_path, source_len, (unsigned)PSPL_MAX_SOURCE_SIZE);
     char* source_buf = malloc(source_len+1);
     if (!source_buf)
@@ -233,7 +235,7 @@ static void pspl_include(const char* path,
     fclose(source_file);
     if (read_len != source_len)
         pspl_error(-1, "Didn't read expected amount from PSPL source",
-                   "expected %u bytes; read %u bytes", source_len, read_len);
+                   "expected %zu bytes; read %zu bytes", source_len, read_len);
     
     // Run preprocessor recursively
     pspl_run_preprocessor(include_source, ext_driver_ctx, driver_opts, 0);
@@ -246,6 +248,7 @@ static void pspl_include(const char* path,
     // Restore
     preprocessor_state.source = save_source;
     driver_state.line_num = line_num_save;
+    driver_state.file_name = file_name_save;
 }
 
 /* Get preprocessor hook from directive name

@@ -38,7 +38,7 @@ static void error(unsigned int directive_argc,
         strlcat(err_buf, directive_argv[i], ERR_BUF_LEN);
         print_space = 1;
     }
-    pspl_error(-1, "User-defined [ERROR] in source", err_buf);
+    pspl_error(-1, "User-defined [ERROR] in source", "%s", err_buf);
 }
 
 static void warn(unsigned int directive_argc,
@@ -53,7 +53,7 @@ static void warn(unsigned int directive_argc,
         strlcat(err_buf, directive_argv[i], ERR_BUF_LEN);
         print_space = 1;
     }
-    pspl_warn("User-defined [WARNING] in source", err_buf);
+    pspl_warn("User-defined [WARNING] in source", "%s", err_buf);
 }
 
 /* Process a hook call from the preprocessor */

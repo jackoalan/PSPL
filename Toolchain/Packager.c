@@ -403,7 +403,7 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
             read_len = fread(buf, 1, (rem_len>8196)?8196:rem_len, file);
             if (!read_len)
                 pspl_error(-1, "Unexpected end of staged file",
-                           "`%s` ended with %u bytes to go",
+                           "`%s` ended with %zu bytes to go",
                            ent->file_path, rem_len);
             fwrite(buf, 1, read_len, psplp_file_out);
             rem_len -= read_len;

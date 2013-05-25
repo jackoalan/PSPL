@@ -28,7 +28,7 @@ static void pspl_buffer_check_cap(pspl_buffer_t* buf,
         void* new_buf = realloc(buf->buf, (buf->buf_cap)*2);
         if (!new_buf)
             pspl_error(-1, "Unable to reallocate data buffer",
-                       "Attempted to reallocate %u bytes; errno %d: %s",
+                       "Attempted to reallocate %lu bytes; errno %d: %s",
                        (buf->buf_cap)*2, errno, strerror(errno));
         
         // Update buffer state with larger buffer
@@ -44,7 +44,7 @@ void pspl_buffer_init(pspl_buffer_t* buf, size_t cap) {
     buf->buf = malloc(cap);
     if (!buf->buf)
         pspl_error(-1, "Unable to allocate data buffer",
-                   "Attempted to allocate %u bytes; errno %d: %s",
+                   "Attempted to allocate %zu bytes; errno %d: %s",
                    cap, errno, strerror(errno));
     buf->buf_cur = buf->buf;
     buf->buf_cap = cap;

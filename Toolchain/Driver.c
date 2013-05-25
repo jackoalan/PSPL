@@ -127,6 +127,7 @@ static char* wrap_string(const char* str_in, int indent) {
     // Space for strings
     char cpy_str[1024];
     char* result_str = malloc(1024);
+    result_str[0] = '\0';
     
     // Copy string
     strlcpy(cpy_str, str_in, 1024);
@@ -172,17 +173,9 @@ static char* wrap_string(const char* str_in, int indent) {
             ++cur_line;
         }
         
-        // Handle case where one word is longer than a line (maybe it's German)
-        if (word_length >= avail_line_space) {
-            char truncated_word[512];
-            truncate_string(word_str, (avail_line_space>500)?500:avail_line_space, truncated_word);
-            strlcat(result_str, truncated_word, 1024);
-            cur_line_col = num_cols;
-        } else {
-            strlcat(result_str, word_str, 1024);
-            strlcat(result_str, " ", 1024);
-            cur_line_col += word_length+1;
-        }
+        strlcat(result_str, word_str, 1024);
+        strlcat(result_str, " ", 1024);
+        cur_line_col += word_length+1;
         
         word_str = strtok_r(save_ptr, " ", &save_ptr);
     }
@@ -281,7 +274,7 @@ static void print_help(const char* prog_name) {
         // Now print usage info
         fprintf(stderr, "Command Synopsis:\n");
         const char* help =
-        wrap_string("pspl [-o out-path] [-E|-c] [-G reflist-out-path] [-S staging-root-path] [-D def-name[=def-value]]... [-T target-platform]... source1 [source2 [sourceN]]...", 1);
+        wrap_string("pspl [-o out-path] [-E|-c] [-G reflist-out-path] [-S staging-root-path] [-D def-name[=def-value]]... [-T target-platform]... [-e <LITTLE,BIG,BI>] source1 [source2 [sourceN]]...", 1);
         fprintf(stderr, "%s\n\n\n", help);
         free((char*)help);
         
@@ -326,7 +319,8 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
         msg_str = new_msg;
     }
     
-    char err_head_buf[256] = {0};
+    char err_head_buf[256];
+    err_head_buf[0] = '\0';
     char* err_head = err_head_buf;
     if (xterm_colour) {
         switch (driver_state.pspl_phase) {
@@ -340,7 +334,7 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
                 break;
             case PSPL_PHASE_COMPILE:
                 snprintf(err_head, 255, BOLD RED"ERROR WHILE "CYAN"COMPILING "BLUE"`%s`"GREEN" LINE %u:\n"SGR0,
-                        driver_state.file_name, driver_state.line_num);
+                        driver_state.file_name, driver_state.line_num+1);
                 err_head = wrap_string(err_head, 1);
                 break;
             case PSPL_PHASE_PACKAGE:
@@ -362,12 +356,12 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
                 break;
             case PSPL_PHASE_PREPROCESS:
                 snprintf(err_head, 255, "ERROR WHILE PREPROCESSING `%s` LINE %u:\n",
-                        driver_state.file_name, driver_state.line_num);
+                        driver_state.file_name, driver_state.line_num+1);
                 err_head = wrap_string(err_head, 1);
                 break;
             case PSPL_PHASE_COMPILE:
                 snprintf(err_head, 255, "ERROR WHILE COMPILING `%s` LINE %u:\n",
-                        driver_state.file_name, driver_state.line_num);
+                        driver_state.file_name, driver_state.line_num+1);
                 err_head = wrap_string(err_head, 1);
                 break;
             case PSPL_PHASE_PACKAGE:
@@ -415,7 +409,8 @@ void pspl_warn(const char* brief, const char* msg, ...) {
         msg_str = new_msg;
     }
     
-    char err_head_buf[256] = {0};
+    char err_head_buf[256];
+    err_head_buf[0] = '\0';
     char* err_head = err_head_buf;
     if (xterm_colour) {
         switch (driver_state.pspl_phase) {
@@ -481,7 +476,7 @@ void check_psplc_underflow(pspl_toolchain_driver_psplc_t* psplc, const void* cur
     size_t delta = cur_ptr-(void*)psplc->psplc_data;
     if (delta > psplc->psplc_data_len)
         pspl_error(-1, "PSPLC underflow detected",
-                   "PSPLC `%s` is not long enough to load needed data @0x%x (%u)",
+                   "PSPLC `%s` is not long enough to load needed data @0x%zx (%u)",
                    psplc->file_path, delta, (unsigned)delta);
 }
 
@@ -599,8 +594,6 @@ static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const cha
     char* last_slash = strrchr(abs_path, '/');
     psplc->file_enclosing_dir = malloc(MAXPATHLEN);
     sprintf((char*)psplc->file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
-    if (abs_path != psplc->file_path)
-        free((void*)abs_path);
     
     // File name
     psplc->file_name = last_slash+1;
@@ -609,11 +602,11 @@ static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const cha
     // Load PSPLC object data
     FILE* psplc_file = fopen(path, "r");
     fseek(psplc_file, 0, SEEK_END);
-    long psplc_len = ftell(psplc_file);
+    size_t psplc_len = ftell(psplc_file);
     fseek(psplc_file, 0, SEEK_SET);
     if (psplc_len > PSPL_MAX_SOURCE_SIZE)
         pspl_error(-1, "PSPLC file exceeded filesize limit",
-                   "PSPLC file `%s` is %l bytes in length; exceeding %u byte limit",
+                   "PSPLC file `%s` is %zu bytes in length; exceeding %u byte limit",
                    path, psplc_len, (unsigned)PSPL_MAX_SOURCE_SIZE);
     uint8_t* psplc_buf = malloc(psplc_len+1);
     if (!psplc_buf)
@@ -626,7 +619,7 @@ static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const cha
     fclose(psplc_file);
     if (read_len != psplc_len)
         pspl_error(-1, "Didn't read expected amount from PSPLC",
-                   "expected %u bytes; read %u bytes", psplc_len, read_len);
+                   "expected %lu bytes; read %zu bytes", psplc_len, read_len);
     
     // Verify file size (at least a header in length)
     if (psplc->psplc_data_len < sizeof(pspl_header_t))
@@ -963,9 +956,9 @@ int main(int argc, char** argv) {
     // We need at least one source
     if (!driver_opts.source_c) {
         if (xterm_colour)
-            fprintf(stderr, "Please provide "BOLD"at least one"SGR0" input source\n\n");
+            fprintf(stderr, BOLD"*** Please provide "UNDERLINE"at least one"NORMAL BOLD" input source ***\n\n"SGR0);
         else
-            fprintf(stderr, "Please provide at least one input source\n\n");
+            fprintf(stderr, "*** Please provide at least one input source ***\n\n");
         print_help(argv[0]);
         return -1;
     }
@@ -1130,8 +1123,6 @@ int main(int argc, char** argv) {
             char* last_slash = strrchr(abs_path, '/');
             source->file_enclosing_dir = malloc(MAXPATHLEN);
             sprintf((char*)source->file_enclosing_dir, "%.*s", (int)(last_slash-abs_path+1), abs_path);
-            if (abs_path != source->file_path)
-                free((void*)abs_path);
             
             // File name
             source->file_name = last_slash+1;
@@ -1172,11 +1163,11 @@ int main(int argc, char** argv) {
                            "`%s` is unavailable for reading; errno %d (%s)",
                            driver_opts.source_a[i], errno, strerror(errno));
             fseek(source_file, 0, SEEK_END);
-            long source_len = ftell(source_file);
+            size_t source_len = ftell(source_file);
             fseek(source_file, 0, SEEK_SET);
             if (source_len > PSPL_MAX_SOURCE_SIZE)
                 pspl_error(-1, "PSPL Source file exceeded filesize limit",
-                           "source file `%s` is %l bytes in length; exceeding %u byte limit",
+                           "source file `%s` is %zu bytes in length; exceeding %u byte limit",
                            driver_opts.source_a[i], source_len, (unsigned)PSPL_MAX_SOURCE_SIZE);
             char* source_buf = malloc(source_len+1);
             if (!source_buf)
@@ -1188,7 +1179,7 @@ int main(int argc, char** argv) {
             fclose(source_file);
             if (read_len != source_len)
                 pspl_error(-1, "Didn't read expected amount from PSPL source",
-                           "expected %u bytes; read %u bytes", source_len, read_len);
+                           "expected %lu bytes; read %zu bytes", source_len, read_len);
             
             
             

@@ -24,9 +24,9 @@
  * *warning* or *error* and bring it to the art pipeline executor's attention.
  */
 
-void pspl_error(int exit_code, const char* brief, const char* msg, ...);
+void pspl_error(int exit_code, const char* brief, const char* msg, ...) __printflike(3, 4);
 
-void pspl_warn(const char* brief, const char* msg, ...);
+void pspl_warn(const char* brief, const char* msg, ...) __printflike(2, 3);
 
 
 #pragma mark Driver Context
