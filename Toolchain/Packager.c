@@ -169,8 +169,13 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
     for (i=0 ; i<ctx->plat_count ; ++i)
         psplp_endianness |= ctx->plat_array[i]->byte_order;
     psplp_endianness &= PSPL_BI_ENDIAN;
-    if (!psplp_endianness)
-        pspl_error(-1, "Unable to produce PSPLP", "invalid endianness specified");
+    if (!psplp_endianness) {
+#       if __LITTLE_ENDIAN__
+        psplp_endianness = PSPL_LITTLE_ENDIAN;
+#       elif __BIG_ENDIAN__
+        psplp_endianness = PSPL_BIG_ENDIAN;
+#       endif
+    }
     
     // Table offset accumulations
     uint32_t acc = sizeof(pspl_header_t);

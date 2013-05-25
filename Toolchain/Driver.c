@@ -824,11 +824,7 @@ int main(int argc, char** argv) {
     }
     
     // Default endianness
-#   if __LITTLE_ENDIAN__
-    driver_opts.default_endianness = PSPL_LITTLE_ENDIAN;
-#   elif __BIG_ENDIAN__
-    driver_opts.default_endianness = PSPL_BIG_ENDIAN;
-#   endif
+    driver_opts.default_endianness = PSPL_UNSPEC_ENDIAN;
     
     // Initial argument pass
     char expected_arg = 0;

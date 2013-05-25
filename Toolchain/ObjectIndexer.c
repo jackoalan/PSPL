@@ -1955,8 +1955,13 @@ void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
     for (i=0 ; i<ctx->plat_count ; ++i)
         psplc_endianness |= ctx->plat_array[i]->byte_order;
     psplc_endianness &= PSPL_BI_ENDIAN;
-    if (!psplc_endianness)
-        pspl_error(-1, "Unable to produce PSPLC", "invalid endianness specified");
+    if (!psplc_endianness) {
+#       if __LITTLE_ENDIAN__
+        psplc_endianness = PSPL_LITTLE_ENDIAN;
+#       elif __BIG_ENDIAN__
+        psplc_endianness = PSPL_BIG_ENDIAN;
+#       endif
+    }
     
     // Table offset accumulations
     uint32_t acc = sizeof(pspl_header_t);
