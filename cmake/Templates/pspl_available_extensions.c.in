@@ -10,18 +10,14 @@
 @CONF_PLAT_DEF_INCLUDES@
 
 /* Master platform list (NULL-terminated) */
-pspl_platform_t* pspl_available_target_platforms[] =
-{@CONF_PLAT_ARRAY_INIT_LIST@
-    NULL
-};
+pspl_platform_t* pspl_available_target_platforms[] = {@CONF_PLAT_ARRAY_INIT_LIST@
+    NULL};
 
 
 /* Extension definitions */
 @CONF_EXT_DEF_INCLUDES@
 
 /* Master extension list (NULL-terminated) */
-pspl_extension_t* pspl_available_extensions[] =
-{@CONF_EXT_ARRAY_INIT_LIST@
-    NULL
-};
+pspl_extension_t* pspl_available_extensions[] = {@CONF_EXT_ARRAY_INIT_LIST@
+    NULL};
 

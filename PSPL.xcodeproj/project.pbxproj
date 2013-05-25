@@ -28,6 +28,7 @@
 		E4E4918517510B4D006FCA59 /* gl_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4917417510956006FCA59 /* gl_runtime.c */; settings = {COMPILER_FLAGS = "-DPSPL_RUNTIME"; }; };
 		E4E4918617510B59006FCA59 /* d3d_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4917A175109DD006FCA59 /* d3d_runtime.c */; settings = {COMPILER_FLAGS = "-DPSPL_RUNTIME"; }; };
 		E4E4918717510B5D006FCA59 /* gx_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */; settings = {COMPILER_FLAGS = "-DPSPL_RUNTIME"; }; };
+		E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4916E17510684006FCA59 /* PSPLCommon.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -509,6 +510,7 @@
 				E4E4918517510B4D006FCA59 /* gl_runtime.c in Sources */,
 				E4E4918617510B59006FCA59 /* d3d_runtime.c in Sources */,
 				E4E4918717510B5D006FCA59 /* gx_runtime.c in Sources */,
+				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -634,6 +636,10 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					.,
+					include,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -662,6 +668,10 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					.,
+					include,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;

@@ -6,9 +6,7 @@
 
 #include "@CONF_RUNTIME_PLATFORM_TYPEFILE@"
 
-typedef union {
-    @PSPL_RUNTIME_PLATFORM@_shader_object_t @PSPL_RUNTIME_PLATFORM@_shader;
-} pspl_shader_object_t;
+typedef @PSPL_RUNTIME_PLATFORM@_shader_object_t pspl_shader_object_t;
 
 #endif // _PSPL_PLATFORM_TYPEFILE_
 
