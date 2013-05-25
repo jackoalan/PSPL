@@ -240,11 +240,6 @@ static void pspl_include(const char* path,
     // Run preprocessor recursively
     pspl_run_preprocessor(include_source, ext_driver_ctx, driver_opts, 0);
     
-    if (abs_path != path)
-        free((void*)abs_path);
-    free(source_buf);
-    free((void*)include_source->file_enclosing_dir);
-    
     // Restore
     preprocessor_state.source = save_source;
     driver_state.line_num = line_num_save;
