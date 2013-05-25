@@ -86,7 +86,7 @@ usage modes become clear. Similar to C's *object compiling* and *linking* conven
 ### Command Synopsis
 
 ```
-pspl [-o out-path] [-E|-c] [-G reflist-out-path] [-S staging-root-path] [-D def-name[=def-value]]... [-T target-platform]... source1 [source2 [sourceN]]...
+pspl [-o out-path] [-E|-c] [-G reflist-out-path] [-S staging-root-path] [-D def-name[=def-value]]... [-T target-platform]... [-e <LITTLE,BIG,BI>] source1 [source2 [sourceN]]...
 ```
 
 
@@ -145,7 +145,31 @@ will emit packages or compiled objects for the selected platform(s). The name of
 platform is case-sensitive, and the user must select one from the list presented in 
 the built-in-help of `pspl` (run with no arguments or `-h`).
 
-To target multiple platforms, repeat the `-T` flag for each platform.
+To target multiple platforms, repeat the `-T` flag for each platform. 
+
+Note that it is valid to generate *platform-free* PSPL files by not using this option.
+Platform-free files will not be bindable using the PSPL runtime's common shader
+binding API. This may be used to create functional PSPL packages that 
+*have nothing to do with shaders*. In these cases, the functionality relies on 
+a comprehensive usage of PSPL extensions. The file-packaging mechanic of PSPL continues
+to be available.
+
+
+### Default Endianness (`-e <LITTLE,BIG,BI>`)
+
+Some rigidly-defined graphics platforms specify a platform-native byte-order. For example,
+*GX* enforces big-endian as its byte-order since it's guaranteed to be running on PowerPC
+set in big-endian mode. In these cases, the PSPL byte order is implied when the relevant target
+platform is selected.
+
+More general graphics platforms (like *OpenGL*) have not specified a "native" byte-order
+(since the standard is able to be implemented on both byte-orderings). In these cases,
+PSPL will select byte-ordering based on the CPU the 
+*Toolchain is currently running on*. 
+
+If the byte-order of the Toolchain machine *does not match* the byte-order of the target 
+runtime machine, the `-e` flag may be used to manually specify the byte-order that should
+be used for generating the PSPL files. The value of the argument should be one of [LITTLE,BIG,BI].
 
 
 ### Output Path (`-o out-path`)
