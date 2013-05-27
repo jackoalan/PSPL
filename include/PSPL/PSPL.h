@@ -84,7 +84,7 @@ int pspl_load_package_membuf(const void* package_data, size_t package_len,
 void pspl_unload_package(const pspl_package_t* package);
 
 
-#pragma mark Shader Objects
+#pragma mark PSPLC Objects
 
 /* PSPLC runtime object (from PSPLC) 
  * Holds state information about object during runtime */
@@ -98,28 +98,28 @@ typedef struct {
     pspl_platform_shader_object_t native_shader;
     
     // Opaque object pointer used by PSPL's runtime internals
-    const void* pspl_shader_internals;
+    const void* pspl_internals;
     
 } psplc_object_t;
 
-/* Count shader objects within package */
-unsigned int pspl_count_shader_objects(const pspl_package_t* package);
+/* Count PSPLC objects within package */
+unsigned int pspl_count_psplc_objects(const pspl_package_t* package);
 
-/* Enumerate shader objects within package 
+/* Enumerate PSPLC objects within package 
  * returning negative value from hook will cancel enumeration */
-typedef int(*pspl_enumerate_shader_object_hook)(const psplc_object_t* shader_object);
-void pspl_enumerate_shader_objects(const pspl_package_t* package,
-                                   pspl_enumerate_shader_object_hook hook);
+typedef int(*pspl_enumerate_psplc_object_hook)(const psplc_object_t* psplc_object);
+void pspl_enumerate_psplc_objects(const pspl_package_t* package,
+                                  pspl_enumerate_psplc_object_hook hook);
 
-/* Get shader object from key string and optionally perform retain */
-const psplc_object_t* pspl_get_shader_object_from_key(const char* key, int retain);
+/* Get PSPLC object from key string and optionally perform retain */
+const psplc_object_t* pspl_get_psplc_object_from_key(const char* key, int retain);
 
-/* Get shader object from hash and optionally perform retain */
-const psplc_object_t* pspl_get_shader_object_from_hash(pspl_hash* hash, int retain);
+/* Get PSPLC object from hash and optionally perform retain */
+const psplc_object_t* pspl_get_psplc_object_from_hash(pspl_hash* hash, int retain);
 
-/* Retain/release shader object */
-void pspl_retain_shader_object(const psplc_object_t* shader_object);
-void pspl_release_shader_object(const psplc_object_t* shader_object);
+/* Retain/release PSPLC object */
+void pspl_retain_psplc_object(const psplc_object_t* psplc_object);
+void pspl_release_psplc_object(const psplc_object_t* psplc_object);
 
 
 #pragma mark Archived Files
@@ -136,7 +136,7 @@ typedef struct {
     const void* file_data;
     
     // Opaque object pointer used by PSPL's runtime internals
-    const void* pspl_shader_internals;
+    const void* pspl_internals;
     
 } pspl_archived_file_t;
 

@@ -76,35 +76,35 @@ void pspl_unload_package(const pspl_package_t* package) {
 }
 
 
-#pragma mark Shader Objects
+#pragma mark PSPLC Objects
 
-/* Count shader objects within package */
-unsigned int pspl_count_shader_objects(const pspl_package_t* package) {
+/* Count PSPLC objects within package */
+unsigned int pspl_count_psplc_objects(const pspl_package_t* package) {
     
 }
 
-/* Enumerate shader objects within package
+/* Enumerate PSPLC objects within package
  * returning negative value from hook will cancel enumeration */
-void pspl_enumerate_shader_objects(const pspl_package_t* package,
-                                   pspl_enumerate_shader_object_hook hook) {
+void pspl_enumerate_psplc_objects(const pspl_package_t* package,
+                                  pspl_enumerate_psplc_object_hook hook) {
     
 }
 
-/* Get shader object from key string and optionally perform retain */
-const psplc_object_t* pspl_get_shader_object_from_key(const char* key, int retain) {
+/* Get PSPLC object from key string and optionally perform retain */
+const psplc_object_t* pspl_get_psplc_object_from_key(const char* key, int retain) {
     
 }
 
-/* Get shader object from hash and optionally perform retain */
-const psplc_object_t* pspl_get_shader_object_from_hash(pspl_hash* hash, int retain) {
+/* Get PSPLC object from hash and optionally perform retain */
+const psplc_object_t* pspl_get_psplc_object_from_hash(pspl_hash* hash, int retain) {
     
 }
 
-/* Retain/release shader object */
-void pspl_retain_shader_object(const psplc_object_t* shader_object) {
+/* Retain/release PSPLC object */
+void pspl_retain_psplc_object(const psplc_object_t* psplc_object) {
     
 }
-void pspl_release_shader_object(const psplc_object_t* shader_object) {
+void pspl_release_psplc_object(const psplc_object_t* psplc_object) {
     
 }
 
@@ -135,4 +135,5 @@ void pspl_retain_archived_file(const pspl_archived_file_t* archived_file) {
 void pspl_release_archived_file(const pspl_archived_file_t* archived_file) {
     
 }
+
 
