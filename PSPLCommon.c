@@ -16,7 +16,7 @@
 void pspl_hash_fmt(char* out, const pspl_hash* hash) {
     int i;
     for (i=0 ; i<sizeof(pspl_hash) ; ++i) {
-        sprintf(out, "%02X", (unsigned int)(hash->hash[i]));
+        sprintf(out, "%02X", (unsigned int)(hash->b[i]));
         out += 2;
     }
 }
@@ -26,7 +26,7 @@ void pspl_hash_parse(pspl_hash* out, const char* hash_str) {
     byte_str[2] = '\0';
     for (i=0 ; i<sizeof(pspl_hash) ; ++i) {
         strncpy(byte_str, hash_str, 2);
-        out->hash[i] = (uint8_t)strtol(byte_str, NULL, 16);
+        out->b[i] = (uint8_t)strtol(byte_str, NULL, 16);
         hash_str += 2;
     }
 }

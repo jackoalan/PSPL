@@ -21,8 +21,9 @@
 #define PSPL_BI_ENDIAN     3
 
 /* PSPL stored hash type */
-typedef struct {
-    uint8_t hash[20];
+typedef union {
+    uint8_t b[20];
+    uint32_t w[5];
 } pspl_hash;
 static inline int pspl_hash_cmp(const pspl_hash* a, const pspl_hash* b) {
     return memcmp(a, b, sizeof(pspl_hash));
@@ -34,10 +35,58 @@ static inline void pspl_hash_cpy(pspl_hash* dest, const pspl_hash* src) {
 extern void pspl_hash_fmt(char* out, const pspl_hash* hash);
 extern void pspl_hash_parse(pspl_hash* out, const char* hash_str);
 
-/* Runtime-only structures */
+
+/* Runtime-only things */
 #ifdef PSPL_RUNTIME
 
-/* Shader runtime object (from PSPLC) 
+#pragma mark Runtime API
+
+/* Init PSPL Runtime */
+int pspl_init();
+
+/* Shutdown PSPL Runtime */
+void pspl_shutdown();
+
+
+#pragma mark Packages
+
+/* Package handle type */
+typedef struct _pspl_loaded_package pspl_package_t;
+
+/* Data provider type */
+typedef struct {
+    
+    // Open handle at path for reading (returning pointer to handle or NULL)
+    const void*(*open)(const char* path);
+    
+    // Close previously opened handle
+    void(*close)(const void* handle);
+    
+    // Tell length of handle
+    size_t(*len)(const void* handle);
+    
+    // Seek to point in handle
+    int(*seek)(const void* handle, size_t seek_set);
+    
+    // Read count of bytes from handle (returning bytes read)
+    size_t(*read)(const void* handle, size_t num_bytes, void* data_out);
+    
+} pspl_data_provider_t;
+
+/* Load PSPL package */
+int pspl_load_package_file(const char* package_path, const pspl_package_t** package_out);
+int pspl_load_package_provider(const char* package_path, const pspl_data_provider_t* data_provider,
+                               const pspl_package_t** package_out);
+int pspl_load_package_membuf(const void* package_data, size_t package_len,
+                             const pspl_package_t** package_out);
+
+/* Unload PSPL package */
+void pspl_unload_package(const pspl_package_t* package);
+
+
+#pragma mark Shader Objects
+
+/* PSPLC runtime object (from PSPLC) 
  * Holds state information about object during runtime */
 typedef struct {
     
@@ -51,8 +100,61 @@ typedef struct {
     // Opaque object pointer used by PSPL's runtime internals
     const void* pspl_shader_internals;
     
-} pspl_shader_object_t;
+} psplc_object_t;
 
-#endif
+/* Count shader objects within package */
+unsigned int pspl_count_shader_objects(const pspl_package_t* package);
 
+/* Enumerate shader objects within package 
+ * returning negative value from hook will cancel enumeration */
+typedef int(*pspl_enumerate_shader_object_hook)(const psplc_object_t* shader_object);
+void pspl_enumerate_shader_objects(const pspl_package_t* package,
+                                   pspl_enumerate_shader_object_hook hook);
+
+/* Get shader object from key string and optionally perform retain */
+const psplc_object_t* pspl_get_shader_object_from_key(const char* key, int retain);
+
+/* Get shader object from hash and optionally perform retain */
+const psplc_object_t* pspl_get_shader_object_from_hash(pspl_hash* hash, int retain);
+
+/* Retain/release shader object */
+void pspl_retain_shader_object(const psplc_object_t* shader_object);
+void pspl_release_shader_object(const psplc_object_t* shader_object);
+
+
+#pragma mark Archived Files
+
+/* Archived file object (from PSPLP)
+ * Holds state information about file during runtime */
+typedef struct {
+    
+    // Hash of archived file
+    pspl_hash hash;
+    
+    // File length and data
+    size_t file_len;
+    const void* file_data;
+    
+    // Opaque object pointer used by PSPL's runtime internals
+    const void* pspl_shader_internals;
+    
+} pspl_archived_file_t;
+
+/* Count archived files within package */
+unsigned int pspl_count_archived_files(const pspl_package_t* package);
+
+/* Enumerate archived files within package
+ * returning negative value from hook will cancel enumeration */
+typedef int(*pspl_enumerate_archived_file_hook)(const pspl_archived_file_t* archived_file);
+void pspl_enumerate_archived_files(const pspl_package_t* package,
+                                   pspl_enumerate_archived_file_hook hook);
+
+/* Get archived file from hash and optionally perform retain */
+const pspl_archived_file_t* pspl_get_archived_file_from_hash(pspl_hash* hash, int retain);
+
+/* Retain/release archived file */
+void pspl_retain_archived_file(const pspl_archived_file_t* archived_file);
+void pspl_release_archived_file(const pspl_archived_file_t* archived_file);
+
+#endif // PSPL_RUNTIME
 #endif
