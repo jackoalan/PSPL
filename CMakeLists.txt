@@ -186,9 +186,13 @@ if(len GREATER 0)
   endforeach(extension)
 endif()
 
-# Generate the C config file
+# Generate the C config files
 configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_available_extensions.c.in
-               pspl_available_extensions.c)
+               pspl_available_toolchain_extensions.c)
+set(CONF_PLAT_DEF_INCLUDES "#include \"${PSPL_RUNTIME_PLATFORM}_platform_def.h\"\n")
+set(CONF_PLAT_ARRAY_INIT_LIST "\n    &${PSPL_RUNTIME_PLATFORM}_platform,")
+configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_available_extensions.c.in
+               pspl_available_runtime_extensions.c)
 
 
 

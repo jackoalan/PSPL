@@ -10,7 +10,7 @@
 @CONF_PLAT_DEF_INCLUDES@
 
 /* Master platform list (NULL-terminated) */
-pspl_platform_t* pspl_available_target_platforms[] = {@CONF_PLAT_ARRAY_INIT_LIST@
+pspl_platform_t* pspl_available_platforms[] = {@CONF_PLAT_ARRAY_INIT_LIST@
     NULL};
 
 

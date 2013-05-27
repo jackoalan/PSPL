@@ -7,7 +7,6 @@
 //
 
 #define PSPL_INTERNAL
-#define PSPL_TOOLCHAIN
 
 #include <PSPL/PSPLExtension.h>
 #include <PSPLInternal.h>

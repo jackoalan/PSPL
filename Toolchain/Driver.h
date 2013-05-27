@@ -49,7 +49,7 @@ char* strtok_r(char *str,
 extern pspl_extension_t* pspl_available_extensions[];
 
 /* Available target platforms (NULL-terminated array) */
-extern pspl_platform_t* pspl_available_target_platforms[];
+extern pspl_platform_t* pspl_available_platforms[];
 
 /* xterm Colour */
 extern uint8_t xterm_colour;

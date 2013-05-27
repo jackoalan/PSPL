@@ -6,7 +6,6 @@
 //
 //
 #define PSPL_INTERNAL
-#define PSPL_TOOLCHAIN
 
 /* Should an error condition print backtrace? */
 #ifndef _WIN32
@@ -236,7 +235,7 @@ static void print_copyrights() {
         fprintf(stderr, "PSPL Core\n\n");
     
     // First, PSPL's copyright
-    pspl_provide_copyright("PSPL (Toolchain and Runtime)", "Copyright (c) 2013 Jack Andersen",
+    pspl_provide_copyright("PSPL (Toolchain and Runtime)", "Copyright (c) 2013 Jack Andersen <jackoalan@gmail.com>",
                            PSPL_MIT_LICENCE);
     
     fprintf(stderr, "\n");
@@ -277,7 +276,7 @@ static void print_copyrights() {
     else
         fprintf(stderr, "PSPL Platforms\n\n");
     
-    pspl_platform_t** plat = &pspl_available_target_platforms[0];
+    pspl_platform_t** plat = &pspl_available_platforms[0];
     while (plat[0]) {
         if (plat[0]->toolchain_platform && plat[0]->toolchain_platform->copyright_hook) {
             if (xterm_colour)
@@ -347,7 +346,7 @@ static void print_help(const char* prog_name) {
                 BOLD"Available Target Platforms:\n"NORMAL);
         pspl_platform_t* plat = NULL;
         i = 0;
-        while ((plat = pspl_available_target_platforms[i++])) {
+        while ((plat = pspl_available_platforms[i++])) {
             fprintf(stderr, "  "BOLD"* %s"NORMAL" - %s",
                     plat->platform_name, plat->platform_desc);
             fprintf(stderr, "\n");
@@ -392,7 +391,7 @@ static void print_help(const char* prog_name) {
                 "Available Target Platforms:\n");
         pspl_platform_t* plat = NULL;
         i = 0;
-        while ((plat = pspl_available_target_platforms[i++])) {
+        while ((plat = pspl_available_platforms[i++])) {
             fprintf(stderr, "  * %s - %s",
                     plat->platform_name, plat->platform_desc);
             fprintf(stderr, "\n");
@@ -647,7 +646,7 @@ static void add_target_platform(pspl_toolchain_driver_opts_t* driver_opts,
     // Look up platform
     pspl_platform_t* plat = NULL;
     int i = 0;
-    while ((plat = pspl_available_target_platforms[i++])) {
+    while ((plat = pspl_available_platforms[i++])) {
         if (!strcmp(plat->platform_name, name)) {
             pspl_platforms[driver_opts->platform_c] = plat;
             break;
@@ -695,7 +694,7 @@ static pspl_extension_t* lookup_ext(const char* ext_name, unsigned int* idx_out)
 static pspl_platform_t* lookup_target_platform(const char* plat_name) {
     pspl_platform_t* plat = NULL;
     unsigned int i = 0;
-    while ((plat = pspl_available_target_platforms[i++])) {
+    while ((plat = pspl_available_platforms[i++])) {
         if (!strcmp(plat->platform_name, plat_name))
             break;
     }

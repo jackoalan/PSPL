@@ -16,18 +16,18 @@ endif()
 
 # Ensure typefile for *specified runtime platform only* is included in runtime sources
 list(GET pspl_platform_typefile_list ${runtime_idx} CONF_RUNTIME_PLATFORM_TYPEFILE)
-configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_runtime_platform_typefile.h.in
-               pspl_runtime_platform_typefile.h)
-               
-# Ensure toolchain macro set for `pspl_available_extensions`
-set_source_files_properties(${PSPL_BINARY_DIR}/pspl_available_extensions.c PROPERTIES 
-                            COMPILE_DEFINITIONS PSPL_RUNTIME=1 
-                            COMPILE_FLAGS "-include pspl_runtime_platform_typefile.h")
+configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_runtime_platform_typefile.pch.in
+               pspl_runtime_platform_typefile.pch)
 
 # Define runtime library
 add_library(pspl-rt STATIC
             RuntimeCore.c
-            ${PSPL_BINARY_DIR}/pspl_available_extensions.c)
+            ${PSPL_BINARY_DIR}/pspl_available_runtime_extensions.c)
+            
+# All sources in `pspl-rt` should be exposed to platform-specific types
+set_target_properties(pspl-rt PROPERTIES
+                      COMPILE_FLAGS "-include pspl_runtime_platform_typefile.pch"
+                      COMPILE_DEFINITIONS PSPL_RUNTIME=1)
 
 # Link runtime extensions
 target_link_libraries(pspl-rt

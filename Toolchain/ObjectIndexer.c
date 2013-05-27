@@ -7,7 +7,6 @@
 //
 
 #define PSPL_INTERNAL
-#define PSPL_TOOLCHAIN
 
 #include <stdio.h>
 #include <string.h>

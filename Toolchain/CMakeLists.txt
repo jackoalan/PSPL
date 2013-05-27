@@ -14,11 +14,6 @@ elseif(PSPL_TOOLCHAIN_HASHING STREQUAL WINDOWS)
   add_definitions(-D PSPL_HASHING_WINDOWS)
 endif()
 
-
-# Ensure toolchain macro set for `pspl_available_extensions`
-set_source_files_properties(${PSPL_BINARY_DIR}/pspl_available_extensions.c 
-                            PROPERTIES COMPILE_DEFINITIONS PSPL_TOOLCHAIN=1)
-
 # Define toolchain executable
 add_executable(pspl
                Driver.c
@@ -28,7 +23,10 @@ add_executable(pspl
                Buffer.c
                ReferenceGatherer.c
                ObjectIndexer.c
-               ${PSPL_BINARY_DIR}/pspl_available_extensions.c)
+               ${PSPL_BINARY_DIR}/pspl_available_toolchain_extensions.c)
+               
+set_target_properties(pspl PROPERTIES
+                      COMPILE_DEFINITIONS PSPL_TOOLCHAIN=1)
 
 # Link toolchain extensions
 target_link_libraries(pspl ${pspl_extension_toolchain_link_list} ${HASH_LIB} pspl_common)

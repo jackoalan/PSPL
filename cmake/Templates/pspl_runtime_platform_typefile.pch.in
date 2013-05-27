@@ -6,7 +6,7 @@
 
 #include "@CONF_RUNTIME_PLATFORM_TYPEFILE@"
 
-typedef @PSPL_RUNTIME_PLATFORM@_shader_object_t pspl_shader_object_t;
+typedef @PSPL_RUNTIME_PLATFORM@_shader_object_t pspl_platform_shader_object_t;
 
 #endif // _PSPL_PLATFORM_TYPEFILE_
 
