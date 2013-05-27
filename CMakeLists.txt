@@ -128,6 +128,9 @@ if(len GREATER 0)
     endif()
     
     list(APPEND pspl_extension_toolchain_link_list ${PLAT_NAME}_toolplat)
+    if(PSPL_RUNTIME_PLATFORM STREQUAL PLAT_NAME)
+      list(APPEND pspl_extension_runtime_link_list ${PLAT_NAME}_runplat)
+    endif()
 
     # Generate extension definition
     configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_platform_def.h.in

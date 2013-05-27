@@ -30,15 +30,13 @@ add_library(pspl-rt STATIC
             ${PSPL_BINARY_DIR}/pspl_available_extensions.c)
 
 # Link runtime extensions
-target_link_libraries(pspl-rt 
-                      ${PSPL_RUNTIME_PLATFORM}_runplat 
+target_link_libraries(pspl-rt
                       ${pspl_extension_runtime_link_list} 
                       ${HASH_LIB} 
                       pspl_common)
 
 # Export runtime for use in other CMake Projects
 export(TARGETS pspl-rt
-       ${PSPL_RUNTIME_PLATFORM}_runplat 
        ${pspl_extension_runtime_link_list} 
        ${HASH_LIB} 
        pspl_common 
