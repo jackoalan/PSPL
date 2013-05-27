@@ -168,6 +168,154 @@ static char* wrap_string(const char* str_in, int indent) {
 }
 
 
+#pragma mark Copyright Reproduction
+
+const char* PSPL_MIT_LICENCE =
+"Permission is hereby granted, free of charge, to any person obtaining a copy\n"
+"of this software and associated documentation files (the \"Software\"), to deal\n"
+"in the Software without restriction, including without limitation the rights\n"
+"to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n"
+"copies of the Software, and to permit persons to whom the Software is\n"
+"furnished to do so, subject to the following conditions:\n"
+"\n"
+"The above copyright notice and this permission notice shall be included in\n"
+"all copies or substantial portions of the Software.\n"
+"\n"
+"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
+"IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"
+"FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n"
+"AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"
+"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"
+"OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n"
+"THE SOFTWARE.)";
+
+const char* PSPL_FREEBSD_LICENCE =
+"Redistribution and use in source and binary forms, with or without\n"
+"modification, are permitted provided that the following conditions\n"
+"are met:\n"
+"1. Redistributions of source code must retain the above copyright\n"
+"notice, this list of conditions and the following disclaimer.\n"
+"2. Redistributions in binary form must reproduce the above copyright\n"
+"notice, this list of conditions and the following disclaimer in the\n"
+"documentation and/or other materials provided with the distribution.\n"
+"\n"
+"THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND\n"
+"ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n"
+"IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\n"
+"ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE\n"
+"FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\n"
+"DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS\n"
+"OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)\n"
+"HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT\n"
+"LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY\n"
+"OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF\n"
+"SUCH DAMAGE.";
+
+void pspl_provide_copyright(const char* component_name,
+                            const char* copyright,
+                            const char* licence) {
+    
+    if (xterm_colour) {
+        fprintf(stderr, BOLD BLUE"%s\n"SGR0, component_name);
+        fprintf(stderr, BLUE"%s\n\n"SGR0, copyright);
+    } else {
+        fprintf(stderr, "%s\n", component_name);
+        fprintf(stderr, "%s\n\n", copyright);
+    }
+    
+    fprintf(stderr, "%s\n\n", licence);
+    
+}
+
+static void print_copyrights() {
+
+    // PSPL Core copyrights
+    if (xterm_colour)
+        fprintf(stderr, BOLD UNDERLINE MAGENTA"PSPL Core\n\n"SGR0);
+    else
+        fprintf(stderr, "PSPL Core\n\n");
+    
+    // First, PSPL's copyright
+    pspl_provide_copyright("PSPL (Toolchain and Runtime)", "Copyright (c) 2013 Jack Andersen",
+                           PSPL_MIT_LICENCE);
+    
+    fprintf(stderr, "\n");
+    
+    
+#   ifdef _WIN32
+    
+    // PSPL Windows Core copyrights
+    if (xterm_colour)
+        fprintf(stderr, BOLD UNDERLINE MAGENTA"PSPL Windows Core\n\n"SGR0);
+    else
+        fprintf(stderr, "PSPL Windows Core\n\n");
+    
+    // MinGW
+    pspl_provide_copyright("MinGW (WIN32 API)", "Copyright (c) 2012 MinGW.org project",
+                           PSPL_MIT_LICENCE);
+    
+    // FreeBSD
+    pspl_provide_copyright("FreeBSD (strtok_r, strlcat, strlcpy)",
+                           "Copyright (c) 1992-2013 The FreeBSD Project. All rights reserved.\n"
+                           "\n"
+                           "strtok_r, from Berkeley strtok\n"
+                           "Copyright (c) 1998 Softweyr LLC.  All rights reserved.\n"
+                           "Oct 13, 1998 by Wes Peters <wes@softweyr.com>\n"
+                           "\n"
+                           "strlcat and strlcpy\n"
+                           "Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>",
+                           PSPL_FREEBSD_LICENCE);
+    
+    fprintf(stderr, "\n");
+    
+#   endif
+    
+    
+    // Platforms
+    if (xterm_colour)
+        fprintf(stderr, BOLD UNDERLINE MAGENTA"PSPL Platforms\n\n"SGR0);
+    else
+        fprintf(stderr, "PSPL Platforms\n\n");
+    
+    pspl_platform_t** plat = &pspl_available_target_platforms[0];
+    while (plat[0]) {
+        if (plat[0]->toolchain_platform && plat[0]->toolchain_platform->copyright_hook) {
+            if (xterm_colour)
+                fprintf(stderr, BOLD UNDERLINE RED"%s Platform\n\n"SGR0, plat[0]->platform_name);
+            else
+                fprintf(stderr, "%s Platform\n\n", plat[0]->platform_name);
+            plat[0]->toolchain_platform->copyright_hook();
+        }
+        ++plat;
+    }
+    
+    fprintf(stderr, "\n");
+
+    
+    // Extensions
+    if (xterm_colour)
+        fprintf(stderr, BOLD UNDERLINE MAGENTA"PSPL Extensions\n\n"SGR0);
+    else
+        fprintf(stderr, "PSPL Extensions\n\n");
+    
+    
+    pspl_extension_t** ext = &pspl_available_extensions[0];
+    while (ext[0]) {
+        if (ext[0]->toolchain_extension && ext[0]->toolchain_extension->copyright_hook) {
+            if (xterm_colour)
+                fprintf(stderr, BOLD UNDERLINE RED"%s Platform\n\n"SGR0, ext[0]->extension_name);
+            else
+                fprintf(stderr, "%s Platform\n\n", ext[0]->extension_name);
+            ext[0]->toolchain_extension->copyright_hook();
+        }
+        ++ext;
+    }
+    
+    fprintf(stderr, "\n");
+
+}
+
+
 #pragma mark Built-in Help
 
 static void print_help(const char* prog_name) {
@@ -180,8 +328,10 @@ static void print_help(const char* prog_name) {
                 BOLD RED "PSPL Toolchain\n"
                 BOLD MAGENTA "By Jack Andersen "GREEN"<jackoalan@gmail.com>\n"
                 UNDERLINE CYAN "https://github.com/jackoalan/PSPL\n" NORMAL
-                "\n"
-                "\n"
+                "\n");
+        fprintf(stderr, BLUE"Run with "BOLD"-l"NORMAL BLUE
+                " to see licences on contained software components"SGR0);
+        fprintf(stderr, "\n\n\n"
                 BOLD"Available Extensions:\n"NORMAL);
         pspl_extension_t* ext = NULL;
         int i = 0;
@@ -223,9 +373,11 @@ static void print_help(const char* prog_name) {
                 "PSPL Toolchain\n"
                 "By Jack Andersen <jackoalan@gmail.com>\n"
                 "https://github.com/jackoalan/PSPL\n"
-                "\n"
-                "\n"
-                "Available Extensions:\n");
+                "\n");
+        fprintf(stderr, "Run with `-l`"
+                " to see licences on contained software components");
+        fprintf(stderr,
+                "\n\n\nAvailable Extensions:\n");
         pspl_extension_t* ext = NULL;
         int i = 0;
         while ((ext = pspl_available_extensions[i++])) {
@@ -257,7 +409,7 @@ static void print_help(const char* prog_name) {
         wrap_string("pspl [-o out-path] [-E|-c] [-G reflist-out-path] [-S staging-root-path] [-D def-name[=def-value]]... [-T target-platform]... [-e <LITTLE,BIG,BI>] source1 [source2 [sourceN]]...", 1);
         fprintf(stderr, "%s\n\n\n", help);
         free((char*)help);
-        
+                
     }
 }
 
@@ -794,6 +946,11 @@ int main(int argc, char** argv) {
                 print_help(argv[0]);
                 return 0;
                 
+            } else if (token_char == 'l') {
+                
+                print_copyrights();
+                return 0;
+                
             } else if (token_char == 'o') {
                 
                 if (argv[i][2])
@@ -1232,53 +1389,5 @@ int main(int argc, char** argv) {
 }
 
 
-#pragma mark Windows Support Stuff
 
-#ifdef _WIN32
-
-/*
- * public domain strtok_r() by Charlie Gordon
- *
- *   from comp.lang.c  9/14/2007
- *
- *      http://groups.google.com/group/comp.lang.c/msg/2ab1ecbb86646684
- *
- *     (Declaration that it's public domain):
- *      http://groups.google.com/group/comp.lang.c/msg/7c7b39328fefab9c
- */
-
-char* strtok_r(char *str,
-               const char *delim,
-               char **nextp)
-{
-    char *ret;
-    
-    if (str == NULL)
-    {
-        str = *nextp;
-    }
-    
-    str += strspn(str, delim);
-    
-    if (*str == '\0')
-    {
-        return NULL;
-    }
-    
-    ret = str;
-    
-    str += strcspn(str, delim);
-    
-    if (*str)
-    {
-        *str++ = '\0';
-    }
-    
-    *nextp = str;
-    
-    return ret;
-}
-
-
-#endif
 

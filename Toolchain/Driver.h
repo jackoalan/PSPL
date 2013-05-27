@@ -59,8 +59,13 @@ extern uint8_t xterm_colour;
 #define PSPL_MODE_PREPROCESS_ONLY  (1<<1)
 
 /* Error and warning reporting */
+#ifdef __clang__
 void pspl_error(int exit_code, const char* brief, const char* msg, ...) __printflike(3, 4);
 void pspl_warn(const char* brief, const char* msg, ...) __printflike(2, 3);
+#else
+void pspl_error(int exit_code, const char* brief, const char* msg, ...);
+void pspl_warn(const char* brief, const char* msg, ...);
+#endif
 
 
 /* Structure composing all global options together */

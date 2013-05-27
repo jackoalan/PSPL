@@ -24,9 +24,30 @@
  * *warning* or *error* and bring it to the art pipeline executor's attention.
  */
 
+#ifdef __clang__
 void pspl_error(int exit_code, const char* brief, const char* msg, ...) __printflike(3, 4);
-
 void pspl_warn(const char* brief, const char* msg, ...) __printflike(2, 3);
+#else
+void pspl_error(int exit_code, const char* brief, const char* msg, ...);
+void pspl_warn(const char* brief, const char* msg, ...);
+#endif
+
+
+#pragma mark Copyright Reproduction
+
+/* A static copy of the entire MIT licence */
+extern const char* PSPL_MIT_LICENCE;
+
+/* A static copy of the entire FreeBSD licence */
+extern const char* PSPL_FREEBSD_LICENCE;
+
+/* Call this method (within copyright hook) for each software component contained */
+void pspl_provide_copyright(const char* component_name,
+                            const char* copyright,
+                            const char* licence);
+
+/* Extension hook for providing copyright details using `pspl_provide_copyright` */
+typedef void(*pspl_toolchain_copyright_hook)(void);
 
 
 #pragma mark Driver Context
@@ -295,6 +316,7 @@ typedef struct _pspl_toolchain_extension {
     // Hook fields
     pspl_toolchain_init_hook init_hook;
     pspl_toolchain_finish_hook finish_hook;
+    pspl_toolchain_copyright_hook copyright_hook;
     pspl_toolchain_line_preprocessor_hook line_preprocessor_hook;
     pspl_toolchain_command_call_hook command_call_hook;
     pspl_toolchain_heading_switch_hook heading_switch_hook;
@@ -346,6 +368,7 @@ typedef struct _pspl_toolchain_platform {
     
     // Hook fields
     pspl_toolchain_init_hook init_hook;
+    pspl_toolchain_copyright_hook copyright_hook;
     pspl_toolchain_platform_receive_hook receive_hook;
     pspl_toolchain_platform_generate_hook generate_hook;
     

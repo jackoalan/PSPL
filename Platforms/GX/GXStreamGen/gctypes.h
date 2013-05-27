@@ -85,6 +85,7 @@ typedef unsigned int BOOL;
 	structure used to set up argc/argv
 
 */
+       /*
 struct __argv {
 	int argvMagic;		//!< argv magic number, set to 0x5f617267 ('_arg') if valid 
 	char *commandLine;	//!< base address of command line, set of null terminated strings
@@ -99,7 +100,7 @@ extern struct __argv *__system_argv;
 
 // argv struct magic number
 #define ARGV_MAGIC 0x5f617267
-
+*/
 #ifdef __cplusplus
    }
 #endif /* __cplusplus */
