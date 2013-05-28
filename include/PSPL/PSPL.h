@@ -10,6 +10,7 @@
 #define PSPL_PSPL_h
 
 #include <string.h>
+#include <PSPL/PSPLExtension.h>
 
 /* PSPL's method of defining numeric values in a bi-endian manner */
 #include <PSPL/PSPLValue.h>
@@ -41,8 +42,17 @@ extern void pspl_hash_parse(pspl_hash* out, const char* hash_str);
 
 #pragma mark Runtime API
 
-/* Init PSPL Runtime */
-int pspl_init();
+/** 
+ * Init PSPL Runtime
+ * 
+ * Allocates necessary state for the runtime platform compiled into `pspl-rt`.
+ * PSPLP package files may be loaded afterwards.
+ * 
+ * @param  Output pointer that's set with a reference to the compiled-in platform
+ *         metadata structure
+ * @return Error code (0:successful, negative:unsuccessful)
+ */
+int pspl_init(const pspl_platform_t** platform_out);
 
 /* Shutdown PSPL Runtime */
 void pspl_shutdown();
@@ -157,4 +167,8 @@ void pspl_retain_archived_file(const pspl_archived_file_t* archived_file);
 void pspl_release_archived_file(const pspl_archived_file_t* archived_file);
 
 #endif // PSPL_RUNTIME
+
+#include <PSPL/PSPLToolchainExtension.h>
+#include <PSPL/PSPLRuntimeExtension.h>
+
 #endif

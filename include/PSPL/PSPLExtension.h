@@ -62,8 +62,7 @@ typedef struct _pspl_platform {
 
 
 #include <PSPL/PSPL.h>
-#include <PSPL/PSPLToolchainExtension.h>
-#include <PSPL/PSPLRuntimeExtension.h>
+
 
 
 #endif
