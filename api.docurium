@@ -1,0 +1,8 @@
+{
+ "name":   "PSPL",
+ "github": "jackoalan/PSPL",
+ "input":  "include/PSPL",
+ "prefix": "pspl_",
+ "output": "docs",
+ "branch": "gh-pages"
+}

@@ -45,6 +45,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E40231C017543F2100DE076A /* api.docurium */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = api.docurium; sourceTree = "<group>"; };
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
 		E48CCCBC1747D4D500DDDD63 /* ToolchainCrossDarwinMinGW32.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToolchainCrossDarwinMinGW32.cmake; sourceTree = "<group>"; };
 		E4995F2B173E8BCE003B06BF /* PSPLHash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLHash.h; sourceTree = "<group>"; };
@@ -169,6 +170,7 @@
 				E4E4918C1753FACF006FCA59 /* pspl_available_runtime_extensions.c */,
 				E4AFAE28171C92B900F7A0BF /* COPYING */,
 				E4AFAE29171C92BE00F7A0BF /* README.md */,
+				E40231C017543F2100DE076A /* api.docurium */,
 				E4AFAE72171DFF1800F7A0BF /* CMakeLists.txt */,
 				E4AFAE73171EF72E00F7A0BF /* cmake */,
 				E4AFAE911729D90E00F7A0BF /* PSPLInternal.h */,
