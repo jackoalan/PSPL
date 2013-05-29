@@ -51,7 +51,7 @@ extern void pspl_hash_parse(pspl_hash* out, const char* hash_str);
 #pragma mark Runtime API
 
 /** 
- * Init PSPL Runtime
+ * Init PSPL Runtime.
  * 
  * Allocates necessary state for the runtime platform compiled into `pspl-rt`.
  * PSPLP package files may be loaded afterwards.
