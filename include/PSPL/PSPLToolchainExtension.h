@@ -15,6 +15,13 @@
 
 #define PSPL_MAX_HEADING_ARGS 16
 
+/**
+ * @file PSPL/PSPLToolchainExtension.h
+ * @brief API for extending the PSPL language
+ * @defgroup pspl_toolchain API for extending the PSPL language
+ * @ingroup PSPL
+ * @{
+ */
 
 #pragma mark Error Reporting
 
@@ -28,7 +35,20 @@
 void pspl_error(int exit_code, const char* brief, const char* msg, ...) __printflike(3, 4);
 void pspl_warn(const char* brief, const char* msg, ...) __printflike(2, 3);
 #else
+/**
+ * Raise globally-recognised error condition (terminating the entire program)
+ *
+ * @param exit_code Error code to use with `exit`
+ * @param brief Short string briefly describing error
+ * @param msg Format string elaborating error details
+ */
 void pspl_error(int exit_code, const char* brief, const char* msg, ...);
+/**
+ * Raise globally-recognised warning
+ *
+ * @param brief Short string briefly describing warning
+ * @param msg Format string elaborating warning details
+ */
 void pspl_warn(const char* brief, const char* msg, ...);
 #endif
 
@@ -41,33 +61,47 @@ extern const char* PSPL_MIT_LICENCE;
 /* A static copy of the entire FreeBSD licence */
 extern const char* PSPL_FREEBSD_LICENCE;
 
-/* Call this method (within copyright hook) for each software component contained */
-void pspl_provide_copyright(const char* component_name,
-                            const char* copyright,
-                            const char* licence);
+/**
+ * Provide software licencing details for extension
+ *
+ * Call this method (within copyright hook) for each software component 
+ * contained in extension or platform
+ *
+ * @param component_name Name of software component contained
+ * @param copyright Copyright string of software component
+ * @param licence Shortest-representable copy of attached licence 
+ *        (line-wrapped to 80 columns)
+ */
+void pspl_toolchain_provide_copyright(const char* component_name,
+                                      const char* copyright,
+                                      const char* licence);
 
-/* Extension hook for providing copyright details using `pspl_provide_copyright` */
+/**
+ * Extension hook for providing copyright details using `pspl_toolchain_provide_copyright` 
+ */
 typedef void(*pspl_toolchain_copyright_hook)(void);
 
 
 #pragma mark Driver Context
 
-/* Toolchain driver context (data consistent from init to finish) */
+/**
+ * Toolchain driver context (data consistent from init to finish) 
+ */
 typedef struct {
-    // Array of current target runtime platform(s) for toolchain driver
-    unsigned int target_runtime_platforms_c; // Count of target platforms
-    const pspl_platform_t* const * target_runtime_platforms; // Platform array
+    /**< Array of current target runtime platform(s) for toolchain driver */
+    unsigned int target_runtime_platforms_c; /**< Count of target platforms */
+    const pspl_platform_t* const * target_runtime_platforms; /**< Platform array */
     
-    // Name of PSPL source (including extension)
+    /**< Name of PSPL source (including extension) */
     const char* pspl_name;
     
-    // Absolute path of PSPL-enclosing directory (with trailing slash)
+    /**< Absolute path of PSPL-enclosing directory (with trailing slash) */
     const char* pspl_enclosing_dir;
     
-    // Driver-definitions (added with `-D` flag)
-    unsigned int def_c; // Count of defs
-    const char** def_k; // Array (of length `def_c`) containing defined key strings
-    const char** def_v; // Array (of length `def_c`) containing index-associated values (or NULL if no values)
+    /**< Driver-definitions (added with `-D` flag) */
+    unsigned int def_c; /**< Count of defs */
+    const char** def_k; /**< Array (of length `def_c`) containing defined key strings */
+    const char** def_v; /**< Array (of length `def_c`) containing index-associated values (or NULL if no values) */
     
 } pspl_toolchain_context_t;
 
@@ -75,14 +109,27 @@ typedef struct {
 
 #pragma mark Toolchain Extension Hook Types
 
-/* Init hook type */
+/**
+ * Init hook type
+ *
+ * Called at the start of *one* PSPL source preprocessing
+ */
 typedef int(*pspl_toolchain_init_hook)(const pspl_toolchain_context_t* driver_context);
 
-/* Finish hook type */
+/**
+ * Finish hook type
+ *
+ * Called at the end of *one* PSPL source compiling
+ */
 typedef void(*pspl_toolchain_finish_hook)(const pspl_toolchain_context_t* driver_context);
 
-/* Request the immediate initialisation of another extension by name
- * (only valid within init hook) */
+/**
+ * Request the immediate initialisation of another extension by name
+ * (only valid within init hook)
+ *
+ * @param ext_name Unique name of extension
+ * @return 0 if successful
+ */
 int pspl_toolchain_init_other_extension(const char* ext_name);
 
 
@@ -374,6 +421,7 @@ typedef struct _pspl_toolchain_platform {
     
 } pspl_toolchain_platform_t;
 
+/** @} */
 
 #endif // PSPL_TOOLCHAIN
 #endif

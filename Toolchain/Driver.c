@@ -210,7 +210,7 @@ const char* PSPL_FREEBSD_LICENCE =
 "OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF\n"
 "SUCH DAMAGE.";
 
-void pspl_provide_copyright(const char* component_name,
+void pspl_toolchain_provide_copyright(const char* component_name,
                             const char* copyright,
                             const char* licence) {
     
@@ -235,7 +235,7 @@ static void print_copyrights() {
         fprintf(stderr, "PSPL Core\n\n");
     
     // First, PSPL's copyright
-    pspl_provide_copyright("PSPL (Toolchain and Runtime)", "Copyright (c) 2013 Jack Andersen <jackoalan@gmail.com>",
+    pspl_toolchain_provide_copyright("PSPL (Toolchain and Runtime)", "Copyright (c) 2013 Jack Andersen <jackoalan@gmail.com>",
                            PSPL_MIT_LICENCE);
     
     fprintf(stderr, "\n");
@@ -250,11 +250,11 @@ static void print_copyrights() {
         fprintf(stderr, "PSPL Windows Core\n\n");
     
     // MinGW
-    pspl_provide_copyright("MinGW (WIN32 API)", "Copyright (c) 2012 MinGW.org project",
+    pspl_toolchain_provide_copyright("MinGW (WIN32 API)", "Copyright (c) 2012 MinGW.org project",
                            PSPL_MIT_LICENCE);
     
     // FreeBSD
-    pspl_provide_copyright("FreeBSD (strtok_r, strlcat, strlcpy)",
+    pspl_toolchain_provide_copyright("FreeBSD (strtok_r, strlcat, strlcpy)",
                            "Copyright (c) 1992-2013 The FreeBSD Project. All rights reserved.\n"
                            "\n"
                            "strtok_r, from Berkeley strtok\n"
