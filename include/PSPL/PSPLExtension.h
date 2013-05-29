@@ -14,8 +14,7 @@
 /**
  * @file PSPL/PSPLExtension.h
  * @brief Primary Extension and Platform Structures
- * @defgroup pspl_extension Objects and Routines for authoring PSPL extensions
- * @ingroup pspl_extension
+ * @ingroup PSPL
  * @{
  */
 
@@ -31,23 +30,13 @@ typedef struct _pspl_extension {
     const char* extension_name; /**< Unique extension name (short) */
     const char* extension_desc; /**< Description of extension (for built-in help) */
 #   ifdef PSPL_TOOLCHAIN
-    // Extension's toolchain extension definition object
-    const struct _pspl_toolchain_extension* toolchain_extension;
+    const struct _pspl_toolchain_extension* toolchain_extension; /**< Extension toolchain substructure */
 #   endif
-    
 #   ifdef PSPL_RUNTIME
-    // Extension's runtime extension definition object
-    const struct _pspl_runtime_extension* runtime_extension;
+    const struct _pspl_runtime_extension* runtime_extension; /**< Extension runtime substructure */
 #   endif
-    
 } pspl_extension_t;
 
-/**
- * @}
- * @defgroup pspl_platform Objects and Routines for authoring PSPL platforms
- * @ingroup pspl_platform
- * @{
- */
 
 /** 
  * Common platform description structure 
@@ -60,24 +49,14 @@ typedef struct _pspl_extension {
 typedef struct _pspl_platform {
     const char* platform_name; /**< Unique platform name (short) */
     const char* platform_desc; /**< Description of platform (for built-in help) */
-    
-    // Native byte-order [PSPL_LITTLE_ENDIAN, PSPL_BIG_ENDIAN]
-    uint8_t byte_order;
-    
-    // Padding
-    uint8_t padding[3];
-    
-    // Platform toolchain structure
+    uint8_t byte_order; /**< Native byte-order [PSPL_LITTLE_ENDIAN, PSPL_BIG_ENDIAN] */
+    uint8_t padding[3]; /**< Full-word padding */
 #   ifdef PSPL_TOOLCHAIN
-    const struct _pspl_toolchain_platform* toolchain_platform;
+    const struct _pspl_toolchain_platform* toolchain_platform; /**< Platform toolchain substructure */
 #   endif
-    
-    // Platform runtime structure
 #   ifdef PSPL_RUNTIME
-    const struct _pspl_runtime_platform* runtime_platform;
+    const struct _pspl_runtime_platform* runtime_platform; /**< Platform runtime substructure */
 #   endif
-    
-    
 } pspl_platform_t;
 
 /** @} */
