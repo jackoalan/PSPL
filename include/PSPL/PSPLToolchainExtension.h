@@ -23,35 +23,6 @@
  * @{
  */
 
-#pragma mark Error Reporting
-
-/* During the toolchain execution phases, the extension may wish to notify
- * the driver that an error condition has arisn (perhaps due to bad syntax by 
- * the shader author). These functions allow the extension to either raise a 
- * *warning* or *error* and bring it to the art pipeline executor's attention.
- */
-
-#ifdef __clang__
-void pspl_error(int exit_code, const char* brief, const char* msg, ...) __printflike(3, 4);
-void pspl_warn(const char* brief, const char* msg, ...) __printflike(2, 3);
-#else
-/**
- * Raise globally-recognised error condition (terminating the entire program)
- *
- * @param exit_code Error code to use with `exit`
- * @param brief Short string briefly describing error
- * @param msg Format string elaborating error details
- */
-void pspl_error(int exit_code, const char* brief, const char* msg, ...);
-/**
- * Raise globally-recognised warning
- *
- * @param brief Short string briefly describing warning
- * @param msg Format string elaborating warning details
- */
-void pspl_warn(const char* brief, const char* msg, ...);
-#endif
-
 
 #pragma mark Copyright Reproduction
 

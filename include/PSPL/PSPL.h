@@ -25,7 +25,7 @@
  */
 
 /**
- * Endianness enumerations 
+ * Endianness enumerations
  */
 enum pspl_endianness {
     PSPL_UNSPEC_ENDIAN = 0,
@@ -34,6 +34,31 @@ enum pspl_endianness {
     PSPL_BI_ENDIAN     = 3
 };
 
+#pragma mark Error Reporting
+
+#ifdef __clang__
+void pspl_error(int exit_code, const char* brief, const char* msg, ...) __printflike(3, 4);
+void pspl_warn(const char* brief, const char* msg, ...) __printflike(2, 3);
+#else
+/**
+ * Raise globally-recognised error condition (terminating the entire program)
+ *
+ * @param exit_code Error code to use with `exit`
+ * @param brief Short string briefly describing error
+ * @param msg Format string elaborating error details
+ */
+void pspl_error(int exit_code, const char* brief, const char* msg, ...);
+/**
+ * Raise globally-recognised warning
+ *
+ * @param brief Short string briefly describing warning
+ * @param msg Format string elaborating warning details
+ */
+void pspl_warn(const char* brief, const char* msg, ...);
+#endif
+
+
+#pragma mark Hash Stuff
 
 /**
  * PSPL stored hash type 
