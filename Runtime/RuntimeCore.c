@@ -390,11 +390,14 @@ struct _pspl_loaded_package {
 
 
 /* Private routine to load PSPLP data */
+#define PACKAGE_PROVIDER(package) (package->provider_local)?&package->provider.provider:package->provider.provider
+#define IS_PSPLP_BI pspl_head->endian_flags == PSPL_BI_ENDIAN
 static int load_psplp(pspl_runtime_package_rep_t* package) {
+    const void* package_provider = PACKAGE_PROVIDER(package);
     
     // Read header chunk of data
     const void* header_data = NULL;
-    package->provider_hooks->read(package->provider.provider,
+    package->provider_hooks->read(package_provider,
                                   sizeof(pspl_header_t) +
                                   sizeof(pspl_off_header_bi_t) +
                                   sizeof(pspl_psplp_header_bi_t),
@@ -402,12 +405,66 @@ static int load_psplp(pspl_runtime_package_rep_t* package) {
     
     // Bind header
     const pspl_header_t* pspl_head = header_data;
+    const void* pspl_cur = header_data + sizeof(pspl_header_t);
     
     // Validate members
     if (memcmp(pspl_head->magic, "PSPL", 4)) {
-        pspl_warn("Invalid magic on provided package", "Magic should be 'PSPL'");
+        pspl_warn("Invalid magic on provided package", "magic should be 'PSPL'");
         return -1;
     }
+    if (pspl_head->package_flag != 1) {
+        pspl_warn("Provided PSPLC instead of package", "only packages are accepted by runtime");
+        return -1;
+    }
+    if (pspl_head->version != PSPL_VERSION) {
+        pspl_warn("PSPL version mismatch", "Version %u provided; expected version %u",
+                  pspl_head->version, PSPL_VERSION);
+        return -1;
+    }
+#   if defined(__LITTLE_ENDIAN__)
+    if (pspl_head->endian_flags == PSPL_BIG_ENDIAN) {
+        pspl_warn("Incompatible PSPL byte-order", "unable to use big-endian PSPL");
+        return -1;
+    }
+#   elif defined(__BIG_ENDIAN__)
+    if (pspl_head->endian_flags == PSPL_LITTLE_ENDIAN) {
+        pspl_warn("Incompatible PSPL byte-order", "unable to use little-endian PSPL");
+        return -1;
+    }
+#   endif
+    
+    // Offset header next
+    const pspl_off_header_t* off_header = pspl_cur;
+    if (IS_PSPLP_BI) {
+        const pspl_off_header_bi_t* bi_header = pspl_cur;
+        off_header = &bi_header->native;
+        pspl_cur += sizeof(pspl_off_header_t);
+    }
+    pspl_cur += sizeof(pspl_off_header_t);
+
+    // PSPLP header next
+    const pspl_psplp_header_t* psplp_header = pspl_cur;
+    if (IS_PSPLP_BI) {
+        const pspl_psplp_header_bi_t* bi_header = pspl_cur;
+        psplp_header = &bi_header->native;
+        pspl_cur += sizeof(pspl_psplp_header_t);
+    }
+    pspl_cur += sizeof(pspl_psplp_header_t);
+    
+    // Determine length of entire PSPLP minus file data blobs and string tables
+    size_t cur_off = pspl_cur - header_data;
+    size_t psplp_embed_len =
+    off_header->file_table_off +
+    (((IS_PSPLP_BI)?
+      sizeof(pspl_file_stub_bi_t):
+      sizeof(pspl_file_stub_t))*
+     off_header->file_table_c) -
+    cur_off;
+    
+    // Read in embedded object tables and blobs
+    const void* embedded_data = NULL;
+    package->provider_hooks->seek(package_provider, cur_off);
+    package->provider_hooks->read(package_provider, psplp_embed_len, &embedded_data);
     
     
     
@@ -598,9 +655,7 @@ int pspl_runtime_load_package_provider(const char* package_path,
  * @param package Package representation to unload
  */
 void pspl_runtime_unload_package(const pspl_runtime_package_rep_t* package) {
-    package->provider_hooks->close((package->provider_local)?
-                                   &package->provider.provider:
-                                   package->provider.provider);
+    package->provider_hooks->close(PACKAGE_PROVIDER(package));
     pspl_malloc_free(&package_mem_ctx, (void*)package);
 }
 
