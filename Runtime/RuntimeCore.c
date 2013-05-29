@@ -229,7 +229,7 @@ void pspl_runtime_enumerate_archived_files(const pspl_runtime_package_rep_t* pac
  *        reference count set to 1 when found
  * @return File representation (or NULL if not available)
  */
-const pspl_runtime_arc_file_rep_t* pspl_get_archived_file_from_hash(pspl_hash* hash, int retain) {
+const pspl_runtime_arc_file_rep_t* pspl_runtime_get_archived_file_from_hash(pspl_hash* hash, int retain) {
     
 }
 
