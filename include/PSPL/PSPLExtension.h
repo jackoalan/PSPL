@@ -21,14 +21,15 @@
 
 /** 
  * Common extension definition structure
+ *
+ * Instances of this structure are generated before compile time
+ * via CMake. The structure is shared between the *Toolchain* and
+ * *Runtime* portions of PSPL, thereby maintaining a common extension
+ * namespace.
  */
 typedef struct _pspl_extension {
-    // Unique name of extension
-    const char* extension_name;
-    
-    // Description of extension (for built-in help)
-    const char* extension_desc;
-    
+    const char* extension_name; /**< Unique extension name (short) */
+    const char* extension_desc; /**< Description of extension (for built-in help) */
 #   ifdef PSPL_TOOLCHAIN
     // Extension's toolchain extension definition object
     const struct _pspl_toolchain_extension* toolchain_extension;
@@ -50,14 +51,15 @@ typedef struct _pspl_extension {
 
 /** 
  * Common platform description structure 
+ *
+ * Instances of this structure are generated before compile time
+ * via CMake. The structure is shared between the *Toolchain* and
+ * *Runtime* portions of PSPL, thereby maintaining a common platform
+ * namespace.
  */
 typedef struct _pspl_platform {
-    
-    // Short platform name
-    const char* platform_name;
-    
-    // Platform description
-    const char* platform_desc;
+    const char* platform_name; /**< Unique platform name (short) */
+    const char* platform_desc; /**< Description of platform (for built-in help) */
     
     // Native byte-order [PSPL_LITTLE_ENDIAN, PSPL_BIG_ENDIAN]
     uint8_t byte_order;
