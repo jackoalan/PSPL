@@ -24,16 +24,18 @@
  * @{
  */
 
-/** 
+/**
  * Endianness enumerations 
  */
-#define PSPL_UNSPEC_ENDIAN 0
-#define PSPL_LITTLE_ENDIAN 1
-#define PSPL_BIG_ENDIAN    2
-#define PSPL_BI_ENDIAN     3
+enum pspl_endianness {
+    PSPL_UNSPEC_ENDIAN = 0,
+    PSPL_LITTLE_ENDIAN = 1,
+    PSPL_BIG_ENDIAN    = 2,
+    PSPL_BI_ENDIAN     = 3
+};
 
 
-/** 
+/**
  * PSPL stored hash type 
  */
 typedef union {
@@ -112,13 +114,13 @@ void pspl_runtime_shutdown();
 
 #pragma mark Packages
 
-/** 
+/**
  * Package representation type 
  */
 typedef struct _pspl_loaded_package pspl_runtime_package_rep_t;
 
 
-/** 
+/**
  * Data provider type
  */
 typedef struct {
@@ -177,7 +179,7 @@ int pspl_runtime_load_package_provider(const char* package_path, const pspl_data
 int pspl_runtime_load_package_membuf(const void* package_data, size_t package_len,
                                      const pspl_runtime_package_rep_t** package_out);
 
-/** 
+/**
  * Unload PSPL package
  *
  * Frees all allocated objects represented through this package.
@@ -191,7 +193,7 @@ void pspl_runtime_unload_package(const pspl_runtime_package_rep_t* package);
 
 #pragma mark PSPLC Objects
 
-/** 
+/**
  * PSPLC runtime representation (from PSPLC)
  * Holds state information about object during runtime 
  */
@@ -209,7 +211,7 @@ typedef struct {
     
 } pspl_runtime_psplc_rep_t;
 
-/** 
+/**
  * Count embedded PSPLCs within package
  *
  * @param package Package representation to count from
@@ -233,7 +235,7 @@ typedef int(*pspl_runtime_enumerate_psplc_hook)(const pspl_runtime_psplc_rep_t* 
 void pspl_runtime_enumerate_psplcs(const pspl_runtime_package_rep_t* package,
                                    pspl_runtime_enumerate_psplc_hook hook);
 
-/** 
+/**
  * Get PSPLC representation from key string and optionally perform retain
  *
  * @param key Key-string to hash and use to look up PSPLC representation
@@ -243,7 +245,7 @@ void pspl_runtime_enumerate_psplcs(const pspl_runtime_package_rep_t* package,
  */
 const pspl_runtime_psplc_rep_t* pspl_runtime_get_psplc_from_key(const char* key, int retain);
 
-/** 
+/**
  * Get PSPLC representation from hash and optionally perform retain 
  *
  * @param hash Hash to use to look up PSPLC representation
@@ -253,7 +255,7 @@ const pspl_runtime_psplc_rep_t* pspl_runtime_get_psplc_from_key(const char* key,
  */
 const pspl_runtime_psplc_rep_t* pspl_runtime_get_psplc_from_hash(pspl_hash* hash, int retain);
 
-/** 
+/**
  * Increment reference-count of PSPLC representation
  *
  * @param psplc PSPLC representation
@@ -270,7 +272,7 @@ void pspl_runtime_release_psplc(const pspl_runtime_psplc_rep_t* psplc);
 
 #pragma mark Archived Files
 
-/** 
+/**
  * Archived file object (from PSPLP)
  * Holds state information about file during runtime 
  */
@@ -296,7 +298,7 @@ typedef struct {
  */
 unsigned int pspl_runtime_count_archived_files(const pspl_runtime_package_rep_t* package);
 
-/** 
+/**
  * Function type to enumerate archived files within package.
  * `archived_file` provides the complete file representation
  * Returning negative value from hook will cancel enumeration 
@@ -312,7 +314,7 @@ typedef int(*pspl_runtime_enumerate_archived_file_hook)(const pspl_runtime_arc_f
 void pspl_runtime_enumerate_archived_files(const pspl_runtime_package_rep_t* package,
                                            pspl_runtime_enumerate_archived_file_hook hook);
 
-/** 
+/**
  * Get archived file from hash and optionally perform retain
  *
  * @param hash Hash to use to look up archived file

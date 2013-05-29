@@ -18,7 +18,7 @@
  * @{
  */
 
-/** 
+/**
  * Common extension definition structure
  *
  * Instances of this structure are generated before compile time
@@ -40,7 +40,7 @@ typedef struct _pspl_extension {
 } pspl_extension_t;
 
 
-/** 
+/**
  * Common platform description structure 
  *
  * Instances of this structure are generated before compile time
