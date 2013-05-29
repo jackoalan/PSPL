@@ -18,7 +18,6 @@
 /**
  * @file PSPL/PSPL.h
  * @brief General Toolchain *and* Runtime Public API Bits
- * @defgroup pspl General Toolchain *and* Runtime Public API Bits
  * @ingroup PSPL
  * @{
  */
@@ -50,20 +49,20 @@ extern void pspl_hash_parse(pspl_hash* out, const char* hash_str);
 
 #pragma mark Runtime API
 
-/** 
- * Init PSPL Runtime.
- * 
+/**
+ * Init PSPL Runtime
+ *
  * Allocates necessary state for the runtime platform compiled into `pspl-rt`.
  * PSPLP package files may be loaded afterwards.
- * 
+ *
  * @param platform_out Output pointer that's set with a reference to the 
  *        compiled-in platform metadata structure
  * @return 0 if successful, negative otherwise
  */
 int pspl_init(const pspl_platform_t** platform_out);
 
-/** 
- * Shutdown PSPL Runtime 
+/**
+ * Shutdown PSPL Runtime
  *
  * Deallocates any objects and archived files owned by the PSPL runtime,
  * closes any open packages, unloads all objects
