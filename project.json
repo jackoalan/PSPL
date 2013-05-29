@@ -1,1 +1,1 @@
-{"versions":["HEAD"],"github":"jackoalan/PSPL","name":"PSPL","signatures":{"pspl_init":{"exists":["HEAD"],"changes":{}}},"groups":{"pspl_init":"PSPL"}}
+{"versions":["HEAD"],"github":"jackoalan/PSPL","name":"PSPL","signatures":{"pspl_init":{"exists":["HEAD"],"changes":{}},"pspl_shutdown":{"exists":["HEAD"],"changes":{}}},"groups":{"pspl_init":"PSPL","pspl_shutdown":"PSPL"}}
