@@ -11,7 +11,17 @@
 
 #include <stdint.h>
 
-/* Common extension definition structure */
+/**
+ * @file PSPL/PSPLExtension.h
+ * @brief Primary Extension and Platform Structures
+ * @defgroup pspl_extension Objects and Routines for authoring PSPL extensions
+ * @ingroup pspl_extension
+ * @{
+ */
+
+/** 
+ * Common extension definition structure
+ */
 typedef struct _pspl_extension {
     // Unique name of extension
     const char* extension_name;
@@ -31,8 +41,16 @@ typedef struct _pspl_extension {
     
 } pspl_extension_t;
 
+/**
+ * @}
+ * @defgroup pspl_platform Objects and Routines for authoring PSPL platforms
+ * @ingroup pspl_platform
+ * @{
+ */
 
-/* Common platform description structure */
+/** 
+ * Common platform description structure 
+ */
 typedef struct _pspl_platform {
     
     // Short platform name
@@ -60,6 +78,7 @@ typedef struct _pspl_platform {
     
 } pspl_platform_t;
 
+/** @} */
 
 #include <PSPL/PSPL.h>
 

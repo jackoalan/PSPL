@@ -15,6 +15,14 @@
 /* PSPL's method of defining numeric values in a bi-endian manner */
 #include <PSPL/PSPLValue.h>
 
+/**
+ * @file PSPL/PSPL.h
+ * @brief General Toolchain *and* Runtime Public API Bits
+ * @defgroup pspl General Toolchain *and* Runtime Public API Bits
+ * @ingroup pspl
+ * @{
+ */
+
 /* Endianness enumerations */
 #define PSPL_UNSPEC_ENDIAN 0
 #define PSPL_LITTLE_ENDIAN 1
@@ -48,13 +56,18 @@ extern void pspl_hash_parse(pspl_hash* out, const char* hash_str);
  * Allocates necessary state for the runtime platform compiled into `pspl-rt`.
  * PSPLP package files may be loaded afterwards.
  * 
- * @param  Output pointer that's set with a reference to the compiled-in platform
- *         metadata structure
- * @return Error code (0:successful, negative:unsuccessful)
+ * @param platform_out *Output pointer* that's set with a reference to the 
+ *        compiled-in platform metadata structure
+ * @return Error code [**0:** successful, **Negative:** unsuccessful]
  */
 int pspl_init(const pspl_platform_t** platform_out);
 
-/* Shutdown PSPL Runtime */
+/** 
+ * Shutdown PSPL Runtime 
+ *
+ * Deallocates any objects and archived files owned by the PSPL runtime;
+ * closes any open packages; unloads all objects
+ */
 void pspl_shutdown();
 
 
@@ -167,6 +180,8 @@ void pspl_retain_archived_file(const pspl_archived_file_t* archived_file);
 void pspl_release_archived_file(const pspl_archived_file_t* archived_file);
 
 #endif // PSPL_RUNTIME
+
+/** @} */
 
 #include <PSPL/PSPLToolchainExtension.h>
 #include <PSPL/PSPLRuntimeExtension.h>
