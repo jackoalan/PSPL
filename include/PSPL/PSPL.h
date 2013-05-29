@@ -18,6 +18,7 @@
 /**
  * @file PSPL/PSPL.h
  * @brief General Toolchain *and* Runtime Public API Bits
+ * @defgroup pspl_malloc Memory management context
  * @defgroup pspl_hash Hash Manipulation Routines
  * @defgroup pspl_runtime Runtime Public API
  * @ingroup PSPL
@@ -56,6 +57,49 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...);
  */
 void pspl_warn(const char* brief, const char* msg, ...);
 #endif
+
+
+#pragma mark Malloc Zone Context
+
+/**
+ * Malloc context type 
+ */
+/* Malloc context */
+typedef struct _malloc_context {
+    unsigned int object_num;
+    unsigned int object_cap;
+    void** object_arr;
+} pspl_malloc_context_t;
+
+/**
+ * Init Malloc Context for tracking allocated objects
+ *
+ * @param context Context object to populate
+ */
+void pspl_malloc_context_init(pspl_malloc_context_t* context);
+
+/**
+ * Destroy Malloc Context and free tracked memory objects with it
+ *
+ * @param context Context object to destroy
+ */
+void pspl_malloc_context_destroy(pspl_malloc_context_t* context);
+
+/**
+ * Allocate memory object and track within context
+ *
+ * @param context Context object to add memory object within
+ * @return Newly-allocated memory object pointer
+ */
+void* pspl_malloc_malloc(pspl_malloc_context_t* context, size_t size);
+
+/**
+ * Free memory object from within context
+ *
+ * @param context Context object to free memory object from
+ * @param ptr Previously allocated memory object
+ */
+void pspl_malloc_free(pspl_malloc_context_t* context, void* ptr);
 
 
 #pragma mark Hash Stuff
@@ -151,7 +195,7 @@ typedef struct _pspl_loaded_package pspl_runtime_package_rep_t;
 typedef struct {
     
     /**< Open handle at path for reading (returning pointer to handle or NULL) */
-    const void*(*open)(const char* path);
+    int(*open)(void* handle, const char* path);
     
     /**< Close previously opened handle */
     void(*close)(const void* handle);
@@ -163,7 +207,7 @@ typedef struct {
     int(*seek)(const void* handle, size_t seek_set);
     
     /**< Read count of bytes from handle (returning bytes read) */
-    size_t(*read)(const void* handle, size_t num_bytes, void* data_out);
+    size_t(*read)(const void* handle, size_t num_bytes, const void** data_out);
     
 } pspl_data_provider_t;
 
@@ -185,12 +229,16 @@ int pspl_runtime_load_package_file(const char* package_path, const pspl_runtime_
  *
  * @param package_path path expressing location to PSPLP file
  *        (supplied to 'open' hook)
- * @param data_provider application-populated data structure with hook
+ * @param data_provider_handle application-allocated handle object for use
+ *        with provided hooks
+ * @param data_provider_hooks application-populated data structure with hook
  *        implementations for data-handling routines
  * @param package_out Output pointer conveying package representation
  * @return 0 if successful, or negative otherwise
  */
-int pspl_runtime_load_package_provider(const char* package_path, const pspl_data_provider_t* data_provider,
+int pspl_runtime_load_package_provider(const char* package_path,
+                                       void* data_provider_handle,
+                                       const pspl_data_provider_t* data_provider_hooks,
                                        const pspl_runtime_package_rep_t** package_out);
 
 /**

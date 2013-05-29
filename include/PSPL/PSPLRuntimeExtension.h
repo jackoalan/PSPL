@@ -53,7 +53,7 @@ typedef struct _pspl_runtime_extension {
     // Hook fields
     
     // Extension init (called once at runtime init)
-    void(*init_hook)(const pspl_extension_t* extension);
+    int(*init_hook)(const pspl_extension_t* extension);
     
     // Shutdown (called once at runtime shutdown)
     pspl_runtime_shutdown_hook shutdown_hook;
@@ -81,7 +81,7 @@ typedef struct _pspl_runtime_platform {
     // Hook fields
     
     // Platform init (called once at runtime init)
-    void(*init_hook)(const pspl_platform_t* platform);
+    int(*init_hook)(const pspl_platform_t* platform);
     
     // Shutdown (called once at runtime shutdown)
     pspl_runtime_shutdown_hook shutdown_hook;

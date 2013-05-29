@@ -31,6 +31,47 @@ void pspl_hash_parse(pspl_hash* out, const char* hash_str) {
     }
 }
 
+#pragma mark Malloc Zone Management
+
+void pspl_malloc_context_init(pspl_malloc_context_t* context) {
+    context->object_num = 0;
+    context->object_cap = 50;
+    context->object_arr = calloc(50, sizeof(void*));
+    context->object_arr[0] = NULL;
+}
+
+void pspl_malloc_context_destroy(pspl_malloc_context_t* context) {
+    int i;
+    for (i=0 ; i<context->object_num ; ++i)
+        if (context->object_arr[i])
+            free((void*)context->object_arr[i]);
+    context->object_num = 0;
+    context->object_cap = 0;
+    free(context->object_arr);
+}
+
+void* pspl_malloc_malloc(pspl_malloc_context_t* context, size_t size) {
+    int i;
+    for (i=0 ; i<context->object_num ; ++i)
+        if (!context->object_arr[i])
+            return (context->object_arr[i] = malloc(size));
+    if (context->object_num >= context->object_cap) {
+        context->object_cap *= 2;
+        context->object_arr = realloc(context->object_arr, context->object_cap*sizeof(const void*));
+    }
+    return (context->object_arr[context->object_num++] = malloc(size));
+}
+
+void pspl_malloc_free(pspl_malloc_context_t* context, void* ptr) {
+    int i;
+    for (i=0 ; i<context->object_num ; ++i)
+        if (context->object_arr[i] == ptr) {
+            free((void*)context->object_arr[i]);
+            context->object_arr[i] = NULL;
+        }
+}
+
+
 #pragma mark Windows Support Stuff
 
 #ifdef _WIN32
