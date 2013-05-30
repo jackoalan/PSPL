@@ -37,7 +37,6 @@ void pspl_malloc_context_init(pspl_malloc_context_t* context) {
     context->object_num = 0;
     context->object_cap = 50;
     context->object_arr = calloc(50, sizeof(void*));
-    context->object_arr[0] = NULL;
 }
 
 void pspl_malloc_context_destroy(pspl_malloc_context_t* context) {

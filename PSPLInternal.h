@@ -254,8 +254,22 @@ typedef struct {
 } pspl_psplp_header_t;
 typedef DEF_BI_OBJ_TYPE(pspl_psplp_header_t) pspl_psplp_header_bi_t;
 #define SWAP_PSPL_PSPLP_HEADER_T(ptr) \
-(ptr)->psplc_count = swap_uint32((ptr)->psplc_count);\
+(ptr)->psplc_count = swap_uint32((ptr)->psplc_count)
 
+/* Top-tier PSPLC index record */
+typedef struct {
+    
+    // File-absolute offset to beginning of PSPLC record
+    uint32_t psplc_base;
+    
+    // Total length between PSPLC base and beginning of PSPLC data blobs
+    uint32_t psplc_tables_len;
+    
+} pspl_psplp_psplc_index_t;
+typedef DEF_BI_OBJ_TYPE(pspl_psplp_psplc_index_t) pspl_psplp_psplc_index_bi_t;
+#define SWAP_PSPL_PSPLP_PSPLC_INDEX_T(ptr) \
+(ptr)->psplc_base = swap_uint32((ptr)->psplc_base);\
+(ptr)->psplc_tables_len = swap_uint32((ptr)->psplc_tables_len)
 
 #endif // PSPL_INTERNAL
 #endif

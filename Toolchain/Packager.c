@@ -180,7 +180,7 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
     uint32_t acc = sizeof(pspl_header_t);
     acc += (psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_off_header_bi_t) : sizeof(pspl_off_header_t);
     acc += (psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_psplp_header_bi_t) : sizeof(pspl_psplp_header_t);
-    acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(uint32_t)*2 : sizeof(uint32_t) + sizeof(pspl_hash)) * ctx->indexer_count;
+    acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_psplp_psplc_index_bi_t) : sizeof(pspl_psplp_psplc_index_t) + sizeof(pspl_hash)) * ctx->indexer_count;
     
     for (i=0 ; i<ctx->indexer_count ; ++i) {
         pspl_indexer_context_t* indexer = ctx->indexer_array[i];
@@ -188,7 +188,7 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
         acc += sizeof(pspl_hash);
         acc += (psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_psplc_header_bi_t) : sizeof(pspl_psplc_header_t);
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_array_extension_bi_t) : sizeof(pspl_object_array_extension_t)) * ctx->ext_count;
-        indexer->extension_obj_array_off = acc;
+        indexer->extension_obj_array_off = acc - indexer->extension_obj_base_off; // PACKAGER SPECIFIC!!! - BASE-RELATIVE OFFSETS!!!
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_hash_record_bi_t) : sizeof(pspl_object_hash_record_t) + sizeof(pspl_hash)) * indexer->h_objects_count;
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_int_record_bi_t) : sizeof(pspl_object_int_record_t)) * indexer->i_objects_count;
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_hash_record_bi_t) : sizeof(pspl_object_hash_record_t) + sizeof(pspl_hash)) * indexer->ph_objects_count;
@@ -317,31 +317,19 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
     for (i=0 ; i<ctx->indexer_count ; ++i) {
         pspl_indexer_context_t* indexer = ctx->indexer_array[i];
         fwrite(&indexer->psplc_hash, 1, sizeof(pspl_hash), psplp_file_out);
-        uint32_t base = indexer->extension_obj_base_off;
-        uint32_t base_swapped = swap_uint32(base);
+        pspl_psplp_psplc_index_bi_t psplc_record;
+        SET_BI_U32(psplc_record, psplc_base, indexer->extension_obj_base_off);
+        SET_BI_U32(psplc_record, psplc_tables_len,
+                   indexer->extension_obj_data_off - indexer->extension_obj_base_off);
         switch (psplp_endianness) {
             case PSPL_LITTLE_ENDIAN:
-#               if __LITTLE_ENDIAN__
-                fwrite(&base, 1, sizeof(uint32_t), psplp_file_out);
-#               elif __BIG_ENDIAN__
-                fwrite(&base_swapped, 1, sizeof(uint32_t), psplp_file_out);
-#               endif
+                fwrite(&psplc_record.little, 1, sizeof(pspl_psplp_psplc_index_t), psplp_file_out);
                 break;
             case PSPL_BIG_ENDIAN:
-#               if __LITTLE_ENDIAN__
-                fwrite(&base_swapped, 1, sizeof(uint32_t), psplp_file_out);
-#               elif __BIG_ENDIAN__
-                fwrite(&base, 1, sizeof(uint32_t), psplp_file_out);
-#               endif
+                fwrite(&psplc_record.big, 1, sizeof(pspl_psplp_psplc_index_t), psplp_file_out);
                 break;
             case PSPL_BI_ENDIAN:
-#               if __LITTLE_ENDIAN__
-                fwrite(&base, 1, sizeof(uint32_t), psplp_file_out);
-                fwrite(&base_swapped, 1, sizeof(uint32_t), psplp_file_out);
-#               elif __BIG_ENDIAN__
-                fwrite(&base_swapped, 1, sizeof(uint32_t), psplp_file_out);
-                fwrite(&base, 1, sizeof(uint32_t), psplp_file_out);
-#               endif
+                fwrite(&psplc_record, 1, sizeof(pspl_psplp_psplc_index_bi_t), psplp_file_out);
                 break;
             default:
                 break;

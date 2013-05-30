@@ -21,9 +21,9 @@ typedef struct {
 } pspl_data_object_t;
 
 typedef void(*pspl_runtime_shutdown_hook)();
-typedef void(*pspl_runtime_load_object_hook)(pspl_runtime_psplc_rep_t* object);
-typedef void(*pspl_runtime_unload_object_hook)(pspl_runtime_psplc_rep_t* object);
-typedef void(*pspl_runtime_bind_object_hook)(pspl_runtime_psplc_rep_t* object);
+typedef void(*pspl_runtime_load_object_hook)(pspl_runtime_psplc_t* object);
+typedef void(*pspl_runtime_unload_object_hook)(pspl_runtime_psplc_t* object);
+typedef void(*pspl_runtime_bind_object_hook)(pspl_runtime_psplc_t* object);
 
 
 #pragma mark Extension/Platform Load API
@@ -31,15 +31,15 @@ typedef void(*pspl_runtime_bind_object_hook)(pspl_runtime_psplc_rep_t* object);
 /* These *must* be called within the `load` hook of platform or extension */
 
 /* Get embedded data object for extension by key (to hash) */
-const pspl_data_object_t* pspl_get_embedded_data_object_from_key(pspl_runtime_psplc_rep_t* object,
+const pspl_data_object_t* pspl_get_embedded_data_object_from_key(pspl_runtime_psplc_t* object,
                                                                  const char* key);
 
 /* Get embedded object for extension by hash */
-const pspl_data_object_t* pspl_get_embedded_data_object_from_hash(pspl_runtime_psplc_rep_t* object,
+const pspl_data_object_t* pspl_get_embedded_data_object_from_hash(pspl_runtime_psplc_t* object,
                                                                   pspl_hash* hash);
 
 /* Get embedded object for extension by index */
-const pspl_data_object_t* pspl_get_embedded_data_object_from_index(pspl_runtime_psplc_rep_t* object,
+const pspl_data_object_t* pspl_get_embedded_data_object_from_index(pspl_runtime_psplc_t* object,
                                                                    uint32_t index);
 
 

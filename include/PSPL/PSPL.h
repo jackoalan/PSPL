@@ -186,7 +186,7 @@ void pspl_runtime_shutdown();
 /**
  * Package representation type 
  */
-typedef struct _pspl_loaded_package pspl_runtime_package_rep_t;
+typedef struct _pspl_loaded_package pspl_runtime_package_t;
 
 
 /**
@@ -222,7 +222,7 @@ typedef struct {
  * @param package_out Output pointer conveying package representation
  * @return 0 if successful, or negative otherwise
  */
-int pspl_runtime_load_package_file(const char* package_path, const pspl_runtime_package_rep_t** package_out);
+int pspl_runtime_load_package_file(const char* package_path, const pspl_runtime_package_t** package_out);
 
 /**
  * Load a PSPLP package file using data-providing hook routines provided by application
@@ -239,7 +239,7 @@ int pspl_runtime_load_package_file(const char* package_path, const pspl_runtime_
 int pspl_runtime_load_package_provider(const char* package_path,
                                        void* data_provider_handle,
                                        const pspl_data_provider_t* data_provider_hooks,
-                                       const pspl_runtime_package_rep_t** package_out);
+                                       const pspl_runtime_package_t** package_out);
 
 /**
  * Load a PSPLP package file from application-provided memory buffer
@@ -250,7 +250,7 @@ int pspl_runtime_load_package_provider(const char* package_path,
  * @return 0 if successful, or negative otherwise
  */
 int pspl_runtime_load_package_membuf(const void* package_data, size_t package_len,
-                                     const pspl_runtime_package_rep_t** package_out);
+                                     const pspl_runtime_package_t** package_out);
 
 /**
  * Unload PSPL package
@@ -261,7 +261,7 @@ int pspl_runtime_load_package_membuf(const void* package_data, size_t package_le
  *
  * @param package Package representation to unload
  */
-void pspl_runtime_unload_package(const pspl_runtime_package_rep_t* package);
+void pspl_runtime_unload_package(const pspl_runtime_package_t* package);
 
 
 #pragma mark PSPLC Objects
@@ -279,10 +279,7 @@ typedef struct {
      *   (initialised by load hook, freed by unload hook, bound by bind hook) */
     pspl_platform_shader_object_t native_shader;
     
-    /**< Opaque object pointer used by PSPL's runtime internals */
-    const void* pspl_internals;
-    
-} pspl_runtime_psplc_rep_t;
+} pspl_runtime_psplc_t;
 
 /**
  * Count embedded PSPLCs within package
@@ -290,14 +287,14 @@ typedef struct {
  * @param package Package representation to count from
  * @return PSPLC count
  */
-unsigned int pspl_runtime_count_psplcs(const pspl_runtime_package_rep_t* package);
+unsigned int pspl_runtime_count_psplcs(const pspl_runtime_package_t* package);
 
 /**
  * Funtion type to enumerate PSPLC representations within package.
  * `psplc_object` provides the complete PSPLC representation
  * Returning negative value from hook will cancel enumeration
  */
-typedef int(*pspl_runtime_enumerate_psplc_hook)(const pspl_runtime_psplc_rep_t* psplc_object);
+typedef int(*pspl_runtime_enumerate_psplc_hook)(const pspl_runtime_psplc_t* psplc_object);
 
 /**
  * Enumerate embedded PSPLCs within package
@@ -305,7 +302,7 @@ typedef int(*pspl_runtime_enumerate_psplc_hook)(const pspl_runtime_psplc_rep_t* 
  * @param package Package representation to enumerate from
  * @param hook Function to call for each PSPLC
  */
-void pspl_runtime_enumerate_psplcs(const pspl_runtime_package_rep_t* package,
+void pspl_runtime_enumerate_psplcs(const pspl_runtime_package_t* package,
                                    pspl_runtime_enumerate_psplc_hook hook);
 
 /**
@@ -316,7 +313,7 @@ void pspl_runtime_enumerate_psplcs(const pspl_runtime_package_rep_t* package,
  *        reference count set to 1 when found
  * @return PSPLC representation (or NULL if not available)
  */
-const pspl_runtime_psplc_rep_t* pspl_runtime_get_psplc_from_key(const char* key, int retain);
+const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_key(const char* key, int retain);
 
 /**
  * Get PSPLC representation from hash and optionally perform retain 
@@ -326,21 +323,21 @@ const pspl_runtime_psplc_rep_t* pspl_runtime_get_psplc_from_key(const char* key,
  *        reference count set to 1 when found
  * @return PSPLC representation (or NULL if not available)
  */
-const pspl_runtime_psplc_rep_t* pspl_runtime_get_psplc_from_hash(pspl_hash* hash, int retain);
+const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_hash(pspl_hash* hash, int retain);
 
 /**
  * Increment reference-count of PSPLC representation
  *
  * @param psplc PSPLC representation
  */
-void pspl_runtime_retain_psplc(const pspl_runtime_psplc_rep_t* psplc);
+void pspl_runtime_retain_psplc(const pspl_runtime_psplc_t* psplc);
 
 /**
  * Decrement reference-count of PSPLC representation
  *
  * @param psplc PSPLC representation
  */
-void pspl_runtime_release_psplc(const pspl_runtime_psplc_rep_t* psplc);
+void pspl_runtime_release_psplc(const pspl_runtime_psplc_t* psplc);
 
 
 #pragma mark Archived Files
@@ -358,10 +355,7 @@ typedef struct {
     size_t file_len;
     const void* file_data;
     
-    /**< Opaque object pointer used by PSPL's runtime internals */
-    const void* pspl_internals;
-    
-} pspl_runtime_arc_file_rep_t;
+} pspl_runtime_arc_file_t;
 
 /**
  * Count archived files within package
@@ -369,14 +363,14 @@ typedef struct {
  * @param package Package representation to count from
  * @return Archived file count
  */
-unsigned int pspl_runtime_count_archived_files(const pspl_runtime_package_rep_t* package);
+unsigned int pspl_runtime_count_archived_files(const pspl_runtime_package_t* package);
 
 /**
  * Function type to enumerate archived files within package.
  * `archived_file` provides the complete file representation
  * Returning negative value from hook will cancel enumeration 
  */
-typedef int(*pspl_runtime_enumerate_archived_file_hook)(const pspl_runtime_arc_file_rep_t* archived_file);
+typedef int(*pspl_runtime_enumerate_archived_file_hook)(const pspl_runtime_arc_file_t* archived_file);
 
 /**
  * Enumerate archived files within package
@@ -384,7 +378,7 @@ typedef int(*pspl_runtime_enumerate_archived_file_hook)(const pspl_runtime_arc_f
  * @param package Package representation to enumerate from
  * @param hook Function to call for each file
  */
-void pspl_runtime_enumerate_archived_files(const pspl_runtime_package_rep_t* package,
+void pspl_runtime_enumerate_archived_files(const pspl_runtime_package_t* package,
                                            pspl_runtime_enumerate_archived_file_hook hook);
 
 /**
@@ -395,21 +389,21 @@ void pspl_runtime_enumerate_archived_files(const pspl_runtime_package_rep_t* pac
  *        reference count set to 1 when found
  * @return File representation (or NULL if not available)
  */
-const pspl_runtime_arc_file_rep_t* pspl_runtime_get_archived_file_from_hash(pspl_hash* hash, int retain);
+const pspl_runtime_arc_file_t* pspl_runtime_get_archived_file_from_hash(pspl_hash* hash, int retain);
 
 /**
  * Increment reference-count of archived file
  *
  * @param file File representation
  */
-void pspl_runtime_retain_archived_file(const pspl_runtime_arc_file_rep_t* file);
+void pspl_runtime_retain_archived_file(const pspl_runtime_arc_file_t* file);
 
 /**
  * Decrement reference-count of archived file
  *
  * @param file File representation
  */
-void pspl_runtime_release_archived_file(const pspl_runtime_arc_file_rep_t* file);
+void pspl_runtime_release_archived_file(const pspl_runtime_arc_file_t* file);
 
 #endif // PSPL_RUNTIME
 
