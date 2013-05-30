@@ -831,13 +831,12 @@ static int load_psplp(pspl_runtime_package_t* package) {
             
         }
         
-        // Verify platform
-        if (package->runtime_platform_index == 0xff) {
-            pspl_warn("Required platform not present in PSPLP",
-                      "this build of `pspl-rt` requires packages targeting '%s' platform",
+        // Advise user if this platform has been discriminated
+        if (psplc_platform_count && package->runtime_platform_index == 0xff)
+            pspl_warn("Platform not present in PSPLP",
+                      "this build of `pspl-rt` made for packages targeting '%s' platform; "
+                      "graphics functionality will not be utilised",
                       pspl_runtime_platform->platform_name);
-            return -1;
-        }
         
         
         // Free strings if loaded using stdio
