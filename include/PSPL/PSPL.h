@@ -313,7 +313,8 @@ void pspl_runtime_enumerate_psplcs(const pspl_runtime_package_t* package,
  *        reference count set to 1 when found
  * @return PSPLC representation (or NULL if not available)
  */
-const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_key(const char* key, int retain);
+const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_key(const pspl_runtime_package_t* package,
+                                                            const char* key, int retain);
 
 /**
  * Get PSPLC representation from hash and optionally perform retain 
@@ -323,7 +324,8 @@ const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_key(const char* key, int
  *        reference count set to 1 when found
  * @return PSPLC representation (or NULL if not available)
  */
-const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_hash(pspl_hash* hash, int retain);
+const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_hash(const pspl_runtime_package_t* package,
+                                                             pspl_hash* hash, int retain);
 
 /**
  * Increment reference-count of PSPLC representation
@@ -389,7 +391,8 @@ void pspl_runtime_enumerate_archived_files(const pspl_runtime_package_t* package
  *        reference count set to 1 when found
  * @return File representation (or NULL if not available)
  */
-const pspl_runtime_arc_file_t* pspl_runtime_get_archived_file_from_hash(pspl_hash* hash, int retain);
+const pspl_runtime_arc_file_t* pspl_runtime_get_archived_file_from_hash(const pspl_runtime_package_t* package,
+                                                                        pspl_hash* hash, int retain);
 
 /**
  * Increment reference-count of archived file

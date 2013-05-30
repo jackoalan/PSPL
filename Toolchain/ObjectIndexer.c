@@ -2006,6 +2006,10 @@ void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
     ctx->extension_obj_data_off = acc;
     for (i=0 ; i<ctx->h_objects_count ; ++i) {
         pspl_indexer_entry_t* ent = ctx->h_objects_array[i];
+        if (psplc_endianness == PSPL_LITTLE_ENDIAN)
+            ent->object_big_data = NULL;
+        else if (psplc_endianness == PSPL_BIG_ENDIAN)
+            ent->object_little_data = NULL;
         ent->object_padding = ROUND_UP_4(acc) - acc;
         if (ent->object_little_data && ent->object_big_data &&
             ent->object_little_data != ent->object_big_data)
@@ -2015,6 +2019,10 @@ void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
     }
     for (i=0 ; i<ctx->i_objects_count ; ++i) {
         pspl_indexer_entry_t* ent = ctx->i_objects_array[i];
+        if (psplc_endianness == PSPL_LITTLE_ENDIAN)
+            ent->object_big_data = NULL;
+        else if (psplc_endianness == PSPL_BIG_ENDIAN)
+            ent->object_little_data = NULL;
         ent->object_padding = ROUND_UP_4(acc) - acc;
         if (ent->object_little_data && ent->object_big_data &&
             ent->object_little_data != ent->object_big_data)
@@ -2024,6 +2032,10 @@ void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
     }
     for (i=0 ; i<ctx->ph_objects_count ; ++i) {
         pspl_indexer_entry_t* ent = ctx->ph_objects_array[i];
+        if (psplc_endianness == PSPL_LITTLE_ENDIAN)
+            ent->object_big_data = NULL;
+        else if (psplc_endianness == PSPL_BIG_ENDIAN)
+            ent->object_little_data = NULL;
         ent->object_padding = ROUND_UP_4(acc) - acc;
         if (ent->object_little_data && ent->object_big_data &&
             ent->object_little_data != ent->object_big_data)
@@ -2033,6 +2045,10 @@ void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
     }
     for (i=0 ; i<ctx->pi_objects_count ; ++i) {
         pspl_indexer_entry_t* ent = ctx->pi_objects_array[i];
+        if (psplc_endianness == PSPL_LITTLE_ENDIAN)
+            ent->object_big_data = NULL;
+        else if (psplc_endianness == PSPL_BIG_ENDIAN)
+            ent->object_little_data = NULL;
         ent->object_padding = ROUND_UP_4(acc) - acc;
         if (ent->object_little_data && ent->object_big_data &&
             ent->object_little_data != ent->object_big_data)
