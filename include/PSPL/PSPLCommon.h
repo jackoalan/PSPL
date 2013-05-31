@@ -17,6 +17,7 @@
 /**
  * @file PSPL/PSPLCommon.h
  * @brief General Toolchain *and* Runtime Public API Bits
+ * @defgroup pspl Common APIs
  * @defgroup pspl_malloc Memory management context
  * @defgroup pspl_hash Hash Manipulation Routines
  * @ingroup PSPL
