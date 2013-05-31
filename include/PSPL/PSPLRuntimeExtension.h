@@ -43,7 +43,7 @@ typedef void(*pspl_runtime_bind_object_hook)(const pspl_runtime_psplc_t* object)
 
 /* These *must* be called within the `load` hook of platform or extension */
 
-/** 
+/**
  * Get embedded data object for extension by key (used in hash lookup)
  *
  * * **This routine may only be called within extension/platform `load` hook**
@@ -55,11 +55,11 @@ typedef void(*pspl_runtime_bind_object_hook)(const pspl_runtime_psplc_t* object)
  * @param data_object_out Pointer to app-allocated data object structure
  *        needing to be populated (composing data ptr and length)
  */
-int pspl_get_embedded_data_object_from_key(const pspl_runtime_psplc_t* object,
-                                           const char* key,
-                                           pspl_data_object_t* data_object_out);
+int pspl_runtime_get_embedded_data_object_from_key(const pspl_runtime_psplc_t* object,
+                                                   const char* key,
+                                                   pspl_data_object_t* data_object_out);
 
-/** 
+/**
  * Get embedded object for extension by hash
  *
  * * **This routine may only be called within extension/platform `load` hook**
@@ -71,11 +71,11 @@ int pspl_get_embedded_data_object_from_key(const pspl_runtime_psplc_t* object,
  * @param data_object_out Pointer to app-allocated data object structure
  *        needing to be populated (composing data ptr and length)
  */
-int pspl_get_embedded_data_object_from_hash(const pspl_runtime_psplc_t* object,
-                                            const pspl_hash* hash,
-                                            pspl_data_object_t* data_object_out);
+int pspl_runtime_get_embedded_data_object_from_hash(const pspl_runtime_psplc_t* object,
+                                                    const pspl_hash* hash,
+                                                    pspl_data_object_t* data_object_out);
 
-/** 
+/**
  * Get embedded data object for extension by index (used in integer lookup)
  *
  * * **This routine may only be called within extension/platform `load` hook**
@@ -87,9 +87,9 @@ int pspl_get_embedded_data_object_from_hash(const pspl_runtime_psplc_t* object,
  * @param data_object_out Pointer to app-allocated data object structure
  *        needing to be populated (composing data ptr and length)
  */
- int pspl_get_embedded_data_object_from_index(const pspl_runtime_psplc_t* object,
-                                             uint32_t index,
-                                             pspl_data_object_t* data_object_out);
+ int pspl_runtime_get_embedded_data_object_from_index(const pspl_runtime_psplc_t* object,
+                                                      uint32_t index,
+                                                      pspl_data_object_t* data_object_out);
 
 
 #pragma mark Main Runtime Extension Structure

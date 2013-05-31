@@ -375,9 +375,9 @@ static enum {
 static uint32_t api_load_subject_index;
 
 /* Get embedded data object for extension by key (to hash) */
-int pspl_get_embedded_data_object_from_key(const pspl_runtime_psplc_t* object,
-                                           const char* key,
-                                           pspl_data_object_t* data_object_out) {
+int pspl_runtime_get_embedded_data_object_from_key(const pspl_runtime_psplc_t* object,
+                                                   const char* key,
+                                                   pspl_data_object_t* data_object_out) {
     
     // Hash key
     pspl_hash_ctx_t hash_ctx;
@@ -386,14 +386,14 @@ int pspl_get_embedded_data_object_from_key(const pspl_runtime_psplc_t* object,
     pspl_hash* result;
     pspl_hash_result(&hash_ctx, result);
     
-    return pspl_get_embedded_data_object_from_hash(object, result, data_object_out);
+    return pspl_runtime_get_embedded_data_object_from_hash(object, result, data_object_out);
     
 }
 
 /* Get embedded object for extension by hash */
-int pspl_get_embedded_data_object_from_hash(const pspl_runtime_psplc_t* object,
-                                            const pspl_hash* hash,
-                                            pspl_data_object_t* data_object_out) {
+int pspl_runtime_get_embedded_data_object_from_hash(const pspl_runtime_psplc_t* object,
+                                                    const pspl_hash* hash,
+                                                    pspl_data_object_t* data_object_out) {
     int i,j;
     const _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)object;
     
@@ -436,9 +436,9 @@ int pspl_get_embedded_data_object_from_hash(const pspl_runtime_psplc_t* object,
 }
 
 /* Get embedded object for extension by index */
-int pspl_get_embedded_data_object_from_index(const pspl_runtime_psplc_t* object,
-                                             uint32_t index,
-                                             pspl_data_object_t* data_object_out) {
+int pspl_runtime_get_embedded_data_object_from_index(const pspl_runtime_psplc_t* object,
+                                                     uint32_t index,
+                                                     pspl_data_object_t* data_object_out) {
     int i,j;
     const _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)object;
     
