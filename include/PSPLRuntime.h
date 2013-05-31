@@ -13,8 +13,6 @@
 #define PSPL_RUNTIME
 #endif
 
-#include <PSPL/PSPLCommon.h>
-
 /**
  * @file PSPLRuntime.h
  * @brief Runtime Public API
@@ -22,6 +20,8 @@
  * @ingroup PSPL
  * @{
  */
+
+#include <PSPL/PSPLCommon.h>
 
 
 #pragma mark Runtime API
