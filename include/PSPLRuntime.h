@@ -9,10 +9,6 @@
 #ifndef PSPL_PSPLRuntime_h
 #define PSPL_PSPLRuntime_h
 
-#ifndef PSPL_RUNTIME
-#define PSPL_RUNTIME
-#endif
-
 /**
  * @file PSPLRuntime.h
  * @brief Runtime Public API
@@ -141,9 +137,11 @@ typedef struct {
     /**< Hash of PSPLC object */
     pspl_hash hash;
     
+#   ifdef PSPL_RUNTIME
     /**< Platform-specific shader object
      *   (initialised by load hook, freed by unload hook, bound by bind hook) */
     pspl_platform_shader_object_t native_shader;
+#   endif
     
 } pspl_runtime_psplc_t;
 
