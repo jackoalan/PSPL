@@ -16,7 +16,7 @@
 #include <PSPL/PSPL.h>
 
 /**
- * @file PSPL/PSPLRuntime.h
+ * @file PSPLRuntime.h
  * @brief Runtime Public API
  * @defgroup pspl_runtime Runtime Public API
  * @ingroup PSPL
