@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 #include <sys/param.h>
 
-#include <PSPL/PSPLExtension.h>
+#include <PSPLExtension.h>
 #include "ReferenceGatherer.h"
 
 #ifdef _WIN32

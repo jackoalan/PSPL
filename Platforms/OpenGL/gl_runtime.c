@@ -6,4 +6,9 @@
 //
 //
 
-#include <stdio.h>
+#include <PSPLExtension.h>
+
+
+pspl_runtime_platform_t GL2_runplat = {
+    
+};

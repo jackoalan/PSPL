@@ -202,8 +202,6 @@ configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_available_extensions.c.in
 # Core Targets #
 ################
 
-
-
 # Target subdirectories
 add_subdirectory(Toolchain)
 
@@ -213,4 +211,12 @@ if(runtime_idx GREATER -1)
 else()
   message(WARNING "Unable to build runtime; '${PSPL_RUNTIME_PLATFORM}' platform not available")
 endif()
+
+
+
+#########
+# Tests #
+#########
+
+add_subdirectory(Test)
 

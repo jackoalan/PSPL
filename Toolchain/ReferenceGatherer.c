@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <PSPL/PSPLExtension.h>
+#include <PSPLExtension.h>
 #include "ReferenceGatherer.h"
 
 #define PSPL_INITIAL_REF_CAP 50

@@ -34,7 +34,7 @@
 #endif
 
 #include <PSPL/PSPL.h>
-#include <PSPL/PSPLExtension.h>
+#include <PSPLExtension.h>
 #include <PSPLInternal.h>
 
 #include "Driver.h"

@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <PSPL/PSPLExtension.h>
+#include <PSPLExtension.h>
 #include <PSPLInternal.h>
 #include <PSPLHash.h>
 #if PSPL_ERROR_PRINT_BACKTRACE
@@ -191,12 +191,15 @@ static void print_backtrace() {
  * uses a global context state to print context-sensitive error info */
 void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
     if (xterm_colour)
-        fprintf(stderr, RED"*** ERROR ***\n"SGR0);
+        fprintf(stderr, BOLD RED"*** PSPL ERROR ***\n"SGR0);
     else
-        fprintf(stderr, "*** ERROR ***\n");
+        fprintf(stderr, "*** PSPL ERROR ***\n");
     
     brief = wrap_string(brief, 1);
-    fprintf(stderr, "%s:\n", brief);
+    if (xterm_colour)
+        fprintf(stderr, BOLD"%s:\n"SGR0, brief);
+    else
+        fprintf(stderr, "%s:\n", brief);
     char* msg_str = NULL;
     if (msg) {
         va_list va;
@@ -228,12 +231,15 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
  * uses a global context state to print context-sensitive error info */
 void pspl_warn(const char* brief, const char* msg, ...) {
     if (xterm_colour)
-        fprintf(stderr, MAGENTA"*** WARNING ***\n"SGR0);
+        fprintf(stderr, BOLD MAGENTA"*** PSPL WARNING ***\n"SGR0);
     else
-        fprintf(stderr, "*** WARNING ***\n");
+        fprintf(stderr, "*** PSPL WARNING ***\n");
     
     brief = wrap_string(brief, 1);
-    fprintf(stderr, "%s:\n", brief);
+    if (xterm_colour)
+        fprintf(stderr, BOLD"%s:\n"SGR0, brief);
+    else
+        fprintf(stderr, "%s:\n", brief);
     char* msg_str = NULL;
     if (msg) {
         va_list va;
@@ -998,7 +1004,7 @@ static int load_psplp(pspl_runtime_package_t* package) {
 static int stdio_open(void* handle, const char* path) {
     struct stdio_handle* stdio = ((struct stdio_handle*)handle);
     stdio->file = fopen(path, "r");
-    if (stdio->file)
+    if (!stdio->file)
         return -1;
     pspl_malloc_context_init(&stdio->mem_ctx);
     return 0;
@@ -1046,6 +1052,7 @@ int pspl_runtime_load_package_file(const char* package_path,
     package->provider_hooks = &stdio;
     package->provider_local = 1;
     if (stdio.open(&package->provider.stdio, package_path)) {
+        pspl_warn("Unable to load PSPLP", "unable to open `%s`", package_path);
         pspl_malloc_free(&package_mem_ctx, package);
         return -1;
     }

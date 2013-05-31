@@ -8,7 +8,7 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <PSPL/PSPLExtension.h>
+#include <PSPLExtension.h>
 
 
 static void message(unsigned int directive_argc,

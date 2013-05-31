@@ -8,7 +8,7 @@
 
 #define PSPL_INTERNAL
 
-#include <PSPL/PSPLExtension.h>
+#include <PSPLExtension.h>
 #include <PSPLInternal.h>
 #include <PSPLHash.h>
 #include <errno.h>

@@ -10,7 +10,8 @@
 #define PSPL_PSPLRuntimeExtension_h
 #ifdef PSPL_RUNTIME
 
-#include <PSPL/PSPLExtension.h>
+#include <PSPLExtension.h>
+#include <PSPLRuntime.h>
 
 #pragma mark Hook Types
 

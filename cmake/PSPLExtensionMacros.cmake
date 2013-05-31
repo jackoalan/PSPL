@@ -67,6 +67,9 @@ macro(pspl_add_platform_runtime platform_name)
     set_source_files_properties(${ARGN} PROPERTIES COMPILE_DEFINITIONS PSPL_RUNTIME=1)
     if(${platform_name} STREQUAL ${PSPL_RUNTIME_PLATFORM})
       add_library("${platform_name}_runplat" STATIC ${ARGN})
+      set_target_properties("${platform_name}_runplat" PROPERTIES
+                            COMPILE_FLAGS "-include ${PSPL_BINARY_DIR}/Runtime/pspl_runtime_platform_typefile.pch"
+                            COMPILE_DEFINITIONS PSPL_RUNTIME=1)
     endif()
   endif()
 

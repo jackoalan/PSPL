@@ -6,7 +6,7 @@
 //
 //
 
-#include <PSPL/PSPLExtension.h>
+#include <PSPLExtension.h>
 
 /* Toolchain platform definition */
 pspl_toolchain_platform_t D3D9_toolplat = {

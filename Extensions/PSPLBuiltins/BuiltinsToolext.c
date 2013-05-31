@@ -7,7 +7,7 @@
 //
 
 
-#include <PSPL/PSPLExtension.h>
+#include <PSPLExtension.h>
 #include "PreprocessorBuiltins.h"
 #include "CompilerBuiltins.h"
 

@@ -11,7 +11,7 @@
 #ifdef PSPL_TOOLCHAIN
 
 #include <stdlib.h>
-#include <PSPL/PSPLExtension.h>
+#include <PSPLExtension.h>
 
 #define PSPL_MAX_HEADING_ARGS 16
 

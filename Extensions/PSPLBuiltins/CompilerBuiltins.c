@@ -6,7 +6,7 @@
 //
 //
 
-#include <PSPL/PSPLExtension.h>
+#include <PSPLExtension.h>
 #include "../../PSPLHash.h"
 #include <string.h>
 #include <stdio.h>

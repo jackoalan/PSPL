@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include <PSPL/PSPLExtension.h>
+#include <PSPLExtension.h>
 #include <PSPLInternal.h>
 
 #include "Preprocessor.h"

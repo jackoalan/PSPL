@@ -12,7 +12,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <PSPL/PSPLExtension.h>
+#include <PSPLExtension.h>
 
 /* This API is used to maintain an index context for gathering
  * enbedded objects and file stubs. It coordinates with the
