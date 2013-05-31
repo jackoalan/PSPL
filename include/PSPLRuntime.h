@@ -13,7 +13,7 @@
 #define PSPL_RUNTIME
 #endif
 
-#include <PSPL/PSPL.h>
+#include <PSPL/PSPLCommon.h>
 
 /**
  * @file PSPLRuntime.h

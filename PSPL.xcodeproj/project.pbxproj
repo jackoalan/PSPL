@@ -85,7 +85,7 @@
 		E4AFAE29171C92BE00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4AFAE2A171C92D100F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4AFAE2B171C92E000F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
-		E4AFAE33171C941500F7A0BF /* PSPL.h */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.c.h; path = PSPL.h; sourceTree = "<group>"; tabWidth = 4; usesTabs = 0; };
+		E4AFAE33171C941500F7A0BF /* PSPLCommon.h */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.c.h; path = PSPLCommon.h; sourceTree = "<group>"; tabWidth = 4; usesTabs = 0; };
 		E4AFAE3F171C9E2C00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4AFAE40171C9E3700F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4AFAE41171C9E3E00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
@@ -278,7 +278,7 @@
 		E4AFAE32171C93C000F7A0BF /* PSPL */ = {
 			isa = PBXGroup;
 			children = (
-				E4AFAE33171C941500F7A0BF /* PSPL.h */,
+				E4AFAE33171C941500F7A0BF /* PSPLCommon.h */,
 				E4AFAE4B171CA3DA00F7A0BF /* PSPLValue.h */,
 				E4AFAE53171CA6C700F7A0BF /* PSPLToolchainExtension.h */,
 				E4AFAE56171CA74A00F7A0BF /* PSPLRuntimeExtension.h */,

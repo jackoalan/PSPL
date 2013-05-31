@@ -9,7 +9,7 @@
 #ifndef PSPL_PSPLHash_h
 #define PSPL_PSPLHash_h
 
-#include <PSPL/PSPL.h>
+#include <PSPL/PSPLCommon.h>
 
 #if defined(PSPL_HASHING_BUILTIN)
 #  include "Hash/hash_builtin.h"

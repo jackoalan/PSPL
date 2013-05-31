@@ -10,7 +10,7 @@
 #define PSPL_PSPLExtension_h
 
 
-#include <PSPL/PSPL.h>
+#include <PSPL/PSPLCommon.h>
 #include <PSPL/PSPLToolchainExtension.h>
 #include <PSPL/PSPLRuntimeExtension.h>
 

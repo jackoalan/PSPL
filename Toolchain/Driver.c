@@ -33,7 +33,7 @@
 #include <execinfo.h>
 #endif
 
-#include <PSPL/PSPL.h>
+#include <PSPL/PSPLCommon.h>
 #include <PSPLExtension.h>
 #include <PSPLInternal.h>
 

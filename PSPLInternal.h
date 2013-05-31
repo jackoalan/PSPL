@@ -13,7 +13,7 @@
  * codebases. It is primarily concerned with the PSPLC and PSPLP file-formats */
 #ifdef PSPL_INTERNAL
 
-#include <PSPL/PSPL.h>
+#include <PSPL/PSPLCommon.h>
 
 /* Internal enumerations */
 extern const char* PSPL_MAGIC; // Set to PSPL_MAGIC_DEF

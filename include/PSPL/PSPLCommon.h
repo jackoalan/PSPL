@@ -1,5 +1,5 @@
 //
-//  PSPL.h
+//  PSPLCommon.h
 //  PSPL
 //
 //  Created by Jack Andersen on 4/15/13.
@@ -15,7 +15,7 @@
 #include <PSPL/PSPLValue.h>
 
 /**
- * @file PSPL/PSPL.h
+ * @file PSPL/PSPLCommon.h
  * @brief General Toolchain *and* Runtime Public API Bits
  * @defgroup pspl_malloc Memory management context
  * @defgroup pspl_hash Hash Manipulation Routines
