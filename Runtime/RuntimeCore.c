@@ -723,6 +723,7 @@ static int load_psplp(pspl_runtime_package_t* package) {
                                                                   sizeof(pspl_object_int_record_t));
                 
                 // Hashed indexing read-in
+                unsigned int h_arr_c = 0;
                 const void* ext_off = off_tables + ext->ext_hash_indexed_object_array_off;
                 for (l=0 ; l<ext->ext_hash_indexed_object_count ; ++l) {
                     const pspl_hash* hash = ext_off;
@@ -735,14 +736,19 @@ static int load_psplp(pspl_runtime_package_t* package) {
                     }
                     ext_off += sizeof(pspl_object_hash_record_t);
                     
+                    // Determine if platform is (not) supported
+                    if (!((rec->platform_availability_bits >> package->runtime_platform_index) & 1))
+                        continue;
+                    
                     // Populate runtime data (simple copy)
-                    _pspl_object_hash_record_t* dest = &hash_dest_table[l];
+                    _pspl_object_hash_record_t* dest = &hash_dest_table[h_arr_c++];
                     pspl_hash_cpy(&dest->hash, hash);
                     dest->record = *rec;
                     dest->record.object_off -= blobs_off;
                 }
                 
                 // Integer indexing read-in
+                unsigned int i_arr_c = 0;
                 ext_off = off_tables + ext->ext_int_indexed_object_array_off;
                 for (l=0 ; l<ext->ext_int_indexed_object_count ; ++l) {
                     const pspl_object_int_record_t* rec = ext_off;
@@ -753,8 +759,12 @@ static int load_psplp(pspl_runtime_package_t* package) {
                     }
                     ext_off += sizeof(pspl_object_int_record_t);
                     
+                    // Determine if platform is (not) supported
+                    if (!((rec->platform_availability_bits >> package->runtime_platform_index) & 1))
+                        continue;
+                    
                     // Populate runtime data (simple copy)
-                    pspl_object_int_record_t* dest = &int_dest_table[l];
+                    pspl_object_int_record_t* dest = &int_dest_table[i_arr_c++];
                     *dest = *rec;
                     dest->object_off -= blobs_off;
                 }
@@ -762,9 +772,9 @@ static int load_psplp(pspl_runtime_package_t* package) {
                 // Access index array and apply
                 _pspl_object_index_t* index = &ext_index_arr[k];
                 index->extension_index = ext->extension_index;
-                index->h_arr_c = ext->ext_hash_indexed_object_count;
+                index->h_arr_c = h_arr_c;
                 index->h_arr = hash_dest_table;
-                index->i_arr_c = ext->ext_int_indexed_object_count;
+                index->i_arr_c = i_arr_c;
                 index->i_arr = int_dest_table;
                 
             }
@@ -788,6 +798,7 @@ static int load_psplp(pspl_runtime_package_t* package) {
                                                                   sizeof(pspl_object_int_record_t));
                 
                 // Hashed indexing read-in
+                unsigned int h_arr_c = 0;
                 const void* ext_off = off_tables + ext->ext_hash_indexed_object_array_off;
                 for (l=0 ; l<ext->ext_hash_indexed_object_count ; ++l) {
                     const pspl_hash* hash = ext_off;
@@ -800,14 +811,19 @@ static int load_psplp(pspl_runtime_package_t* package) {
                     }
                     ext_off += sizeof(pspl_object_hash_record_t);
                     
+                    // Determine if platform is (not) supported
+                    if (!((rec->platform_availability_bits >> package->runtime_platform_index) & 1))
+                        continue;
+                    
                     // Populate runtime data (simple copy)
-                    _pspl_object_hash_record_t* dest = &hash_dest_table[l];
+                    _pspl_object_hash_record_t* dest = &hash_dest_table[h_arr_c++];
                     pspl_hash_cpy(&dest->hash, hash);
                     dest->record = *rec;
                     dest->record.object_off -= blobs_off;
                 }
                 
                 // Integer indexing read-in
+                unsigned int i_arr_c = 0;
                 ext_off = off_tables + ext->ext_int_indexed_object_array_off;
                 for (l=0 ; l<ext->ext_int_indexed_object_count ; ++l) {
                     const pspl_object_int_record_t* rec = ext_off;
@@ -818,8 +834,12 @@ static int load_psplp(pspl_runtime_package_t* package) {
                     }
                     ext_off += sizeof(pspl_object_int_record_t);
                     
+                    // Determine if platform is (not) supported
+                    if (!((rec->platform_availability_bits >> package->runtime_platform_index) & 1))
+                        continue;
+                    
                     // Populate runtime data (simple copy)
-                    pspl_object_int_record_t* dest = &int_dest_table[l];
+                    pspl_object_int_record_t* dest = &int_dest_table[i_arr_c++];
                     *dest = *rec;
                     dest->object_off -= blobs_off;
                 }
@@ -827,9 +847,9 @@ static int load_psplp(pspl_runtime_package_t* package) {
                 // Access index array and apply
                 _pspl_object_index_t* index = &plat_index_arr[k];
                 index->platform_index = ext->platform_index;
-                index->h_arr_c = ext->ext_hash_indexed_object_count;
+                index->h_arr_c = h_arr_c;
                 index->h_arr = hash_dest_table;
-                index->i_arr_c = ext->ext_int_indexed_object_count;
+                index->i_arr_c = i_arr_c;
                 index->i_arr = int_dest_table;
 
             }
@@ -890,6 +910,7 @@ static int load_psplp(pspl_runtime_package_t* package) {
                                                       sizeof(_pspl_runtime_arc_file_t));
         
         // Read in each file record
+        unsigned int file_count = 0;
         for (j=0 ; j<off_header->file_table_c ; ++j) {
             const pspl_hash* hash = ft_table_cur;
             ft_table_cur += sizeof(pspl_hash);
@@ -901,8 +922,12 @@ static int load_psplp(pspl_runtime_package_t* package) {
             }
             ft_table_cur += sizeof(pspl_file_stub_t);
             
+            // Determine if platform is (not) supported
+            if (!((ent->platform_availability_bits >> package->runtime_platform_index) & 1))
+                continue;
+            
             // Populate file record
-            _pspl_runtime_arc_file_t* dest = &dest_table[j];
+            _pspl_runtime_arc_file_t* dest = &dest_table[file_count++];
             pspl_hash_cpy(&dest->public.hash, hash);
             dest->public.file_len = ent->file_len;
             dest->public.file_data = NULL;
@@ -916,7 +941,7 @@ static int load_psplp(pspl_runtime_package_t* package) {
             pspl_malloc_free(&package->provider.stdio.mem_ctx, (void*)ft_table);
             
         // Apply to package
-        package->file_count = off_header->file_table_c;
+        package->file_count = file_count;
         package->file_array = dest_table;
     }
     
