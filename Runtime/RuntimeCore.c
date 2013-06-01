@@ -1040,9 +1040,9 @@ static void stdio_close(const void* handle) {
     fclose(stdio->file);
 }
 static size_t stdio_len(const void* handle) {
-    size_t prev = ftell((FILE*)handle);
+    size_t prev = ftell(((struct stdio_handle*)handle)->file);
     fseek(((struct stdio_handle*)handle)->file, 0, SEEK_END);
-    size_t len = ftell((FILE*)handle);
+    size_t len = ftell(((struct stdio_handle*)handle)->file);
     fseek(((struct stdio_handle*)handle)->file, prev, SEEK_SET);
     return len;
 }

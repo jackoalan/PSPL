@@ -33,6 +33,11 @@ static void kbfunc(unsigned char key, int x, int y) {
     }
 }
 
+static int enumerate_psplc_hook(const pspl_runtime_psplc_t* psplc_object) {
+    pspl_runtime_retain_psplc(psplc_object);
+    return 0;
+}
+
 int main(int argc, char* argv[]) {
     
     // Setup GLUT
@@ -48,7 +53,8 @@ int main(int argc, char* argv[]) {
     const pspl_platform_t* plat;
     pspl_runtime_init(&plat);
     const pspl_runtime_package_t* package = NULL;
-    pspl_runtime_load_package_file("a.out.psplp", &package);
+    pspl_runtime_load_package_file("rtest.psplp", &package);
+    pspl_runtime_enumerate_psplcs(package, enumerate_psplc_hook);
     
     // Start rendering
     glutMainLoop();

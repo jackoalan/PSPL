@@ -140,6 +140,9 @@ macro(pspl_add_extension_runtime extension_name)
           "Ordered runtime extension name list, augmented by `pspl_add_extension_runtime`")
       set_source_files_properties(${ARGN} PROPERTIES COMPILE_DEFINITIONS PSPL_RUNTIME=1)
       add_library("${extension_name}_runext" STATIC ${ARGN})
+      set_target_properties("${extension_name}_runext" PROPERTIES
+                            COMPILE_FLAGS "-include ${PSPL_BINARY_DIR}/Runtime/pspl_runtime_platform_typefile.pch"
+                            COMPILE_DEFINITIONS PSPL_RUNTIME=1)
     endif()
   endif()
 

@@ -948,7 +948,7 @@ void pspl_indexer_hash_object_augment(pspl_indexer_context_t* ctx, const pspl_ex
     new_entry->object_len = data_len;
     void* little_buf = NULL;
     if (data_len && little_data) {
-        void* little_buf = malloc(data_len);
+        little_buf = malloc(data_len);
         memcpy(little_buf, little_data, data_len);
     }
     void* big_buf = little_buf;

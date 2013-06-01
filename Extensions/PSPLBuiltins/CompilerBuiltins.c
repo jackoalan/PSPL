@@ -50,6 +50,10 @@ int BUILTINS_command_call_hook(const pspl_toolchain_context_t* driver_context,
             pspl_hash* result_hash;
             pspl_package_file_augment(NULL, command_argv[0], NULL, NULL, 1, &result_hash);
         }
+    } else if (!strcasecmp(command_name, "RUN_TEST")) {
+        if (!command_argc)
+            fprintf(stderr, "`RUN_TEST` needs one argument\n");
+        pspl_embed_hash_keyed_object(NULL, "test", command_argv[0], command_argv[0], strlen(command_argv[0]));
     }
     
     return 0;

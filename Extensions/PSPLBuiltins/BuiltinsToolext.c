@@ -48,6 +48,7 @@ static const char* claimed_commands[] = {
     "PSPL_PUSH_HEADING",
     "PSPL_POP_HEADING",
     "PSPL_LOAD_MESSAGE",
+    "RUN_TEST",
     NULL};
 
 

@@ -12,6 +12,7 @@
 		E45034CF175813490079B62D /* test_mac.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034B9175811FB0079B62D /* test_mac.c */; };
 		E45034D11758153E0079B62D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45034D01758153E0079B62D /* OpenGL.framework */; };
 		E45034D3175815420079B62D /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45034D2175815420079B62D /* GLUT.framework */; };
+		E45034D7175A41140079B62D /* runtime-test.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034D5175A40A50079B62D /* runtime-test.c */; };
 		E45591D6174ADA8F00CE0A08 /* Packager.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE9B172DB2D400F7A0BF /* Packager.c */; };
 		E45591D8174D60C100CE0A08 /* gx_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E45591D7174D60C100CE0A08 /* gx_toolchain.c */; };
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
@@ -68,6 +69,7 @@
 		E45034D01758153E0079B62D /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/System/Library/Frameworks/OpenGL.framework; sourceTree = DEVELOPER_DIR; };
 		E45034D2175815420079B62D /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/System/Library/Frameworks/GLUT.framework; sourceTree = DEVELOPER_DIR; };
 		E45034D4175819BC0079B62D /* PSPLRuntime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLRuntime.h; sourceTree = "<group>"; };
+		E45034D5175A40A50079B62D /* runtime-test.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "runtime-test.c"; sourceTree = "<group>"; };
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
 		E48CCCBC1747D4D500DDDD63 /* ToolchainCrossDarwinMinGW32.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToolchainCrossDarwinMinGW32.cmake; sourceTree = "<group>"; };
 		E4995F2B173E8BCE003B06BF /* PSPLHash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLHash.h; sourceTree = "<group>"; };
@@ -431,6 +433,7 @@
 				E4BB18DE1734632E00B8CDD1 /* PreprocessorBuiltins.c */,
 				E4BB18E01734633D00B8CDD1 /* CompilerBuiltins.h */,
 				E4BB18E11734634600B8CDD1 /* CompilerBuiltins.c */,
+				E45034D5175A40A50079B62D /* runtime-test.c */,
 			);
 			path = PSPLBuiltins;
 			sourceTree = "<group>";
@@ -591,6 +594,7 @@
 				E4E4918717510B5D006FCA59 /* gx_runtime.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
 				E4E4918E1753FAD3006FCA59 /* pspl_available_runtime_extensions.c in Sources */,
+				E45034D7175A41140079B62D /* runtime-test.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
