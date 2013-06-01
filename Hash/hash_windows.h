@@ -17,15 +17,19 @@
 typedef struct {
     HCRYPTPROV crypt_ctx;
     HCRYPTHASH hash_ctx;
-    DWORD result[20];
+    BYTE result[20];
 } pspl_hash_ctx_t;
 
 static inline void init_sha1_win(pspl_hash_ctx_t* ctx) {
-    
+    CryptAcquireContext(&ctx->crypt_ctx, NULL, NULL, PROV_RSA_SIG, 0);
+    CryptCreateHash(ctx->crypt_ctx, CALG_SHA1, 0, 0, &ctx->hash_ctx);
 }
 
 static inline void finish_sha1_win(pspl_hash_ctx_t* ctx) {
-    
+    DWORD twenty = 20;
+    CryptGetHashParam(ctx->hash_ctx, HP_HASHVAL, ctx->result, &twenty, 0);
+    CryptDestroyHash(ctx->hash_ctx);
+    CryptReleaseContext(ctx->crypt_ctx, 0);
 }
 
 /* PSPL defines */
