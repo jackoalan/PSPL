@@ -1520,6 +1520,9 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
 uint32_t union_plat_bits(pspl_indexer_globals_t* globals,
                          pspl_indexer_context_t* locals, uint32_t bits) {
     
+    if (bits == 0xffffffff)
+        return 0xffffffff;
+    
     int i,j;
     uint32_t result = 0;
     
@@ -1550,9 +1553,6 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                                    FILE* psplc_file_out) {
     
     int i,j,k;
-    
-    // Write hash
-    fwrite(&ctx->psplc_hash, 1, sizeof(pspl_hash), psplc_file_out);
     
     // Populate PSPLC object header
     pspl_psplc_header_bi_t psplc_header;
@@ -2113,6 +2113,9 @@ void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
         default:
             break;
     }
+    
+    // Write hash
+    fwrite(&ctx->psplc_hash, 1, sizeof(pspl_hash), psplc_file_out);
     
     // Perform bare file write
     pspl_indexer_write_psplc_bare(ctx, psplc_endianness, (pspl_indexer_globals_t*)ctx, psplc_file_out);

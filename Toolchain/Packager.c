@@ -185,7 +185,7 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
     for (i=0 ; i<ctx->indexer_count ; ++i) {
         pspl_indexer_context_t* indexer = ctx->indexer_array[i];
         indexer->extension_obj_base_off = acc;
-        acc += sizeof(pspl_hash);
+        //acc += sizeof(pspl_hash);
         acc += (psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_psplc_header_bi_t) : sizeof(pspl_psplc_header_t);
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_array_extension_bi_t) : sizeof(pspl_object_array_extension_t)) * ctx->ext_count;
         indexer->extension_obj_array_off = acc - indexer->extension_obj_base_off; // PACKAGER SPECIFIC!!! - BASE-RELATIVE OFFSETS!!!

@@ -190,7 +190,7 @@ typedef struct {
     uint32_t platform_availability_bits;
     
     // Is data bi-endian (logical; no need to swap)
-    uint16_t object_bi;
+    uint32_t object_bi;
     
     // Absolute file-offset to embedded object
     uint32_t object_off;
@@ -216,7 +216,7 @@ typedef struct {
     uint32_t platform_availability_bits;
     
     // Is data bi-endian (logical; no need to swap)
-    uint16_t object_bi;
+    uint32_t object_bi;
     
     // Absolute file-offset to embedded object
     uint32_t object_off;
