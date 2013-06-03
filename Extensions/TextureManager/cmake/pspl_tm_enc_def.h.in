@@ -1,5 +1,6 @@
+extern pspl_tm_encoder_hook @ENC_NAME@_encode;
 pspl_tm_encoder_t @ENC_NAME@_tmenc = {
-    .name = @ENC_NAME@,
-    .desc = @ENC_DESC@,
+    .name = "@ENC_NAME@",
+    .desc = "@ENC_DESC@",
     .encoder_hook = @ENC_NAME@_encode
 };

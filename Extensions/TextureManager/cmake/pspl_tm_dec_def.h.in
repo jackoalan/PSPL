@@ -1,5 +1,6 @@
+extern pspl_tm_decoder_hook @DEC_NAME@_decode;
 pspl_tm_decoder_t @DEC_NAME@_tmdec = {
-    .name = @DEC_NAME@,
-    .desc = @DEC_DESC@,
+    .name = "@DEC_NAME@",
+    .desc = "@DEC_DESC@",
     .encoder_hook = @DEC_NAME@_decode
 };

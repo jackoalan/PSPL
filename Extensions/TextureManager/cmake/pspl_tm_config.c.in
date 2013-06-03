@@ -4,15 +4,13 @@
 
 #include <TMToolchain.h>
 
-/* Decoders */
-@CONF_DECODER_INCLUDES@
+/* Decoders */@CONF_DECODER_INCLUDES@
 
 pspl_tm_decoder_t* pspl_tm_available_decoders[] = {@CONF_DECODER_INIT_LIST@
     NULL};
 
 
-/* Encoders */
-@CONF_ENCODER_INCLUDES@
+/* Encoders */@CONF_ENCODER_INCLUDES@
 
 pspl_tm_encoder_t* pspl_tm_available_encoders[] = {@CONF_ENCODER_INIT_LIST@
     NULL};
