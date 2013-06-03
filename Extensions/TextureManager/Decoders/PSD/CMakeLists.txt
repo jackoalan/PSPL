@@ -1,0 +1,1 @@
+pspl_tm_add_decoder(PSD "Layered Adobe Photoshop PSD format" "PSD" psd_dec.c)

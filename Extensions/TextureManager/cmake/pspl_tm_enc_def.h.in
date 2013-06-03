@@ -1,0 +1,5 @@
+pspl_tm_encoder_t @ENC_NAME@_tmenc = {
+    .name = @ENC_NAME@,
+    .desc = @ENC_DESC@,
+    .encoder_hook = @ENC_NAME@_encode
+};

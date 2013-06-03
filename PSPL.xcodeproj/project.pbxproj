@@ -13,6 +13,10 @@
 		E45034D11758153E0079B62D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45034D01758153E0079B62D /* OpenGL.framework */; };
 		E45034D3175815420079B62D /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45034D2175815420079B62D /* GLUT.framework */; };
 		E45034D7175A41140079B62D /* runtime-test.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034D5175A40A50079B62D /* runtime-test.c */; };
+		E45034E1175CD9720079B62D /* pspl_tm_config.c.in in Sources */ = {isa = PBXBuildFile; fileRef = E45034E0175CD9720079B62D /* pspl_tm_config.c.in */; };
+		E45034E4175CDA4A0079B62D /* TMToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E3175CDA4A0079B62D /* TMToolchain.c */; };
+		E45034E7175CDA5C0079B62D /* TMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E5175CDA560079B62D /* TMRuntime.c */; };
+		E45034ED175CDDA30079B62D /* psd_dec.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034EC175CDDA30079B62D /* psd_dec.c */; };
 		E45591D6174ADA8F00CE0A08 /* Packager.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE9B172DB2D400F7A0BF /* Packager.c */; };
 		E45591D8174D60C100CE0A08 /* gx_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E45591D7174D60C100CE0A08 /* gx_toolchain.c */; };
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
@@ -70,6 +74,17 @@
 		E45034D2175815420079B62D /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/System/Library/Frameworks/GLUT.framework; sourceTree = DEVELOPER_DIR; };
 		E45034D4175819BC0079B62D /* PSPLRuntime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLRuntime.h; sourceTree = "<group>"; };
 		E45034D5175A40A50079B62D /* runtime-test.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "runtime-test.c"; sourceTree = "<group>"; };
+		E45034DD175CD5860079B62D /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		E45034DE175CD5E70079B62D /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		E45034DF175CD5FF0079B62D /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		E45034E0175CD9720079B62D /* pspl_tm_config.c.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = pspl_tm_config.c.in; sourceTree = "<group>"; };
+		E45034E2175CDA300079B62D /* TMToolchain.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMToolchain.h; sourceTree = "<group>"; };
+		E45034E3175CDA4A0079B62D /* TMToolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = TMToolchain.c; sourceTree = "<group>"; };
+		E45034E5175CDA560079B62D /* TMRuntime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = TMRuntime.c; sourceTree = "<group>"; };
+		E45034E9175CDB0B0079B62D /* pspl_tm_enc_def.h.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = pspl_tm_enc_def.h.in; sourceTree = "<group>"; };
+		E45034EA175CDB210079B62D /* pspl_tm_dec_def.h.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = pspl_tm_dec_def.h.in; sourceTree = "<group>"; };
+		E45034EB175CDCF80079B62D /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		E45034EC175CDDA30079B62D /* psd_dec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = psd_dec.c; sourceTree = "<group>"; };
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
 		E48CCCBC1747D4D500DDDD63 /* ToolchainCrossDarwinMinGW32.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToolchainCrossDarwinMinGW32.cmake; sourceTree = "<group>"; };
 		E4995F2B173E8BCE003B06BF /* PSPLHash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLHash.h; sourceTree = "<group>"; };
@@ -197,6 +212,91 @@
 			path = Test;
 			sourceTree = "<group>";
 		};
+		E45034D8175CD46A0079B62D /* Decoders */ = {
+			isa = PBXGroup;
+			children = (
+				E45034EE175CDFBF0079B62D /* PNG */,
+				E45034EF175CDFC40079B62D /* JPEG */,
+				E45034F0175CDFD30079B62D /* TGA */,
+				E45034F1175CDFD80079B62D /* TIFF */,
+				E45034DD175CD5860079B62D /* CMakeLists.txt */,
+				E4AFAE891729A9BC00F7A0BF /* PSD */,
+				E4AFAE8B1729A9BC00F7A0BF /* XCF */,
+				E4AFAE8E1729AB1100F7A0BF /* OpenRaster */,
+			);
+			path = Decoders;
+			sourceTree = "<group>";
+		};
+		E45034D9175CD4720079B62D /* Encoders */ = {
+			isa = PBXGroup;
+			children = (
+				E45034EB175CDCF80079B62D /* CMakeLists.txt */,
+				E45034DB175CD53B0079B62D /* RGB */,
+				E45034DA175CD50D0079B62D /* S3TC */,
+				E45034DC175CD5410079B62D /* PVRTC */,
+			);
+			path = Encoders;
+			sourceTree = "<group>";
+		};
+		E45034DA175CD50D0079B62D /* S3TC */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = S3TC;
+			sourceTree = "<group>";
+		};
+		E45034DB175CD53B0079B62D /* RGB */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = RGB;
+			sourceTree = "<group>";
+		};
+		E45034DC175CD5410079B62D /* PVRTC */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = PVRTC;
+			sourceTree = "<group>";
+		};
+		E45034E8175CDACE0079B62D /* cmake */ = {
+			isa = PBXGroup;
+			children = (
+				E45034E0175CD9720079B62D /* pspl_tm_config.c.in */,
+				E45034EA175CDB210079B62D /* pspl_tm_dec_def.h.in */,
+				E45034E9175CDB0B0079B62D /* pspl_tm_enc_def.h.in */,
+			);
+			path = cmake;
+			sourceTree = "<group>";
+		};
+		E45034EE175CDFBF0079B62D /* PNG */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = PNG;
+			sourceTree = "<group>";
+		};
+		E45034EF175CDFC40079B62D /* JPEG */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = JPEG;
+			sourceTree = "<group>";
+		};
+		E45034F0175CDFD30079B62D /* TGA */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = TGA;
+			sourceTree = "<group>";
+		};
+		E45034F1175CDFD80079B62D /* TIFF */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = TIFF;
+			sourceTree = "<group>";
+		};
 		E4995F2A173E8B3E003B06BF /* Hash */ = {
 			isa = PBXGroup;
 			children = (
@@ -303,10 +403,14 @@
 		E4AFAE38171C978E00F7A0BF /* TextureManager */ = {
 			isa = PBXGroup;
 			children = (
+				E45034E8175CDACE0079B62D /* cmake */,
 				E4AFAE42171C9E4700F7A0BF /* README.md */,
-				E4AFAE891729A9BC00F7A0BF /* PSDSupport */,
-				E4AFAE8B1729A9BC00F7A0BF /* XCFSupport */,
-				E4AFAE8E1729AB1100F7A0BF /* OpenRasterSupport */,
+				E45034DF175CD5FF0079B62D /* CMakeLists.txt */,
+				E45034E2175CDA300079B62D /* TMToolchain.h */,
+				E45034E3175CDA4A0079B62D /* TMToolchain.c */,
+				E45034E5175CDA560079B62D /* TMRuntime.c */,
+				E45034D8175CD46A0079B62D /* Decoders */,
+				E45034D9175CD4720079B62D /* Encoders */,
 			);
 			path = TextureManager;
 			sourceTree = "<group>";
@@ -398,29 +502,31 @@
 			path = PMDLFormat;
 			sourceTree = "<group>";
 		};
-		E4AFAE891729A9BC00F7A0BF /* PSDSupport */ = {
+		E4AFAE891729A9BC00F7A0BF /* PSD */ = {
 			isa = PBXGroup;
 			children = (
 				E4AFAE8A1729A9BC00F7A0BF /* README.md */,
+				E45034DE175CD5E70079B62D /* CMakeLists.txt */,
+				E45034EC175CDDA30079B62D /* psd_dec.c */,
 			);
-			path = PSDSupport;
+			path = PSD;
 			sourceTree = "<group>";
 		};
-		E4AFAE8B1729A9BC00F7A0BF /* XCFSupport */ = {
+		E4AFAE8B1729A9BC00F7A0BF /* XCF */ = {
 			isa = PBXGroup;
 			children = (
 				E4AFAE8D1729A9CC00F7A0BF /* README.md */,
 				E4AFAE8C1729A9BC00F7A0BF /* SPECIFICATION.md */,
 			);
-			path = XCFSupport;
+			path = XCF;
 			sourceTree = "<group>";
 		};
-		E4AFAE8E1729AB1100F7A0BF /* OpenRasterSupport */ = {
+		E4AFAE8E1729AB1100F7A0BF /* OpenRaster */ = {
 			isa = PBXGroup;
 			children = (
 				E4AFAE8F1729AB3C00F7A0BF /* README.md */,
 			);
-			path = OpenRasterSupport;
+			path = OpenRaster;
 			sourceTree = "<group>";
 		};
 		E4BB18D7173432EA00B8CDD1 /* PSPLBuiltins */ = {
@@ -581,6 +687,9 @@
 				E4E491731751094E006FCA59 /* gl_toolchain.c in Sources */,
 				E4E49179175109D4006FCA59 /* d3d_toolchain.c in Sources */,
 				E4E4918F1753FAD6006FCA59 /* pspl_available_toolchain_extensions.c in Sources */,
+				E45034E1175CD9720079B62D /* pspl_tm_config.c.in in Sources */,
+				E45034E4175CDA4A0079B62D /* TMToolchain.c in Sources */,
+				E45034ED175CDDA30079B62D /* psd_dec.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -595,6 +704,7 @@
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
 				E4E4918E1753FAD3006FCA59 /* pspl_available_runtime_extensions.c in Sources */,
 				E45034D7175A41140079B62D /* runtime-test.c in Sources */,
+				E45034E7175CDA5C0079B62D /* TMRuntime.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -850,6 +960,7 @@
 				E45034CB1758131E0079B62D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		E4AFAE22171C8F8E00F7A0BF /* Build configuration list for PBXProject "PSPL" */ = {
 			isa = XCConfigurationList;

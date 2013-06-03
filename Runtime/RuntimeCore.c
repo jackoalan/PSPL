@@ -591,8 +591,12 @@ static const pspl_data_provider_t stdio;
 #define PACKAGE_PROVIDER(package) (package->provider_local)?&package->provider.provider:package->provider.provider
 #define IS_PSPLP_BI pspl_head->endian_flags == PSPL_BI_ENDIAN
 static int load_psplp(pspl_runtime_package_t* package) {
+    int j,k,l;
     const void* package_provider = PACKAGE_PROVIDER(package);
     size_t package_len = package->provider_hooks->len(package_provider);
+    
+    
+#   pragma mark Header Read
     
     // Read header chunk of data
     const void* header_data = NULL;
@@ -651,6 +655,77 @@ static int load_psplp(pspl_runtime_package_t* package) {
     pspl_cur += sizeof(pspl_psplp_header_t);
     
     
+#   pragma mark String Tables Read
+    
+    // Read in string tables at end
+    const void* strings_data = NULL;
+    size_t strings_len = package_len - off_header->extension_name_table_off;
+    if (strings_len && strings_len < package_len) {
+        package->provider_hooks->seek(package_provider, off_header->extension_name_table_off);
+        package->provider_hooks->read(package_provider, strings_len, &strings_data);
+    }
+    
+    if (strings_data) {
+        
+        // Populate extension set
+        unsigned int psplc_extension_count = off_header->extension_name_table_c;
+        const char* psplc_extension_name = (char*)strings_data;
+        package->ext_array = calloc(psplc_extension_count+1, sizeof(pspl_extension_t*));
+        for (j=0 ; j<psplc_extension_count ; ++j) {
+            
+            // Lookup
+            const pspl_extension_t* ext = lookup_ext(psplc_extension_name, NULL);
+            if (!ext) {
+                pspl_warn("PSPLP-required extension not available",
+                          "requested `%s` which is not available in this build of `pspl-rt`",
+                          psplc_extension_name);
+                return -1;
+            }
+            
+            // Add to set
+            package->ext_array[j] = ext;
+            
+            // Advance
+            psplc_extension_name += strlen(psplc_extension_name) + 1;
+            
+        }
+        package->ext_array[psplc_extension_count] = NULL;
+        
+        
+        // Populate platform index
+        unsigned int psplc_platform_count = off_header->platform_name_table_c;
+        const char* psplc_platform_name = psplc_extension_name;
+        package->runtime_platform_index = 0xff;
+        for (j=0 ; j<psplc_platform_count ; ++j) {
+            
+            // Verify and set if found
+            if (!strcmp(psplc_platform_name, pspl_runtime_platform->platform_name)) {
+                package->runtime_platform_index = j;
+                break;
+            }
+            
+            // Advance
+            psplc_platform_name += strlen(psplc_platform_name) + 1;
+            
+        }
+        
+        // Advise user if this platform has been discriminated
+        if (psplc_platform_count && package->runtime_platform_index == 0xff)
+            pspl_warn("Platform not present in PSPLP",
+                      "this build of `pspl-rt` was made for packages targeting '%s' platform; "
+                      "graphics functionality will not be utilised",
+                      pspl_runtime_platform->platform_name);
+        
+        
+        // Free strings if loaded using stdio
+        if (package->provider_hooks == &stdio)
+            pspl_malloc_free(&package->provider.stdio.mem_ctx, (void*)strings_data);
+        
+    }
+    
+    
+#   pragma mark Index Read
+    
     // Read in index tables for each embedded PSPLC
     size_t i1_off = pspl_cur - header_data;
     size_t i1_len = (((IS_PSPLP_BI)?
@@ -664,7 +739,6 @@ static int load_psplp(pspl_runtime_package_t* package) {
         package->provider_hooks->read(package_provider, i1_len, (void*)&i1_table);
     }
     
-    int j,k,l;
     package->psplc_count = 0;
     package->psplc_array = NULL;
     if (i1_table) {
@@ -887,6 +961,8 @@ static int load_psplp(pspl_runtime_package_t* package) {
     }
     
     
+#   pragma mark Archived File Table Read
+    
     // Read in archived file table
     size_t ft_off = off_header->file_table_off;
     size_t ft_len = (((IS_PSPLP_BI)?
@@ -943,72 +1019,6 @@ static int load_psplp(pspl_runtime_package_t* package) {
         // Apply to package
         package->file_count = file_count;
         package->file_array = dest_table;
-    }
-    
-    // Read in string tables at end
-    const void* strings_data = NULL;
-    size_t strings_len = package_len - off_header->extension_name_table_off;
-    if (strings_len && strings_len < package_len) {
-        package->provider_hooks->seek(package_provider, off_header->extension_name_table_off);
-        package->provider_hooks->read(package_provider, strings_len, &strings_data);
-    }
-    
-    if (strings_data) {
-        
-        // Populate extension set
-        unsigned int psplc_extension_count = off_header->extension_name_table_c;
-        const char* psplc_extension_name = (char*)strings_data;
-        package->ext_array = calloc(psplc_extension_count+1, sizeof(pspl_extension_t*));
-        for (j=0 ; j<psplc_extension_count ; ++j) {
-            
-            // Lookup
-            const pspl_extension_t* ext = lookup_ext(psplc_extension_name, NULL);
-            if (!ext) {
-                pspl_warn("PSPLP-required extension not available",
-                          "requested `%s` which is not available in this build of `pspl-rt`",
-                          psplc_extension_name);
-                return -1;
-            }
-            
-            // Add to set
-            package->ext_array[j] = ext;
-            
-            // Advance
-            psplc_extension_name += strlen(psplc_extension_name) + 1;
-            
-        }
-        package->ext_array[psplc_extension_count] = NULL;
-        
-        
-        // Populate platform index
-        unsigned int psplc_platform_count = off_header->platform_name_table_c;
-        const char* psplc_platform_name = psplc_extension_name;
-        package->runtime_platform_index = 0xff;
-        for (j=0 ; j<psplc_platform_count ; ++j) {
-            
-            // Verify and set if found
-            if (!strcmp(psplc_platform_name, pspl_runtime_platform->platform_name)) {
-                package->runtime_platform_index = j;
-                break;
-            }
-            
-            // Advance
-            psplc_platform_name += strlen(psplc_platform_name) + 1;
-            
-        }
-        
-        // Advise user if this platform has been discriminated
-        if (psplc_platform_count && package->runtime_platform_index == 0xff)
-            pspl_warn("Platform not present in PSPLP",
-                      "this build of `pspl-rt` was made for packages targeting '%s' platform; "
-                      "graphics functionality will not be utilised",
-                      pspl_runtime_platform->platform_name);
-        
-        
-        // Free strings if loaded using stdio
-        if (package->provider_hooks == &stdio)
-            pspl_malloc_free(&package->provider.stdio.mem_ctx, (void*)strings_data);
-        
     }
     
     // Free header data if loaded using stdio
