@@ -2,6 +2,7 @@
 /* This file was automatically generated via CMake to extend the
  * available TextureManager formats */
 
+#include <stdlib.h>
 #include <TMToolchain.h>
 
 /* Decoders */@CONF_DECODER_INCLUDES@

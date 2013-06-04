@@ -9,14 +9,17 @@
 #ifndef PSPL_TMToolchain_h
 #define PSPL_TMToolchain_h
 
+#include <stdlib.h>
+#include <stdint.h>
+
 /* Image type enumeration */
 enum PSPL_TM_IMAGE_TYPE {
     PSPL_TM_IMAGE_NONE = 0,
-    PSPL_TM_IMAGE_RGBA = 1,
-    PSPL_TM_IMAGE_RGB  = 2,
-    PSPL_TM_IMAGE_RG   = 3,
-    PSPL_TM_IMAGE_R    = 4,
-    PSPL_TM_IMAGE_IDX  = 5
+    PSPL_TM_IMAGE_R    = 1,
+    PSPL_TM_IMAGE_RG   = 2,
+    PSPL_TM_IMAGE_RGB  = 3,
+    PSPL_TM_IMAGE_RGBA = 4,
+    PSPL_TM_IMAGE_IDX  = 8
 };
 
 /* PSPL TextureManager common image type */
@@ -24,15 +27,8 @@ enum PSPL_TM_IMAGE_TYPE {
 typedef struct {
     enum PSPL_TM_IMAGE_TYPE image_type;
     unsigned int width, height;
-    union {
-        struct {
-            uint32_t r_depth, g_depth, b_depth, a_depth;
-        };
-        struct {
-            uint32_t idx_depth;
-        };
-    } depth;
-    const void* scanline_image_data;
+    const uint8_t* image_buffer;
+    const uint8_t* index_buffer;
 } pspl_tm_image_t;
 
 

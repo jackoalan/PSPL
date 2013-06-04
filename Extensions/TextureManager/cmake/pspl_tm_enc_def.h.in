@@ -1,5 +1,6 @@
-extern pspl_tm_encoder_hook @ENC_NAME@_encode;
-pspl_tm_encoder_t @ENC_NAME@_tmenc = {
+extern int @ENC_NAME@_encode(const char* file_path, const char* file_path_ext,
+                             const pspl_tm_image_t* image_in);
+static pspl_tm_encoder_t @ENC_NAME@_tmenc = {
     .name = "@ENC_NAME@",
     .desc = "@ENC_DESC@",
     .encoder_hook = @ENC_NAME@_encode

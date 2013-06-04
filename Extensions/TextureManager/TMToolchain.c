@@ -8,3 +8,7 @@
 
 #include <PSPLExtension.h>
 #include "TMToolchain.h"
+
+pspl_toolchain_extension_t TextureManager_toolext = {
+    
+};

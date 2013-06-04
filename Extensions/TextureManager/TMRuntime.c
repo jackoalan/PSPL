@@ -7,3 +7,7 @@
 //
 
 #include <PSPLExtension.h>
+
+pspl_runtime_extension_t TextureManager_runext = {
+    
+};

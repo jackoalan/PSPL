@@ -1,6 +1,7 @@
-extern pspl_tm_decoder_hook @DEC_NAME@_decode;
-pspl_tm_decoder_t @DEC_NAME@_tmdec = {
+extern int @DEC_NAME@_decode(const char* file_path, const char* file_path_ext,
+                             pspl_tm_image_t* image_out);
+static pspl_tm_decoder_t @DEC_NAME@_tmdec = {
     .name = "@DEC_NAME@",
     .desc = "@DEC_DESC@",
-    .encoder_hook = @DEC_NAME@_decode
+    .decoder_hook = @DEC_NAME@_decode
 };

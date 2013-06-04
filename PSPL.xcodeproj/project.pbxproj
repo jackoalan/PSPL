@@ -13,10 +13,10 @@
 		E45034D11758153E0079B62D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45034D01758153E0079B62D /* OpenGL.framework */; };
 		E45034D3175815420079B62D /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45034D2175815420079B62D /* GLUT.framework */; };
 		E45034D7175A41140079B62D /* runtime-test.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034D5175A40A50079B62D /* runtime-test.c */; };
-		E45034E1175CD9720079B62D /* pspl_tm_config.c.in in Sources */ = {isa = PBXBuildFile; fileRef = E45034E0175CD9720079B62D /* pspl_tm_config.c.in */; };
 		E45034E4175CDA4A0079B62D /* TMToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E3175CDA4A0079B62D /* TMToolchain.c */; };
 		E45034E7175CDA5C0079B62D /* TMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E5175CDA560079B62D /* TMRuntime.c */; };
-		E45034ED175CDDA30079B62D /* psd_dec.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034EC175CDDA30079B62D /* psd_dec.c */; };
+		E45034ED175CDDA30079B62D /* psd_dec.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034EC175CDDA30079B62D /* psd_dec.c */; settings = {COMPILER_FLAGS = "-IExtensions/TextureManager"; }; };
+		E45034F3175D80FA0079B62D /* pspl_tm_config.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034F2175D80F90079B62D /* pspl_tm_config.c */; settings = {COMPILER_FLAGS = "-IExtensions/TextureManager"; }; };
 		E45591D6174ADA8F00CE0A08 /* Packager.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE9B172DB2D400F7A0BF /* Packager.c */; };
 		E45591D8174D60C100CE0A08 /* gx_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E45591D7174D60C100CE0A08 /* gx_toolchain.c */; };
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
@@ -85,6 +85,7 @@
 		E45034EA175CDB210079B62D /* pspl_tm_dec_def.h.in */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; path = pspl_tm_dec_def.h.in; sourceTree = "<group>"; };
 		E45034EB175CDCF80079B62D /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E45034EC175CDDA30079B62D /* psd_dec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = psd_dec.c; sourceTree = "<group>"; };
+		E45034F2175D80F90079B62D /* pspl_tm_config.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pspl_tm_config.c; path = build/Extensions/TextureManager/pspl_tm_config.c; sourceTree = SOURCE_ROOT; };
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
 		E48CCCBC1747D4D500DDDD63 /* ToolchainCrossDarwinMinGW32.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToolchainCrossDarwinMinGW32.cmake; sourceTree = "<group>"; };
 		E4995F2B173E8BCE003B06BF /* PSPLHash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLHash.h; sourceTree = "<group>"; };
@@ -406,6 +407,7 @@
 				E4AFAE42171C9E4700F7A0BF /* README.md */,
 				E45034DF175CD5FF0079B62D /* CMakeLists.txt */,
 				E45034E8175CDACE0079B62D /* cmake */,
+				E45034F2175D80F90079B62D /* pspl_tm_config.c */,
 				E45034E2175CDA300079B62D /* TMToolchain.h */,
 				E45034E3175CDA4A0079B62D /* TMToolchain.c */,
 				E45034E5175CDA560079B62D /* TMRuntime.c */,
@@ -687,9 +689,9 @@
 				E4E491731751094E006FCA59 /* gl_toolchain.c in Sources */,
 				E4E49179175109D4006FCA59 /* d3d_toolchain.c in Sources */,
 				E4E4918F1753FAD6006FCA59 /* pspl_available_toolchain_extensions.c in Sources */,
-				E45034E1175CD9720079B62D /* pspl_tm_config.c.in in Sources */,
 				E45034E4175CDA4A0079B62D /* TMToolchain.c in Sources */,
 				E45034ED175CDDA30079B62D /* psd_dec.c in Sources */,
+				E45034F3175D80FA0079B62D /* pspl_tm_config.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
