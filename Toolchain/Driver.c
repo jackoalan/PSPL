@@ -317,6 +317,11 @@ static void print_copyrights() {
 
 #pragma mark Built-in Help
 
+void pspl_toolchain_provide_subext(const char* subext_name, const char* subext_desc,
+                                   unsigned indent_level) {
+    
+}
+
 static void print_help(const char* prog_name) {
     
     if (xterm_colour) {

@@ -1,7 +1,10 @@
 extern int @DEC_NAME@_decode(const char* file_path, const char* file_path_ext,
                              pspl_tm_image_t* image_out);
+static const char* @DEC_NAME@_exts[] = {@DEC_EXTS@
+    NULL};
 static pspl_tm_decoder_t @DEC_NAME@_tmdec = {
     .name = "@DEC_NAME@",
     .desc = "@DEC_DESC@",
+    .extensions = @DEC_NAME@_exts,
     .decoder_hook = @DEC_NAME@_decode
 };

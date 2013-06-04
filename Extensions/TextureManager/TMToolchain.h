@@ -23,7 +23,6 @@ enum PSPL_TM_IMAGE_TYPE {
 };
 
 /* PSPL TextureManager common image type */
-#define PSPL_FLOAT_DEPTH 0xffffffff
 typedef struct {
     enum PSPL_TM_IMAGE_TYPE image_type;
     unsigned int width, height;
@@ -41,6 +40,7 @@ typedef int(*pspl_tm_decoder_hook)(const char* file_path, const char* file_path_
 typedef struct {
     const char* name;
     const char* desc;
+    const char** extensions;
     pspl_tm_decoder_hook decoder_hook;
 } pspl_tm_decoder_t;
 

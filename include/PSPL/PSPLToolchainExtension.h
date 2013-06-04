@@ -53,6 +53,25 @@ void pspl_toolchain_provide_copyright(const char* component_name,
 typedef void(*pspl_toolchain_copyright_hook)(void);
 
 
+/**
+ * Provide sub-extension details for built-in help
+ *
+ * Call this method (within subext hook) for each sub-extension contained
+ * within extension
+ *
+ * @param subext_name Name of sub-extension
+ * @param subext_desc Description of sub-extension
+ * @param indent_level Level of sub-intent; 0 and 1 are both *one* indent level
+ */
+void pspl_toolchain_provide_subext(const char* subext_name, const char* subext_desc,
+                                   unsigned indent_level);
+
+/**
+ * Extension hook for providing sub-extension details using `pspl_toolchain_provide_subext`
+ */
+typedef void(*pspl_toolchain_subext_hook)(void);
+
+
 #pragma mark Driver Context
 
 /**
