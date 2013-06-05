@@ -87,7 +87,7 @@ configure_file(cmake/pspl_tm_config.c.in pspl_tm_config.c)
 #######################
 
 include_directories(.)
-pspl_add_extension(TextureManager "Platform-independent Texture Conversion and Integration")
+pspl_add_extension(TextureManager "Platform-independent texture conversion and integration")
 pspl_add_extension_toolchain(TextureManager TMToolchain.c ${PSPL_TM_CODER_SRCS} pspl_tm_config.c)
 pspl_add_extension_runtime(TextureManager TMRuntime.c)
 

@@ -319,7 +319,18 @@ static void print_copyrights() {
 
 void pspl_toolchain_provide_subext(const char* subext_name, const char* subext_desc,
                                    unsigned indent_level) {
-    
+    if (!indent_level)
+        indent_level = 1;
+    int i;
+    for (i=0 ; i<indent_level ; ++i)
+        fprintf(stderr, "  ");
+    if (xterm_colour)
+        fprintf(stderr, "  "BOLD"- %s"NORMAL, subext_name);
+    else
+        fprintf(stderr, "  - %s", subext_name);
+    if (subext_desc)
+        fprintf(stderr, " - %s", subext_desc);
+    fprintf(stderr, "\n");
 }
 
 static void print_help(const char* prog_name) {
@@ -342,6 +353,8 @@ static void print_help(const char* prog_name) {
         while ((ext = pspl_available_extensions[i++])) {
             fprintf(stderr, "  "BOLD"* %s"NORMAL" - %s\n",
                     ext->extension_name, ext->extension_desc);
+            if (ext->toolchain_extension && ext->toolchain_extension->subext_hook)
+                ext->toolchain_extension->subext_hook();
         }
         if (i==1)
             fprintf(stderr, "  "BOLD"-- No extensions available --"NORMAL"\n");
@@ -387,6 +400,8 @@ static void print_help(const char* prog_name) {
         while ((ext = pspl_available_extensions[i++])) {
             fprintf(stderr, "  * %s - %s\n",
                     ext->extension_name, ext->extension_desc);
+            if (ext->toolchain_extension && ext->toolchain_extension->subext_hook)
+                ext->toolchain_extension->subext_hook();
         }
         if (i==1)
             fprintf(stderr, "  -- No extensions available --\n");

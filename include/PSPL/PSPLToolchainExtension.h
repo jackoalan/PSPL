@@ -354,6 +354,7 @@ typedef struct _pspl_toolchain_extension {
     pspl_toolchain_init_hook init_hook;
     pspl_toolchain_finish_hook finish_hook;
     pspl_toolchain_copyright_hook copyright_hook;
+    pspl_toolchain_subext_hook subext_hook;
     pspl_toolchain_line_preprocessor_hook line_preprocessor_hook;
     pspl_toolchain_command_call_hook command_call_hook;
     pspl_toolchain_heading_switch_hook heading_switch_hook;
