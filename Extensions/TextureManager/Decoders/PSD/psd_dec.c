@@ -35,6 +35,17 @@ typedef struct {
     uint16_t colour_mode;
 } PSD_head_t;
 
+/* Rectangle type */
+typedef struct {
+    uint32_t top, left, bottom, right;
+} PSD_rect_t;
+
+/* Layer-Channel type */
+typedef struct {
+    uint16_t chan_id;
+    uint32_t chan_len;
+} PSD_layer_channel;
+
 /* Pascal string advance utility */
 static void advance_past_pascal_string(void** ptr) {
     uint8_t** cptr = (uint8_t**)ptr;
@@ -127,11 +138,94 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
 #   endif
     
     if (file_path_ext) {
+        if (!lm_len)
+            pspl_error(-1, "No layers in PSD", "requested layer '%s' from PSD `%s` which has no layers",
+                       file_path_ext, file_path);
         
         // Find named layer and read in
         
-    } else
-        fseek(psdf, lm_len, SEEK_CUR);
+        int16_t layer_count;
+        fread(&layer_count, 1, sizeof(int16_t), psdf);
+#       ifdef __LITTLE_ENDIAN__
+        layer_count = swap_uint16(layer_count);
+#       endif
+        
+        // If we found proposed layer
+        uint8_t found_layer = 0;
+        
+        // Rectangle of layer
+        PSD_rect_t layer_rect;
+        
+        // Offset of proposed layer's image data
+        size_t layer_chan_data_off = 0;
+        
+        // Navigate layer info data
+        int i;
+        for (i=0 ; i<layer_count ; ++i) {
+            size_t next_layer_chan_data_off = 0;
+            
+            // Layer rectangle
+            if (found_layer) {
+                fseek(psdf, sizeof(PSD_rect_t), SEEK_CUR);
+            } else {
+                fread(&layer_rect, 1, sizeof(PSD_rect_t), psdf);
+#               ifdef __LITTLE_ENDIAN__
+                layer_rect.bottom = swap_uint32(layer_rect.bottom);
+                layer_rect.left = swap_uint32(layer_rect.left);
+                layer_rect.top = swap_uint32(layer_rect.top);
+                layer_rect.right = swap_uint32(layer_rect.right);
+#               endif
+            }
+            
+            // Advance past channels
+            uint16_t chan_count;
+            fread(&chan_count, 1, sizeof(uint16_t), psdf);
+#           ifdef __LITTLE_ENDIAN__
+            chan_count = swap_uint16(chan_count);
+#           endif
+            int j;
+            for (j=0 ; j<chan_count ; ++j) {
+                PSD_layer_channel chan;
+                fread(&chan, 1, sizeof(PSD_layer_channel), psdf);
+#               ifdef __LITTLE_ENDIAN__
+                chan.chan_id = swap_uint16(chan.chan_id);
+                chan.chan_len = swap_uint32(chan.chan_len);
+#               endif
+                next_layer_chan_data_off += chan.chan_len;
+            }
+            
+            // Advance to layer name
+            fseek(psdf, 12, SEEK_CUR);
+            uint32_t extra_len;
+            fread(&extra_len, 1, sizeof(uint32_t), psdf);
+#           ifdef __LITTLE_ENDIAN__
+            extra_len = swap_uint32(extra_len);
+#           endif
+            fseek(psdf, extra_len, SEEK_CUR);
+            
+            // This should be the name
+            uint8_t name_len;
+            fread(&name_len, 1, sizeof(uint8_t), psdf);
+            char name[256];
+            fread(name, 1, name_len, psdf);
+            name[name_len] = '\0';
+            
+            // Check against requested
+            if (!strcasecmp(name, file_path_ext))
+                found_layer = 1;
+            
+            // Accumulate layer data offset
+            if (!found_layer)
+                layer_chan_data_off += next_layer_chan_data_off;
+            
+        }
+        
+        return 0;
+        
+    }
+    
+    // Skip to next section otherwise
+    fseek(psdf, lm_len, SEEK_CUR);
     
     
 #   pragma mark Read Merged Image Data (if layer not specified)
@@ -141,6 +235,9 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
         uint16_t im_comp_mode = 0;
         if (!fread(&im_comp_mode, 1, sizeof(uint16_t), psdf))
             pspl_error(-1, "No merged image data in PSD", "PSD `%s` was not saved with 'Maximise Compatibility' checked",
+                       file_path);
+        if (im_comp_mode != 0)
+            pspl_error(-1, "Compressed PSD formats unsupported", "PSD `%s` has compressed merged image data",
                        file_path);
         size_t im_len = psd_head.width * psd_head.height * psd_head.num_channels;
         void* im_data = malloc(im_len);
