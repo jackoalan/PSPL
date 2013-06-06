@@ -26,11 +26,6 @@
 #include <execinfo.h>
 #endif
 
-/* Round up to nearest 4 multiple */
-#define ROUND_UP_4(val) ((val)%4)?((((val)>>2)<<2)+4):(val)
-
-/* Round up to nearest 32 multiple */
-#define ROUND_UP_32(val) ((val)%32)?((((val)>>5)<<5)+32):(val)
 
 /* Escape character sequences to control xterm */
 #define NOBKD     "\E[47;49m"

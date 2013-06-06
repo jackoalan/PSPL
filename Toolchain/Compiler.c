@@ -74,7 +74,7 @@ void pspl_embed_hash_keyed_object(const pspl_platform_t** platforms,
         return;
     pspl_indexer_hash_object_augment(driver_state.indexer_ctx, driver_state.proc_extension,
                                      platforms, key, little_object, big_object, object_size,
-                                     compiler_state.source);
+                                     driver_state.source);
 }
 
 /* Add data object (keyed with a non-hashed 32-bit unsigned numeric value)
@@ -91,7 +91,7 @@ void pspl_embed_integer_keyed_object(const pspl_platform_t** platforms,
         return;
     pspl_indexer_integer_object_augment(driver_state.indexer_ctx, driver_state.proc_extension,
                                         platforms, key, little_object, big_object, object_size,
-                                        compiler_state.source);
+                                        driver_state.source);
 }
 
 /* Way for compiler extensions to send a named instruction
@@ -148,7 +148,7 @@ void pspl_embed_platform_hash_keyed_object(const char* key,
         return;
     pspl_indexer_platform_hash_object_augment(driver_state.indexer_ctx, driver_state.proc_platform,
                                               key, little_object, big_object, object_size,
-                                              compiler_state.source);
+                                              driver_state.source);
 }
 
 /* Add data object (keyed with a non-hashed 32-bit unsigned numeric value)
@@ -164,13 +164,14 @@ void pspl_embed_platform_integer_keyed_object(uint32_t key,
         return;
     pspl_indexer_platform_integer_object_augment(driver_state.indexer_ctx, driver_state.proc_platform,
                                                  key, little_object, big_object, object_size,
-                                                 compiler_state.source);
+                                                 driver_state.source);
 }
 
 /* Add file for PSPL-packaging */
 void pspl_package_file_augment(const pspl_platform_t** plats, const char* path_in,
                                const char* path_ext_in,
                                pspl_converter_file_hook converter_hook, uint8_t move_output,
+                               void* user_ptr,
                                pspl_hash** hash_out) {
     if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
@@ -178,11 +179,12 @@ void pspl_package_file_augment(const pspl_platform_t** plats, const char* path_i
         driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
         return;
     pspl_indexer_stub_file_augment(driver_state.indexer_ctx, plats, path_in, path_ext_in,
-                                   converter_hook, move_output, hash_out, compiler_state.source);
+                                   converter_hook, move_output, user_ptr, hash_out, driver_state.source);
 }
 void pspl_package_membuf_augment(const pspl_platform_t** plats, const char* path_in,
                                  const char* path_ext_in,
                                  pspl_converter_membuf_hook converter_hook,
+                                 void* user_ptr,
                                  pspl_hash** hash_out) {
     if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
@@ -190,7 +192,7 @@ void pspl_package_membuf_augment(const pspl_platform_t** plats, const char* path
         driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
         return;
     pspl_indexer_stub_membuf_augment(driver_state.indexer_ctx, plats, path_in, path_ext_in,
-                                     converter_hook, hash_out, compiler_state.source);
+                                     converter_hook, user_ptr, hash_out, driver_state.source);
 }
 
 

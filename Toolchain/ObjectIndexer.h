@@ -172,12 +172,14 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
                                     const pspl_platform_t** plats, const char* path_in,
                                     const char* path_ext_in,
                                     pspl_converter_file_hook converter_hook, uint8_t move_output,
+                                    void* user_ptr,
                                     pspl_hash** hash_out,
                                     pspl_toolchain_driver_source_t* definer);
 void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
                                       const pspl_platform_t** plats, const char* path_in,
                                       const char* path_ext_in,
                                       pspl_converter_membuf_hook converter_hook,
+                                      void* user_ptr,
                                       pspl_hash** hash_out,
                                       pspl_toolchain_driver_source_t* definer);
 

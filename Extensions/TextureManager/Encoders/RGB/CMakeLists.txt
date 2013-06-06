@@ -1,0 +1,1 @@
+pspl_tm_add_encoder(RGB "Uncompressed RGB format" rgb_enc.c)

@@ -11,6 +11,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <PSPL/PSPLCommon.h>
 
 /* Image type enumeration */
 enum PSPL_TM_IMAGE_TYPE {
@@ -47,8 +48,8 @@ typedef struct {
 
 
 /* Encoder hook type */
-typedef int(*pspl_tm_encoder_hook)(const char* file_path, const char* file_path_ext,
-                                   const pspl_tm_image_t* image_in);
+typedef int(*pspl_tm_encoder_hook)(pspl_malloc_context_t* mem_ctx, const uint8_t* image_in,
+unsigned chan_count, unsigned width, unsigned height, uint8_t** image_out, size_t* size_out);
 
 /* Encoder type */
 typedef struct {

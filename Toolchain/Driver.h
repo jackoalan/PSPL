@@ -234,6 +234,9 @@ typedef struct {
     // Staging area path (set to working dir otherwise)
     char staging_path[MAXPATHLEN];
     
+    // Current source file
+    pspl_toolchain_driver_source_t* source;
+    
     // Out file path
     //const char* out_path;
     

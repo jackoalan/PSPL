@@ -302,9 +302,9 @@ static void print_copyrights() {
     while (ext[0]) {
         if (ext[0]->toolchain_extension && ext[0]->toolchain_extension->copyright_hook) {
             if (xterm_colour)
-                fprintf(stderr, BOLD UNDERLINE RED"%s Platform\n\n"SGR0, ext[0]->extension_name);
+                fprintf(stderr, BOLD UNDERLINE RED"%s Extension\n\n"SGR0, ext[0]->extension_name);
             else
-                fprintf(stderr, "%s Platform\n\n", ext[0]->extension_name);
+                fprintf(stderr, "%s Extension\n\n", ext[0]->extension_name);
             ext[0]->toolchain_extension->copyright_hook();
         }
         ++ext;
@@ -1173,11 +1173,24 @@ int main(int argc, char** argv) {
     pspl_toolchain_context_t tool_ctx = {
         .target_runtime_platforms_c = driver_opts.platform_c,
         .target_runtime_platforms = driver_opts.platform_a,
+        .target_endianness = driver_opts.default_endianness,
         .def_c = driver_opts.def_c,
         .def_k = driver_opts.def_k,
         .def_v = driver_opts.def_v
     };
     driver_state.tool_ctx = &tool_ctx;
+    
+    // Determine endianness
+    for (i=0 ; i<driver_opts.platform_c ; ++i)
+        tool_ctx.target_endianness |= driver_opts.platform_a[i]->byte_order;
+    tool_ctx.target_endianness &= PSPL_BI_ENDIAN;
+    if (!tool_ctx.target_endianness) {
+#       if __LITTLE_ENDIAN__
+        tool_ctx.target_endianness = PSPL_LITTLE_ENDIAN;
+#       elif __BIG_ENDIAN__
+        tool_ctx.target_endianness = PSPL_BIG_ENDIAN;
+#       endif
+    }
     
     
     // Reference gathering context (if requested)
@@ -1236,6 +1249,7 @@ int main(int argc, char** argv) {
             
 #           pragma mark Process PSPL Source
             pspl_toolchain_driver_source_t* source = &sources[sources_c++];
+            driver_state.source = source;
             source->parent_source = NULL;
             
             // Populate filename members

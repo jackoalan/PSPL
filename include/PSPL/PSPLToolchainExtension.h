@@ -82,6 +82,9 @@ typedef struct {
     unsigned int target_runtime_platforms_c; /**< Count of target platforms */
     const pspl_platform_t* const * target_runtime_platforms; /**< Platform array */
     
+    /**< Target endian mode (PSPL_ENDIAN_LITTLE,PSPL_ENDIAN_BIG,PSPL_ENDIAN_BI) */
+    unsigned target_endianness;
+    
     /**< Name of PSPL source (including extension) */
     const char* pspl_name;
     
@@ -305,8 +308,8 @@ void pspl_send_platform_instruction(const pspl_platform_t** platforms,
 
 /* Standard data conversion interface */
 void pspl_converter_progress_update(double progress);
-typedef int(*pspl_converter_file_hook)(char* path_out, const char* path_in, const char* suggested_path);
-typedef int(*pspl_converter_membuf_hook)(void** buf_out, size_t* len_out, const char* path_in);
+typedef int(*pspl_converter_file_hook)(char* path_out, const char* path_in, const char* suggested_path, void* user_ptr);
+typedef int(*pspl_converter_membuf_hook)(void** buf_out, size_t* len_out, const char* path_in, void* user_ptr);
 
 /* The `platforms` argument works as described for psplc_embed_* functions above
  * `path` may be relative to PSPL file or absolute to toolchain host */
@@ -325,10 +328,12 @@ typedef int(*pspl_converter_membuf_hook)(void** buf_out, size_t* len_out, const 
 void pspl_package_file_augment(const pspl_platform_t** platforms, const char* path_in,
                                const char* path_ext_in,
                                pspl_converter_file_hook converter_hook, uint8_t move_output,
+                               void* user_ptr,
                                pspl_hash** hash_out);
 void pspl_package_membuf_augment(const pspl_platform_t** platforms, const char* path_in,
                                  const char* path_ext_in,
                                  pspl_converter_membuf_hook converter_hook,
+                                 void* user_ptr,
                                  pspl_hash** hash_out);
 
 

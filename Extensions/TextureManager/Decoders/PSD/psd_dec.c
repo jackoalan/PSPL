@@ -24,7 +24,7 @@ enum PSD_COLOUR_MODE {
 };
 
 /* PSD Header Type */
-typedef struct {
+typedef struct __attribute__ ((__packed__)) {
     uint8_t signature[4];
     uint16_t version;
     uint16_t pad1;
@@ -37,12 +37,12 @@ typedef struct {
 
 /* Rectangle type */
 typedef struct {
-    uint32_t top, left, bottom, right;
+    int32_t top, left, bottom, right;
 } PSD_rect_t;
 
 /* Layer-Channel type */
-typedef struct {
-    uint16_t chan_id;
+typedef struct __attribute__ ((__packed__)) {
+    int16_t chan_id;
     uint32_t chan_len;
 } PSD_layer_channel;
 
@@ -53,6 +53,117 @@ static void advance_past_pascal_string(void** ptr) {
         *cptr += 2;
     else
         *cptr += **cptr + 1;
+}
+
+/* PackBits decompression algorithm */
+
+/*
+ * Copyright (c) 1988-1997 Sam Leffler
+ * Copyright (c) 1991-1997 Silicon Graphics, Inc.
+ *
+ * Permission to use, copy, modify, distribute, and sell this software and
+ * its documentation for any purpose is hereby granted without fee, provided
+ * that (i) the above copyright notices and this permission notice appear in
+ * all copies of the software and related documentation, and (ii) the names of
+ * Sam Leffler and Silicon Graphics may not be used in any advertising or
+ * publicity relating to the software without the specific, prior written
+ * permission of Sam Leffler and Silicon Graphics.
+ *
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
+ * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
+ * OF THIS SOFTWARE.
+ */
+
+static int
+PackBitsDecode(uint8_t* op, size_t occ, uint8_t* ip, size_t icc)
+{
+	char *bp;
+	size_t cc;
+	long n;
+	int b;
+    
+	bp = (char*) ip;
+	cc = icc;
+	while (cc > 0 && occ > 0) {
+		n = (long) *bp++, cc--;
+		/*
+		 * Watch out for compilers that
+		 * don't sign extend chars...
+		 */
+		if (n >= 128)
+			n -= 256;
+		if (n < 0) {		/* replicate next byte -n+1 times */
+			if (n == -128)	/* nop */
+				continue;
+			n = -n + 1;
+			if( occ < (size_t)n )
+			{
+				pspl_warn("PackBits warning",
+                               "Discarding %lu bytes to avoid buffer overrun",
+                               (unsigned long) ((size_t)n - occ));
+				n = (long)occ;
+			}
+			occ -= n;
+			b = *bp++, cc--;
+			while (n-- > 0)
+				*op++ = (uint8_t) b;
+		} else {		/* copy next n+1 bytes literally */
+			if (occ < (size_t)(n + 1))
+			{
+				pspl_warn("PackBits warning",
+                               "Discarding %lu bytes to avoid buffer overrun",
+                               (unsigned long) ((size_t)n - occ + 1));
+				n = (long)occ - 1;
+			}
+			if (cc < (size_t) (n+1))
+			{
+				pspl_warn("PackBits warning",
+                               "Terminating PackBitsDecode due to lack of data.");
+				break;
+			}
+			memcpy(op, bp, ++n);
+			op += n; occ -= n;
+			bp += n; cc -= n;
+		}
+	}
+	if (occ > 0) {
+		pspl_error(-1, "PackBits error", "Not enough data for scanline");
+		return (0);
+	}
+	return (1);
+}
+
+/* PSD Packbits decompress */
+static void PSD_unpackbits(void* out_buf, unsigned chan_count,
+                           unsigned width, unsigned height, FILE* psdf) {
+    int c;
+    uint16_t* len_arr = calloc(height * chan_count, sizeof(uint16_t));
+    fread(len_arr, sizeof(uint16_t), height * chan_count, psdf);
+    size_t max_in_line = 0;
+    for (c=0 ; c<height*chan_count ; ++c) {
+#       if __LITTLE_ENDIAN__
+        len_arr[c] = swap_uint16(len_arr[c]);
+#       endif
+        if (len_arr[c] > max_in_line)
+            max_in_line = len_arr[c];
+    }
+    
+    void* in_line = malloc(max_in_line);
+    for (c=0 ; c<height*chan_count ; ++c) {
+        fread(in_line, 1, len_arr[c], psdf);
+        PackBitsDecode(out_buf, width, in_line, len_arr[c]);
+        out_buf += width;
+    }
+    free(in_line);
+    
+    free(len_arr);
 }
 
 /* Routine to extract named layer from Photoshop document */
@@ -143,12 +254,15 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
                        file_path_ext, file_path);
         
         // Find named layer and read in
-        
+
+        fseek(psdf, 4, SEEK_CUR);
         int16_t layer_count;
         fread(&layer_count, 1, sizeof(int16_t), psdf);
 #       ifdef __LITTLE_ENDIAN__
         layer_count = swap_uint16(layer_count);
 #       endif
+        if (layer_count < 0)
+            layer_count = abs(layer_count);
         
         // If we found proposed layer
         uint8_t found_layer = 0;
@@ -218,6 +332,16 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
 #           ifdef __LITTLE_ENDIAN__
             extra_len = swap_uint32(extra_len);
 #           endif
+            size_t data_off = ftell(psdf) + extra_len;
+            fread(&extra_len, 1, sizeof(uint32_t), psdf);
+#           ifdef __LITTLE_ENDIAN__
+            extra_len = swap_uint32(extra_len);
+#           endif
+            fseek(psdf, extra_len, SEEK_CUR);
+            fread(&extra_len, 1, sizeof(uint32_t), psdf);
+#           ifdef __LITTLE_ENDIAN__
+            extra_len = swap_uint32(extra_len);
+#           endif
             fseek(psdf, extra_len, SEEK_CUR);
             
             // This should be the name
@@ -235,6 +359,9 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
             if (!found_layer)
                 layer_chan_data_off += next_layer_chan_data_off;
             
+            // Advance to data
+            fseek(psdf, data_off, SEEK_SET);
+            
         }
         
         // Ensure layer was found
@@ -244,28 +371,43 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
         
         // Read in layer image data
         fseek(psdf, layer_chan_data_off, SEEK_CUR);
-        uint16_t im_comp_mode = 0;
-        fread(&im_comp_mode, 1, sizeof(uint16_t), psdf);
-#       ifdef __LITTLE_ENDIAN__
-        im_comp_mode = swap_uint16(im_comp_mode);
-#       endif
-        if (im_comp_mode != 0)
-            pspl_error(-1, "Compressed PSD formats unsupported", "PSD `%s` has compressed image data",
-                       file_path);
-        size_t im_len = 0;
-        for (i=0 ; i<layer_chan_count ; ++i) {
-            PSD_layer_channel* chan = &layer_chan_arr[i];
-            im_len += chan->chan_len;
-        }
+        
+        // Decompressed buffer
+        size_t im_len = (layer_rect.right-layer_rect.left) * (layer_rect.bottom-layer_rect.top) *
+                        layer_chan_count;
         void* im_data = malloc(im_len);
-        if (fread(im_data, 1, im_len, psdf) != im_len)
-            pspl_error(-1, "Unexpected end of PSD", "unable to read layer '%s' image data from `%s`",
-                       file_path_ext, file_path);
+        
+        // Read in
+        size_t chan_size = (layer_rect.right-layer_rect.left) * (layer_rect.bottom-layer_rect.top);
+        void* chan_cur = im_data;
+        for (i=0 ; i<layer_chan_count ; ++i) {
+            uint16_t im_comp_mode = 0;
+            fread(&im_comp_mode, 1, sizeof(uint16_t), psdf);
+#           ifdef __LITTLE_ENDIAN__
+            im_comp_mode = swap_uint16(im_comp_mode);
+#           endif
+            
+            if (im_comp_mode == 0) {
+                if (fread(im_data, 1, im_len, psdf) != im_len)
+                    pspl_error(-1, "Unexpected end of PSD", "unable to read layer image data from `%s`",
+                               file_path);
+            } else if (im_comp_mode == 1) {
+                PSD_unpackbits(chan_cur, 1, layer_rect.right-layer_rect.left,
+                               layer_rect.bottom-layer_rect.top, psdf);
+                chan_cur += chan_size;
+            } else
+                pspl_error(-1, "Compressed PSD formats unsupported", "PSD `%s` has compressed image data",
+                           file_path);
+        }
+        
+
+
         
         // Rearrange data in scanline, channel-interleaved order
         uint8_t* im_dest = malloc(psd_head.width * psd_head.height * layer_chan_count);
         const uint8_t* im_cur_chan = im_data;
         for (c=0 ; c<layer_chan_count ; ++c) {
+            int ci = (layer_chan_arr[c].chan_id == -1)?layer_chan_count-1:layer_chan_arr[c].chan_id;
             for (y=0 ; y<psd_head.height ; ++y) {
                 const uint8_t* im_cur_line = im_cur_chan + ((y - layer_rect.top) * (layer_rect.right - layer_rect.left));
                 uint8_t line_limit = (layer_rect.top > y || layer_rect.bottom < y);
@@ -273,10 +415,10 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
                 for (x=0 ; x<psd_head.width ; ++x) {
                     uint8_t limit = (line_limit)?1:(layer_rect.left > x || layer_rect.right < x);
                     unsigned col = x * layer_chan_count;
-                    im_dest[line_base+col+c] = (limit)?0:*(im_cur_line + (x - layer_rect.left));
+                    im_dest[line_base+col+ci] = (limit)?0:*(im_cur_line + (x - layer_rect.left));
                 }
             }
-            im_cur_chan += layer_chan_arr[c].chan_len;
+            im_cur_chan += chan_size;
         }
         
         // Done with read data
@@ -309,14 +451,18 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
 #       ifdef __LITTLE_ENDIAN__
         im_comp_mode = swap_uint16(im_comp_mode);
 #       endif
-        if (im_comp_mode != 0)
-            pspl_error(-1, "Compressed PSD formats unsupported", "PSD `%s` has compressed merged image data",
-                       file_path);
         size_t im_len = psd_head.width * psd_head.height * psd_head.num_channels;
         void* im_data = malloc(im_len);
-        if (fread(im_data, 1, im_len, psdf) != im_len)
-            pspl_error(-1, "Unexpected end of PSD", "unable to read all image data from `%s`",
+        if (im_comp_mode == 0) {
+            if (fread(im_data, 1, im_len, psdf) != im_len)
+                pspl_error(-1, "Unexpected end of PSD", "unable to read all image data from `%s`",
+                           file_path);
+        } else if (im_comp_mode == 1) {
+            PSD_unpackbits(im_data, psd_head.num_channels, psd_head.width, psd_head.height, psdf);
+        } else
+            pspl_error(-1, "Compressed PSD formats unsupported", "PSD `%s` has compressed merged image data",
                        file_path);
+
         
         // Rearrange merged data in scanline, channel-interleaved order
         const uint8_t* im_cur = im_data;

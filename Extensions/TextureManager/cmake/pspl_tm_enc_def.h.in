@@ -1,5 +1,5 @@
-extern int @ENC_NAME@_encode(const char* file_path, const char* file_path_ext,
-                             const pspl_tm_image_t* image_in);
+extern int @ENC_NAME@_encode(pspl_malloc_context_t* mem_ctx, const uint8_t* image_in, unsigned chan_count,
+                             unsigned width, unsigned height, uint8_t** image_out, size_t* size_out);
 static pspl_tm_encoder_t @ENC_NAME@_tmenc = {
     .name = "@ENC_NAME@",
     .desc = "@ENC_DESC@",

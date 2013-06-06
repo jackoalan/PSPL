@@ -14,6 +14,12 @@
 /* PSPL's method of defining numeric values in a bi-endian manner */
 #include <PSPL/PSPLValue.h>
 
+/* Round up to nearest 4 multiple */
+#define ROUND_UP_4(val) (((val)%4)?((((val)>>2)<<2)+4):(val))
+
+/* Round up to nearest 32 multiple */
+#define ROUND_UP_32(val) (((val)%32)?((((val)>>5)<<5)+32):(val))
+
 /**
  * @file PSPL/PSPLCommon.h
  * @brief General Toolchain *and* Runtime Public API Bits

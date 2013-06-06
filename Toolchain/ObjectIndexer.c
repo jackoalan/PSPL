@@ -42,12 +42,6 @@
 
 #define PSPL_INDEXER_INITIAL_CAP 50
 
-/* Round up to nearest 4 multiple */
-#define ROUND_UP_4(val) ((val)%4)?((((val)>>2)<<2)+4):(val)
-
-/* Round up to nearest 32 multiple */
-#define ROUND_UP_32(val) ((val)%32)?((((val)>>5)<<5)+32):(val)
-
 #pragma mark File Utilities
 
 /* Determine if referenced file is newer than last-known hashed binary object (For PSPLCs) */
@@ -1025,7 +1019,7 @@ void pspl_indexer_integer_object_augment(pspl_indexer_context_t* ctx, const pspl
     new_entry->object_len = data_len;
     void* little_buf = NULL;
     if (data_len && little_data) {
-        void* little_buf = malloc(data_len);
+        little_buf = malloc(data_len);
         memcpy(little_buf, little_data, data_len);
     }
     void* big_buf = little_buf;
@@ -1086,7 +1080,7 @@ void pspl_indexer_platform_hash_object_augment(pspl_indexer_context_t* ctx, cons
     new_entry->object_len = data_len;
     void* little_buf = NULL;
     if (data_len && little_data) {
-        void* little_buf = malloc(data_len);
+        little_buf = malloc(data_len);
         memcpy(little_buf, little_data, data_len);
     }
     void* big_buf = little_buf;
@@ -1139,7 +1133,7 @@ void pspl_indexer_platform_integer_object_augment(pspl_indexer_context_t* ctx, c
     new_entry->object_len = data_len;
     void* little_buf = NULL;
     if (data_len && little_data) {
-        void* little_buf = malloc(data_len);
+        little_buf = malloc(data_len);
         memcpy(little_buf, little_data, data_len);
     }
     void* big_buf = little_buf;
@@ -1194,6 +1188,7 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
                                     const pspl_platform_t** plats, const char* path_in,
                                     const char* path_ext_in,
                                     pspl_converter_file_hook converter_hook, uint8_t move_output,
+                                    void* user_ptr,
                                     pspl_hash** hash_out,
                                     pspl_toolchain_driver_source_t* definer) {
     converter_state.path = path_in;
@@ -1277,7 +1272,7 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
             conv_path_buf[0] = '\0';
             int err;
             pspl_converter_progress_update(0.0);
-            if((err = converter_hook(conv_path_buf, path_in, sug_path))) {
+            if((err = converter_hook(conv_path_buf, path_in, sug_path, user_ptr))) {
                 fprintf(stderr, "\n");
                 pspl_error(-1, "Error converting file", "converter hook returned error '%d' for `%s`",
                            err, path_in);
@@ -1362,6 +1357,7 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
                                       const pspl_platform_t** plats, const char* path_in,
                                       const char* path_ext_in,
                                       pspl_converter_membuf_hook converter_hook,
+                                      void* user_ptr,
                                       pspl_hash** hash_out,
                                       pspl_toolchain_driver_source_t* definer) {
     if (!converter_hook)
@@ -1438,7 +1434,7 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
         size_t conv_len = 0;
         int err;
         pspl_converter_progress_update(0.0);
-        if((err = converter_hook(&conv_buf, &conv_len, path_in))) {
+        if((err = converter_hook(&conv_buf, &conv_len, path_in, user_ptr))) {
             fprintf(stderr, "\n");
             pspl_error(-1, "Error converting file", "converter hook returned error '%d' for `%s`",
                        err, path_in);
@@ -1470,6 +1466,8 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
         char final_hash_path_str[MAXPATHLEN];
         final_hash_path_str[0] = '\0';
         strlcat(final_hash_path_str, driver_state.staging_path, MAXPATHLEN);
+        strlcat(final_hash_path_str, path_hash_str, MAXPATHLEN);
+        strlcat(final_hash_path_str, "_", MAXPATHLEN);
         strlcat(final_hash_path_str, final_hash_str, MAXPATHLEN);
         
         // Write to staging area

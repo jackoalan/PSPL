@@ -17,6 +17,7 @@
 		E45034E7175CDA5C0079B62D /* TMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E5175CDA560079B62D /* TMRuntime.c */; };
 		E45034ED175CDDA30079B62D /* psd_dec.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034EC175CDDA30079B62D /* psd_dec.c */; settings = {COMPILER_FLAGS = "-IExtensions/TextureManager"; }; };
 		E45034F3175D80FA0079B62D /* pspl_tm_config.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034F2175D80F90079B62D /* pspl_tm_config.c */; settings = {COMPILER_FLAGS = "-IExtensions/TextureManager"; }; };
+		E45034F51760DC220079B62D /* rgb_enc.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034F41760DC220079B62D /* rgb_enc.c */; settings = {COMPILER_FLAGS = "-IExtensions/TextureManager"; }; };
 		E45591D6174ADA8F00CE0A08 /* Packager.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE9B172DB2D400F7A0BF /* Packager.c */; };
 		E45591D8174D60C100CE0A08 /* gx_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E45591D7174D60C100CE0A08 /* gx_toolchain.c */; };
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
@@ -86,6 +87,9 @@
 		E45034EB175CDCF80079B62D /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E45034EC175CDDA30079B62D /* psd_dec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = psd_dec.c; sourceTree = "<group>"; };
 		E45034F2175D80F90079B62D /* pspl_tm_config.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pspl_tm_config.c; path = build/Extensions/TextureManager/pspl_tm_config.c; sourceTree = SOURCE_ROOT; };
+		E45034F41760DC220079B62D /* rgb_enc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rgb_enc.c; sourceTree = "<group>"; };
+		E45034F61760DC300079B62D /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		E45034F71760E2BE0079B62D /* TMCommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMCommon.h; sourceTree = "<group>"; };
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
 		E48CCCBC1747D4D500DDDD63 /* ToolchainCrossDarwinMinGW32.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToolchainCrossDarwinMinGW32.cmake; sourceTree = "<group>"; };
 		E4995F2B173E8BCE003B06BF /* PSPLHash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLHash.h; sourceTree = "<group>"; };
@@ -249,6 +253,8 @@
 		E45034DB175CD53B0079B62D /* RGB */ = {
 			isa = PBXGroup;
 			children = (
+				E45034F61760DC300079B62D /* CMakeLists.txt */,
+				E45034F41760DC220079B62D /* rgb_enc.c */,
 			);
 			path = RGB;
 			sourceTree = "<group>";
@@ -408,6 +414,7 @@
 				E45034DF175CD5FF0079B62D /* CMakeLists.txt */,
 				E45034E8175CDACE0079B62D /* cmake */,
 				E45034F2175D80F90079B62D /* pspl_tm_config.c */,
+				E45034F71760E2BE0079B62D /* TMCommon.h */,
 				E45034E2175CDA300079B62D /* TMToolchain.h */,
 				E45034E3175CDA4A0079B62D /* TMToolchain.c */,
 				E45034E5175CDA560079B62D /* TMRuntime.c */,
@@ -692,6 +699,7 @@
 				E45034E4175CDA4A0079B62D /* TMToolchain.c in Sources */,
 				E45034ED175CDDA30079B62D /* psd_dec.c in Sources */,
 				E45034F3175D80FA0079B62D /* pspl_tm_config.c in Sources */,
+				E45034F51760DC220079B62D /* rgb_enc.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
