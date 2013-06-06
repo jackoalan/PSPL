@@ -10,6 +10,7 @@
 #define PSPL_PreprocessorBuiltins_h
 
 void BUILTINS_pp_hook(const pspl_toolchain_context_t* driver_context,
+                      const char* directive_name,
                       unsigned int directive_argc,
                       const char** directive_argv);
 

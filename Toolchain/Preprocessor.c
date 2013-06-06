@@ -531,7 +531,7 @@ void pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
                         
                         // Callout to preprocessor hook
                         hook_ext->toolchain_extension->
-                        line_preprocessor_hook(ext_driver_ctx, tok_c, (const char**)tok_arr);
+                        line_preprocessor_hook(ext_driver_ctx, tok_arr[0], tok_c-1, (const char**)&tok_arr[1]);
                         
                         // Unset callout context
                         driver_state.pspl_phase = PSPL_PHASE_PREPROCESS;

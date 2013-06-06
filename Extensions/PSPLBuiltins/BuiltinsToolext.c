@@ -38,10 +38,6 @@ static const char* claimed_pp_direc[] = {
     "FI",
     NULL};
 
-static const char* weak_claimed_pp_direc[] = {
-    "SAMPLE",
-    NULL};
-
 /* Global command names */
 static const char* claimed_commands[] = {
     "PSPL_NAME",
@@ -55,7 +51,6 @@ static const char* claimed_commands[] = {
 /* Main extension bindings */
 pspl_toolchain_extension_t BUILTINS_toolext = {
     .claimed_global_preprocessor_directives = claimed_pp_direc,
-    .weak_claimed_global_preprocessor_directives = weak_claimed_pp_direc,
     .claimed_global_command_names = claimed_commands,
     .claimed_heading_names = claimed_headings,
     .init_hook = BUILTINS_init,

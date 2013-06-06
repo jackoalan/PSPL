@@ -131,6 +131,7 @@ int pspl_toolchain_init_other_extension(const char* ext_name);
  * The hook implementation should call `pspl_preprocessor_add_line` 
  * for each line of code that the preprocessor should emit in place of directive call */
 typedef void(*pspl_toolchain_line_preprocessor_hook)(const pspl_toolchain_context_t* driver_context,
+                                                     const char* directive_name,
                                                      unsigned int directive_argc,
                                                      const char** directive_argv);
 

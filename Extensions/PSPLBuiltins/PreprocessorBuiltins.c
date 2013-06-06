@@ -58,16 +58,17 @@ static void warn(unsigned int directive_argc,
 
 /* Process a hook call from the preprocessor */
 void BUILTINS_pp_hook(const pspl_toolchain_context_t* driver_context,
+                      const char* directive_name,
                       unsigned int directive_argc,
                       const char** directive_argv) {
     
-    if (!strcasecmp(directive_argv[0], "MESSAGE"))
+    if (!strcasecmp(directive_name, "MESSAGE"))
         message(directive_argc, directive_argv);
-    else if (!strcasecmp(directive_argv[0], "ERROR"))
+    else if (!strcasecmp(directive_name, "ERROR"))
         error(directive_argc, directive_argv);
-    else if (!strcasecmp(directive_argv[0], "WARN"))
+    else if (!strcasecmp(directive_name, "WARN"))
         warn(directive_argc, directive_argv);
-    else if (!strcasecmp(directive_argv[0], "WARNING"))
+    else if (!strcasecmp(directive_name, "WARNING"))
         warn(directive_argc, directive_argv);
     
 }

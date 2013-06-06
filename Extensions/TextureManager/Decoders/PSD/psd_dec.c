@@ -97,7 +97,7 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
     
     // Validate depth
     if (psd_head.depth != 8)
-        pspl_error(-1, "Only 8-bit-per-channel PSD files supported", "unable to use `%s`; PSB %d-bit files aren't supported",
+        pspl_error(-1, "Only 8-bit-per-channel PSD files supported", "unable to use `%s`; PSD %d-bit files aren't supported",
                    file_path, psd_head.depth);
     
     // Validate colour mode
@@ -153,8 +153,12 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
         // If we found proposed layer
         uint8_t found_layer = 0;
         
-        // Rectangle of layer
+        // Rectangle of proposed layer
         PSD_rect_t layer_rect;
+        
+        // Channel data of proposed layer
+        uint16_t layer_chan_count;
+        PSD_layer_channel layer_chan_arr[4];
         
         // Offset of proposed layer's image data
         size_t layer_chan_data_off = 0;
@@ -183,19 +187,32 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
 #           ifdef __LITTLE_ENDIAN__
             chan_count = swap_uint16(chan_count);
 #           endif
+            if (!found_layer)
+                layer_chan_count = (chan_count > 4)?4:chan_count;
             int j;
             for (j=0 ; j<chan_count ; ++j) {
-                PSD_layer_channel chan;
-                fread(&chan, 1, sizeof(PSD_layer_channel), psdf);
-#               ifdef __LITTLE_ENDIAN__
-                chan.chan_id = swap_uint16(chan.chan_id);
-                chan.chan_len = swap_uint32(chan.chan_len);
-#               endif
-                next_layer_chan_data_off += chan.chan_len;
+                if (found_layer || j>3) {
+                    fseek(psdf, sizeof(PSD_layer_channel), SEEK_CUR);
+                } else {
+                    PSD_layer_channel* chan = &layer_chan_arr[j];
+                    fread(chan, 1, sizeof(PSD_layer_channel), psdf);
+#                   ifdef __LITTLE_ENDIAN__
+                    chan->chan_id = swap_uint16(chan->chan_id);
+                    chan->chan_len = swap_uint32(chan->chan_len);
+#                   endif
+                    next_layer_chan_data_off += chan->chan_len;
+                }
             }
             
+            // Ensure '8BIM' occurs here
+            char czech[4];
+            fread(czech, 1, 4, psdf);
+            if (memcmp(czech, "8BIM", 4))
+                pspl_error(-1, "Inconsistent PSD detected", "unable to find expected blend-mode signature in `%s`",
+                           file_path);
+            
             // Advance to layer name
-            fseek(psdf, 12, SEEK_CUR);
+            fseek(psdf, 8, SEEK_CUR);
             uint32_t extra_len;
             fread(&extra_len, 1, sizeof(uint32_t), psdf);
 #           ifdef __LITTLE_ENDIAN__
@@ -210,7 +227,7 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
             fread(name, 1, name_len, psdf);
             name[name_len] = '\0';
             
-            // Check against requested
+            // Check against requested name
             if (!strcasecmp(name, file_path_ext))
                 found_layer = 1;
             
@@ -220,6 +237,59 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
             
         }
         
+        // Ensure layer was found
+        if (!found_layer)
+            pspl_error(-1, "Unable to find PSD layer", "PSD `%s` does not contain a layer named '%s'",
+                       file_path, file_path_ext);
+        
+        // Read in layer image data
+        fseek(psdf, layer_chan_data_off, SEEK_CUR);
+        uint16_t im_comp_mode = 0;
+        fread(&im_comp_mode, 1, sizeof(uint16_t), psdf);
+#       ifdef __LITTLE_ENDIAN__
+        im_comp_mode = swap_uint16(im_comp_mode);
+#       endif
+        if (im_comp_mode != 0)
+            pspl_error(-1, "Compressed PSD formats unsupported", "PSD `%s` has compressed image data",
+                       file_path);
+        size_t im_len = 0;
+        for (i=0 ; i<layer_chan_count ; ++i) {
+            PSD_layer_channel* chan = &layer_chan_arr[i];
+            im_len += chan->chan_len;
+        }
+        void* im_data = malloc(im_len);
+        if (fread(im_data, 1, im_len, psdf) != im_len)
+            pspl_error(-1, "Unexpected end of PSD", "unable to read layer '%s' image data from `%s`",
+                       file_path_ext, file_path);
+        
+        // Rearrange data in scanline, channel-interleaved order
+        uint8_t* im_dest = malloc(psd_head.width * psd_head.height * layer_chan_count);
+        const uint8_t* im_cur_chan = im_data;
+        for (c=0 ; c<layer_chan_count ; ++c) {
+            for (y=0 ; y<psd_head.height ; ++y) {
+                const uint8_t* im_cur_line = im_cur_chan + ((y - layer_rect.top) * (layer_rect.right - layer_rect.left));
+                uint8_t line_limit = (layer_rect.top > y || layer_rect.bottom < y);
+                unsigned line_base = psd_head.width * y * layer_chan_count;
+                for (x=0 ; x<psd_head.width ; ++x) {
+                    uint8_t limit = (line_limit)?1:(layer_rect.left > x || layer_rect.right < x);
+                    unsigned col = x * layer_chan_count;
+                    im_dest[line_base+col+c] = (limit)?0:*(im_cur_line + (x - layer_rect.left));
+                }
+            }
+            im_cur_chan += layer_chan_arr[c].chan_len;
+        }
+        
+        // Done with read data
+        free(im_data);
+        
+        // Populate TM structure
+        image_out->image_type = layer_chan_count;
+        image_out->height = psd_head.height;
+        image_out->width = psd_head.width;
+        image_out->image_buffer = im_dest;
+        image_out->index_buffer = NULL;
+        
+        fclose(psdf);
         return 0;
         
     }
@@ -236,6 +306,9 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
         if (!fread(&im_comp_mode, 1, sizeof(uint16_t), psdf))
             pspl_error(-1, "No merged image data in PSD", "PSD `%s` was not saved with 'Maximise Compatibility' checked",
                        file_path);
+#       ifdef __LITTLE_ENDIAN__
+        im_comp_mode = swap_uint16(im_comp_mode);
+#       endif
         if (im_comp_mode != 0)
             pspl_error(-1, "Compressed PSD formats unsupported", "PSD `%s` has compressed merged image data",
                        file_path);
@@ -271,6 +344,7 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
         
     }
     
+    fclose(psdf);
     return 0;
     
 }

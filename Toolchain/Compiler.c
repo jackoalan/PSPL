@@ -67,7 +67,10 @@ void pspl_embed_hash_keyed_object(const pspl_platform_t** platforms,
                                   const void* little_object,
                                   const void* big_object,
                                   size_t object_size) {
-    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
+    if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
         return;
     pspl_indexer_hash_object_augment(driver_state.indexer_ctx, driver_state.proc_extension,
                                      platforms, key, little_object, big_object, object_size,
@@ -81,7 +84,10 @@ void pspl_embed_integer_keyed_object(const pspl_platform_t** platforms,
                                      const void* little_object,
                                      const void* big_object,
                                      size_t object_size) {
-    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
+    if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
         return;
     pspl_indexer_integer_object_augment(driver_state.indexer_ctx, driver_state.proc_extension,
                                         platforms, key, little_object, big_object, object_size,
@@ -97,8 +103,12 @@ void pspl_embed_integer_keyed_object(const pspl_platform_t** platforms,
 void pspl_send_platform_instruction(const pspl_platform_t** platforms,
                                     const char* operation,
                                     const void* data) {
-    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
+    if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
         return;
+    int save_state = driver_state.pspl_phase;
     const pspl_extension_t* save_ext = driver_state.proc_extension;
     driver_state.pspl_phase = PSPL_PHASE_COMPILE_PLATFORM;
     const pspl_platform_t* plat;
@@ -120,7 +130,7 @@ void pspl_send_platform_instruction(const pspl_platform_t** platforms,
         }
     }
     driver_state.proc_extension = save_ext;
-    driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
+    driver_state.pspl_phase = save_state;
 }
 
 /* Same functions for platform data objects
@@ -131,7 +141,10 @@ void pspl_embed_platform_hash_keyed_object(const char* key,
                                            const void* little_object,
                                            const void* big_object,
                                            size_t object_size) {
-    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_PLATFORM)
+    if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
         return;
     pspl_indexer_platform_hash_object_augment(driver_state.indexer_ctx, driver_state.proc_platform,
                                               key, little_object, big_object, object_size,
@@ -144,7 +157,10 @@ void pspl_embed_platform_integer_keyed_object(uint32_t key,
                                               const void* little_object,
                                               const void* big_object,
                                               size_t object_size) {
-    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_PLATFORM)
+    if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
         return;
     pspl_indexer_platform_integer_object_augment(driver_state.indexer_ctx, driver_state.proc_platform,
                                                  key, little_object, big_object, object_size,
@@ -156,7 +172,10 @@ void pspl_package_file_augment(const pspl_platform_t** plats, const char* path_i
                                const char* path_ext_in,
                                pspl_converter_file_hook converter_hook, uint8_t move_output,
                                pspl_hash** hash_out) {
-    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
+    if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
         return;
     pspl_indexer_stub_file_augment(driver_state.indexer_ctx, plats, path_in, path_ext_in,
                                    converter_hook, move_output, hash_out, compiler_state.source);
@@ -165,7 +184,10 @@ void pspl_package_membuf_augment(const pspl_platform_t** plats, const char* path
                                  const char* path_ext_in,
                                  pspl_converter_membuf_hook converter_hook,
                                  pspl_hash** hash_out) {
-    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION)
+    if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
         return;
     pspl_indexer_stub_membuf_augment(driver_state.indexer_ctx, plats, path_in, path_ext_in,
                                      converter_hook, hash_out, compiler_state.source);
