@@ -1,5 +1,19 @@
 cmake_minimum_required(VERSION 2.8)
 
+
+# Platform List
+set(PSPL_TARGET_PLATFORMS "" CACHE INTERNAL "" FORCE)
+
+# Specify which platform(s) should be targeted
+macro(set_pspl_platforms)
+  unset(plats)
+  foreach(plat ${ARGN})
+    list(APPEND plats -T${plat})
+  endforeach(plat)
+  set(PSPL_TARGET_PLATFORMS ${plats} CACHE INTERNAL "" FORCE)
+endmacro(set_pspl_platforms)
+
+
 # Target list
 set(PSPL_PACKAGE_TARGETS "" CACHE INTERNAL "" FORCE)
 
@@ -27,7 +41,7 @@ macro(add_pspl_package target_name)
           include(${CMAKE_CURRENT_BINARY_DIR}/${base}.psplg)
         endif()
         add_custom_command(OUTPUT ${base}.psplc COMMAND ${PSPL_BINARY_LOC} ARGS 
-                           -c -o ${base}.psplc -G ${base}.psplg -S ${CMAKE_BINARY_DIR} ${path}
+                           -c -o ${base}.psplc -G ${base}.psplg -S ${CMAKE_BINARY_DIR} ${PSPL_TARGET_PLATFORMS} ${path}
                            DEPENDS ${PSPL_REFLIST})
         list(APPEND objects ${base}.psplc)
       else()
@@ -37,7 +51,7 @@ macro(add_pspl_package target_name)
     
     # Package rule
     add_custom_command(OUTPUT ${target_name}.psplp COMMAND ${PSPL_BINARY_LOC} ARGS 
-                       -o ${target_name}.psplp -S ${CMAKE_BINARY_DIR} ${objects}
+                       -o ${target_name}.psplp -S ${CMAKE_BINARY_DIR} ${PSPL_TARGET_PLATFORMS} ${objects}
                        DEPENDS ${objects})
     add_custom_target(${target_name} ALL DEPENDS ${target_name}.psplp)
     
