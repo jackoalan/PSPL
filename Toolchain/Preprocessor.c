@@ -109,7 +109,7 @@ void pspl_preprocessor_add_indent_line(unsigned int indent_level, const char* li
 }
 
 /* Convenience function to emit PSPL primary-heading push
- * (emits 'PSPL_HEADING_PUSH(primary_heading_name)')
+ * (emits 'PUSH_HEADING(primary_heading_name)')
  * Saves heading state onto internal toolchain-driver stack */
 void pspl_preprocessor_add_heading_push(const char* primary_heading_name) {
     if (driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION)
@@ -121,7 +121,7 @@ void pspl_preprocessor_add_heading_push(const char* primary_heading_name) {
         pspl_buffer_addchar(&preprocessor_state.out_buf, '\t');
     
     // Deposit expanded string
-    pspl_buffer_addstr(&preprocessor_state.out_buf, "PSPL_HEADING_PUSH(");
+    pspl_buffer_addstr(&preprocessor_state.out_buf, "PUSH_HEADING(");
     pspl_buffer_addstr(&preprocessor_state.out_buf, primary_heading_name);
     pspl_buffer_addstr(&preprocessor_state.out_buf, ")\n");
     
@@ -131,7 +131,7 @@ void pspl_preprocessor_add_heading_push(const char* primary_heading_name) {
 
 /* Convenience function to emit PSPL primary-heading push
  * (emits 'PSPL_HEADING_POP()')
- * restores the heading state before previous PSPL_HEADING_PUSH() */
+ * restores the heading state before previous POP_HEADING() */
 void pspl_preprocessor_add_heading_pop() {
     if (driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION)
         return;
@@ -142,7 +142,7 @@ void pspl_preprocessor_add_heading_pop() {
         pspl_buffer_addchar(&preprocessor_state.out_buf, '\t');
     
     // Deposit expanded string
-    pspl_buffer_addstr(&preprocessor_state.out_buf, "PSPL_HEADING_POP()\n");
+    pspl_buffer_addstr(&preprocessor_state.out_buf, "POP_HEADING()\n");
     
     // Add a line to expansion count
     ++preprocessor_state.source->expansion_line_nodes[driver_state.line_num].expanded_line_count;

@@ -48,6 +48,7 @@ static struct _pspl_compiler_state {
     pspl_toolchain_driver_source_t* source;
     
     // Current heading context info
+    unsigned push_count;
     pspl_toolchain_heading_context_t* heading_context;
     
     // Current indent context info
@@ -72,6 +73,8 @@ void pspl_embed_hash_keyed_object(const pspl_platform_t** platforms,
         driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
         return;
+    if (!driver_state.indexer_ctx)
+        return;
     pspl_indexer_hash_object_augment(driver_state.indexer_ctx, driver_state.proc_extension,
                                      platforms, key, little_object, big_object, object_size,
                                      driver_state.source);
@@ -88,6 +91,8 @@ void pspl_embed_integer_keyed_object(const pspl_platform_t** platforms,
         driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
+        return;
+    if (!driver_state.indexer_ctx)
         return;
     pspl_indexer_integer_object_augment(driver_state.indexer_ctx, driver_state.proc_extension,
                                         platforms, key, little_object, big_object, object_size,
@@ -146,6 +151,8 @@ void pspl_embed_platform_hash_keyed_object(const char* key,
         driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
         return;
+    if (!driver_state.indexer_ctx)
+        return;
     pspl_indexer_platform_hash_object_augment(driver_state.indexer_ctx, driver_state.proc_platform,
                                               key, little_object, big_object, object_size,
                                               driver_state.source);
@@ -161,6 +168,8 @@ void pspl_embed_platform_integer_keyed_object(uint32_t key,
         driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
+        return;
+    if (!driver_state.indexer_ctx)
         return;
     pspl_indexer_platform_integer_object_augment(driver_state.indexer_ctx, driver_state.proc_platform,
                                                  key, little_object, big_object, object_size,
@@ -178,6 +187,8 @@ void pspl_package_file_augment(const pspl_platform_t** plats, const char* path_i
         driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
         return;
+    if (!driver_state.indexer_ctx)
+        return;
     pspl_indexer_stub_file_augment(driver_state.indexer_ctx, plats, path_in, path_ext_in,
                                    converter_hook, move_output, user_ptr, hash_out, driver_state.source);
 }
@@ -190,6 +201,8 @@ void pspl_package_membuf_augment(const pspl_platform_t** plats, const char* path
         driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
+        return;
+    if (!driver_state.indexer_ctx)
         return;
     pspl_indexer_stub_membuf_augment(driver_state.indexer_ctx, plats, path_in, path_ext_in,
                                      converter_hook, user_ptr, hash_out, driver_state.source);
@@ -391,6 +404,7 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
     indent_ctx_stack[0].line_text = NULL;
     compiler_state.indent_context = &indent_ctx_stack[0];
     
+    compiler_state.push_count = 0;
     
     // Start reading lines
     
@@ -807,26 +821,72 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             in_com = 0;
             
             // Now determine which extension's command hook needs to be dispatched
-            const pspl_extension_t* hook_ext = get_com_hook_ext(com_name);
-            
-            if (hook_ext) {
+            if (!strcasecmp(com_name, "NAME")) {
                 
-                // Set callout context accordingly
-                driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
-                driver_state.proc_extension = hook_ext;
+                if (!tok_c)
+                    pspl_error(-1, "Invalid command use", "NAME command must have *one* argument");
                 
-                // Callout to command hook
-                hook_ext->toolchain_extension->
-                command_call_hook(ext_driver_ctx, compiler_state.heading_context,
-                                  com_name, tok_c, (const char**)tok_arr);
+                pspl_hash_ctx_t hash_ctx;
+                pspl_hash_init(&hash_ctx);
+                pspl_hash_write(&hash_ctx, tok_arr[0], strlen(tok_arr[0]));
+                pspl_hash* result;
+                pspl_hash_result(&hash_ctx, result);
+                pspl_hash_cpy(&driver_state.indexer_ctx->psplc_hash, result);
                 
-                // Unset callout context
-                driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+            } else if (!strcasecmp(com_name, "PUSH_HEADING")) {
                 
-            } else
-                pspl_warn("Unrecognised command",
-                          "command `%s` not handled by any installed extensions; skipping",
-                          com_name);
+                if (!tok_c)
+                    pspl_error(-1, "Invalid command use",
+                               "PUSH_HEADING command must have *one* argument");
+                
+                pspl_toolchain_heading_context_t* pushed_ctx = &compiler_state.heading_context[1];
+                pushed_ctx->heading_argc = tok_c - 1;
+                int l;
+                for (l=0 ; l<pushed_ctx->heading_argc ; ++l)
+                    pushed_ctx->heading_argv[l] = tok_arr[l+1];
+                pushed_ctx->heading_level = 0;
+                pushed_ctx->heading_name = tok_arr[0];
+                pushed_ctx->heading_trace = NULL;
+                compiler_state.heading_context = pushed_ctx;
+                ++compiler_state.push_count;
+                
+            } else if (!strcasecmp(com_name, "POP_HEADING")) {
+                
+                if (!compiler_state.push_count)
+                    pspl_warn("Over-popped heading", "`%s` popped heading more times than pushed",
+                              source->file_path);
+                else {
+                    const pspl_toolchain_heading_context_t* climb_ctx = compiler_state.heading_context;
+                    while (climb_ctx->heading_trace)
+                        climb_ctx = climb_ctx->heading_trace;
+                    compiler_state.heading_context = (pspl_toolchain_heading_context_t*)&climb_ctx[-1];
+                    --compiler_state.push_count;
+                }
+                
+            } else {
+                
+                const pspl_extension_t* hook_ext = get_com_hook_ext(com_name);
+                
+                if (hook_ext) {
+                    
+                    // Set callout context accordingly
+                    driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
+                    driver_state.proc_extension = hook_ext;
+                    
+                    // Callout to command hook
+                    hook_ext->toolchain_extension->
+                    command_call_hook(ext_driver_ctx, compiler_state.heading_context,
+                                      com_name, tok_c, (const char**)tok_arr);
+                    
+                    // Unset callout context
+                    driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+                    
+                } else
+                    pspl_warn("Unrecognised command",
+                              "command `%s` not handled by any installed extensions; skipping",
+                              com_name);
+                
+            }
             
             // Free resources
             free(com_name);

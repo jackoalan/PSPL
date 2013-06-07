@@ -1298,7 +1298,8 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
         if (hash_file(&new_entry->object_hash, final_path))
             pspl_error(-1, "Unable to hash file",
                        "error while hashing `%s`", final_path);
-        *hash_out = &new_entry->object_hash;
+        if (hash_out)
+            *hash_out = &new_entry->object_hash;
         
         // Final Hash path
         char final_hash_str[PSPL_HASH_STRING_LEN];
@@ -1331,7 +1332,9 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
         
         // No conversion; just copy newest data hash
         pspl_hash_parse(&new_entry->object_hash, newest_data_hash_str);
-        
+        if (hash_out)
+            *hash_out = &new_entry->object_hash;
+
     }
     
     // Populate structure
@@ -1458,7 +1461,8 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
         pspl_hash* hash_result;
         pspl_hash_result(&hash_ctx, hash_result);
         pspl_hash_cpy(&new_entry->object_hash, hash_result);
-        *hash_out = &new_entry->object_hash;
+        if (hash_out)
+            *hash_out = &new_entry->object_hash;
         
         // Final Hash path
         char final_hash_str[PSPL_HASH_STRING_LEN];
@@ -1488,6 +1492,8 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
         
         // No conversion; just copy newest data hash
         pspl_hash_parse(&new_entry->object_hash, newest_data_hash_str);
+        if (hash_out)
+            *hash_out = &new_entry->object_hash;
         
     }
     

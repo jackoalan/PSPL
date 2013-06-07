@@ -148,12 +148,12 @@ void pspl_preprocessor_add_line(const char* line_text, ...);
 void pspl_preprocessor_add_indent_line(unsigned int indent_level, const char* line_text, ...);
 
 /* Convenience function to emit PSPL primary-heading push
- * (emits 'PSPL_HEADING_PUSH(primary_heading_name)') 
+ * (emits 'PUSH_HEADING(primary_heading_name)') 
  * Saves heading state onto internal toolchain-driver stack */
 void pspl_preprocessor_add_heading_push(const char* primary_heading_name);
 
 /* Convenience function to emit PSPL primary-heading push
- * (emits 'PSPL_HEADING_POP()')
+ * (emits 'POP_HEADING()')
  * restores the heading state before previous PSPL_HEADING_PUSH() */
 void pspl_preprocessor_add_heading_pop();
 

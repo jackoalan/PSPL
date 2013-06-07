@@ -40,9 +40,6 @@ static const char* claimed_pp_direc[] = {
 
 /* Global command names */
 static const char* claimed_commands[] = {
-    "PSPL_NAME",
-    "PSPL_PUSH_HEADING",
-    "PSPL_POP_HEADING",
     "PSPL_LOAD_MESSAGE",
     "RUN_TEST",
     NULL};

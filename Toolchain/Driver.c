@@ -36,6 +36,7 @@
 #include <PSPL/PSPLCommon.h>
 #include <PSPLExtension.h>
 #include <PSPLInternal.h>
+#include <PSPLHash.h>
 
 #include "Driver.h"
 #include "Preprocessor.h"
@@ -1254,6 +1255,16 @@ int main(int argc, char** argv) {
             
             // Populate filename members
             source->file_path = driver_opts.source_a[i];
+            
+            // Generate default PSPLC hash
+            if (!(driver_opts.pspl_mode_opts & PSPL_MODE_PREPROCESS_ONLY)) {
+                pspl_hash_ctx_t hash_ctx;
+                pspl_hash_init(&hash_ctx);
+                pspl_hash_write(&hash_ctx, source->file_path, strlen(source->file_path));
+                pspl_hash* result_hash;
+                pspl_hash_result(&hash_ctx, result_hash);
+                pspl_hash_cpy(&driver_state.indexer_ctx->psplc_hash, result_hash);
+            }
             
             // Make path absolute (if it's not already)
             const char* abs_path = source->file_path;

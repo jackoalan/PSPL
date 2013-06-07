@@ -53,6 +53,16 @@ void pspl_packager_indexer_augment(pspl_packager_context_t* ctx,
                    "PSPL Packager would have augmented too many PSPLCs; expected %u",
                    ctx->indexer_cap);
     
+    // Ensure PSPLC isn't already staged for adding
+    for (i=0 ; i<ctx->indexer_count ; ++i) {
+        pspl_indexer_context_t* present_idxer = ctx->indexer_array[i];
+        if (!pspl_hash_cmp(&present_idxer->psplc_hash, &indexer->psplc_hash))
+            pspl_error(-1, "Duplicate-ID PSPLCs added to package",
+                       "PSPLC '%s' and '%s' have the same identifier hash; "
+                       "this is disallowed by PSPL",
+                       present_idxer->definer, indexer->definer);
+    }
+    
     // Unify extension array
     for (i=0 ; i<indexer->ext_count ; ++i) {
         needs_add = 1;
