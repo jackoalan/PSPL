@@ -96,6 +96,9 @@ typedef struct {
     const char** def_k; /**< Array (of length `def_c`) containing defined key strings */
     const char** def_v; /**< Array (of length `def_c`) containing index-associated values (or NULL if no values) */
     
+    /**< Output path */
+    const char* output_path;
+    
 } pspl_toolchain_context_t;
 
 #pragma mark -

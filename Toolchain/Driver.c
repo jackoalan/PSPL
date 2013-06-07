@@ -542,6 +542,8 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
     fprintf(stderr, "\n");
 #   endif // PSPL_ERROR_PRINT_BACKTRACE
     
+    if (driver_state.tool_ctx->output_path)
+        unlink(driver_state.tool_ctx->output_path);
     exit(exit_code);
 }
 
@@ -567,15 +569,15 @@ void pspl_warn(const char* brief, const char* msg, ...) {
     if (xterm_colour) {
         switch (driver_state.pspl_phase) {
             case PSPL_PHASE_INIT:
-                err_head = wrap_string(BOLD YELLOW"WARNING WHILE "CYAN"INITIALISING"YELLOW" TOOLCHAIN:\n"SGR0, 1);
+                err_head = wrap_string(BOLD MAGENTA"WARNING WHILE "CYAN"INITIALISING"MAGENTA" TOOLCHAIN:\n"SGR0, 1);
                 break;
             case PSPL_PHASE_PREPROCESS:
-                snprintf(err_head, 255, BOLD YELLOW"WARNING WHILE "CYAN"PREPROCESSING "BLUE"`%s`"GREEN" LINE %u:\n"SGR0,
+                snprintf(err_head, 255, BOLD MAGENTA"WARNING WHILE "CYAN"PREPROCESSING "BLUE"`%s`"GREEN" LINE %u:\n"SGR0,
                         driver_state.file_name, driver_state.line_num);
                 err_head = wrap_string(err_head, 1);
                 break;
             case PSPL_PHASE_COMPILE:
-                snprintf(err_head, 255, BOLD YELLOW"WARNING WHILE "CYAN"COMPILING "BLUE"`%s`"GREEN" LINE %u:\n"SGR0,
+                snprintf(err_head, 255, BOLD MAGENTA"WARNING WHILE "CYAN"COMPILING "BLUE"`%s`"GREEN" LINE %u:\n"SGR0,
                         driver_state.file_name, driver_state.line_num);
                 err_head = wrap_string(err_head, 1);
                 break;
@@ -626,10 +628,11 @@ void pspl_warn(const char* brief, const char* msg, ...) {
 /* Report PSPLC read-in underflow */
 void check_psplc_underflow(pspl_toolchain_driver_psplc_t* psplc, const void* cur_ptr) {
     size_t delta = cur_ptr-(void*)psplc->psplc_data;
+    /*
     if (delta > psplc->psplc_data_len)
         pspl_error(-1, "PSPLC underflow detected",
                    "PSPLC `%s` is not long enough to load needed data @0x%zx (%u)",
-                   psplc->file_path, delta, (unsigned)delta);
+                   psplc->file_path, delta, (unsigned)delta);*/
 }
 
 
@@ -808,8 +811,9 @@ static void init_psplc_from_file(pspl_toolchain_driver_psplc_t* psplc, const cha
     } else {
         pspl_off_head = (pspl_off_header_t*)(psplc->psplc_data + sizeof(pspl_header_t));
         check_psplc_underflow(psplc, pspl_off_head+sizeof(pspl_off_header_t));
-        if (IS_PSPLC_SWAPPED)
+        if (IS_PSPLC_SWAPPED) {
             SWAP_PSPL_OFF_HEADER_T(pspl_off_head);
+        }
     }
     
     // Populate extension set
@@ -1177,7 +1181,8 @@ int main(int argc, char** argv) {
         .target_endianness = driver_opts.default_endianness,
         .def_c = driver_opts.def_c,
         .def_k = driver_opts.def_k,
-        .def_v = driver_opts.def_v
+        .def_v = driver_opts.def_v,
+        .output_path = driver_opts.out_path
     };
     driver_state.tool_ctx = &tool_ctx;
     

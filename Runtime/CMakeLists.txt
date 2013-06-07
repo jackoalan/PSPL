@@ -35,13 +35,4 @@ target_link_libraries(pspl-rt
                       ${HASH_LIB} 
                       pspl_common)
 
-# Export runtime for use in other CMake Projects
-export(TARGETS pspl-rt
-       ${pspl_extension_runtime_link_list} 
-       ${HASH_LIB} 
-       pspl_common 
-       FILE pspl-rt-targets.cmake)
-file(TO_CMAKE_PATH pspl-rt-targets.cmake PSPL_RT_TARGET_FILE)
-configure_file(${PSPL_SOURCE_DIR}/cmake/PSPLConfig.cmake.in
-               PSPLConfig.cmake)
-export(PACKAGE PSPL)
+

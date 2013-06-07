@@ -220,3 +220,19 @@ endif()
 
 add_subdirectory(Test)
 
+
+##########
+# Export #
+##########
+
+export(TARGETS pspl-rt
+       ${pspl_extension_runtime_link_list} 
+       ${HASH_LIB} 
+       pspl_common 
+       FILE pspl-rt-targets.cmake)
+get_filename_component(PSPL_RT_TARGET_FILE ${PSPL_BINARY_DIR}/pspl-rt-targets.cmake ABSOLUTE)
+get_target_property(PSPL_BINARY_LOC pspl LOCATION)
+configure_file(${PSPL_SOURCE_DIR}/cmake/PSPLConfig.cmake.in
+               PSPLConfig.cmake)
+export(PACKAGE PSPL)
+

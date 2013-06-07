@@ -647,8 +647,9 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx,
     } else {
         psplc_head = psplc_cur;
         check_psplc_underflow(existing_psplc, psplc_head+sizeof(pspl_psplc_header_t));
-        if (IS_PSPLC_SWAPPED)
+        if (IS_PSPLC_SWAPPED) {
             SWAP_PSPL_PSPLC_HEADER_T(psplc_head);
+        }
         psplc_cur += sizeof(pspl_psplc_header_t);
     }
     
@@ -664,8 +665,9 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx,
         } else {
             ext = psplc_cur;
             check_psplc_underflow(existing_psplc, ext+sizeof(pspl_object_array_extension_t));
-            if (IS_PSPLC_SWAPPED)
+            if (IS_PSPLC_SWAPPED) {
                 SWAP_PSPL_OBJECT_ARRAY_EXTENSION_T(ext);
+            }
             psplc_cur += sizeof(pspl_object_array_extension_t);
         }
         
@@ -692,8 +694,9 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx,
             } else {
                 obj = h_obj_cur;
                 check_psplc_underflow(existing_psplc, obj+sizeof(pspl_object_hash_record_t));
-                if (IS_PSPLC_SWAPPED)
+                if (IS_PSPLC_SWAPPED) {
                     SWAP_PSPL_OBJECT_HASH_RECORD_T(obj);
+                }
                 h_obj_cur += sizeof(pspl_object_hash_record_t);
             }
             
@@ -722,8 +725,9 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx,
             } else {
                 obj = i_obj_cur;
                 check_psplc_underflow(existing_psplc, obj+sizeof(pspl_object_int_record_t));
-                if (IS_PSPLC_SWAPPED)
+                if (IS_PSPLC_SWAPPED) {
                     SWAP_PSPL_OBJECT_HASH_RECORD_T(obj);
+                }
                 i_obj_cur += sizeof(pspl_object_int_record_t);
             }
             
@@ -752,8 +756,9 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx,
         } else {
             ext = psplc_cur;
             check_psplc_underflow(existing_psplc, ext+sizeof(pspl_object_array_extension_t));
-            if (IS_PSPLC_SWAPPED)
+            if (IS_PSPLC_SWAPPED) {
                 SWAP_PSPL_OBJECT_ARRAY_EXTENSION_T(ext);
+            }
             psplc_cur += sizeof(pspl_object_array_extension_t);
         }
         
@@ -780,8 +785,9 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx,
             } else {
                 obj = h_obj_cur;
                 check_psplc_underflow(existing_psplc, obj+sizeof(pspl_object_hash_record_t));
-                if (IS_PSPLC_SWAPPED)
+                if (IS_PSPLC_SWAPPED) {
                     SWAP_PSPL_OBJECT_HASH_RECORD_T(obj);
+                }
                 h_obj_cur += sizeof(pspl_object_hash_record_t);
             }
             
@@ -810,8 +816,9 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx,
             } else {
                 obj = i_obj_cur;
                 check_psplc_underflow(existing_psplc, obj+sizeof(pspl_object_int_record_t));
-                if (IS_PSPLC_SWAPPED)
+                if (IS_PSPLC_SWAPPED) {
                     SWAP_PSPL_OBJECT_HASH_RECORD_T(obj);
+                }
                 i_obj_cur += sizeof(pspl_object_int_record_t);
             }
             
@@ -847,8 +854,9 @@ void pspl_indexer_psplc_stub_augment(pspl_indexer_context_t* ctx,
         } else {
             stub = psplc_cur;
             check_psplc_underflow(existing_psplc, stub+sizeof(pspl_file_stub_t));
-            if (IS_PSPLC_SWAPPED)
+            if (IS_PSPLC_SWAPPED) {
                 SWAP_PSPL_FILE_STUB_T(stub);
+            }
             psplc_cur += sizeof(pspl_file_stub_t);
         }
         
