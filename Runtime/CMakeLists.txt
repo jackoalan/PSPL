@@ -27,7 +27,7 @@ add_library(pspl-rt STATIC
 # All sources in `pspl-rt` should be exposed to platform-specific types
 set_target_properties(pspl-rt PROPERTIES
                       COMPILE_FLAGS "-include pspl_runtime_platform_typefile.pch"
-                      COMPILE_DEFINITIONS PSPL_RUNTIME=1)
+                      COMPILE_DEFINITIONS "PSPL_RUNTIME=1;PSPL_RUNTIME_PLATFORM_${PSPL_RUNTIME_PLATFORM}=1")
 
 # Link runtime extensions
 target_link_libraries(pspl-rt

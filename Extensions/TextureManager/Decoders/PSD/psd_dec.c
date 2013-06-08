@@ -55,7 +55,7 @@ static void advance_past_pascal_string(void** ptr) {
         *cptr += **cptr + 1;
 }
 
-/* PackBits decompression algorithm */
+/* PackBits decompression algorithm (from libtiff) */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler

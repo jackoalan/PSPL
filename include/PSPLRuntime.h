@@ -17,6 +17,7 @@
  * @{
  */
 
+#include <stdio.h>
 #include <PSPL/PSPLCommon.h>
 
 
@@ -68,8 +69,14 @@ typedef struct {
     /**< Seek to point in handle */
     int(*seek)(const void* handle, size_t seek_set);
     
+    /**< Tell current point in handle */
+    size_t(*tell)(const void* handle);
+    
     /**< Read count of bytes from handle (returning bytes read) */
     size_t(*read)(const void* handle, size_t num_bytes, const void** data_out);
+    
+    /**< Read count of bytes from handle into already-allocated buffer (returning bytes read) */
+    size_t(*read_direct)(const void* handle, size_t num_bytes, void* data_buf);
     
 } pspl_data_provider_t;
 
@@ -135,7 +142,10 @@ void pspl_runtime_unload_package(const pspl_runtime_package_t* package);
 typedef struct {
     
     /**< Hash of PSPLC object */
-    pspl_hash hash;
+    const pspl_hash hash;
+    
+    /**< Parent package */
+    const pspl_runtime_package_t* parent;
     
 #   ifdef PSPL_RUNTIME
     /**< Platform-specific shader object
@@ -215,7 +225,10 @@ void pspl_runtime_release_psplc(const pspl_runtime_psplc_t* psplc);
 typedef struct {
     
     /**< Hash of archived file */
-    pspl_hash hash;
+    const pspl_hash hash;
+    
+    /**< Parent package */
+    const pspl_runtime_package_t* parent;
     
     /**< File length and data */
     size_t file_len;
@@ -256,7 +269,7 @@ void pspl_runtime_enumerate_archived_files(const pspl_runtime_package_t* package
  * @return File representation (or NULL if not available)
  */
 const pspl_runtime_arc_file_t* pspl_runtime_get_archived_file_from_hash(const pspl_runtime_package_t* package,
-                                                                        pspl_hash* hash, int retain);
+                                                                        const pspl_hash* hash, int retain);
 
 /**
  * Increment reference-count of archived file
@@ -271,6 +284,23 @@ void pspl_runtime_retain_archived_file(const pspl_runtime_arc_file_t* file);
  * @param file File representation
  */
 void pspl_runtime_release_archived_file(const pspl_runtime_arc_file_t* file);
+
+/**
+ * Get pre-seeked FILE pointer and length of archived file
+ *
+ * An advanced API to bypass the reference-counted loading mechanism of
+ * pspl-rt and receive a FILE pointer ready to load data from disk directly
+ *
+ * @param file Archived file object
+ * @param provider_hooks_out Hook structure used to access data
+ * @param provider_handle_out File instance containing requested data (pre-seeked)
+ * @param len_out Length of file record
+ * @return 0 if successful, otherwise negative
+ */
+int pspl_runtime_access_archived_file(const pspl_runtime_arc_file_t* file,
+                                      const pspl_data_provider_t** provider_hooks_out,
+                                      const void** provider_handle_out,
+                                      size_t* len_out);
 
 /** @} */
 

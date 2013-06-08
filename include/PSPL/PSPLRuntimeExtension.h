@@ -44,7 +44,7 @@ typedef void(*pspl_runtime_bind_object_hook)(const pspl_runtime_psplc_t* object)
 /* These *must* be called within the `load` hook of platform or extension */
 
 /**
- * Get embedded data object for extension by key (used in hash lookup)
+ * Get embedded data object for extension by string key (used in hash lookup)
  *
  * * **This routine may only be called within extension/platform `load` hook**
  * * This routine will only lookup objects in *hashed namespace*
@@ -60,7 +60,19 @@ int pspl_runtime_get_embedded_data_object_from_key(const pspl_runtime_psplc_t* o
                                                    pspl_data_object_t* data_object_out);
 
 /**
- * Get embedded object for extension by hash
+ * Count embedded object in PSPLC keyed by hash
+ *
+ * * **This routine may only be called within extension/platform `load` hook**
+ * * This routine will only lookup objects in *hashed namespace*
+ *
+ * @param object Read-only handle identifying embedded PSPLC object
+ *        to count objects from
+ * @return Count of hash-keyed objects
+ */
+int pspl_runtime_count_hash_embedded_data_objects(const pspl_runtime_psplc_t* object);
+
+/**
+ * Get embedded object for extension by direct hash key (skips string hashing)
  *
  * * **This routine may only be called within extension/platform `load` hook**
  * * This routine will only lookup objects in *hashed namespace*
@@ -72,11 +84,39 @@ int pspl_runtime_get_embedded_data_object_from_key(const pspl_runtime_psplc_t* o
  *        needing to be populated (composing data ptr and length)
  */
 int pspl_runtime_get_embedded_data_object_from_hash(const pspl_runtime_psplc_t* object,
-                                                    const pspl_hash* hash,
+                                                    const pspl_hash* key,
                                                     pspl_data_object_t* data_object_out);
 
+typedef int(*pspl_hash_enumerate_hook)(pspl_data_object_t* data_object, const pspl_hash* key, void* user_ptr);
 /**
- * Get embedded data object for extension by index (used in integer lookup)
+ * Enumerate hashed embedded objects
+ *
+ * * **This routine may only be called within extension/platform `load` hook**
+ * * This routine will only lookup objects in *hashed namespace*
+ *
+ * @param object Read-only handle identifying embedded PSPLC object
+ *        to get data object from
+ * @param hook Function pointer to call for each hash-keyed object.
+ *        Returning -1 from hook will cancel enumeration.
+ */
+void pspl_runtime_enumerate_hash_embedded_data_objects(const pspl_runtime_psplc_t* object,
+                                                       pspl_hash_enumerate_hook hook,
+                                                       void* user_ptr);
+
+/**
+ * Count embedded objects in PSPLC keyed by integer
+ *
+ * * **This routine may only be called within extension/platform `load` hook**
+ * * This routine will only lookup objects in *integer namespace*
+ *
+ * @param object Read-only handle identifying embedded PSPLC object
+ *        to count objects from
+ * @return Count of integer-keyed objects
+ */
+int pspl_runtime_count_integer_embedded_data_objects(const pspl_runtime_psplc_t* object);
+
+/**
+ * Get embedded data object for extension by integer-key (used in integer lookup)
  *
  * * **This routine may only be called within extension/platform `load` hook**
  * * This routine will only lookup objects in *integer namespace*
@@ -87,9 +127,25 @@ int pspl_runtime_get_embedded_data_object_from_hash(const pspl_runtime_psplc_t* 
  * @param data_object_out Pointer to app-allocated data object structure
  *        needing to be populated (composing data ptr and length)
  */
- int pspl_runtime_get_embedded_data_object_from_index(const pspl_runtime_psplc_t* object,
-                                                      uint32_t index,
-                                                      pspl_data_object_t* data_object_out);
+int pspl_runtime_get_embedded_data_object_from_integer(const pspl_runtime_psplc_t* object,
+                                                       uint32_t key,
+                                                       pspl_data_object_t* data_object_out);
+
+typedef int(*pspl_integer_enumerate_hook)(pspl_data_object_t* data_object, uint32_t key, void* user_ptr);
+/**
+ * Enumerate integer-keyed embedded objects
+ *
+ * * **This routine may only be called within extension/platform `load` hook**
+ * * This routine will only lookup objects in *integer namespace*
+ *
+ * @param object Read-only handle identifying embedded PSPLC object
+ *        to get data object from
+ * @param hook Function pointer to call for each integer-keyed object.
+ *        Returning -1 from hook will cancel enumeration.
+ */
+void pspl_runtime_enumerate_integer_embedded_data_objects(const pspl_runtime_psplc_t* object,
+                                                          pspl_integer_enumerate_hook hook,
+                                                          void* user_ptr);
 
 
 #pragma mark Main Runtime Extension Structure

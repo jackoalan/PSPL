@@ -55,6 +55,10 @@ extern const pspl_platform_t* pspl_available_platforms[];
 /* Are we using xterm? */
 uint8_t xterm_colour = 0;
 
+/* Forward decls */
+static void _pspl_runtime_release_psplc(const pspl_runtime_psplc_t* psplc, int total);
+static void _pspl_runtime_release_archived_file(const pspl_runtime_arc_file_t* file, int total);
+
 
 #pragma mark Terminal Utils
 
@@ -288,9 +292,6 @@ typedef struct {
     // Public structure
     pspl_runtime_psplc_t public;
     
-    // Parent package
-    pspl_runtime_package_t* parent;
-    
     // Reference count
     unsigned int ref_count;
     
@@ -314,9 +315,6 @@ typedef struct {
     
     // Public structure
     pspl_runtime_arc_file_t public;
-    
-    // Parent package
-    pspl_runtime_package_t* parent;
     
     // Reference count
     unsigned int ref_count;
@@ -385,6 +383,21 @@ int pspl_runtime_get_embedded_data_object_from_key(const pspl_runtime_psplc_t* o
     
 }
 
+/* Count embedded object in PSPLC keyed by hash */
+int pspl_runtime_count_hash_embedded_data_objects(const pspl_runtime_psplc_t* object) {
+    const _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)object;
+    
+    const _pspl_object_index_t* idx = NULL;
+    if (api_load_state == PSPL_LOADING_EXT)
+        idx = &obj->ext_arr[api_load_subject_index];
+    else if (api_load_state == PSPL_LOADING_PLAT)
+        idx = &obj->plat_arr[api_load_subject_index];
+    else
+        return -1;
+    
+    return idx->h_arr_c;
+}
+
 /* Get embedded object for extension by hash */
 int pspl_runtime_get_embedded_data_object_from_hash(const pspl_runtime_psplc_t* object,
                                                     const pspl_hash* hash,
@@ -430,8 +443,58 @@ int pspl_runtime_get_embedded_data_object_from_hash(const pspl_runtime_psplc_t* 
     
 }
 
+/* Enumerate hashed embedded objects */
+void pspl_runtime_enumerate_hash_embedded_data_objects(const pspl_runtime_psplc_t* object,
+                                                       pspl_hash_enumerate_hook hook,
+                                                       void* user_ptr) {
+    int i;
+    const _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)object;
+    
+    const _pspl_object_index_t* idx = NULL;
+    if (api_load_state == PSPL_LOADING_EXT)
+        idx = &obj->ext_arr[api_load_subject_index];
+    else if (api_load_state == PSPL_LOADING_PLAT)
+        idx = &obj->plat_arr[api_load_subject_index];
+    else
+        return;
+    
+    
+    // Perform lookup
+    for (i=0 ; i<idx->h_arr_c ; ++i) {
+        const _pspl_object_hash_record_t* rec = &idx->h_arr[i];
+        
+        // Populate data
+        pspl_data_object_t data_object_out;
+        data_object_out.object_data = obj->blobs_buf + rec->record.object_off;
+#       ifdef __BIG_ENDIAN__
+        if (rec->record.object_bi)
+            data_object_out.object_data += ROUND_UP_4(rec->record.object_len);
+#       endif
+        data_object_out.object_len = rec->record.object_len;
+            
+        if(hook(&data_object_out, &rec->hash, user_ptr) < 0)
+            return;
+
+    }
+}
+
+/* Count embedded objects in PSPLC keyed by integer */
+int pspl_runtime_count_integer_embedded_data_objects(const pspl_runtime_psplc_t* object) {
+    const _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)object;
+    
+    const _pspl_object_index_t* idx = NULL;
+    if (api_load_state == PSPL_LOADING_EXT)
+        idx = &obj->ext_arr[api_load_subject_index];
+    else if (api_load_state == PSPL_LOADING_PLAT)
+        idx = &obj->plat_arr[api_load_subject_index];
+    else
+        return -1;
+    
+    return idx->i_arr_c;
+}
+
 /* Get embedded object for extension by index */
-int pspl_runtime_get_embedded_data_object_from_index(const pspl_runtime_psplc_t* object,
+int pspl_runtime_get_embedded_data_object_from_integer(const pspl_runtime_psplc_t* object,
                                                      uint32_t index,
                                                      pspl_data_object_t* data_object_out) {
     int i,j;
@@ -473,6 +536,41 @@ int pspl_runtime_get_embedded_data_object_from_index(const pspl_runtime_psplc_t*
     
     return -1;
     
+}
+
+/* Enumerate integer-indexed embedded objects */
+void pspl_runtime_enumerate_integer_embedded_data_objects(const pspl_runtime_psplc_t* object,
+                                                          pspl_integer_enumerate_hook hook,
+                                                          void* user_ptr) {
+    int i;
+    const _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)object;
+    
+    const _pspl_object_index_t* idx = NULL;
+    if (api_load_state == PSPL_LOADING_EXT)
+        idx = &obj->ext_arr[api_load_subject_index];
+    else if (api_load_state == PSPL_LOADING_PLAT)
+        idx = &obj->plat_arr[api_load_subject_index];
+    else
+        return;
+    
+    
+    // Perform lookup
+    for (i=0 ; i<idx->i_arr_c ; ++i) {
+        const pspl_object_int_record_t* rec = &idx->i_arr[i];
+            
+        // Populate data
+        pspl_data_object_t data_object_out;
+        data_object_out.object_data = obj->blobs_buf + rec->object_off;
+#       ifdef __BIG_ENDIAN__
+        if (rec->record.object_bi)
+            data_object_out.object_data += ROUND_UP_4(rec->object_len);
+#       endif
+        data_object_out.object_len = rec->object_len;
+        
+        if(hook(&data_object_out, rec->object_index, user_ptr) < 0)
+            return;
+        
+    }
 }
 
 #pragma mark Runtime API
@@ -925,8 +1023,8 @@ static int load_psplp(pspl_runtime_package_t* package) {
             
             // Populate runtime object
             _pspl_runtime_psplc_t* dest_psplc = &dest_table[j];
-            pspl_hash_cpy(&dest_psplc->public.hash, hash);
-            dest_psplc->parent = package;
+            pspl_hash_cpy((pspl_hash*)&dest_psplc->public.hash, hash);
+            dest_psplc->public.parent = package;
             dest_psplc->ref_count = 0;
             dest_psplc->ext_arr_c = psplc_head->extension_count;
             dest_psplc->ext_arr = ext_index_arr;
@@ -999,10 +1097,10 @@ static int load_psplp(pspl_runtime_package_t* package) {
             
             // Populate file record
             _pspl_runtime_arc_file_t* dest = &dest_table[file_count++];
-            pspl_hash_cpy(&dest->public.hash, hash);
+            pspl_hash_cpy((pspl_hash*)&dest->public.hash, hash);
             dest->public.file_len = ent->file_len;
             dest->public.file_data = NULL;
-            dest->parent = package;
+            dest->public.parent = package;
             dest->ref_count = 0;
             dest->file_off = ent->file_off;
         }
@@ -1054,18 +1152,27 @@ static size_t stdio_len(const void* handle) {
 static int stdio_seek(const void* handle, size_t seek_set) {
     return fseek(((struct stdio_handle*)handle)->file, seek_set, SEEK_SET);
 }
+static size_t stdio_tell(const void* handle) {
+    return ftell(((struct stdio_handle*)handle)->file);
+}
 static size_t stdio_read(const void* handle, size_t num_bytes, const void** data_out) {
     struct stdio_handle* stdio = ((struct stdio_handle*)handle);
     void* buf = pspl_malloc_malloc(&stdio->mem_ctx, num_bytes);
     *data_out = buf;
     return fread(buf, 1, num_bytes, stdio->file);
 }
+static size_t stdio_read_direct(const void* handle, size_t num_bytes, void* data_buf) {
+    struct stdio_handle* stdio = ((struct stdio_handle*)handle);
+    return fread(data_buf, 1, num_bytes, stdio->file);
+}
 static const pspl_data_provider_t stdio = {
     .open = stdio_open,
     .close = stdio_close,
     .len = stdio_len,
     .seek = stdio_seek,
-    .read = stdio_read
+    .tell = stdio_tell,
+    .read = stdio_read,
+    .read_direct = stdio_read_direct
 };
 
 /**
@@ -1116,6 +1223,10 @@ static int mem_seek(const void* handle, size_t seek_set) {
     mem->cur = mem->data + seek_set;
     return 0;
 }
+static size_t mem_tell(const void* handle) {
+    struct mem_handle* mem = ((struct mem_handle*)handle);
+    return mem->cur - mem->data;
+}
 static size_t mem_read(const void* handle, size_t num_bytes, const void** data_out) {
     struct mem_handle* mem = ((struct mem_handle*)handle);
     size_t read_in = mem->cur - mem->data;
@@ -1127,12 +1238,25 @@ static size_t mem_read(const void* handle, size_t num_bytes, const void** data_o
     mem->cur += num_bytes;
     return rem;
 }
+static size_t mem_read_direct(const void* handle, size_t num_bytes, void* data_buf) {
+    struct mem_handle* mem = ((struct mem_handle*)handle);
+    size_t read_in = mem->cur - mem->data;
+    if (read_in >= mem->len)
+        return 0;
+    size_t rem = mem->len - read_in;
+    rem = (num_bytes < rem)?num_bytes:rem;
+    memcpy(data_buf, mem->cur, rem);
+    mem->cur += num_bytes;
+    return rem;
+}
 static const pspl_data_provider_t membuf = {
     .open = mem_open,
     .close = mem_close,
     .len = mem_len,
     .seek = mem_seek,
-    .read = mem_read
+    .tell = mem_tell,
+    .read = mem_read,
+    .read_direct = mem_read_direct
 };
 
 /**
@@ -1214,6 +1338,7 @@ void pspl_runtime_unload_package(const pspl_runtime_package_t* package) {
     int i,j;
     for (i=0 ; i<package->psplc_count ; ++i) {
         const _pspl_runtime_psplc_t* obj = &package->psplc_array[i];
+        _pspl_runtime_release_psplc((pspl_runtime_psplc_t*)obj, 1);
         for (j=0 ; j<obj->ext_arr_c ; ++j) {
             const _pspl_object_index_t* idx = &obj->ext_arr[j];
             free((void*)idx->h_arr);
@@ -1228,6 +1353,10 @@ void pspl_runtime_unload_package(const pspl_runtime_package_t* package) {
         free((void*)obj->plat_arr);
     }
     free((void*)package->psplc_array);
+    for (i=0 ; i<package->file_count ; ++i) {
+        const _pspl_runtime_arc_file_t* obj = &package->file_array[i];
+        _pspl_runtime_release_archived_file((pspl_runtime_arc_file_t*)obj, 1);
+    }
     free((void*)package->file_array);
     package->provider_hooks->close(PACKAGE_PROVIDER(package));
     pspl_malloc_free(&package_mem_ctx, (void*)package);
@@ -1329,20 +1458,20 @@ const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_hash(const pspl_runtime_
  */
 void pspl_runtime_retain_psplc(const pspl_runtime_psplc_t* psplc) {
     _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)psplc;
-    const pspl_data_provider_t* package_provider = PACKAGE_PROVIDER(obj->parent);
+    const pspl_data_provider_t* package_provider = PACKAGE_PROVIDER(obj->public.parent);
     int i;
     
     // See if it needs loading
     if (!obj->ref_count) {
         
         // Load data objects
-        obj->parent->provider_hooks->seek(package_provider, obj->blobs_off);
-        obj->parent->provider_hooks->read(package_provider, obj->blobs_len, &obj->blobs_buf);
+        psplc->parent->provider_hooks->seek(package_provider, obj->blobs_off);
+        psplc->parent->provider_hooks->read(package_provider, obj->blobs_len, &obj->blobs_buf);
         
         // Run extension hooks
         for (i=0 ; i<obj->ext_arr_c ; ++i) {
             const _pspl_object_index_t* idx = &obj->ext_arr[i];
-            const pspl_extension_t* extension = obj->parent->ext_array[idx->extension_index];
+            const pspl_extension_t* extension = psplc->parent->ext_array[idx->extension_index];
             
             // Notify extension of loading
             api_load_state = PSPL_LOADING_EXT;
@@ -1355,7 +1484,7 @@ void pspl_runtime_retain_psplc(const pspl_runtime_psplc_t* psplc) {
         // Run platform hooks
         for (i=0 ; i<obj->plat_arr_c ; ++i) {
             const _pspl_object_index_t* idx = &obj->plat_arr[i];
-            if (idx->platform_index != obj->parent->runtime_platform_index)
+            if (idx->platform_index != psplc->parent->runtime_platform_index)
                 continue;
             
             // Notify extension of loading
@@ -1376,19 +1505,19 @@ void pspl_runtime_retain_psplc(const pspl_runtime_psplc_t* psplc) {
  *
  * @param psplc PSPLC representation
  */
-void pspl_runtime_release_psplc(const pspl_runtime_psplc_t* psplc) {
+static void _pspl_runtime_release_psplc(const pspl_runtime_psplc_t* psplc, int total) {
     _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)psplc;
     if (!obj->ref_count)
         return;
     int i;
     
     // See if it needs unloading
-    if (obj->ref_count == 1) {
+    if (obj->ref_count == 1 || total) {
         
         // Run extension hooks
         for (i=0 ; i<obj->ext_arr_c ; ++i) {
             const _pspl_object_index_t* idx = &obj->ext_arr[i];
-            const pspl_extension_t* extension = obj->parent->ext_array[idx->extension_index];
+            const pspl_extension_t* extension = psplc->parent->ext_array[idx->extension_index];
             
             // Notify extension of unloading
             api_load_state = PSPL_LOADING_EXT;
@@ -1401,10 +1530,10 @@ void pspl_runtime_release_psplc(const pspl_runtime_psplc_t* psplc) {
         // Run platform hooks
         for (i=0 ; i<obj->plat_arr_c ; ++i) {
             const _pspl_object_index_t* idx = &obj->plat_arr[i];
-            if (idx->platform_index != obj->parent->runtime_platform_index)
+            if (idx->platform_index != psplc->parent->runtime_platform_index)
                 continue;
             
-            // Notify extension of unloading
+            // Notify platform of unloading
             api_load_state = PSPL_LOADING_PLAT;
             api_load_subject_index = i;
             if (pspl_runtime_platform->runtime_platform && pspl_runtime_platform->runtime_platform->unload_object_hook)
@@ -1413,13 +1542,18 @@ void pspl_runtime_release_psplc(const pspl_runtime_psplc_t* psplc) {
         }
         
         // Free data buffer if allocated with stdio
-        if (obj->parent->provider_hooks == &stdio)
-            pspl_malloc_free(&obj->parent->provider.stdio.mem_ctx, (void*)obj->blobs_buf);
+        if (psplc->parent->provider_hooks == &stdio)
+            pspl_malloc_free((pspl_malloc_context_t*)&psplc->parent->provider.stdio.mem_ctx, (void*)obj->blobs_buf);
         obj->blobs_buf = NULL;
         
     }
     
     --obj->ref_count;
+    if (total)
+        obj->ref_count = 0;
+}
+void pspl_runtime_release_psplc(const pspl_runtime_psplc_t* psplc) {
+    _pspl_runtime_release_psplc(psplc, 0);
 }
 
 
@@ -1459,7 +1593,7 @@ void pspl_runtime_enumerate_archived_files(const pspl_runtime_package_t* package
  * @return File representation (or NULL if not available)
  */
 const pspl_runtime_arc_file_t* pspl_runtime_get_archived_file_from_hash(const pspl_runtime_package_t* package,
-                                                                        pspl_hash* hash, int retain) {
+                                                                        const pspl_hash* hash, int retain) {
     
     // Perform lookup
     int i,j;
@@ -1495,14 +1629,14 @@ const pspl_runtime_arc_file_t* pspl_runtime_get_archived_file_from_hash(const ps
  */
 void pspl_runtime_retain_archived_file(const pspl_runtime_arc_file_t* file) {
     _pspl_runtime_arc_file_t* obj = (_pspl_runtime_arc_file_t*)file;
-    const pspl_data_provider_t* package_provider = PACKAGE_PROVIDER(obj->parent);
+    const pspl_data_provider_t* package_provider = PACKAGE_PROVIDER(file->parent);
     
     // See if it needs loading
     if (!obj->ref_count) {
         
         // Load data objects
-        obj->parent->provider_hooks->seek(package_provider, obj->file_off);
-        obj->parent->provider_hooks->read(package_provider, obj->public.file_len, &obj->public.file_data);
+        file->parent->provider_hooks->seek(package_provider, obj->file_off);
+        file->parent->provider_hooks->read(package_provider, obj->public.file_len, &obj->public.file_data);
         
     }
     
@@ -1514,22 +1648,51 @@ void pspl_runtime_retain_archived_file(const pspl_runtime_arc_file_t* file) {
  *
  * @param file File representation
  */
-void pspl_runtime_release_archived_file(const pspl_runtime_arc_file_t* file) {
+static void _pspl_runtime_release_archived_file(const pspl_runtime_arc_file_t* file, int total) {
     _pspl_runtime_arc_file_t* obj = (_pspl_runtime_arc_file_t*)file;
     if (!obj->ref_count)
         return;
     
     // See if it needs unloading
-    if (obj->ref_count == 1) {
+    if (obj->ref_count == 1 || total) {
         
         // Free data buffer if allocated with stdio
-        if (obj->parent->provider_hooks == &stdio)
-            pspl_malloc_free(&obj->parent->provider.stdio.mem_ctx, (void*)&obj->public.file_data);
+        if (file->parent->provider_hooks == &stdio)
+            pspl_malloc_free((pspl_malloc_context_t*)&file->parent->provider.stdio.mem_ctx, (void*)&obj->public.file_data);
         obj->public.file_data = NULL;
         
     }
     
     --obj->ref_count;
+    if (total)
+        obj->ref_count = 0;
+}
+void pspl_runtime_release_archived_file(const pspl_runtime_arc_file_t* file) {
+    _pspl_runtime_release_archived_file(file, 0);
+}
+
+/**
+ * Get pre-seeked FILE pointer and length of archived file
+ *
+ * An advanced API to bypass the reference-counted loading mechanism of
+ * pspl-rt and receive a FILE pointer ready to load data from disk directly
+ *
+ * @param file Archived file object
+ * @param provider_hooks_out Hook structure used to access data
+ * @param provider_handle_out File instance containing requested data (pre-seeked)
+ * @param len_out Length of file record
+ * @return 0 if successful, otherwise negative
+ */
+int pspl_runtime_access_archived_file(const pspl_runtime_arc_file_t* file,
+                                      const pspl_data_provider_t** provider_hooks_out,
+                                      const void** provider_handle_out,
+                                      size_t* len_out) {
+    const _pspl_runtime_arc_file_t* obj = (_pspl_runtime_arc_file_t*)file;
+    *provider_hooks_out = file->parent->provider_hooks;
+    *provider_handle_out = PACKAGE_PROVIDER(file->parent);
+    *len_out = obj->public.file_len;
+    (*provider_hooks_out)->seek(*provider_handle_out, obj->file_off);
+    return 0;
 }
 
 

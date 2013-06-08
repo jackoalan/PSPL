@@ -64,12 +64,12 @@ macro(pspl_add_platform_runtime platform_name)
   if(plat_exist LESS 0)
     message(AUTHOR_WARNING "WARNING: Unable to add platform runtime '${platform_name}'; `pspl_add_platform` hasn't been called first")
   else()
-    set_source_files_properties(${ARGN} PROPERTIES COMPILE_DEFINITIONS PSPL_RUNTIME=1)
+    set_source_files_properties(${ARGN} PROPERTIES COMPILE_DEFINITIONS "PSPL_RUNTIME=1;PSPL_RUNTIME_PLATFORM_${PSPL_RUNTIME_PLATFORM}=1")
     if(${platform_name} STREQUAL ${PSPL_RUNTIME_PLATFORM})
       add_library("${platform_name}_runplat" STATIC ${ARGN})
       set_target_properties("${platform_name}_runplat" PROPERTIES
                             COMPILE_FLAGS "-include ${PSPL_BINARY_DIR}/Runtime/pspl_runtime_platform_typefile.pch"
-                            COMPILE_DEFINITIONS PSPL_RUNTIME=1)
+                            COMPILE_DEFINITIONS "PSPL_RUNTIME=1;PSPL_RUNTIME_PLATFORM_${PSPL_RUNTIME_PLATFORM}=1")
     endif()
   endif()
 
@@ -138,11 +138,11 @@ macro(pspl_add_extension_runtime extension_name)
       list(APPEND pspl_runtime_extension_list ${extension_name})
       set(pspl_runtime_extension_list ${pspl_runtime_extension_list} CACHE INTERNAL
           "Ordered runtime extension name list, augmented by `pspl_add_extension_runtime`")
-      set_source_files_properties(${ARGN} PROPERTIES COMPILE_DEFINITIONS PSPL_RUNTIME=1)
+      set_source_files_properties(${ARGN} PROPERTIES COMPILE_DEFINITIONS "PSPL_RUNTIME=1;PSPL_RUNTIME_PLATFORM_${PSPL_RUNTIME_PLATFORM}=1")
       add_library("${extension_name}_runext" STATIC ${ARGN})
       set_target_properties("${extension_name}_runext" PROPERTIES
                             COMPILE_FLAGS "-include ${PSPL_BINARY_DIR}/Runtime/pspl_runtime_platform_typefile.pch"
-                            COMPILE_DEFINITIONS PSPL_RUNTIME=1)
+                            COMPILE_DEFINITIONS "PSPL_RUNTIME=1;PSPL_RUNTIME_PLATFORM_${PSPL_RUNTIME_PLATFORM}=1")
     endif()
   endif()
 
