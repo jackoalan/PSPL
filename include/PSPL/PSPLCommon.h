@@ -20,6 +20,29 @@
 /* Round up to nearest 32 multiple */
 #define ROUND_UP_32(val) (((val)%32)?((((val)>>5)<<5)+32):(val))
 
+/* Common 4-component vector representation */
+typedef struct {
+    float vector[4];
+} pspl_vector4_t;
+
+/* Common 3-component vector representation */
+typedef struct {
+    float vector[3];
+} pspl_vector3_t;
+
+/* Common 3x4 matrix (homogenous) representation */
+typedef struct {
+    float matrix[3][4];
+} pspl_matrix34_t;
+
+/* Common perspective transform representation */
+typedef struct {
+    float fov;
+    float aspect;
+    float near;
+    float far;
+} pspl_perspective_t;
+
 /**
  * @file PSPL/PSPLCommon.h
  * @brief General Toolchain *and* Runtime Public API Bits

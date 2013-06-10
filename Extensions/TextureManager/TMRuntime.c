@@ -274,7 +274,7 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
 #   endif
     
     // Perform load
-#   if PSPL_RUNTIME_PLATFORM_GL2 || PSPL_RUNTIME_PLATFORM_GL2_D3D9
+#   if PSPL_RUNTIME_PLATFORM_GL2 || PSPL_RUNTIME_PLATFORM_D3D9
     recursive_mip_load(&recurse_info,
                        tex_head->num_mips-1, 0, tex_head->size.native.width,
                        tex_head->size.native.height, init_off + tex_head->data_off);

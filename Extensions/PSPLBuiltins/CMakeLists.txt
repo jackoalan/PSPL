@@ -10,5 +10,4 @@ elseif(PSPL_TOOLCHAIN_HASHING STREQUAL WINDOWS)
 endif()
 
 pspl_add_extension(BUILTINS "PSPL built-in directives and commands")
-pspl_add_extension_toolchain(BUILTINS BuiltinsToolext.c PreprocessorBuiltins.c CompilerBuiltins.c)
-pspl_add_extension_runtime(BUILTINS runtime-test.c)
+pspl_add_extension_toolchain(BUILTINS BuiltinsToolchain.c)

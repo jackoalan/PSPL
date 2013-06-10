@@ -1,15 +1,16 @@
 //
-//  PreprocessorBuiltins.c
+//  BuiltinsToolchain.c
 //  PSPL
 //
 //  Created by Jack Andersen on 5/3/13.
 //
 //
 
-#include <string.h>
+
 #include <stdio.h>
 #include <PSPLExtension.h>
 
+#pragma mark Preprocessor Builtins
 
 static void message(unsigned int directive_argc,
                     const char** directive_argv) {
@@ -57,10 +58,10 @@ static void warn(unsigned int directive_argc,
 }
 
 /* Process a hook call from the preprocessor */
-void BUILTINS_pp_hook(const pspl_toolchain_context_t* driver_context,
-                      const char* directive_name,
-                      unsigned int directive_argc,
-                      const char** directive_argv) {
+static void pp_hook(const pspl_toolchain_context_t* driver_context,
+                    const char* directive_name,
+                    unsigned int directive_argc,
+                    const char** directive_argv) {
     
     if (!strcasecmp(directive_name, "MESSAGE"))
         message(directive_argc, directive_argv);
@@ -70,5 +71,65 @@ void BUILTINS_pp_hook(const pspl_toolchain_context_t* driver_context,
         warn(directive_argc, directive_argv);
     else if (!strcasecmp(directive_name, "WARNING"))
         warn(directive_argc, directive_argv);
+}
+
+
+#pragma mark Compiler Builtins
+
+
+static int command_call_hook(const pspl_toolchain_context_t* driver_context,
+                             const pspl_toolchain_heading_context_t* current_heading,
+                             const char* command_name,
+                             unsigned int command_argc,
+                             const char** command_argv) {
+    
+    
     
 }
+
+
+#pragma mark Extension Definition
+
+/* Heading names */
+static const char* claimed_headings[] = {
+    "VERTEX",
+    "DEPTH",
+    "FRAGMENT",
+    "BLEND",
+    NULL};
+
+/* Preprocessor directives */
+static const char* claimed_pp_direc[] = {
+    "MESSAGE",
+    "MSG",
+    "ERROR",
+    "ERR",
+    "WARNING",
+    "WARN",
+    "DEFINE",
+    "DEF",
+    "UNDEF",
+    "IF",
+    "ELSEIF",
+    "ELIF",
+    "ELSE",
+    "ENDIF",
+    "FI",
+    NULL};
+
+/* Global command names */
+static const char* claimed_commands[] = {
+    "PSPL_LOAD_MESSAGE",
+    "RUN_TEST",
+    NULL};
+
+
+/* Main extension bindings */
+pspl_toolchain_extension_t BUILTINS_toolext = {
+    .claimed_global_preprocessor_directives = claimed_pp_direc,
+    .claimed_global_command_names = claimed_commands,
+    .claimed_heading_names = claimed_headings,
+    .init_hook = NULL,
+    .line_preprocessor_hook = pp_hook,
+    .command_call_hook = command_call_hook};
+

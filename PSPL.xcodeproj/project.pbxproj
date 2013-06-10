@@ -7,12 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E43B8EBB174DC28900F8C5FB /* BuiltinsToolext.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DB173462A800B8CDD1 /* BuiltinsToolext.c */; };
+		E43B8EBB174DC28900F8C5FB /* BuiltinsToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DB173462A800B8CDD1 /* BuiltinsToolchain.c */; };
 		E45034CE175813440079B62D /* libTEST-RUNTIME.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E4E4918017510B35006FCA59 /* libTEST-RUNTIME.a */; };
 		E45034CF175813490079B62D /* test_mac.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034B9175811FB0079B62D /* test_mac.c */; };
 		E45034D11758153E0079B62D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45034D01758153E0079B62D /* OpenGL.framework */; };
 		E45034D3175815420079B62D /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45034D2175815420079B62D /* GLUT.framework */; };
-		E45034D7175A41140079B62D /* runtime-test.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034D5175A40A50079B62D /* runtime-test.c */; };
 		E45034E4175CDA4A0079B62D /* TMToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E3175CDA4A0079B62D /* TMToolchain.c */; };
 		E45034E7175CDA5C0079B62D /* TMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E5175CDA560079B62D /* TMRuntime.c */; };
 		E45034ED175CDDA30079B62D /* psd_dec.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034EC175CDDA30079B62D /* psd_dec.c */; settings = {COMPILER_FLAGS = "-IExtensions/TextureManager"; }; };
@@ -20,6 +19,8 @@
 		E45034F51760DC220079B62D /* rgb_enc.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034F41760DC220079B62D /* rgb_enc.c */; settings = {COMPILER_FLAGS = "-IExtensions/TextureManager"; }; };
 		E45591D6174ADA8F00CE0A08 /* Packager.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE9B172DB2D400F7A0BF /* Packager.c */; };
 		E45591D8174D60C100CE0A08 /* gx_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E45591D7174D60C100CE0A08 /* gx_toolchain.c */; };
+		E48FF5601764CF29000231AA /* IRToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E48FF55F1764CF29000231AA /* IRToolchain.c */; };
+		E48FF5631764D91C000231AA /* IRRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E48FF5611764CF31000231AA /* IRRuntime.c */; };
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
 		E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3A1740578E003B06BF /* ReferenceGatherer.c */; };
 		E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3D17411620003B06BF /* ObjectIndexer.c */; };
@@ -28,8 +29,6 @@
 		E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAEA117315D4000F7A0BF /* Buffer.c */; };
 		E4AFAEA3173161B500F7A0BF /* Driver.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE46171CA34700F7A0BF /* Driver.c */; };
 		E4B7BCF0173C9DC0002A513E /* gx_offline.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6B171D825400F7A0BF /* gx_offline.c */; };
-		E4BB18DF1734632E00B8CDD1 /* PreprocessorBuiltins.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DE1734632E00B8CDD1 /* PreprocessorBuiltins.c */; };
-		E4BB18E21734634600B8CDD1 /* CompilerBuiltins.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18E11734634600B8CDD1 /* CompilerBuiltins.c */; };
 		E4E4916F17510685006FCA59 /* PSPLCommon.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4916E17510684006FCA59 /* PSPLCommon.c */; };
 		E4E491731751094E006FCA59 /* gl_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E491721751094E006FCA59 /* gl_toolchain.c */; };
 		E4E49179175109D4006FCA59 /* d3d_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E49178175109D4006FCA59 /* d3d_toolchain.c */; };
@@ -74,7 +73,6 @@
 		E45034D01758153E0079B62D /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/System/Library/Frameworks/OpenGL.framework; sourceTree = DEVELOPER_DIR; };
 		E45034D2175815420079B62D /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/System/Library/Frameworks/GLUT.framework; sourceTree = DEVELOPER_DIR; };
 		E45034D4175819BC0079B62D /* PSPLRuntime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLRuntime.h; sourceTree = "<group>"; };
-		E45034D5175A40A50079B62D /* runtime-test.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "runtime-test.c"; sourceTree = "<group>"; };
 		E45034DD175CD5860079B62D /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E45034DE175CD5E70079B62D /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E45034DF175CD5FF0079B62D /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -92,6 +90,10 @@
 		E45034F71760E2BE0079B62D /* TMCommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMCommon.h; sourceTree = "<group>"; };
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
 		E48CCCBC1747D4D500DDDD63 /* ToolchainCrossDarwinMinGW32.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToolchainCrossDarwinMinGW32.cmake; sourceTree = "<group>"; };
+		E48FF55D1764CDDE000231AA /* PSPLPlatform.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLPlatform.h; sourceTree = "<group>"; };
+		E48FF55E1764CE15000231AA /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		E48FF55F1764CF29000231AA /* IRToolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = IRToolchain.c; sourceTree = "<group>"; };
+		E48FF5611764CF31000231AA /* IRRuntime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = IRRuntime.c; sourceTree = "<group>"; };
 		E4995F2B173E8BCE003B06BF /* PSPLHash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLHash.h; sourceTree = "<group>"; };
 		E4995F2C173E8C06003B06BF /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E4995F2D173E8C4D003B06BF /* hash_builtin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hash_builtin.h; sourceTree = "<group>"; };
@@ -151,11 +153,7 @@
 		E4AFAEA017315D3800F7A0BF /* Buffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Buffer.h; sourceTree = "<group>"; };
 		E4AFAEA117315D4000F7A0BF /* Buffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Buffer.c; sourceTree = "<group>"; };
 		E4BB18D81734333800B8CDD1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
-		E4BB18DB173462A800B8CDD1 /* BuiltinsToolext.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = BuiltinsToolext.c; sourceTree = "<group>"; };
-		E4BB18DD1734632400B8CDD1 /* PreprocessorBuiltins.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PreprocessorBuiltins.h; sourceTree = "<group>"; };
-		E4BB18DE1734632E00B8CDD1 /* PreprocessorBuiltins.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = PreprocessorBuiltins.c; sourceTree = "<group>"; };
-		E4BB18E01734633D00B8CDD1 /* CompilerBuiltins.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CompilerBuiltins.h; sourceTree = "<group>"; };
-		E4BB18E11734634600B8CDD1 /* CompilerBuiltins.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = CompilerBuiltins.c; sourceTree = "<group>"; };
+		E4BB18DB173462A800B8CDD1 /* BuiltinsToolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = BuiltinsToolchain.c; sourceTree = "<group>"; };
 		E4BB18E31734635400B8CDD1 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E4BB18E417347B3D00B8CDD1 /* pspl_platform_def.h.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = pspl_platform_def.h.in; sourceTree = "<group>"; };
 		E4BB18E61734803A00B8CDD1 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -304,6 +302,16 @@
 			path = TIFF;
 			sourceTree = "<group>";
 		};
+		E48FF55C1764CDB4000231AA /* PSPL-IR */ = {
+			isa = PBXGroup;
+			children = (
+				E48FF55E1764CE15000231AA /* CMakeLists.txt */,
+				E48FF55F1764CF29000231AA /* IRToolchain.c */,
+				E48FF5611764CF31000231AA /* IRRuntime.c */,
+			);
+			path = "PSPL-IR";
+			sourceTree = "<group>";
+		};
 		E4995F2A173E8B3E003B06BF /* Hash */ = {
 			isa = PBXGroup;
 			children = (
@@ -377,8 +385,9 @@
 		E4AFAE2E171C936300F7A0BF /* include */ = {
 			isa = PBXGroup;
 			children = (
-				E45034D4175819BC0079B62D /* PSPLRuntime.h */,
 				E4AFAE54171CA6D700F7A0BF /* PSPLExtension.h */,
+				E48FF55D1764CDDE000231AA /* PSPLPlatform.h */,
+				E45034D4175819BC0079B62D /* PSPLRuntime.h */,
 				E4AFAE32171C93C000F7A0BF /* PSPL */,
 			);
 			path = include;
@@ -400,6 +409,7 @@
 			children = (
 				E4AFAE78171F002700F7A0BF /* CMakeLists.txt */,
 				E4BB18D7173432EA00B8CDD1 /* PSPLBuiltins */,
+				E48FF55C1764CDB4000231AA /* PSPL-IR */,
 				E4AFAE871726DEC800F7A0BF /* PMDLFormat */,
 				E4AFAE38171C978E00F7A0BF /* TextureManager */,
 				E4AFAE43171CA0CD00F7A0BF /* LightingManager */,
@@ -543,12 +553,7 @@
 			children = (
 				E4BB18D81734333800B8CDD1 /* README.md */,
 				E4BB18E31734635400B8CDD1 /* CMakeLists.txt */,
-				E4BB18DB173462A800B8CDD1 /* BuiltinsToolext.c */,
-				E4BB18DD1734632400B8CDD1 /* PreprocessorBuiltins.h */,
-				E4BB18DE1734632E00B8CDD1 /* PreprocessorBuiltins.c */,
-				E4BB18E01734633D00B8CDD1 /* CompilerBuiltins.h */,
-				E4BB18E11734634600B8CDD1 /* CompilerBuiltins.c */,
-				E45034D5175A40A50079B62D /* runtime-test.c */,
+				E4BB18DB173462A800B8CDD1 /* BuiltinsToolchain.c */,
 			);
 			path = PSPLBuiltins;
 			sourceTree = "<group>";
@@ -683,15 +688,13 @@
 				E4AFAE99172D899D00F7A0BF /* Compiler.c in Sources */,
 				E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */,
 				E4AFAEA3173161B500F7A0BF /* Driver.c in Sources */,
-				E4BB18DF1734632E00B8CDD1 /* PreprocessorBuiltins.c in Sources */,
-				E4BB18E21734634600B8CDD1 /* CompilerBuiltins.c in Sources */,
 				E4B7BCF0173C9DC0002A513E /* gx_offline.c in Sources */,
 				E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */,
 				E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */,
 				E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */,
 				E45591D6174ADA8F00CE0A08 /* Packager.c in Sources */,
 				E45591D8174D60C100CE0A08 /* gx_toolchain.c in Sources */,
-				E43B8EBB174DC28900F8C5FB /* BuiltinsToolext.c in Sources */,
+				E43B8EBB174DC28900F8C5FB /* BuiltinsToolchain.c in Sources */,
 				E4E4916F17510685006FCA59 /* PSPLCommon.c in Sources */,
 				E4E491731751094E006FCA59 /* gl_toolchain.c in Sources */,
 				E4E49179175109D4006FCA59 /* d3d_toolchain.c in Sources */,
@@ -700,6 +703,7 @@
 				E45034ED175CDDA30079B62D /* psd_dec.c in Sources */,
 				E45034F3175D80FA0079B62D /* pspl_tm_config.c in Sources */,
 				E45034F51760DC220079B62D /* rgb_enc.c in Sources */,
+				E48FF5601764CF29000231AA /* IRToolchain.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -713,8 +717,8 @@
 				E4E4918717510B5D006FCA59 /* gx_runtime.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
 				E4E4918E1753FAD3006FCA59 /* pspl_available_runtime_extensions.c in Sources */,
-				E45034D7175A41140079B62D /* runtime-test.c in Sources */,
 				E45034E7175CDA5C0079B62D /* TMRuntime.c in Sources */,
+				E48FF5631764D91C000231AA /* IRRuntime.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
