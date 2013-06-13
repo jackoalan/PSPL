@@ -1724,9 +1724,9 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                 if (ent->object_little_data && ent->object_big_data &&
                     ent->object_little_data != ent->object_big_data) {
 #                   ifdef __LITTLE_ENDIAN__
-                    hash_record.big.object_off = swap_uint32(ctx->extension_obj_data_off + (uint32_t)ent->object_len);
+                    hash_record.big.object_off = swap_uint32(ctx->extension_obj_data_off + ROUND_UP_4((uint32_t)ent->object_len));
 #                   else
-                    hash_record.big.object_off = extension_obj_data_off + (uint32_t)ent->object_len;
+                    hash_record.big.object_off = extension_obj_data_off + ROUND_UP_4((uint32_t)ent->object_len);
 #                   endif
                 }
                 SET_BI_U32(hash_record, object_len, (uint32_t)ent->object_len);
@@ -1770,9 +1770,9 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                 if (ent->object_little_data && ent->object_big_data &&
                     ent->object_little_data != ent->object_big_data) {
 #                   ifdef __LITTLE_ENDIAN__
-                    int_record.big.object_off = swap_uint32(ctx->extension_obj_data_off + (uint32_t)ent->object_len);
+                    int_record.big.object_off = swap_uint32(ctx->extension_obj_data_off + ROUND_UP_4((uint32_t)ent->object_len));
 #                   else
-                    int_record.big.object_off = extension_obj_data_off + (uint32_t)ent->object_len;
+                    int_record.big.object_off = extension_obj_data_off + ROUND_UP_4((uint32_t)ent->object_len);
 #                   endif
                 }
                 SET_BI_U32(int_record, object_len, (uint32_t)ent->object_len);
@@ -1817,9 +1817,9 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                 if (ent->object_little_data && ent->object_big_data &&
                     ent->object_little_data != ent->object_big_data) {
 #                   ifdef __LITTLE_ENDIAN__
-                    hash_record.big.object_off = swap_uint32(ctx->extension_obj_data_off + (uint32_t)ent->object_len);
+                    hash_record.big.object_off = swap_uint32(ctx->extension_obj_data_off + ROUND_UP_4((uint32_t)ent->object_len));
 #                   else
-                    hash_record.big.object_off = extension_obj_data_off + (uint32_t)ent->object_len;
+                    hash_record.big.object_off = extension_obj_data_off + ROUND_UP_4((uint32_t)ent->object_len);
 #                   endif
                 }
                 SET_BI_U32(hash_record, object_len, (uint32_t)ent->object_len);
@@ -1863,9 +1863,9 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                 if (ent->object_little_data && ent->object_big_data &&
                     ent->object_little_data != ent->object_big_data) {
 #                   ifdef __LITTLE_ENDIAN__
-                    int_record.big.object_off = swap_uint32(ctx->extension_obj_data_off + (uint32_t)ent->object_len);
+                    int_record.big.object_off = swap_uint32(ctx->extension_obj_data_off + ROUND_UP_4((uint32_t)ent->object_len));
 #                   else
-                    int_record.big.object_off = extension_obj_data_off + (uint32_t)ent->object_len;
+                    int_record.big.object_off = extension_obj_data_off + ROUND_UP_4((uint32_t)ent->object_len);
 #                   endif
                 }
                 SET_BI_U32(int_record, object_len, (uint32_t)ent->object_len);

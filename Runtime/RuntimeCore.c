@@ -427,10 +427,6 @@ int pspl_runtime_get_embedded_data_object_from_hash(const pspl_runtime_psplc_t* 
             
             // Populate data
             data_object_out->object_data = obj->blobs_buf + rec->record.object_off;
-#           ifdef __BIG_ENDIAN__
-            if (rec->record.object_bi)
-                data_object_out->object_data += ROUND_UP_4(rec->record.object_len);
-#           endif
             data_object_out->object_len = rec->record.object_len;
             
             // Done
@@ -466,10 +462,6 @@ void pspl_runtime_enumerate_hash_embedded_data_objects(const pspl_runtime_psplc_
         // Populate data
         pspl_data_object_t data_object_out;
         data_object_out.object_data = obj->blobs_buf + rec->record.object_off;
-#       ifdef __BIG_ENDIAN__
-        if (rec->record.object_bi)
-            data_object_out.object_data += ROUND_UP_4(rec->record.object_len);
-#       endif
         data_object_out.object_len = rec->record.object_len;
             
         if(hook(&data_object_out, &rec->hash, user_ptr) < 0)
@@ -522,10 +514,6 @@ int pspl_runtime_get_embedded_data_object_from_integer(const pspl_runtime_psplc_
             
             // Populate data
             data_object_out->object_data = obj->blobs_buf + rec->object_off;
-#           ifdef __BIG_ENDIAN__
-            if (rec->record.object_bi)
-                data_object_out->object_data += ROUND_UP_4(rec->object_len);
-#           endif
             data_object_out->object_len = rec->object_len;
             
             // Done
@@ -561,10 +549,6 @@ void pspl_runtime_enumerate_integer_embedded_data_objects(const pspl_runtime_psp
         // Populate data
         pspl_data_object_t data_object_out;
         data_object_out.object_data = obj->blobs_buf + rec->object_off;
-#       ifdef __BIG_ENDIAN__
-        if (rec->record.object_bi)
-            data_object_out.object_data += ROUND_UP_4(rec->object_len);
-#       endif
         data_object_out.object_len = rec->object_len;
         
         if(hook(&data_object_out, rec->object_index, user_ptr) < 0)
