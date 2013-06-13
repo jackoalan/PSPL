@@ -681,27 +681,26 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
                 if (!level) {
                     if (!strcasecmp(name, "GLOBAL"))
                         compiler_state.heading_extension = NULL;
-                    else {
+                    else
                         compiler_state.heading_extension = get_heading_ext(name);
-                        
-                        // Notify extension that it is now active
-                        if (compiler_state.heading_extension &&
-                            compiler_state.heading_extension->toolchain_extension &&
-                            compiler_state.heading_extension->toolchain_extension->heading_switch_hook) {
-                            
-                            // Set callout context accordingly
-                            driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
-                            driver_state.proc_extension = compiler_state.heading_extension;
-                            
-                            // Callout to hook
-                            compiler_state.heading_extension->toolchain_extension->
-                            heading_switch_hook(ext_driver_ctx, compiler_state.heading_context);
-                            
-                            // Unset callout context
-                            driver_state.pspl_phase = PSPL_PHASE_COMPILE;
-                            
-                        }
-                    }
+                }
+                
+                // Notify extension that it is now active
+                if (compiler_state.heading_extension &&
+                    compiler_state.heading_extension->toolchain_extension &&
+                    compiler_state.heading_extension->toolchain_extension->heading_switch_hook) {
+                    
+                    // Set callout context accordingly
+                    driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
+                    driver_state.proc_extension = compiler_state.heading_extension;
+                    
+                    // Callout to hook
+                    compiler_state.heading_extension->toolchain_extension->
+                    heading_switch_hook(ext_driver_ctx, compiler_state.heading_context);
+                    
+                    // Unset callout context
+                    driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+                    
                 }
                 
                 continue; // On to next line

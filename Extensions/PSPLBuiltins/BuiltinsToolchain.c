@@ -77,11 +77,11 @@ static void pp_hook(const pspl_toolchain_context_t* driver_context,
 #pragma mark Compiler Builtins
 
 
-static int command_call_hook(const pspl_toolchain_context_t* driver_context,
-                             const pspl_toolchain_heading_context_t* current_heading,
-                             const char* command_name,
-                             unsigned int command_argc,
-                             const char** command_argv) {
+static void command_call_hook(const pspl_toolchain_context_t* driver_context,
+                              const pspl_toolchain_heading_context_t* current_heading,
+                              const char* command_name,
+                              unsigned int command_argc,
+                              const char** command_argv) {
     
     
     
@@ -90,13 +90,6 @@ static int command_call_hook(const pspl_toolchain_context_t* driver_context,
 
 #pragma mark Extension Definition
 
-/* Heading names */
-static const char* claimed_headings[] = {
-    "VERTEX",
-    "DEPTH",
-    "FRAGMENT",
-    "BLEND",
-    NULL};
 
 /* Preprocessor directives */
 static const char* claimed_pp_direc[] = {
@@ -128,7 +121,6 @@ static const char* claimed_commands[] = {
 pspl_toolchain_extension_t BUILTINS_toolext = {
     .claimed_global_preprocessor_directives = claimed_pp_direc,
     .claimed_global_command_names = claimed_commands,
-    .claimed_heading_names = claimed_headings,
     .init_hook = NULL,
     .line_preprocessor_hook = pp_hook,
     .command_call_hook = command_call_hook};

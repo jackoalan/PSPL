@@ -191,8 +191,8 @@ typedef struct _pspl_toolchain_heading_context {
 #pragma mark Heading Context Switch Hooking
 
 /* Called whenever a heading context switch occurs (into the extension's ownership) */
-typedef int(*pspl_toolchain_heading_switch_hook)(const pspl_toolchain_context_t* driver_context,
-                                                 const pspl_toolchain_heading_context_t* current_heading);
+typedef void(*pspl_toolchain_heading_switch_hook)(const pspl_toolchain_context_t* driver_context,
+                                                  const pspl_toolchain_heading_context_t* current_heading);
 
 
 #pragma mark C-style Command Call Hooking
@@ -200,21 +200,20 @@ typedef int(*pspl_toolchain_heading_switch_hook)(const pspl_toolchain_context_t*
 /* Command call hook type (when C-style command syntax detected)
  * will fall back to line-read hook if negative value returned
  * `current_heading` is NULL if global context is active */
-typedef int(*pspl_toolchain_command_call_hook)(const pspl_toolchain_context_t* driver_context,
-                                               const pspl_toolchain_heading_context_t* current_heading,
-                                               const char* command_name,
-                                               unsigned int command_argc,
-                                               const char** command_argv);
+typedef void(*pspl_toolchain_command_call_hook)(const pspl_toolchain_context_t* driver_context,
+                                                const pspl_toolchain_heading_context_t* current_heading,
+                                                const char* command_name,
+                                                unsigned int command_argc,
+                                                const char** command_argv);
 
 
 #pragma mark Whitespace Line Read Hooking
 
 /* When consecutive line(s) of whitespace are encountered, this method may be 
- * implemented to handle the situation. Returning a negative value will defer 
- * the read in to the generic line-read hook below */
-typedef int(*pspl_toolchain_whitespace_line_read_hook)(const pspl_toolchain_context_t* driver_context,
-                                                       const pspl_toolchain_heading_context_t* current_heading,
-                                                       unsigned int white_line_count);
+ * implemented to handle the situation. */
+typedef void(*pspl_toolchain_whitespace_line_read_hook)(const pspl_toolchain_context_t* driver_context,
+                                                        const pspl_toolchain_heading_context_t* current_heading,
+                                                        unsigned int white_line_count);
 
 
 #pragma mark Generic Line Read Hooking
