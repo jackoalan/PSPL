@@ -24,6 +24,8 @@
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
 		E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3A1740578E003B06BF /* ReferenceGatherer.c */; };
 		E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3D17411620003B06BF /* ObjectIndexer.c */; };
+		E49E051E176A04FF002E1492 /* CalcChain.c in Sources */ = {isa = PBXBuildFile; fileRef = E49E051C176A04AA002E1492 /* CalcChain.c */; };
+		E49E051F176A04FF002E1492 /* CalcChain.c in Sources */ = {isa = PBXBuildFile; fileRef = E49E051C176A04AA002E1492 /* CalcChain.c */; };
 		E4AFAE96172D898B00F7A0BF /* Preprocessor.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE95172D898B00F7A0BF /* Preprocessor.c */; };
 		E4AFAE99172D899D00F7A0BF /* Compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE98172D899D00F7A0BF /* Compiler.c */; };
 		E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAEA117315D4000F7A0BF /* Buffer.c */; };
@@ -90,7 +92,6 @@
 		E45034F71760E2BE0079B62D /* TMCommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMCommon.h; sourceTree = "<group>"; };
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
 		E48CCCBC1747D4D500DDDD63 /* ToolchainCrossDarwinMinGW32.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToolchainCrossDarwinMinGW32.cmake; sourceTree = "<group>"; };
-		E48FF55D1764CDDE000231AA /* PSPLPlatform.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLPlatform.h; sourceTree = "<group>"; };
 		E48FF55E1764CE15000231AA /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E48FF55F1764CF29000231AA /* IRToolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = IRToolchain.c; sourceTree = "<group>"; };
 		E48FF5611764CF31000231AA /* IRRuntime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = IRRuntime.c; sourceTree = "<group>"; };
@@ -105,6 +106,8 @@
 		E4995F3A1740578E003B06BF /* ReferenceGatherer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ReferenceGatherer.c; sourceTree = "<group>"; };
 		E4995F3C17411617003B06BF /* ObjectIndexer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjectIndexer.h; sourceTree = "<group>"; };
 		E4995F3D17411620003B06BF /* ObjectIndexer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = ObjectIndexer.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
+		E49E051C176A04AA002E1492 /* CalcChain.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = CalcChain.c; sourceTree = "<group>"; };
+		E49E051D176A04DE002E1492 /* CalcChain.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CalcChain.h; sourceTree = "<group>"; };
 		E4AFAE28171C92B900F7A0BF /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		E4AFAE29171C92BE00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4AFAE2A171C92D100F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
@@ -306,6 +309,8 @@
 			isa = PBXGroup;
 			children = (
 				E48FF55E1764CE15000231AA /* CMakeLists.txt */,
+				E49E051D176A04DE002E1492 /* CalcChain.h */,
+				E49E051C176A04AA002E1492 /* CalcChain.c */,
 				E48FF55F1764CF29000231AA /* IRToolchain.c */,
 				E48FF5611764CF31000231AA /* IRRuntime.c */,
 			);
@@ -386,7 +391,6 @@
 			isa = PBXGroup;
 			children = (
 				E4AFAE54171CA6D700F7A0BF /* PSPLExtension.h */,
-				E48FF55D1764CDDE000231AA /* PSPLPlatform.h */,
 				E45034D4175819BC0079B62D /* PSPLRuntime.h */,
 				E4AFAE32171C93C000F7A0BF /* PSPL */,
 			);
@@ -704,6 +708,7 @@
 				E45034F3175D80FA0079B62D /* pspl_tm_config.c in Sources */,
 				E45034F51760DC220079B62D /* rgb_enc.c in Sources */,
 				E48FF5601764CF29000231AA /* IRToolchain.c in Sources */,
+				E49E051E176A04FF002E1492 /* CalcChain.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -716,6 +721,7 @@
 				E4E4918617510B59006FCA59 /* d3d_runtime.c in Sources */,
 				E4E4918717510B5D006FCA59 /* gx_runtime.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
+				E49E051F176A04FF002E1492 /* CalcChain.c in Sources */,
 				E4E4918E1753FAD3006FCA59 /* pspl_available_runtime_extensions.c in Sources */,
 				E45034E7175CDA5C0079B62D /* TMRuntime.c in Sources */,
 				E48FF5631764D91C000231AA /* IRRuntime.c in Sources */,

@@ -7,7 +7,26 @@
 //
 
 #include <stdio.h>
-#include <PSPLPlatform.h>
+#include <PSPLExtension.h>
+#include "CalcChain.h"
+
+#define MAX_TEX_COORDS 10
+#define MAX_FRAG_STAGES 16
+
+static void copyright_hook() {
+    
+    pspl_toolchain_provide_copyright("PSPL-IR (Platform-independent shader representation)",
+                                     "Copyright (c) 2013 Jack Andersen <jackoalan@gmail.com>",
+                                     "[See licence for \"PSPL\" above]");
+    
+}
+
+/* Feature enable state enum */
+enum pspl_feature_enable {
+    PLATFORM = 0,
+    DISABLED = 1,
+    ENABLED  = 2
+};
 
 /* Blend factor enum */
 enum pspl_blend_factor {
@@ -18,22 +37,6 @@ enum pspl_blend_factor {
     ONE_MINUS  = 4
 };
 
-/* Calculation chain-link type */
-typedef struct {
-    
-    // Link data type
-    enum CHAIN_LINK_TYPE link_type;
-    
-    // How the link value is obtained
-    enum CHAIN_LINK_USE link_use;
-    
-    // Value
-    union CHAIN_LINK_VALUE link_value;
-    
-    // Cached pre-transform value
-    union CHAIN_LINK_VALUE pre_link_value;
-    
-} pspl_calc_link_t;
 
 /* IR translation state */
 static struct {
@@ -42,15 +45,26 @@ static struct {
     struct {
         
         // Are we populating a matrix?
-        uint8_t in_matrix_def;
+        int in_matrix_def;
         pspl_matrix34_t matrix;
         
+        // Position transform chain
+        pspl_calc_chain_t pos_chain;
         
+        // Normal transform chain
+        pspl_calc_chain_t norm_chain;
+        
+        // Texcoord chains
+        int tc_count;
+        pspl_calc_chain_t tc_chain[MAX_TEX_COORDS];
         
     } vertex;
     
     // Depth state
     struct {
+        
+        enum pspl_feature_enable test;
+        enum pspl_feature_enable write;
         
     } depth;
     
@@ -58,8 +72,10 @@ static struct {
     struct {
         
         // Are we populating a matrix?
-        uint8_t in_matrix_def;
+        int in_matrix_def;
         pspl_matrix34_t matrix;
+        
+        // Stage Array
         
         
     } fragment;
@@ -68,7 +84,7 @@ static struct {
     struct {
         
         // Blending enabled?
-        uint8_t blending;
+        enum pspl_feature_enable blending;
         
         // Blend factors
         enum pspl_blend_factor source_factor;
@@ -78,33 +94,38 @@ static struct {
     
 } ir_state;
 
-static void copyright_hook() {
-    
-    pspl_toolchain_provide_copyright("PSPL-IR (Platform-independent shader representation)",
-                                     "Copyright (c) 2013 Jack Andersen <jackoalan@gmail.com>",
-                                     "[See licence for \"PSPL\" above]");
-    
-}
-
-/*
-static void heading_switch(const pspl_toolchain_context_t* driver_context,
-                           const pspl_toolchain_heading_context_t* current_heading) {
-    
-}*/
 
 static int init(const pspl_toolchain_context_t* driver_context) {
     
     ir_state.vertex.in_matrix_def = 0;
+    pspl_calc_chain_init(&ir_state.vertex.pos_chain);
+    pspl_calc_chain_init(&ir_state.vertex.norm_chain);
+    int i;
+    for (i=0 ; i<MAX_TEX_COORDS ; ++i)
+        pspl_calc_chain_init(&ir_state.vertex.tc_chain[i]);
+    ir_state.vertex.tc_count = 0;
+    
+    ir_state.depth.test = PLATFORM;
+    ir_state.depth.write = PLATFORM;
     
     ir_state.fragment.in_matrix_def = 0;
     
-    ir_state.blend.blending = 0;
+    ir_state.blend.blending = PLATFORM;
     ir_state.blend.source_factor = SRC_ALPHA;
     ir_state.blend.dest_factor = ONE_MINUS | SRC_ALPHA;
     
     return 0;
     
 }
+
+static void shutdown(const pspl_toolchain_context_t* driver_context) {
+    
+    
+    
+}
+
+
+/* BLEND tests */
 
 static inline int is_inverse(const char* str) {return (*str == 'i' ||
                                                        *str == 'I');}
@@ -120,6 +141,9 @@ static inline int is_colour(const char* str) {return (*str == 'c' ||
 
 static inline int is_alpha(const char* str) {return (*str == 'a' ||
                                                      *str == 'A');}
+
+
+/* Handle incoming command call */
 
 static void command_call(const pspl_toolchain_context_t* driver_context,
                          const pspl_toolchain_heading_context_t* current_heading,
@@ -233,7 +257,7 @@ static const char* claimed_headings[] = {
 
 pspl_toolchain_extension_t PSPL_IR_toolext = {
     .copyright_hook = copyright_hook,
-    //.heading_switch_hook = heading_switch,
+    .init_hook = init,
     .command_call_hook = command_call,
     .claimed_heading_names = claimed_headings
 };

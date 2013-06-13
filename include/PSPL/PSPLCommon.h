@@ -41,6 +41,8 @@ typedef struct {
     float aspect;
     float near;
     float far;
+    float post_translate_x;
+    float post_translate_y;
 } pspl_perspective_t;
 
 /**
