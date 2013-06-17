@@ -67,6 +67,7 @@
 
 /* Begin PBXFileReference section */
 		E40231C017543F2100DE076A /* api.docurium */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = api.docurium; sourceTree = "<group>"; };
+		E44E3FE9176E3A9C00665937 /* PSPL_IR.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPL_IR.h; sourceTree = "<group>"; };
 		E45034B8175811860079B62D /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E45034B9175811FB0079B62D /* test_mac.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = test_mac.c; sourceTree = "<group>"; };
 		E45034BB175812050079B62D /* test_wii.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = test_wii.c; sourceTree = "<group>"; };
@@ -107,7 +108,6 @@
 		E4995F3C17411617003B06BF /* ObjectIndexer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjectIndexer.h; sourceTree = "<group>"; };
 		E4995F3D17411620003B06BF /* ObjectIndexer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = ObjectIndexer.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		E49E051C176A04AA002E1492 /* CalcChain.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = CalcChain.c; sourceTree = "<group>"; };
-		E49E051D176A04DE002E1492 /* CalcChain.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CalcChain.h; sourceTree = "<group>"; };
 		E4AFAE28171C92B900F7A0BF /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		E4AFAE29171C92BE00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4AFAE2A171C92D100F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
@@ -309,7 +309,6 @@
 			isa = PBXGroup;
 			children = (
 				E48FF55E1764CE15000231AA /* CMakeLists.txt */,
-				E49E051D176A04DE002E1492 /* CalcChain.h */,
 				E49E051C176A04AA002E1492 /* CalcChain.c */,
 				E48FF55F1764CF29000231AA /* IRToolchain.c */,
 				E48FF5611764CF31000231AA /* IRRuntime.c */,
@@ -404,6 +403,7 @@
 				E4AFAE4B171CA3DA00F7A0BF /* PSPLValue.h */,
 				E4AFAE53171CA6C700F7A0BF /* PSPLToolchainExtension.h */,
 				E4AFAE56171CA74A00F7A0BF /* PSPLRuntimeExtension.h */,
+				E44E3FE9176E3A9C00665937 /* PSPL_IR.h */,
 			);
 			path = PSPL;
 			sourceTree = "<group>";

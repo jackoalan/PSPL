@@ -45,6 +45,11 @@ typedef struct {
     float post_translate_y;
 } pspl_perspective_t;
 
+/* Common 8-bit-per-channel colour representation */
+typedef struct {
+    double r,g,b,a;
+} pspl_colour_t;
+
 /**
  * @file PSPL/PSPLCommon.h
  * @brief General Toolchain *and* Runtime Public API Bits

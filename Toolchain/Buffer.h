@@ -8,7 +8,6 @@
 
 #ifndef PSPL_Buffer_h
 #define PSPL_Buffer_h
-#ifdef PSPL_INTERNAL
 
 #include <stdlib.h>
 
@@ -40,6 +39,5 @@ void pspl_buffer_addchar(pspl_buffer_t* buf, char ch);
 /* Free memory used by the buffer */
 void pspl_buffer_free(pspl_buffer_t* buf);
 
-#endif // PSPL_INTERNAL
 #endif
 

@@ -293,19 +293,6 @@ void pspl_embed_integer_keyed_object(const pspl_platform_t** platforms,
                                      size_t object_size);
 
 
-#pragma mark Send Instruction to Target Platform(s)
-
-/* Way for compiler extensions to send a named instruction
- * (with operation string and instruction data) to a set of
- * target platforms. This will result in an immediate invocation
- * of each platform's `receive` hook.
- * `platforms` is a NULL-terminated array;
- * if not set, all platforms receive instruction. */
-void pspl_send_platform_instruction(const pspl_platform_t** platforms,
-                                    const char* operation,
-                                    const void* data);
-
-
 #pragma mark Add File For Packaging Into PSPLP Flat-File and/or PSPLPD Directory
 
 /* Standard data conversion interface */
@@ -377,17 +364,13 @@ typedef struct _pspl_toolchain_extension {
 
 #pragma mark Toolchain Platform Hook Types
 
-/* Platform instruction receive hook (called many times per PSPLC compile)
- * `instructions` is a NULL-terminated array of generator instructions */
-typedef void(*pspl_toolchain_platform_receive_hook)(const pspl_toolchain_context_t* driver_context,
-                                                    const pspl_extension_t* source_ext,
-                                                    const char* operation,
-                                                    const void* data);
+#include <PSPL/PSPL_IR.h>
 
 /* Platform generator hook (called once per PSPLC compile after all receive calls)
  * actually generates final data objects for storage into PSPLC 
  * also serves as a finish routine */
-typedef void(*pspl_toolchain_platform_generate_hook)(const pspl_toolchain_context_t* driver_context);
+typedef void(*pspl_toolchain_platform_generate_hook)(const pspl_toolchain_context_t* driver_context,
+                                                     const pspl_ir_state_t* ir_state);
 
 /* Embed data objects for generator */
 
@@ -415,7 +398,6 @@ typedef struct _pspl_toolchain_platform {
     // Hook fields
     pspl_toolchain_init_hook init_hook;
     pspl_toolchain_copyright_hook copyright_hook;
-    pspl_toolchain_platform_receive_hook receive_hook;
     pspl_toolchain_platform_generate_hook generate_hook;
     
 } pspl_toolchain_platform_t;

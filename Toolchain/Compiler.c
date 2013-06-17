@@ -18,6 +18,9 @@
 #include "Compiler.h"
 #include "ObjectIndexer.h"
 
+/* Global IR staging state (from PSPL_IR extension) */
+extern pspl_ir_state_t pspl_ir_state;
+
 /* Generate platform-native bullet enumerations */
 #ifdef _WIN32
 const unsigned long PSPL_BULLET_MASK = 0xC0000000;
@@ -97,45 +100,6 @@ void pspl_embed_integer_keyed_object(const pspl_platform_t** platforms,
     pspl_indexer_integer_object_augment(driver_state.indexer_ctx, driver_state.proc_extension,
                                         platforms, key, little_object, big_object, object_size,
                                         driver_state.source);
-}
-
-/* Way for compiler extensions to send a named instruction
- * (with operation string and instruction data) to a set of
- * target platforms. This will result in an immediate invocation
- * of each platform's `receive` hook.
- * `platforms` is a NULL-terminated array; 
- * if not set, all platforms receive instruction. */
-void pspl_send_platform_instruction(const pspl_platform_t** platforms,
-                                    const char* operation,
-                                    const void* data) {
-    if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
-        driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
-        driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
-        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
-        return;
-    int save_state = driver_state.pspl_phase;
-    const pspl_extension_t* save_ext = driver_state.proc_extension;
-    driver_state.pspl_phase = PSPL_PHASE_COMPILE_PLATFORM;
-    const pspl_platform_t* plat;
-    if (platforms) {
-        while ((plat = *platforms++)) {
-            if (plat->toolchain_platform && plat->toolchain_platform->receive_hook) {
-                driver_state.proc_platform = plat;
-                plat->toolchain_platform->receive_hook(driver_state.tool_ctx, save_ext, operation, data);
-            }
-        }
-    } else {
-        int i;
-        for (i=0 ; i<driver_state.tool_ctx->target_runtime_platforms_c ; ++i) {
-            plat = driver_state.tool_ctx->target_runtime_platforms[i];
-            if (plat->toolchain_platform && plat->toolchain_platform->receive_hook) {
-                driver_state.proc_platform = plat;
-                plat->toolchain_platform->receive_hook(driver_state.tool_ctx, save_ext, operation, data);
-            }
-        }
-    }
-    driver_state.proc_extension = save_ext;
-    driver_state.pspl_phase = save_state;
 }
 
 /* Same functions for platform data objects
@@ -941,14 +905,48 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
     
     
 #   pragma mark Platform Object Generation
+    int j;
     
     // Instruct platforms to generate objects
     driver_state.pspl_phase = PSPL_PHASE_COMPILE_PLATFORM;
+    
+    // Calculate total UV attr count
+    pspl_ir_state.total_uv_attr_count = 0;
+    for (j=0 ; j<pspl_ir_state.vertex.tc_count ; ++j) {
+        if (pspl_ir_state.vertex.tc_array[j].tc_source == TEXCOORD_UV)
+            if (pspl_ir_state.total_uv_attr_count <= pspl_ir_state.vertex.tc_array[j].uv_idx)
+                pspl_ir_state.total_uv_attr_count = pspl_ir_state.vertex.tc_array[j].uv_idx + 1;
+    }
+    
+    // Spill names into indices
+    unsigned cur_idx = 0;
+    for (i=0 ; i<pspl_ir_state.fragment.stage_count ; ++i) {
+        pspl_ir_fragment_stage_t* stage = &pspl_ir_state.fragment.stage_array[i];
+        if (stage->using_texture) {
+            uint8_t found = 0;
+            for (j=0 ; j<pspl_ir_state.vertex.tc_count ; ++j) {
+                if (!strcasecmp(stage->stage_texmap.name, pspl_ir_state.vertex.tc_array[j].name)) {
+                    stage->stage_texmap.resolved_name_idx = cur_idx;
+                    pspl_ir_state.vertex.tc_array[j].resolved_name_idx = cur_idx;
+                    ++cur_idx;
+                    found = 1;
+                    break;
+                }
+            }
+            if (!found)
+                pspl_error(-1, "Texcoord name binding error",
+                           "unable to find paired UV generator '%s' in vertex stage",
+                           stage->stage_texmap.name);
+        }
+    }
+    
+
+    
     for (i=0 ; i<driver_opts->platform_c ; ++i) {
         const pspl_platform_t* plat = driver_opts->platform_a[i];
         if (plat && plat->toolchain_platform && plat->toolchain_platform->generate_hook) {
             driver_state.proc_platform = plat;
-            plat->toolchain_platform->generate_hook(ext_driver_ctx);
+            plat->toolchain_platform->generate_hook(ext_driver_ctx, &pspl_ir_state);
         }
     }
     

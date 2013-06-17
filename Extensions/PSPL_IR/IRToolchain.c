@@ -8,10 +8,10 @@
 
 #include <stdio.h>
 #include <PSPLExtension.h>
-#include "CalcChain.h"
+#include <PSPL/PSPL_IR.h>
 
-#define MAX_TEX_COORDS 10
-#define MAX_FRAG_STAGES 16
+/* Global IR staging state */
+pspl_ir_state_t pspl_ir_state;
 
 static void copyright_hook() {
     
@@ -21,98 +21,24 @@ static void copyright_hook() {
     
 }
 
-/* Feature enable state enum */
-enum pspl_feature_enable {
-    PLATFORM = 0,
-    DISABLED = 1,
-    ENABLED  = 2
-};
-
-/* Blend factor enum */
-enum pspl_blend_factor {
-    SRC_COLOUR = 0,
-    DST_COLOUR = 1,
-    SRC_ALPHA  = 2,
-    DST_ALPHA  = 3,
-    ONE_MINUS  = 4
-};
-
-
-/* IR translation state */
-static struct {
-    
-    // Vertex state
-    struct {
-        
-        // Are we populating a matrix?
-        int in_matrix_def;
-        pspl_matrix34_t matrix;
-        
-        // Position transform chain
-        pspl_calc_chain_t pos_chain;
-        
-        // Normal transform chain
-        pspl_calc_chain_t norm_chain;
-        
-        // Texcoord chains
-        int tc_count;
-        pspl_calc_chain_t tc_chain[MAX_TEX_COORDS];
-        
-    } vertex;
-    
-    // Depth state
-    struct {
-        
-        enum pspl_feature_enable test;
-        enum pspl_feature_enable write;
-        
-    } depth;
-    
-    // Fragment state
-    struct {
-        
-        // Are we populating a matrix?
-        int in_matrix_def;
-        pspl_matrix34_t matrix;
-        
-        // Stage Array
-        
-        
-    } fragment;
-    
-    // Blend State
-    struct {
-        
-        // Blending enabled?
-        enum pspl_feature_enable blending;
-        
-        // Blend factors
-        enum pspl_blend_factor source_factor;
-        enum pspl_blend_factor dest_factor;
-        
-    } blend;
-    
-} ir_state;
-
-
 static int init(const pspl_toolchain_context_t* driver_context) {
     
-    ir_state.vertex.in_matrix_def = 0;
-    pspl_calc_chain_init(&ir_state.vertex.pos_chain);
-    pspl_calc_chain_init(&ir_state.vertex.norm_chain);
+    pspl_ir_state.vertex.in_matrix_def = 0;
+    pspl_calc_chain_init(&pspl_ir_state.vertex.pos_chain);
+    pspl_ir_state.vertex.generate_normal = 0;
     int i;
-    for (i=0 ; i<MAX_TEX_COORDS ; ++i)
-        pspl_calc_chain_init(&ir_state.vertex.tc_chain[i]);
-    ir_state.vertex.tc_count = 0;
+    //for (i=0 ; i<MAX_TEX_COORDS ; ++i)
+        //pspl_calc_chain_init(&pspl_ir_state.vertex.tc_chain[i]);
+    pspl_ir_state.vertex.tc_count = 0;
     
-    ir_state.depth.test = PLATFORM;
-    ir_state.depth.write = PLATFORM;
+    pspl_ir_state.depth.test = PLATFORM;
+    pspl_ir_state.depth.write = PLATFORM;
     
-    ir_state.fragment.in_matrix_def = 0;
-    
-    ir_state.blend.blending = PLATFORM;
-    ir_state.blend.source_factor = SRC_ALPHA;
-    ir_state.blend.dest_factor = ONE_MINUS | SRC_ALPHA;
+    pspl_ir_state.fragment.stage_count = 0;
+        
+    pspl_ir_state.blend.blending = PLATFORM;
+    pspl_ir_state.blend.source_factor = SRC_ALPHA;
+    pspl_ir_state.blend.dest_factor = ONE_MINUS | SRC_ALPHA;
     
     return 0;
     
@@ -120,7 +46,10 @@ static int init(const pspl_toolchain_context_t* driver_context) {
 
 static void shutdown(const pspl_toolchain_context_t* driver_context) {
     
-    
+    pspl_calc_chain_destroy(&pspl_ir_state.vertex.pos_chain);
+    int i;
+    //for (i=0 ; i<MAX_TEX_COORDS ; ++i)
+        //pspl_calc_chain_destroy(&pspl_ir_state.vertex.tc_chain[i]);
     
 }
 
@@ -161,37 +90,111 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
             
         } else if (!strcasecmp(current_heading->heading_name, "FRAGMENT")) {
             
+            
+            if (!strcasecmp(command_name, "SAMPLE")) {
+                // Texture sample definition
+                if (command_argc < 2)
+                    pspl_error(-1, "Invalid command use",
+                               "`SAMPLE` must specify 2 arguments in `SAMPLE(<MAPIDX> <UV>)` format");
+                
+                if (!pspl_ir_state.fragment.stage_count) {
+                    // If first stage, insert initial SET stage
+                    
+                    
+                } else {
+                    // Otherwise determine stage accordingly
+                    
+                    int map;
+                    
+                    map = atoi(command_argv[0]);
+                    if (map < 0)
+                        pspl_error(-1, "Invalid SAMPLE value", "map index must be positive");
+                    
+                    
+                    
+                }
+                
+            } else if (!strcasecmp(command_name, "RGBA")) {
+                // RGBA constant definition
+                if (command_argc < 4)
+                    pspl_error(-1, "Invalid command use",
+                               "`RGBA` must specify 4 arguments in `RGBA(<RED> <GREEN> <BLUE> <ALPHA>)` format");
+                
+                unsigned stage_idx = 0;
+                
+                if (!pspl_ir_state.fragment.stage_count) {
+                    // If first stage, insert initial SET stage
+                    
+                    stage_idx = 0;
+                    pspl_ir_state.fragment.stage_array[0].stage_output = OUT_MAIN;
+                    pspl_ir_state.fragment.stage_array[0].stage_op = OP_SET;
+                    
+                } else {
+                    // Otherwise determine stage accordingly
+                    
+                    
+                }
+                
+                pspl_ir_state.fragment.stage_array[stage_idx].sources[0] = IN_COLOUR;
+                
+                double r,g,b,a;
+                
+                r = atof(command_argv[0]);
+                if (r < 0.0 || r > 1.0)
+                    pspl_error(-1, "Invalid colour value", "Red value in `RGBA` must be a normalised [0,1] float value");
+                g = atof(command_argv[1]);
+                if (r < 0.0 || r > 1.0)
+                    pspl_error(-1, "Invalid colour value", "Green value in `RGBA` must be a normalised [0,1] float value");
+                b = atof(command_argv[2]);
+                if (r < 0.0 || r > 1.0)
+                    pspl_error(-1, "Invalid colour value", "Blue value in `RGBA` must be a normalised [0,1] float value");
+                a = atof(command_argv[3]);
+                if (r < 0.0 || r > 1.0)
+                    pspl_error(-1, "Invalid colour value", "Alpha value in `RGBA` must be a normalised [0,1] float value");
+                
+                pspl_ir_state.fragment.stage_array[stage_idx].stage_colour.r = r;
+                pspl_ir_state.fragment.stage_array[stage_idx].stage_colour.g = g;
+                pspl_ir_state.fragment.stage_array[stage_idx].stage_colour.b = b;
+                pspl_ir_state.fragment.stage_array[stage_idx].stage_colour.a = a;
+
+                
+            } else
+                pspl_error(-1, "Unrecognised FRAGMENT command",
+                           "`%s` command not recognised by FRAGMENT heading", command_name);
+            
+            
+            
         } else if (!strcasecmp(current_heading->heading_name, "BLEND")) {
             
             if (command_argc >= 2) {
                 
                 if (is_source(command_name)) {
                     
-                    ir_state.blend.blending = 1;
-                    ir_state.blend.source_factor = 0;
+                    pspl_ir_state.blend.blending = 1;
+                    pspl_ir_state.blend.source_factor = 0;
                     
                     if (command_argc >= 3 && is_inverse(command_argv[0])) {
-                        ir_state.blend.source_factor = ONE_MINUS;
+                        pspl_ir_state.blend.source_factor = ONE_MINUS;
                         ++command_argv;
                     }
                     
                     if (is_source(command_argv[0])) {
                         
                         if (is_colour(command_argv[1])) {
-                            ir_state.blend.source_factor |= SRC_COLOUR;
+                            pspl_ir_state.blend.source_factor |= SRC_COLOUR;
                             return;
                         } else if (is_alpha(command_argv[1])) {
-                            ir_state.blend.source_factor |= SRC_ALPHA;
+                            pspl_ir_state.blend.source_factor |= SRC_ALPHA;
                             return;
                         }
                         
                     } else if (is_dest(command_argv[0])) {
                         
                         if (is_colour(command_argv[1])) {
-                            ir_state.blend.source_factor |= DST_COLOUR;
+                            pspl_ir_state.blend.source_factor |= DST_COLOUR;
                             return;
                         } else if (is_alpha(command_argv[1])) {
-                            ir_state.blend.source_factor |= DST_ALPHA;
+                            pspl_ir_state.blend.source_factor |= DST_ALPHA;
                             return;
                         }
                         
@@ -200,31 +203,31 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                     
                 } else if (is_dest(command_name)) {
                     
-                    ir_state.blend.blending = 1;
-                    ir_state.blend.dest_factor = 0;
+                    pspl_ir_state.blend.blending = 1;
+                    pspl_ir_state.blend.dest_factor = 0;
                     
                     if (command_argc >= 3 && is_inverse(command_argv[0])) {
-                        ir_state.blend.dest_factor = ONE_MINUS;
+                        pspl_ir_state.blend.dest_factor = ONE_MINUS;
                         ++command_argv;
                     }
                     
                     if (is_source(command_argv[0])) {
                         
                         if (is_colour(command_argv[1])) {
-                            ir_state.blend.dest_factor |= SRC_COLOUR;
+                            pspl_ir_state.blend.dest_factor |= SRC_COLOUR;
                             return;
                         } else if (is_alpha(command_argv[1])) {
-                            ir_state.blend.dest_factor |= SRC_ALPHA;
+                            pspl_ir_state.blend.dest_factor |= SRC_ALPHA;
                             return;
                         }
                         
                     } else if (is_dest(command_argv[0])) {
                         
                         if (is_colour(command_argv[1])) {
-                            ir_state.blend.dest_factor |= DST_COLOUR;
+                            pspl_ir_state.blend.dest_factor |= DST_COLOUR;
                             return;
                         } else if (is_alpha(command_argv[1])) {
-                            ir_state.blend.dest_factor |= DST_ALPHA;
+                            pspl_ir_state.blend.dest_factor |= DST_ALPHA;
                             return;
                         }
                         
@@ -239,8 +242,7 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
             pspl_error(-1, "Invalid command use",
                        "`%s` command must follow `%s([INVERSE] <SOURCE,DESTINATION> <COLOUR,ALPHA>)` format",
                        command_name, command_name);
-
-            
+                        
         }
         
     }
