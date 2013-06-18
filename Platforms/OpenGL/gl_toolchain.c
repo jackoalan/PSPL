@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <PSPLExtension.h>
+#include "gl_common.h"
 
 static const char SHADER_HEAD[] =
 "#ifdef GLES\n"
@@ -152,27 +153,137 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
     
     
     
+    // Texture map uniforms
+    char uniform_str[64];
+    snprintf(uniform_str, 64, "uniform LOWPREC sampler2D texs[%u];\n\n", ir_state->total_texmap_count);
+    pspl_buffer_addstr(frag, uniform_str);
+    
+    
+    
     // Main fragment code
     pspl_buffer_addstr(frag, "void main() {\n");
     
+    // Stage output variables
+    pspl_buffer_addstr(frag, "    LOWPREC vec4 stage_main;\n");
+    pspl_malloc_context_t name_tracker;
+    pspl_malloc_context_init(&name_tracker);
+    for (j=0 ; j<ir_state->fragment.stage_count ; ++j) {
+        int k;
+        int found = 0;
+        const pspl_ir_fragment_stage_t* stage = &ir_state->fragment.stage_array[j];
+        if (stage->stage_output == OUT_SIDECHAIN) {
+            for (k=0 ; k<name_tracker.object_num ; ++k) {
+                if (!strcmp(name_tracker.object_arr[k], stage->side_out_name)) {
+                    found = 1;
+                    break;
+                }
+            }
+            if (!found) {
+                char* name = pspl_malloc_malloc(&name_tracker, strlen(stage->side_out_name)+1);
+                strlcpy(name, stage->side_out_name, strlen(stage->side_out_name)+1);
+            }
+        }
+    }
+    for (j=0 ; j<name_tracker.object_num ; ++j) {
+        char sidedef[64];
+        snprintf(sidedef, 64, "    LOWPREC vec4 stage_side_%s;\n", name_tracker.object_arr[j]);
+        pspl_buffer_addstr(frag, sidedef);
+    }
+    pspl_buffer_addstr(frag, "\n");
+        
+    
+    // Interate each fragment stage
+    for (j=0 ; j<ir_state->fragment.stage_count ; ++j) {
+        const pspl_ir_fragment_stage_t* stage = &ir_state->fragment.stage_array[j];
+        
+        char comment[64];
+        snprintf(comment, 64, "    // Stage %u\n", j);
+        pspl_buffer_addstr(frag, comment);
+        
+        char stagedecl[64];
+        if (stage->stage_output == OUT_MAIN)
+            snprintf(stagedecl, 64, "stage_main");
+        else if (stage->stage_output == OUT_SIDECHAIN)
+            snprintf(stagedecl, 64, "stage_side_%s", stage->side_out_name);
+        
+        char stagesources[3][64];
+        int s;
+        for (s=0 ; s<3 ; ++s) {
+            if (stage->sources[s] == IN_ZERO)
+                snprintf(stagesources[s], 64, "rgba(0.0,0.0,0.0,1.0)");
+            else if (stage->sources[s] == IN_ONE)
+                snprintf(stagesources[s], 64, "rgba(1.0,1.0,1.0,1.0)");
+            else if (stage->sources[s] == IN_TEXTURE)
+                snprintf(stagesources[s], 64, "texture2D(texs[%u], texCoords[%u])",
+                         stage->stage_texmap.texmap_idx, stage->stage_texmap.resolved_name_idx);
+            else if (stage->sources[s] == IN_LIGHTING)
+                snprintf(stagesources[s], 64, "rgba(1.0,1.0,1.0,1.0)");
+            else if (stage->sources[s] == IN_COLOUR)
+                snprintf(stagesources[s], 64, "rgba(%f,%f,%f,%f)", stage->stage_colour.r,
+                         stage->stage_colour.g, stage->stage_colour.b, stage->stage_colour.a);
+            else if (stage->sources[s] == IN_MAIN)
+                snprintf(stagesources[s], 64, "stage_main");
+            else if (stage->sources[s] == IN_SIDECHAIN)
+                snprintf(stagesources[s], 64, "stage_side_%s", stage->side_in_names[s]);
+        }
+        
+        char stagedef[64];
+        if (stage->stage_op == OP_SET)
+            snprintf(stagedef, 64, "    %s = %s;\n", stagedecl, stagesources[0]);
+        else if (stage->stage_op == OP_MUL)
+            snprintf(stagedef, 64, "    %s = %s * %s;\n", stagedecl,
+                     stagesources[0], stagesources[1]);
+        else if (stage->stage_op == OP_ADD)
+            snprintf(stagedef, 64, "    %s = %s + %s;\n", stagedecl,
+                     stagesources[0], stagesources[1]);
+        else if (stage->stage_op == OP_SUB)
+            snprintf(stagedef, 64, "    %s = %s - %s;\n", stagedecl,
+                     stagesources[0], stagesources[1]);
+        else if (stage->stage_op == OP_BLEND)
+            snprintf(stagedef, 64, "    %s = ((1.0 - %s) * %s) + (%s * %s);\n", stagedecl,
+                     stagesources[2], stagesources[0], stagesources[2], stagesources[1]);
+        
+        pspl_buffer_addstr(frag, stagedef);
+        
+        pspl_buffer_addstr(frag, "\n");
+    }
+    
     // Colour
-    pspl_buffer_addstr(frag, "    gl_FragColor = rgba(1.0,1.0,1.0,1.0);\n");
+    pspl_buffer_addstr(frag, "    gl_FragColor = stage_main;\n");
     
     
     pspl_buffer_addstr(frag, "}\n\n");
+    
+    pspl_malloc_context_destroy(&name_tracker);
     
 }
 
 static void generate_hook(const pspl_toolchain_context_t* driver_context,
                           const pspl_ir_state_t* ir_state) {
     
+    // Config structure
+    gl_config_t config = {
+        .depth_write = ir_state->depth.write,
+        .depth_test = ir_state->depth.test,
+        .blending = ir_state->blend.blending
+    };
+    pspl_embed_platform_integer_keyed_object(GL_CONFIG_STRUCT, &config, &config, sizeof(gl_config_t));
+    
+    // Vertex shader
     pspl_buffer_t vert_buf;
     pspl_buffer_init(&vert_buf, 2048);
     generate_vertex(driver_context, ir_state, &vert_buf);
+    pspl_embed_platform_integer_keyed_object(GL_VERTEX_SOURCE, vert_buf.buf, vert_buf.buf,
+                                             vert_buf.buf_cur - vert_buf.buf);
+    pspl_buffer_free(&vert_buf);
     
+    // Fragment shader
     pspl_buffer_t frag_buf;
     pspl_buffer_init(&frag_buf, 2048);
     generate_fragment(driver_context, ir_state, &frag_buf);
+    pspl_embed_platform_integer_keyed_object(GL_FRAGMENT_SOURCE, frag_buf.buf, frag_buf.buf,
+                                             frag_buf.buf_cur - frag_buf.buf);
+    pspl_buffer_free(&frag_buf);
     
 }
 

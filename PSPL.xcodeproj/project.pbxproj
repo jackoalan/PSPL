@@ -173,6 +173,7 @@
 		E4E4918017510B35006FCA59 /* libTEST-RUNTIME.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libTEST-RUNTIME.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E4E4918C1753FACF006FCA59 /* pspl_available_runtime_extensions.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = pspl_available_runtime_extensions.c; path = build/pspl_available_runtime_extensions.c; sourceTree = "<group>"; };
 		E4E4918D1753FACF006FCA59 /* pspl_available_toolchain_extensions.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = pspl_available_toolchain_extensions.c; path = build/pspl_available_toolchain_extensions.c; sourceTree = "<group>"; };
+		E4E7F23F1770040800E87FCB /* gl_common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gl_common.h; sourceTree = "<group>"; };
 		E4F078E4173AA5F9000D6699 /* GX_PSPLTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GX_PSPLTypes.h; sourceTree = "<group>"; };
 		E4F078E5173AA891000D6699 /* pspl_runtime_platform_typefile.pch.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = pspl_runtime_platform_typefile.pch.in; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -469,6 +470,7 @@
 				E4AFAE40171C9E3700F7A0BF /* README.md */,
 				E4E49170175108C4006FCA59 /* CMakeLists.txt */,
 				E4E491711751093A006FCA59 /* GL2_PSPLTypes.h */,
+				E4E7F23F1770040800E87FCB /* gl_common.h */,
 				E4E491721751094E006FCA59 /* gl_toolchain.c */,
 				E4E4917417510956006FCA59 /* gl_runtime.c */,
 			);

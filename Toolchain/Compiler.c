@@ -918,6 +918,17 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
                 pspl_ir_state.total_uv_attr_count = pspl_ir_state.vertex.tc_array[j].uv_idx + 1;
     }
     
+    // Calculate total texmap count
+    pspl_ir_state.total_texmap_count = 0;
+    for (j=0 ; j<pspl_ir_state.fragment.stage_count ; ++j) {
+        if (pspl_ir_state.fragment.stage_array[j].using_texture)
+            if (pspl_ir_state.total_texmap_count <= pspl_ir_state.fragment.stage_array[j].stage_texmap.texmap_idx)
+                pspl_ir_state.total_texmap_count = pspl_ir_state.fragment.stage_array[j].stage_texmap.texmap_idx + 1;
+        if (pspl_ir_state.fragment.stage_array[j].using_indirect)
+            if (pspl_ir_state.total_texmap_count <= pspl_ir_state.fragment.stage_array[j].stage_indtexmap.texmap_idx)
+                pspl_ir_state.total_texmap_count = pspl_ir_state.fragment.stage_array[j].stage_indtexmap.texmap_idx + 1;
+    }
+    
     // Spill names into indices
     unsigned cur_idx = 0;
     for (i=0 ; i<pspl_ir_state.fragment.stage_count ; ++i) {

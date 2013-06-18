@@ -20,6 +20,22 @@
 /* Round up to nearest 32 multiple */
 #define ROUND_UP_32(val) (((val)%32)?((((val)>>5)<<5)+32):(val))
 
+/* Feature enable state enum */
+enum pspl_feature {
+    PLATFORM = 0,
+    DISABLED = 1,
+    ENABLED  = 2
+};
+
+/* Blend factor enum */
+enum pspl_blend_factor {
+    SRC_COLOUR = 0,
+    DST_COLOUR = 1,
+    SRC_ALPHA  = 2,
+    DST_ALPHA  = 3,
+    ONE_MINUS  = 4
+};
+
 /* Common 4-component vector representation */
 typedef struct {
     float vector[4];

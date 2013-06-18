@@ -7,6 +7,7 @@
 //
 
 #include <PSPLExtension.h>
+#include "gl_common.h"
 
 
 pspl_runtime_platform_t GL2_runplat = {

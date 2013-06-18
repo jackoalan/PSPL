@@ -99,22 +99,6 @@ void pspl_calc_chain_set_dynamic_perspective(const char* bind_name,
 #define MAX_TEX_COORDS 10
 #define MAX_FRAG_STAGES 16
 
-/* Feature enable state enum */
-enum pspl_feature {
-    PLATFORM = 0,
-    DISABLED = 1,
-    ENABLED  = 2
-};
-
-/* Blend factor enum */
-enum pspl_blend_factor {
-    SRC_COLOUR = 0,
-    DST_COLOUR = 1,
-    SRC_ALPHA  = 2,
-    DST_ALPHA  = 3,
-    ONE_MINUS  = 4
-};
-
 /* Texture map config */
 typedef struct {
     
@@ -156,7 +140,7 @@ typedef struct {
         IN_LIGHTING, // Computed lighting channel value
         IN_COLOUR,   // Specified constant colour value (from parent stage structure)
         IN_MAIN,     // Previous-stage-output main value
-        IN_SIDE      // Previous-stage-output sidechain value
+        IN_SIDECHAIN // Previous-stage-output sidechain value
     } sources[3];
     
     // Sidechain input names (when one or more sources set to 'IN_SIDE')
@@ -184,6 +168,9 @@ typedef struct {
     
     // Total count of UV vertex attributes
     unsigned total_uv_attr_count;
+    
+    // Total count of texture maps
+    unsigned total_texmap_count;
     
     // Vertex state
     struct {
