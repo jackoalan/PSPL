@@ -73,7 +73,7 @@ typedef struct {
     size_t(*tell)(const void* handle);
     
     /**< Read count of bytes from handle (returning bytes read) */
-    size_t(*read)(const void* handle, size_t num_bytes, const void** data_out);
+    size_t(*read)(const void* handle, size_t num_bytes, void** data_out);
     
     /**< Read count of bytes from handle into already-allocated buffer (returning bytes read) */
     size_t(*read_direct)(const void* handle, size_t num_bytes, void* data_buf);
@@ -118,7 +118,7 @@ int pspl_runtime_load_package_provider(const char* package_path,
  * @param package_out Output pointer conveying package representation
  * @return 0 if successful, or negative otherwise
  */
-int pspl_runtime_load_package_membuf(const void* package_data, size_t package_len,
+int pspl_runtime_load_package_membuf(void* package_data, size_t package_len,
                                      const pspl_runtime_package_t** package_out);
 
 /**
@@ -187,7 +187,7 @@ void pspl_runtime_enumerate_psplcs(const pspl_runtime_package_t* package,
  *        reference count set to 1 when found
  * @return PSPLC representation (or NULL if not available)
  */
-const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_key(const pspl_runtime_package_t* package,
+const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_key(pspl_runtime_package_t* package,
                                                             const char* key, int retain);
 
 /**
@@ -198,7 +198,7 @@ const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_key(const pspl_runtime_p
  *        reference count set to 1 when found
  * @return PSPLC representation (or NULL if not available)
  */
-const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_hash(const pspl_runtime_package_t* package,
+const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_hash(pspl_runtime_package_t* package,
                                                              pspl_hash* hash, int retain);
 
 /**
@@ -206,14 +206,21 @@ const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_hash(const pspl_runtime_
  *
  * @param psplc PSPLC representation
  */
-void pspl_runtime_retain_psplc(const pspl_runtime_psplc_t* psplc);
+void pspl_runtime_retain_psplc(pspl_runtime_psplc_t* psplc);
 
 /**
  * Decrement reference-count of PSPLC representation
  *
  * @param psplc PSPLC representation
  */
-void pspl_runtime_release_psplc(const pspl_runtime_psplc_t* psplc);
+void pspl_runtime_release_psplc(pspl_runtime_psplc_t* psplc);
+
+/**
+ * Bind PSPLC representation to GPU (implicitly retains if unloaded)
+ *
+ * @param psplc PSPLC representation
+ */
+void pspl_runtime_bind_psplc(pspl_runtime_psplc_t* psplc);
 
 
 #pragma mark Archived Files
@@ -232,7 +239,7 @@ typedef struct {
     
     /**< File length and data */
     size_t file_len;
-    const void* file_data;
+    void* file_data;
     
 } pspl_runtime_arc_file_t;
 

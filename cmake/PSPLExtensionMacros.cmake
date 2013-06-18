@@ -115,8 +115,10 @@ macro(pspl_add_extension_toolchain extension_name)
       list(APPEND pspl_toolchain_extension_list ${extension_name})
       set(pspl_toolchain_extension_list ${pspl_toolchain_extension_list} CACHE INTERNAL
           "Ordered toolchain extension name list, augmented by `pspl_add_extension_toolchain`")
-      set_source_files_properties(${ARGN} PROPERTIES COMPILE_DEFINITIONS PSPL_TOOLCHAIN=1)
+      #set_source_files_properties(${ARGN} PROPERTIES COMPILE_DEFINITIONS PSPL_TOOLCHAIN=1)
       add_library("${extension_name}_toolext" STATIC ${ARGN})
+      set_target_properties("${extension_name}_toolext" PROPERTIES
+                            COMPILE_DEFINITIONS PSPL_TOOLCHAIN=1)
     endif()
   endif()
   
@@ -138,7 +140,7 @@ macro(pspl_add_extension_runtime extension_name)
       list(APPEND pspl_runtime_extension_list ${extension_name})
       set(pspl_runtime_extension_list ${pspl_runtime_extension_list} CACHE INTERNAL
           "Ordered runtime extension name list, augmented by `pspl_add_extension_runtime`")
-      set_source_files_properties(${ARGN} PROPERTIES COMPILE_DEFINITIONS "PSPL_RUNTIME=1;PSPL_RUNTIME_PLATFORM_${PSPL_RUNTIME_PLATFORM}=1")
+      #set_source_files_properties(${ARGN} PROPERTIES COMPILE_DEFINITIONS "PSPL_RUNTIME=1;PSPL_RUNTIME_PLATFORM_${PSPL_RUNTIME_PLATFORM}=1")
       add_library("${extension_name}_runext" STATIC ${ARGN})
       set_target_properties("${extension_name}_runext" PROPERTIES
                             COMPILE_FLAGS "-include ${PSPL_BINARY_DIR}/Runtime/pspl_runtime_platform_typefile.pch"

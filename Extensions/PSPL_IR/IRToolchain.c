@@ -22,14 +22,16 @@ static void copyright_hook() {
 }
 
 static int init(const pspl_toolchain_context_t* driver_context) {
+    int i;
     
     pspl_ir_state.vertex.in_matrix_def = 0;
     pspl_calc_chain_init(&pspl_ir_state.vertex.pos_chain);
     pspl_ir_state.vertex.generate_normal = 0;
-    int i;
-    //for (i=0 ; i<MAX_TEX_COORDS ; ++i)
-        //pspl_calc_chain_init(&pspl_ir_state.vertex.tc_chain[i]);
     pspl_ir_state.vertex.tc_count = 0;
+    for (i=0 ; i<MAX_TEX_COORDS ; ++i) {
+        pspl_ir_state.vertex.tc_array[i].resolved_name_idx = -1;
+        pspl_calc_chain_init(&pspl_ir_state.vertex.tc_array[i].tc_chain);
+    }
     
     pspl_ir_state.depth.test = PLATFORM;
     pspl_ir_state.depth.write = PLATFORM;
@@ -45,11 +47,11 @@ static int init(const pspl_toolchain_context_t* driver_context) {
 }
 
 static void shutdown(const pspl_toolchain_context_t* driver_context) {
+    int i;
     
     pspl_calc_chain_destroy(&pspl_ir_state.vertex.pos_chain);
-    int i;
-    //for (i=0 ; i<MAX_TEX_COORDS ; ++i)
-        //pspl_calc_chain_destroy(&pspl_ir_state.vertex.tc_chain[i]);
+    for (i=0 ; i<MAX_TEX_COORDS ; ++i)
+        pspl_calc_chain_destroy(&pspl_ir_state.vertex.tc_array[i].tc_chain);
     
 }
 
@@ -84,7 +86,7 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
         
         if (!strcasecmp(current_heading->heading_name, "VERTEX")) {
             
-            
+            // Uniform
             
         } else if (!strcasecmp(current_heading->heading_name, "DEPTH")) {
             
@@ -97,9 +99,13 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                     pspl_error(-1, "Invalid command use",
                                "`SAMPLE` must specify 2 arguments in `SAMPLE(<MAPIDX> <UV>)` format");
                 
-                if (!pspl_ir_state.fragment.stage_count) {
+                unsigned stage_idx = pspl_ir_state.fragment.stage_count;
+                
+                if (!stage_idx) {
                     // If first stage, insert initial SET stage
                     
+                    pspl_ir_state.fragment.stage_array[0].stage_output = OUT_MAIN;
+                    pspl_ir_state.fragment.stage_array[0].stage_op = OP_SET;
                     
                 } else {
                     // Otherwise determine stage accordingly
@@ -109,10 +115,13 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                     map = atoi(command_argv[0]);
                     if (map < 0)
                         pspl_error(-1, "Invalid SAMPLE value", "map index must be positive");
-                    
+                    //pspl_ir_state.fragment.stage_array[stage_idx].
                     
                     
                 }
+                
+                ++stage_idx;
+
                 
             } else if (!strcasecmp(command_name, "RGBA")) {
                 // RGBA constant definition
@@ -120,17 +129,17 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                     pspl_error(-1, "Invalid command use",
                                "`RGBA` must specify 4 arguments in `RGBA(<RED> <GREEN> <BLUE> <ALPHA>)` format");
                 
-                unsigned stage_idx = 0;
+                unsigned stage_idx = pspl_ir_state.fragment.stage_count;
                 
-                if (!pspl_ir_state.fragment.stage_count) {
+                if (!stage_idx) {
                     // If first stage, insert initial SET stage
                     
-                    stage_idx = 0;
                     pspl_ir_state.fragment.stage_array[0].stage_output = OUT_MAIN;
                     pspl_ir_state.fragment.stage_array[0].stage_op = OP_SET;
                     
                 } else {
                     // Otherwise determine stage accordingly
+                    
                     
                     
                 }
@@ -156,6 +165,8 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                 pspl_ir_state.fragment.stage_array[stage_idx].stage_colour.g = g;
                 pspl_ir_state.fragment.stage_array[stage_idx].stage_colour.b = b;
                 pspl_ir_state.fragment.stage_array[stage_idx].stage_colour.a = a;
+                
+                ++pspl_ir_state.fragment.stage_count;
 
                 
             } else

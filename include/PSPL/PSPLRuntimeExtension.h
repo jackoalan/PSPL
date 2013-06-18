@@ -27,21 +27,21 @@
  */
 typedef struct {
     size_t object_len;
-    const void* object_data;
+    void* object_data;
 } pspl_data_object_t;
 
 /**
  * Runtime extension/platform hooks
  */
 typedef void(*pspl_runtime_shutdown_hook)();
-typedef void(*pspl_runtime_load_object_hook)(const pspl_runtime_psplc_t* object);
-typedef void(*pspl_runtime_unload_object_hook)(const pspl_runtime_psplc_t* object);
-typedef void(*pspl_runtime_bind_object_hook)(const pspl_runtime_psplc_t* object);
+typedef void(*pspl_runtime_load_object_hook)(pspl_runtime_psplc_t* object);
+typedef void(*pspl_runtime_unload_object_hook)(pspl_runtime_psplc_t* object);
+typedef void(*pspl_runtime_bind_object_hook)(pspl_runtime_psplc_t* object);
 
 
 #pragma mark Extension/Platform Load API
 
-/* These *must* be called within the `load` hook of platform or extension */
+/* These *must* be called within the `load` or `bind` hook of platform or extension */
 
 /**
  * Get embedded data object for extension by string key (used in hash lookup)

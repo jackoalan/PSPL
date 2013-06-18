@@ -16,8 +16,9 @@ enum gl_object {
 };
 
 typedef struct {
+    uint8_t uv_attr_count;
     uint8_t depth_write, depth_test;
-    uint8_t blending, padding;
+    uint8_t blending;
 } gl_config_t;
 //typedef DEF_BI_OBJ_TYPE(gl_config_t) gl_config_bi_t;
 

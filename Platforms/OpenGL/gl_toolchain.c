@@ -192,7 +192,7 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
     pspl_buffer_addstr(frag, "\n");
         
     
-    // Interate each fragment stage
+    // Iterate each fragment stage
     for (j=0 ; j<ir_state->fragment.stage_count ; ++j) {
         const pspl_ir_fragment_stage_t* stage = &ir_state->fragment.stage_array[j];
         
@@ -263,6 +263,7 @@ static void generate_hook(const pspl_toolchain_context_t* driver_context,
     
     // Config structure
     gl_config_t config = {
+        .uv_attr_count = ir_state->total_uv_attr_count,
         .depth_write = ir_state->depth.write,
         .depth_test = ir_state->depth.test,
         .blending = ir_state->blend.blending

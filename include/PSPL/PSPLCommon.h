@@ -61,6 +61,12 @@ typedef struct {
     float post_translate_y;
 } pspl_perspective_t;
 
+/* Common rotation representation */
+typedef struct {
+    pspl_vector3_t axis;
+    float angle;
+} pspl_rotation_t;
+
 /* Common 8-bit-per-channel colour representation */
 typedef struct {
     double r,g,b,a;

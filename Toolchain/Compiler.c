@@ -937,9 +937,12 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             uint8_t found = 0;
             for (j=0 ; j<pspl_ir_state.vertex.tc_count ; ++j) {
                 if (!strcasecmp(stage->stage_texmap.name, pspl_ir_state.vertex.tc_array[j].name)) {
-                    stage->stage_texmap.resolved_name_idx = cur_idx;
-                    pspl_ir_state.vertex.tc_array[j].resolved_name_idx = cur_idx;
-                    ++cur_idx;
+                    if (pspl_ir_state.vertex.tc_array[j].resolved_name_idx < 0) {
+                        stage->stage_texmap.resolved_name_idx = cur_idx;
+                        pspl_ir_state.vertex.tc_array[j].resolved_name_idx = cur_idx;
+                        ++cur_idx;
+                    } else
+                        stage->stage_texmap.resolved_name_idx = pspl_ir_state.vertex.tc_array[j].resolved_name_idx;
                     found = 1;
                     break;
                 }

@@ -15,7 +15,7 @@
 #include <PSPL/PSPLRuntimeExtension.h>
 
 #ifdef PSPL_TOOLCHAIN
-#include <Toolchain/Buffer.h>
+#include "../Toolchain/Buffer.h"
 #endif
 
 #endif

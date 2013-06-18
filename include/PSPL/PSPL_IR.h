@@ -17,48 +17,30 @@
 
 #if PSPL_TOOLCHAIN
 
-enum CHAIN_LINK_TYPE {
-    LINK_TYPE_IDENTITY,
-    LINK_TYPE_MATRIX34,
-    LINK_TYPE_VECTOR4,
-    LINK_TYPE_VECTOR3,
-};
-
 enum CHAIN_LINK_USE {
-    LINK_USE_NONE,
     LINK_USE_STATIC,
-    LINK_USE_DYNAMIC,
-    LINK_USE_GPU
+    LINK_USE_DYNAMIC
 };
 
-union CHAIN_LINK_VALUE {
+/* Calculation chain-link type */
+typedef struct {
     
-    // Static values
-    pspl_matrix34_t matrix;
-    pspl_vector3_t vector3;
+    // How the link value is obtained
+    enum CHAIN_LINK_USE use;
     
-    // Dynamic name-binding
+    // Link matrix value (Static)
+    pspl_matrix34_t matrix_value;
+    
+    // Link name-binding (Dynamic)
     char link_dynamic_bind_name[IR_NAME_LEN];
     
-    // GPU data-source binding
-    // (Used in fragment stage for dynamic GPU data-handling features)
-    enum {
-        LINK_GPU_POSITION,
-        LINK_GPU_NORMAL,
-        LINK_GPU_VERT_UV
-    } link_gpu_bind;
-    unsigned link_gpu_vert_uv_idx;
-    
-};
-
-
+} pspl_calc_link_t;
 
 /* Calculation chain type */
 typedef struct {
     pspl_malloc_context_t mem_ctx;
-    enum CHAIN_LINK_USE perspective_use;
-    pspl_perspective_t perspective;
-    pspl_matrix34_t perspective_matrix;
+    uint8_t using_perspective;
+    pspl_calc_link_t perspective_link;
 } pspl_calc_chain_t;
 
 /* Routines provided by `PSPL-IR` toolchain extension */
@@ -68,16 +50,26 @@ void pspl_calc_chain_add_static_transform(pspl_calc_chain_t* chain,
                                           const pspl_matrix34_t* matrix);
 void pspl_calc_chain_add_dynamic_transform(pspl_calc_chain_t* chain,
                                            const char* bind_name);
+void pspl_calc_chain_add_static_scale(pspl_calc_chain_t* chain,
+                                      const pspl_vector3_t* scale_vector);
+void pspl_calc_chain_add_dynamic_scale(pspl_calc_chain_t* chain,
+                                       const char* bind_name);
+void pspl_calc_chain_add_static_rotation(pspl_calc_chain_t* chain,
+                                         const pspl_rotation_t* rotation);
+void pspl_calc_chain_add_dynamic_rotation(pspl_calc_chain_t* chain,
+                                          const char* bind_name);
 void pspl_calc_chain_add_static_translation(pspl_calc_chain_t* chain,
-                                            const pspl_vector3_t* vector);
+                                            const pspl_vector3_t* trans_vector);
 void pspl_calc_chain_add_dynamic_translation(pspl_calc_chain_t* chain,
                                              const char* bind_name);
 void pspl_calc_chain_add_static_perspective(pspl_calc_chain_t* chain,
                                             const pspl_perspective_t* persp);
 void pspl_calc_chain_add_dynamic_perspective(pspl_calc_chain_t* chain,
                                              const char* bind_name);
-void pspl_calc_chain_send(pspl_calc_chain_t* chain,
-                          const pspl_platform_t** platforms);
+void pspl_calc_chain_write_position(pspl_calc_chain_t* chain);
+void pspl_calc_chain_write_normal(pspl_calc_chain_t* chain);
+void pspl_calc_chain_write_uv(pspl_calc_chain_t* chain, unsigned uv_idx);
+
 
 #elif PSPL_RUNTIME
 
@@ -85,10 +77,15 @@ void pspl_calc_chain_send(pspl_calc_chain_t* chain,
 void pspl_calc_chain_bind(const void* chain_data);
 void pspl_calc_chain_set_dynamic_transform(const char* bind_name,
                                            const pspl_matrix34_t* matrix);
+void pspl_calc_chain_set_dynamic_scale(const char* bind_name,
+                                       const pspl_vector3_t* scale_vector);
+void pspl_calc_chain_set_dynamic_rotation(const char* bind_name,
+                                          const pspl_rotation_t* rotation);
 void pspl_calc_chain_set_dynamic_translation(const char* bind_name,
-                                             const pspl_vector3_t* vector);
+                                             const pspl_vector3_t* trans_vector);
 void pspl_calc_chain_set_dynamic_perspective(const char* bind_name,
                                              const pspl_perspective_t* persp);
+void pspl_calc_chain_load();
 
 #endif
 
@@ -192,7 +189,7 @@ typedef struct {
         unsigned tc_count;
         struct {
             char name[IR_NAME_LEN];
-            unsigned resolved_name_idx;
+            int resolved_name_idx;
             enum {
                 TEXCOORD_UV,
                 TEXCOORD_POS,

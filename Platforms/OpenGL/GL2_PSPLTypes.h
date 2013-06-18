@@ -15,11 +15,22 @@
 #  include <GL/gl.h>
 #endif
 
+#include "gl_common.h"
+
 /* OpenGL-specific type for shader object */
 typedef struct {
     
-    // Shader object
-    GLuint shader_obj;
+    // Program object
+    GLuint program;
+    
+    // Vertex shader
+    GLuint vertex_shader;
+    
+    // Fragment shader
+    GLuint fragment_shader;
+    
+    // Config structure
+    gl_config_t* config;
     
 } GL2_shader_object_t;
 

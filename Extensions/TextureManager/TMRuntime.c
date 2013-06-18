@@ -292,7 +292,7 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
     
     return 0;
 }
-static void load_object(const pspl_runtime_psplc_t* object) {
+static void load_object(pspl_runtime_psplc_t* object) {
     int tex_c = pspl_runtime_count_integer_embedded_data_objects(object);
     pspl_tm_map_entry* ent = pspl_malloc_malloc(&map_ctx, sizeof(pspl_tm_map_entry));
     ent->owner = object;
@@ -303,7 +303,7 @@ static void load_object(const pspl_runtime_psplc_t* object) {
                                                          (void*)&ent);
 }
 
-static void unload_object(const pspl_runtime_psplc_t* object) {
+static void unload_object(pspl_runtime_psplc_t* object) {
     int i,j;
     for (i=0 ; i<map_ctx.object_num ; ++i) {
         pspl_tm_map_entry* ent = map_ctx.object_arr[i];
@@ -327,7 +327,7 @@ static void unload_object(const pspl_runtime_psplc_t* object) {
     }
 }
 
-static void bind_object(const pspl_runtime_psplc_t* object) {
+static void bind_object(pspl_runtime_psplc_t* object) {
     int i,j;
     for (i=0 ; i<map_ctx.object_num ; ++i) {
         pspl_tm_map_entry* ent = map_ctx.object_arr[i];
