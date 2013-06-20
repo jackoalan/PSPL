@@ -72,9 +72,10 @@ void pspl_calc_chain_write_uv(pspl_calc_chain_t* chain, unsigned uv_idx);
 
 
 #elif PSPL_RUNTIME
+#include <PSPLExtension.h>
 
 /* Routines provided by `PSPL-IR` runtime extension */
-void pspl_calc_chain_bind(const void* chain_data);
+void pspl_calc_chain_bind(const pspl_runtime_psplc_t* object);
 void pspl_calc_chain_set_dynamic_transform(const char* bind_name,
                                            const pspl_matrix34_t* matrix);
 void pspl_calc_chain_set_dynamic_scale(const char* bind_name,
@@ -85,7 +86,7 @@ void pspl_calc_chain_set_dynamic_translation(const char* bind_name,
                                              const pspl_vector3_t* trans_vector);
 void pspl_calc_chain_set_dynamic_perspective(const char* bind_name,
                                              const pspl_perspective_t* persp);
-void pspl_calc_chain_load();
+void pspl_calc_chain_flush();
 
 #endif
 
@@ -121,7 +122,7 @@ typedef struct {
     char side_out_name[IR_NAME_LEN];
     
     // Stage Operation
-    enum {
+    enum stage_op {
         OP_SET,    // 1-source, always used in first stage
         OP_MUL,    // 2-sources; (a*b)
         OP_ADD,    // 2-sources; (a+b)
@@ -140,8 +141,8 @@ typedef struct {
         IN_SIDECHAIN // Previous-stage-output sidechain value
     } sources[3];
     
-    // Sidechain input names (when one or more sources set to 'IN_SIDE')
-    char side_in_names[3][IR_NAME_LEN];
+    // Sidechain input indices (when one or more sources set to 'IN_SIDE')
+    unsigned side_in_indices[3];
     
     // Texture map index
     uint8_t using_texture;
@@ -155,6 +156,7 @@ typedef struct {
     unsigned stage_lightchan_idx;
     
     // Constant colour (for stage source 'IN_COLOUR')
+    uint8_t using_colour;
     pspl_colour_t stage_colour;
     
     
@@ -174,16 +176,11 @@ typedef struct {
         
         // Are we populating a matrix?
         int in_matrix_def;
+        unsigned matrix_row_count;
         pspl_matrix34_t matrix;
         
         // Position transform chain
         pspl_calc_chain_t pos_chain;
-        
-        // Normal transform
-        // (if the normal is referenced in fragment stage,
-        // this is set, resulting in automatic inverse-transpose of
-        // position matrix chain)
-        uint8_t generate_normal;
         
         // Texcoord gens
         unsigned tc_count;
@@ -211,6 +208,10 @@ typedef struct {
     
     // Fragment state
     struct {
+        
+        // Are we enumerating stage operands?
+        enum stage_op def_stage_op;
+        unsigned def_stage_op_idx;
         
         // Stage Array
         unsigned stage_count;

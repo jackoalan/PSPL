@@ -201,9 +201,11 @@ static void vector4_byte_swap(pspl_vector4_t* out, const pspl_vector4_t* in) {
 /* Embedded object indexes */
 enum object_idxs {
     CALC_POS          = 0,
-    CALC_NORM         = 1,
-    CALC_UV0          = 2
+    CALC_UV0          = 1
 };
+
+/* Maximum UV chains */
+#define MAX_CALC_UVS 16
 
 typedef struct {
     
@@ -613,13 +615,6 @@ void pspl_calc_chain_write_position(pspl_calc_chain_t* chain) {
     fold_chain(chain, &big_data, &little_data, &size);
     pspl_embed_integer_keyed_object(NULL, CALC_POS, little_data, big_data, size);
 }
-void pspl_calc_chain_write_normal(pspl_calc_chain_t* chain) {
-    void* big_data;
-    void* little_data;
-    size_t size;
-    fold_chain(chain, &big_data, &little_data, &size);
-    pspl_embed_integer_keyed_object(NULL, CALC_NORM, little_data, big_data, size);
-}
 void pspl_calc_chain_write_uv(pspl_calc_chain_t* chain, unsigned uv_idx) {
     void* big_data;
     void* little_data;
@@ -631,10 +626,24 @@ void pspl_calc_chain_write_uv(pspl_calc_chain_t* chain, unsigned uv_idx) {
 #elif PSPL_RUNTIME
 #pragma mark Runtime
 
-static const void* CHAIN_DATA = NULL;
+static void cache_chain(void* chain_data) {
+    
+}
 
-void pspl_calc_chain_bind(const void* chain_data) {
-    CHAIN_DATA = chain_data;
+static void* CHAIN_POS = NULL;
+static void* CHAIN_UV[MAX_CALC_UVS] = {NULL};
+
+static int enumerate_chains(pspl_data_object_t* data_object, uint32_t key, void* user_ptr) {
+    if (key == CALC_POS)
+        CHAIN_POS = data_object->object_data;
+    else
+        CHAIN_UV[key-CALC_UV0] = data_object->object_data;
+    return 0;
+}
+void pspl_calc_chain_bind(const pspl_runtime_psplc_t* object) {
+    CHAIN_POS = NULL;
+    memset(CHAIN_UV, 0, sizeof(void*)*MAX_CALC_UVS);
+    pspl_runtime_enumerate_integer_embedded_data_objects(object, enumerate_chains, NULL);
 }
 
 void pspl_calc_chain_set_dynamic_transform(const char* bind_name,
@@ -658,9 +667,14 @@ void pspl_calc_chain_set_dynamic_perspective(const char* bind_name,
     
 }
 
-void pspl_calc_chain_load() {
-    if (CHAIN_DATA) {
-        
+void pspl_calc_chain_flush() {
+    if (CHAIN_POS)
+        cache_chain(CHAIN_POS);
+    
+    int i;
+    for (i=0 ; i<MAX_CALC_UVS ; ++i) {
+        if (CHAIN_UV[i])
+            cache_chain(CHAIN_UV[i]);
     }
 }
 

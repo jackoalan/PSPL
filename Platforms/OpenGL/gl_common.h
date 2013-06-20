@@ -15,10 +15,10 @@ enum gl_object {
     GL_FRAGMENT_SOURCE = 3
 };
 
-typedef struct {
-    uint8_t uv_attr_count;
+typedef struct __attribute__ ((__packed__)) {
+    uint8_t uv_attr_count, texmap_count;
     uint8_t depth_write, depth_test;
-    uint8_t blending;
+    uint8_t blending, source_factor, dest_factor;
 } gl_config_t;
 //typedef DEF_BI_OBJ_TYPE(gl_config_t) gl_config_bi_t;
 

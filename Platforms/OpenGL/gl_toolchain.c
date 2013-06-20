@@ -54,8 +54,7 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
     
     // Modelview transform uniform
     pspl_buffer_addstr(vert, "uniform mat4 modelview_mat;\n");
-    if (ir_state->vertex.generate_normal)
-        pspl_buffer_addstr(vert, "uniform mat4 modelview_invtrans_mat;\n");
+    pspl_buffer_addstr(vert, "uniform mat4 modelview_invtrans_mat;\n");
     
     // Projection transform uniform
     pspl_buffer_addstr(vert, "uniform mat4 projection_mat;\n");
@@ -74,8 +73,7 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
     pspl_buffer_addstr(vert, "attribute vec4 pos;\n");
     
     // Normal attribute
-    if (ir_state->vertex.generate_normal)
-        pspl_buffer_addstr(vert, "attribute vec4 norm;\n");
+    pspl_buffer_addstr(vert, "attribute vec4 norm;\n");
     
     // Texcoord attributes
     for (j=0 ; j<ir_state->total_uv_attr_count ; ++j) {
@@ -88,8 +86,7 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
     
     
     // Varying normal
-    if (ir_state->vertex.generate_normal)
-        pspl_buffer_addstr(vert, "varying HIGHPREC vec4 normal;\n");
+    pspl_buffer_addstr(vert, "varying HIGHPREC vec4 normal;\n");
     
     // Varying texcoord linkages
     char varying_str[64];
@@ -105,8 +102,7 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
     pspl_buffer_addstr(vert, "    gl_Position = projection_mat * modelview_mat * pos;\n");
     
     // Normal
-    if (ir_state->vertex.generate_normal)
-        pspl_buffer_addstr(vert, "    normal = modelview_invtrans_mat * norm;\n");
+    pspl_buffer_addstr(vert, "    normal = modelview_invtrans_mat * norm;\n");
     
     // Texcoords
     for (j=0 ; j<ir_state->vertex.tc_count ; ++j) {
@@ -143,8 +139,7 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
     
     
     // Varying normal
-    if (ir_state->vertex.generate_normal)
-        pspl_buffer_addstr(frag, "varying HIGHPREC vec4 normal;\n");
+    pspl_buffer_addstr(frag, "varying HIGHPREC vec4 normal;\n");
     
     // Varying texcoord linkages
     char varying_str[64];
@@ -165,29 +160,12 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
     
     // Stage output variables
     pspl_buffer_addstr(frag, "    LOWPREC vec4 stage_main;\n");
-    pspl_malloc_context_t name_tracker;
-    pspl_malloc_context_init(&name_tracker);
     for (j=0 ; j<ir_state->fragment.stage_count ; ++j) {
-        int k;
-        int found = 0;
-        const pspl_ir_fragment_stage_t* stage = &ir_state->fragment.stage_array[j];
-        if (stage->stage_output == OUT_SIDECHAIN) {
-            for (k=0 ; k<name_tracker.object_num ; ++k) {
-                if (!strcmp(name_tracker.object_arr[k], stage->side_out_name)) {
-                    found = 1;
-                    break;
-                }
-            }
-            if (!found) {
-                char* name = pspl_malloc_malloc(&name_tracker, strlen(stage->side_out_name)+1);
-                strlcpy(name, stage->side_out_name, strlen(stage->side_out_name)+1);
-            }
+        if (ir_state->fragment.stage_array[j].stage_output == OUT_SIDECHAIN) {
+            char sidedef[64];
+            snprintf(sidedef, 64, "    LOWPREC vec4 stage_side_%d;\n", j);
+            pspl_buffer_addstr(frag, sidedef);
         }
-    }
-    for (j=0 ; j<name_tracker.object_num ; ++j) {
-        char sidedef[64];
-        snprintf(sidedef, 64, "    LOWPREC vec4 stage_side_%s;\n", name_tracker.object_arr[j]);
-        pspl_buffer_addstr(frag, sidedef);
     }
     pspl_buffer_addstr(frag, "\n");
         
@@ -204,7 +182,7 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
         if (stage->stage_output == OUT_MAIN)
             snprintf(stagedecl, 64, "stage_main");
         else if (stage->stage_output == OUT_SIDECHAIN)
-            snprintf(stagedecl, 64, "stage_side_%s", stage->side_out_name);
+            snprintf(stagedecl, 64, "stage_side_%d", j);
         
         char stagesources[3][64];
         int s;
@@ -224,7 +202,7 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
             else if (stage->sources[s] == IN_MAIN)
                 snprintf(stagesources[s], 64, "stage_main");
             else if (stage->sources[s] == IN_SIDECHAIN)
-                snprintf(stagesources[s], 64, "stage_side_%s", stage->side_in_names[s]);
+                snprintf(stagesources[s], 64, "stage_side_%d", stage->side_in_indices[s]);
         }
         
         char stagedef[64];
@@ -253,9 +231,7 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
     
     
     pspl_buffer_addstr(frag, "}\n\n");
-    
-    pspl_malloc_context_destroy(&name_tracker);
-    
+        
 }
 
 static void generate_hook(const pspl_toolchain_context_t* driver_context,
@@ -264,9 +240,12 @@ static void generate_hook(const pspl_toolchain_context_t* driver_context,
     // Config structure
     gl_config_t config = {
         .uv_attr_count = ir_state->total_uv_attr_count,
+        .texmap_count = ir_state->total_texmap_count,
         .depth_write = ir_state->depth.write,
         .depth_test = ir_state->depth.test,
-        .blending = ir_state->blend.blending
+        .blending = ir_state->blend.blending,
+        .source_factor = ir_state->blend.source_factor,
+        .dest_factor = ir_state->blend.dest_factor
     };
     pspl_embed_platform_integer_keyed_object(GL_CONFIG_STRUCT, &config, &config, sizeof(gl_config_t));
     
@@ -275,7 +254,7 @@ static void generate_hook(const pspl_toolchain_context_t* driver_context,
     pspl_buffer_init(&vert_buf, 2048);
     generate_vertex(driver_context, ir_state, &vert_buf);
     pspl_embed_platform_integer_keyed_object(GL_VERTEX_SOURCE, vert_buf.buf, vert_buf.buf,
-                                             vert_buf.buf_cur - vert_buf.buf);
+                                             vert_buf.buf_cur - vert_buf.buf + 1);
     pspl_buffer_free(&vert_buf);
     
     // Fragment shader
@@ -283,7 +262,7 @@ static void generate_hook(const pspl_toolchain_context_t* driver_context,
     pspl_buffer_init(&frag_buf, 2048);
     generate_fragment(driver_context, ir_state, &frag_buf);
     pspl_embed_platform_integer_keyed_object(GL_FRAGMENT_SOURCE, frag_buf.buf, frag_buf.buf,
-                                             frag_buf.buf_cur - frag_buf.buf);
+                                             frag_buf.buf_cur - frag_buf.buf + 1);
     pspl_buffer_free(&frag_buf);
     
 }

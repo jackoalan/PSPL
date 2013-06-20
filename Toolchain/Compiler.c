@@ -484,7 +484,7 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
                 bullet = PSPL_BULLET_DASH;
             else if (*line_start == '+')
                 bullet = PSPL_BULLET_PLUS;
-            else if ((bullet = atoi(line_start))) {
+            else if ((bullet = strtol(line_start, NULL, 10))) {
                 bullet &= ~PSPL_BULLET_MASK;
                 char* dot = strchr(line_start, '.');
                 if (dot)
