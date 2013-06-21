@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <PSPLExtension.h>
+#include <PSPL/PSPL_IR.h>
 #include "gl_common.h"
 
 static const char* GLES_HEAD = "#define GLES\n";
@@ -92,6 +93,11 @@ static void load_object(pspl_runtime_psplc_t* object) {
     }
     glUseProgram(object->native_shader.program);
     
+    // Matrix uniforms
+    object->native_shader.mv_mtx_uni = glGetUniformLocation(object->native_shader.program, "modelview_mat");
+    object->native_shader.mv_invxpose_uni = glGetUniformLocation(object->native_shader.program, "modelview_invtrans_mat");
+    object->native_shader.tc_genmtx_arr = glGetUniformLocation(object->native_shader.program, "tc_generator_mats");
+    
     // Texture map uniforms
     GLint texs_uniform = glGetUniformLocation(object->native_shader.program, "texs");
     if (texs_uniform >= 0) {
@@ -110,6 +116,7 @@ static void unload_object(pspl_runtime_psplc_t* object) {
     
 }
 
+static pspl_platform_shader_object_t* bound_shader = NULL;
 static void bind_object(pspl_runtime_psplc_t* object) {
     
     glUseProgram(object->native_shader.program);
@@ -155,6 +162,32 @@ static void bind_object(pspl_runtime_psplc_t* object) {
     } else if (object->native_shader.config->blending == DISABLED)
         glDisable(GL_BLEND);
     
+    bound_shader = &object->native_shader;
+    
+}
+
+/* PSPL-IR routines */
+static int cur_mtx = 0;
+static GLfloat matrices[MAX_CALC_UVS][3][4];
+static GLfloat bottom_row[4] = {0,0,0,1};
+void pspl_ir_load_pos_mtx(pspl_matrix34_t* mtx) {
+    memcpy(&matrices[0], mtx, sizeof(pspl_matrix34_t));
+    memcpy(&matrices[0][3], bottom_row, sizeof(pspl_vector4_t));
+    glUniformMatrix4fv(bound_shader->mv_mtx_uni, 1, GL_TRUE, &matrices[0][0][0]);
+}
+void pspl_ir_load_norm_mtx(pspl_matrix34_t* mtx) {
+    memcpy(&matrices[0], mtx, sizeof(pspl_matrix34_t));
+    memcpy(&matrices[0][3], bottom_row, sizeof(pspl_vector4_t));
+    glUniformMatrix4fv(bound_shader->mv_invxpose_uni, 1, GL_TRUE, &matrices[0][0][0]);
+}
+void pspl_ir_load_uv_mtx(pspl_matrix34_t* mtx) {
+    memcpy(&matrices[cur_mtx], mtx, sizeof(pspl_matrix34_t));
+    memcpy(&matrices[cur_mtx][3], bottom_row, sizeof(pspl_vector4_t));
+    ++cur_mtx;
+}
+void pspl_ir_load_finish() {
+    glUniformMatrix4fv(bound_shader->tc_genmtx_arr, cur_mtx, GL_TRUE, &matrices[0][0][0]);
+    cur_mtx = 0;
 }
 
 pspl_runtime_platform_t GL2_runplat = {

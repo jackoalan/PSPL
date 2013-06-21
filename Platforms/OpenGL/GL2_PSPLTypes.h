@@ -32,6 +32,10 @@ typedef struct {
     // Config structure
     gl_config_t* config;
     
+    // Uniforms
+    GLint mv_mtx_uni, mv_invxpose_uni;
+    GLint tc_genmtx_arr;
+    
 } GL2_shader_object_t;
 
 #endif

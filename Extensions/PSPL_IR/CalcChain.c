@@ -204,9 +204,6 @@ enum object_idxs {
     CALC_UV0          = 1
 };
 
-/* Maximum UV chains */
-#define MAX_CALC_UVS 16
-
 typedef struct {
     
     // Chain link count
@@ -284,7 +281,6 @@ typedef DEF_BI_OBJ_TYPE(pspl_calc_dynamic_link_t) pspl_calc_dynamic_link_bi_t;
 
 void pspl_calc_chain_init(pspl_calc_chain_t* chain) {
     pspl_malloc_context_init(&chain->mem_ctx);
-    chain->using_perspective = 0;
 }
 void pspl_calc_chain_destroy(pspl_calc_chain_t* chain) {
     pspl_malloc_context_destroy(&chain->mem_ctx);
@@ -343,24 +339,7 @@ void pspl_calc_chain_add_dynamic_translation(pspl_calc_chain_t* chain,
     link->use = LINK_USE_DYNAMIC;
     strlcpy(link->link_dynamic_bind_name, bind_name, IR_NAME_LEN);
 }
-void pspl_calc_chain_add_static_perspective(pspl_calc_chain_t* chain,
-                                            const pspl_perspective_t* persp) {
-    if (chain->using_perspective)
-        pspl_error(-1, "Already specified perspective chain", "unable to specify twice");
-    chain->using_perspective = 1;
-    pspl_calc_link_t* link = &chain->perspective_link;
-    link->use = LINK_USE_STATIC;
-    build_persp_matrix(&link->matrix_value, persp);
-}
-void pspl_calc_chain_add_dynamic_perspective(pspl_calc_chain_t* chain,
-                                             const char* bind_name) {
-    if (chain->using_perspective)
-        pspl_error(-1, "Already specified perspective chain", "unable to specify twice");
-    chain->using_perspective = 1;
-    pspl_calc_link_t* link = &chain->perspective_link;
-    link->use = LINK_USE_DYNAMIC;
-    strlcpy(link->link_dynamic_bind_name, bind_name, IR_NAME_LEN);
-}
+
 
 static void fold_chain(pspl_calc_chain_t* chain, void** big_data_out,
                        void** little_data_out, size_t* size_out) {
@@ -369,15 +348,6 @@ static void fold_chain(pspl_calc_chain_t* chain, void** big_data_out,
     // Calculate size of data chain
     unsigned link_count = 0;
     size_t chain_size = sizeof(pspl_calc_chain_head_t);
-    if (chain->using_perspective) {
-        if (chain->perspective_link.use == LINK_USE_STATIC) {
-            chain_size += sizeof(pspl_calc_static_link_t);
-            ++link_count;
-        } else if (chain->perspective_link.use == LINK_USE_DYNAMIC) {
-            chain_size += sizeof(pspl_calc_dynamic_link_t);
-            ++link_count;
-        }
-    }
     pspl_calc_link_t* prev_link = NULL;
     for (i=chain->mem_ctx.object_num-1 ; i>=0 ; --i) {
         pspl_calc_link_t* link = chain->mem_ctx.object_arr[i];
@@ -395,28 +365,6 @@ static void fold_chain(pspl_calc_chain_t* chain, void** big_data_out,
     pspl_malloc_context_t string_table_ctx;
     pspl_malloc_context_init(&string_table_ctx);
     size_t str_table_size = 0;
-    if (chain->using_perspective) {
-        if (chain->perspective_link.use == LINK_USE_DYNAMIC) {
-            uint8_t found = 0;
-            for (j=0 ; j<string_table_ctx.object_num ; ++j) {
-                if (!strcmp(string_table_ctx.object_arr[j] + sizeof(uint32_t),
-                            chain->perspective_link.link_dynamic_bind_name)) {
-                    found = 1;
-                    break;
-                }
-            }
-            if (!found) {
-                void* buf = pspl_malloc_malloc(&string_table_ctx, sizeof(uint32_t) +
-                                               strlen(chain->perspective_link.link_dynamic_bind_name)+1);
-                uint32_t* offset = buf;
-                *offset = (uint32_t)str_table_size;
-                char* string = buf + sizeof(uint32_t);
-                strlcpy(string, chain->perspective_link.link_dynamic_bind_name,
-                        strlen(chain->perspective_link.link_dynamic_bind_name)+1);
-                str_table_size += strlen(chain->perspective_link.link_dynamic_bind_name)+1;
-            }
-        }
-    }
     for (i=chain->mem_ctx.object_num-1 ; i>=0 ; --i) {
         pspl_calc_link_t* link = chain->mem_ctx.object_arr[i];
         if (link->use == LINK_USE_DYNAMIC) {
@@ -457,62 +405,6 @@ static void fold_chain(pspl_calc_chain_t* chain, void** big_data_out,
     little_cur += sizeof(pspl_calc_chain_head_t);
     
     // Concatenate links into data chain
-    
-    // First, store perspective projection link (if provided)
-    if (chain->using_perspective) {
-        if (chain->perspective_link.use == LINK_USE_STATIC) {
-            
-            pspl_calc_static_link_bi_t persp_static;
-            memset(&persp_static, 0, sizeof(pspl_calc_static_link_bi_t));
-            SET_BI_U16(persp_static, zero, 0);
-            memcpy(&persp_static.native.matrix, &chain->perspective_link.matrix_value, sizeof(pspl_matrix34_t));
-            matrix34_byte_swap(&persp_static.swapped.matrix, &persp_static.native.matrix);
-            persp_static.native.matrix_pad.vector[0] = 0;
-            persp_static.native.matrix_pad.vector[1] = 0;
-            persp_static.native.matrix_pad.vector[2] = -1;
-            persp_static.native.matrix_pad.vector[3] = 0;
-            vector4_byte_swap(&persp_static.swapped.matrix_pad, &persp_static.native.matrix_pad);
-            persp_static.native.concat_matrix_pad.vector[0] = 0;
-            persp_static.native.concat_matrix_pad.vector[1] = 0;
-            persp_static.native.concat_matrix_pad.vector[2] = -1;
-            persp_static.native.concat_matrix_pad.vector[3] = 0;
-            vector4_byte_swap(&persp_static.swapped.concat_matrix_pad, &persp_static.native.concat_matrix_pad);
-            memcpy(big_cur, &persp_static.big, sizeof(pspl_calc_static_link_t));
-            big_cur += sizeof(pspl_calc_static_link_t);
-            memcpy(little_cur, &persp_static.little, sizeof(pspl_calc_static_link_t));
-            little_cur += sizeof(pspl_calc_static_link_t);
-            
-        } else if (chain->perspective_link.use == LINK_USE_DYNAMIC) {
-            
-            pspl_calc_dynamic_link_bi_t persp_dynamic;
-            memset(&persp_dynamic, 0, sizeof(pspl_calc_dynamic_link_bi_t));
-            SET_BI_U16(persp_dynamic, one, 1);
-            for (j=0 ; j<string_table_ctx.object_num ; ++j) {
-                if (!strcmp(string_table_ctx.object_arr[j] + sizeof(uint32_t),
-                            chain->perspective_link.link_dynamic_bind_name)) {
-                    SET_BI_U16(persp_dynamic, name_offset, *(uint32_t*)string_table_ctx.object_arr[j]);
-                    break;
-                }
-            }
-            persp_dynamic.native.matrix_pad.vector[0] = 0;
-            persp_dynamic.native.matrix_pad.vector[1] = 0;
-            persp_dynamic.native.matrix_pad.vector[2] = -1;
-            persp_dynamic.native.matrix_pad.vector[3] = 0;
-            vector4_byte_swap(&persp_dynamic.swapped.matrix_pad, &persp_dynamic.native.matrix_pad);
-            persp_dynamic.native.concat_matrix_pad.vector[0] = 0;
-            persp_dynamic.native.concat_matrix_pad.vector[1] = 0;
-            persp_dynamic.native.concat_matrix_pad.vector[2] = -1;
-            persp_dynamic.native.concat_matrix_pad.vector[3] = 0;
-            vector4_byte_swap(&persp_dynamic.swapped.concat_matrix_pad, &persp_dynamic.native.concat_matrix_pad);
-            memcpy(big_cur, &persp_dynamic.big, sizeof(pspl_calc_dynamic_link_t));
-            big_cur += sizeof(pspl_calc_dynamic_link_t);
-            memcpy(little_cur, &persp_dynamic.little, sizeof(pspl_calc_dynamic_link_t));
-            little_cur += sizeof(pspl_calc_dynamic_link_t);
-            
-        }
-    }
-    
-    // Next, store orthographic transformation links
     prev_link = NULL;
     for (i=chain->mem_ctx.object_num-1 ; i>=0 ; --i) {
         pspl_calc_link_t* link = chain->mem_ctx.object_arr[i];
@@ -522,6 +414,7 @@ static void fold_chain(pspl_calc_chain_t* chain, void** big_data_out,
             pspl_calc_static_link_bi_t trans_static;
             memset(&trans_static, 0, sizeof(pspl_calc_static_link_bi_t));
             SET_BI_U16(trans_static, zero, 0);
+            SET_BI_U16(trans_static, cache_valid, 0);
             memcpy(&trans_static.native.matrix, &link->matrix_value, sizeof(pspl_matrix34_t));
             matrix34_byte_swap(&trans_static.swapped.matrix, &trans_static.native.matrix);
             trans_static.native.matrix_pad.vector[0] = 0;
@@ -572,6 +465,9 @@ static void fold_chain(pspl_calc_chain_t* chain, void** big_data_out,
                     break;
                 }
             }
+            SET_BI_U16(trans_dynamic, cache_valid, 0);
+            memcpy(&trans_dynamic.native.matrix, &identity_mtx, sizeof(pspl_matrix34_t));
+            matrix34_byte_swap(&trans_dynamic.swapped.matrix, &trans_dynamic.native.matrix);
             trans_dynamic.native.matrix_pad.vector[0] = 0;
             trans_dynamic.native.matrix_pad.vector[1] = 0;
             trans_dynamic.native.matrix_pad.vector[2] = 0;
@@ -626,8 +522,71 @@ void pspl_calc_chain_write_uv(pspl_calc_chain_t* chain, unsigned uv_idx) {
 #elif PSPL_RUNTIME
 #pragma mark Runtime
 
-static void cache_chain(void* chain_data) {
+static pspl_matrix34_t* cache_chain(void* chain_data) {
+    pspl_calc_chain_head_t* head = chain_data;
+    void* data_cur = chain_data + sizeof(pspl_calc_chain_head_t);
+    int i;
     
+    if (!head->link_count)
+        return NULL;
+    
+    int cache_invalid = 0;
+    pspl_matrix34_t* prev_mtx = NULL;
+    for (i=0 ; i<head->link_count ; ++i) {
+        uint16_t* decider = data_cur;
+        if (*decider) {
+            // Dynamic
+            pspl_calc_dynamic_link_t* link = data_cur;
+            if (cache_invalid || !link->cache_valid) {
+                cache_invalid = 1;
+                if (prev_mtx)
+                    matrix34_mul(prev_mtx, &link->matrix, &link->concat_matrix);
+                link->cache_valid = 1;
+            }
+            if (prev_mtx)
+                prev_mtx = &link->concat_matrix;
+            else
+                prev_mtx = &link->matrix;
+        } else {
+            // Static
+            pspl_calc_static_link_t* link = data_cur;
+            if (cache_invalid || !link->cache_valid) {
+                cache_invalid = 1;
+                if (prev_mtx)
+                    matrix34_mul(prev_mtx, &link->matrix, &link->concat_matrix);
+                link->cache_valid = 1;
+            }
+            if (prev_mtx)
+                prev_mtx = &link->concat_matrix;
+            else
+                prev_mtx = &link->matrix;
+        }
+    }
+    
+    return prev_mtx;
+}
+
+static void set_chain_dynamic(void* chain_data, const char* bind_name,
+                              const pspl_matrix34_t* matrix) {
+    pspl_calc_chain_head_t* head = chain_data;
+    void* data_cur = chain_data + sizeof(pspl_calc_chain_head_t);
+    int i;
+    
+    if (!head->link_count)
+        return;
+    
+    for (i=0 ; i<head->link_count ; ++i) {
+        uint16_t* decider = data_cur;
+        if (*decider) {
+            // Dynamic
+            pspl_calc_dynamic_link_t* link = data_cur;
+            if (!strcasecmp(chain_data + head->str_table_off +
+                            link->name_offset, bind_name)) {
+                memcpy(&link->matrix, matrix, sizeof(pspl_matrix34_t));
+                link->cache_valid = 0;
+            }
+        }
+    }
 }
 
 static void* CHAIN_POS = NULL;
@@ -648,34 +607,59 @@ void pspl_calc_chain_bind(const pspl_runtime_psplc_t* object) {
 
 void pspl_calc_chain_set_dynamic_transform(const char* bind_name,
                                            const pspl_matrix34_t* matrix) {
-    
-}
-void pspl_calc_chain_set_dynamic_scale(const char* bind_name,
-                                       const pspl_vector3_t* scale_vector) {
-    
-}
-void pspl_calc_chain_set_dynamic_rotation(const char* bind_name,
-                                          const pspl_rotation_t* rotation) {
-    
-}
-void pspl_calc_chain_set_dynamic_translation(const char* bind_name,
-                                             const pspl_vector3_t* vector) {
-    
-}
-void pspl_calc_chain_set_dynamic_perspective(const char* bind_name,
-                                             const pspl_perspective_t* persp) {
-    
-}
-
-void pspl_calc_chain_flush() {
     if (CHAIN_POS)
-        cache_chain(CHAIN_POS);
+        set_chain_dynamic(CHAIN_POS, bind_name, matrix);
     
     int i;
     for (i=0 ; i<MAX_CALC_UVS ; ++i) {
         if (CHAIN_UV[i])
-            cache_chain(CHAIN_UV[i]);
+            set_chain_dynamic(CHAIN_UV[i], bind_name, matrix);
     }
+}
+void pspl_calc_chain_set_dynamic_scale(const char* bind_name,
+                                       const pspl_vector3_t* scale_vector) {
+    pspl_matrix34_t mtx;
+    memcpy(&mtx, &identity_mtx, sizeof(pspl_matrix34_t));
+    mtx.matrix[0][0] = scale_vector->vector[0];
+    mtx.matrix[1][1] = scale_vector->vector[1];
+    mtx.matrix[2][2] = scale_vector->vector[2];
+    pspl_calc_chain_set_dynamic_transform(bind_name, &mtx);
+}
+void pspl_calc_chain_set_dynamic_rotation(const char* bind_name,
+                                          const pspl_rotation_t* rotation) {
+    pspl_matrix34_t mtx;
+    build_rotation_matrix(&mtx, rotation);
+    pspl_calc_chain_set_dynamic_transform(bind_name, &mtx);
+}
+void pspl_calc_chain_set_dynamic_translation(const char* bind_name,
+                                             const pspl_vector3_t* vector) {
+    pspl_matrix34_t mtx;
+    memcpy(&mtx, &identity_mtx, sizeof(pspl_matrix34_t));
+    mtx.matrix[0][3] = vector->vector[0];
+    mtx.matrix[1][3] = vector->vector[1];
+    mtx.matrix[2][3] = vector->vector[2];
+    pspl_calc_chain_set_dynamic_transform(bind_name, &mtx);
+}
+
+/* Platform-implemented matrix loading routines */
+extern void pspl_ir_load_pos_mtx(pspl_matrix34_t* mtx);
+extern void pspl_ir_load_norm_mtx(pspl_matrix34_t* mtx);
+extern void pspl_ir_load_uv_mtx(pspl_matrix34_t* mtx);
+extern void pspl_ir_load_finish();
+
+void pspl_calc_chain_flush() {
+    if (CHAIN_POS)
+        pspl_ir_load_pos_mtx(cache_chain(CHAIN_POS));
+    
+    // TODO: NORM MTX
+    
+    int i;
+    for (i=0 ; i<MAX_CALC_UVS ; ++i) {
+        if (CHAIN_UV[i])
+            pspl_ir_load_uv_mtx(cache_chain(CHAIN_UV[i]));
+    }
+    
+    pspl_ir_load_finish();
 }
 
 

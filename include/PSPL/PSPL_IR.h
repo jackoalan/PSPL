@@ -13,6 +13,9 @@
 
 #define IR_NAME_LEN 256
 
+/* Maximum UV chains */
+#define MAX_CALC_UVS 16
+
 #pragma mark CalcChain Interface
 
 #if PSPL_TOOLCHAIN
@@ -39,8 +42,6 @@ typedef struct {
 /* Calculation chain type */
 typedef struct {
     pspl_malloc_context_t mem_ctx;
-    uint8_t using_perspective;
-    pspl_calc_link_t perspective_link;
 } pspl_calc_chain_t;
 
 /* Routines provided by `PSPL-IR` toolchain extension */
@@ -62,10 +63,6 @@ void pspl_calc_chain_add_static_translation(pspl_calc_chain_t* chain,
                                             const pspl_vector3_t* trans_vector);
 void pspl_calc_chain_add_dynamic_translation(pspl_calc_chain_t* chain,
                                              const char* bind_name);
-void pspl_calc_chain_add_static_perspective(pspl_calc_chain_t* chain,
-                                            const pspl_perspective_t* persp);
-void pspl_calc_chain_add_dynamic_perspective(pspl_calc_chain_t* chain,
-                                             const char* bind_name);
 void pspl_calc_chain_write_position(pspl_calc_chain_t* chain);
 void pspl_calc_chain_write_normal(pspl_calc_chain_t* chain);
 void pspl_calc_chain_write_uv(pspl_calc_chain_t* chain, unsigned uv_idx);
@@ -84,8 +81,6 @@ void pspl_calc_chain_set_dynamic_rotation(const char* bind_name,
                                           const pspl_rotation_t* rotation);
 void pspl_calc_chain_set_dynamic_translation(const char* bind_name,
                                              const pspl_vector3_t* trans_vector);
-void pspl_calc_chain_set_dynamic_perspective(const char* bind_name,
-                                             const pspl_perspective_t* persp);
 void pspl_calc_chain_flush();
 
 #endif
@@ -135,7 +130,7 @@ typedef struct {
         IN_ZERO,     // Constant '0' value
         IN_ONE,      // Constant '1' value
         IN_TEXTURE,  // Sampled texel value
-        IN_LIGHTING, // Computed lighting channel value
+        IN_LIGHTING, // Computed lighting channel value // NOT USED QUITE YET!!!
         IN_COLOUR,   // Specified constant colour value (from parent stage structure)
         IN_MAIN,     // Previous-stage-output main value
         IN_SIDECHAIN // Previous-stage-output sidechain value
@@ -152,7 +147,7 @@ typedef struct {
     uint8_t using_indirect;
     pspl_ir_texture_t stage_indtexmap;
     
-    // Lighting channel index
+    // Lighting channel index // NOT USED QUITE YET!!!
     unsigned stage_lightchan_idx;
     
     // Constant colour (for stage source 'IN_COLOUR')

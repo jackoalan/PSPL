@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		E43B8EBB174DC28900F8C5FB /* BuiltinsToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DB173462A800B8CDD1 /* BuiltinsToolchain.c */; };
-		E447F7F71773AC310081E1DF /* CalcChain.c in Sources */ = {isa = PBXBuildFile; fileRef = E49E051C176A04AA002E1492 /* CalcChain.c */; };
 		E45034CE175813440079B62D /* libTEST-RUNTIME.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E4E4918017510B35006FCA59 /* libTEST-RUNTIME.a */; };
 		E45034CF175813490079B62D /* test_mac.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034B9175811FB0079B62D /* test_mac.c */; };
 		E45034D11758153E0079B62D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45034D01758153E0079B62D /* OpenGL.framework */; };
@@ -710,7 +709,6 @@
 				E45034F3175D80FA0079B62D /* pspl_tm_config.c in Sources */,
 				E45034F51760DC220079B62D /* rgb_enc.c in Sources */,
 				E48FF5601764CF29000231AA /* IRToolchain.c in Sources */,
-				E447F7F71773AC310081E1DF /* CalcChain.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
