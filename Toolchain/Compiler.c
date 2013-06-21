@@ -110,10 +110,7 @@ void pspl_embed_platform_hash_keyed_object(const char* key,
                                            const void* little_object,
                                            const void* big_object,
                                            size_t object_size) {
-    if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
-        driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
-        driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
-        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
+    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_PLATFORM)
         return;
     if (!driver_state.indexer_ctx)
         return;
@@ -128,10 +125,7 @@ void pspl_embed_platform_integer_keyed_object(uint32_t key,
                                               const void* little_object,
                                               const void* big_object,
                                               size_t object_size) {
-    if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
-        driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
-        driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
-        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
+    if (driver_state.pspl_phase != PSPL_PHASE_COMPILE_PLATFORM)
         return;
     if (!driver_state.indexer_ctx)
         return;
@@ -854,6 +848,7 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             // Free resources
             free(com_name);
             free(tok_read_in);
+            continue;
             
         }
         
@@ -954,12 +949,19 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
         }
     }
     
-
+    // Write chains into PSPLC
+    pspl_calc_chain_write_position(&pspl_ir_state.vertex.pos_chain);
+    for (i=0 ; i<pspl_ir_state.vertex.tc_count ; ++i)
+        pspl_calc_chain_write_uv(&pspl_ir_state.vertex.tc_array[i].tc_chain, i);
     
+    // Have platforms generate their PSPLC contributions
     for (i=0 ; i<driver_opts->platform_c ; ++i) {
         const pspl_platform_t* plat = driver_opts->platform_a[i];
         if (plat && plat->toolchain_platform && plat->toolchain_platform->generate_hook) {
             driver_state.proc_platform = plat;
+            
+            
+            
             plat->toolchain_platform->generate_hook(ext_driver_ctx, &pspl_ir_state);
         }
     }

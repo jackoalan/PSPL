@@ -547,6 +547,7 @@ static pspl_matrix34_t* cache_chain(void* chain_data) {
                 prev_mtx = &link->concat_matrix;
             else
                 prev_mtx = &link->matrix;
+            data_cur += sizeof(pspl_calc_dynamic_link_t);
         } else {
             // Static
             pspl_calc_static_link_t* link = data_cur;
@@ -560,6 +561,7 @@ static pspl_matrix34_t* cache_chain(void* chain_data) {
                 prev_mtx = &link->concat_matrix;
             else
                 prev_mtx = &link->matrix;
+            data_cur += sizeof(pspl_calc_static_link_t);
         }
     }
     
@@ -585,7 +587,9 @@ static void set_chain_dynamic(void* chain_data, const char* bind_name,
                 memcpy(&link->matrix, matrix, sizeof(pspl_matrix34_t));
                 link->cache_valid = 0;
             }
-        }
+            data_cur += sizeof(pspl_calc_dynamic_link_t);
+        } else
+            data_cur += sizeof(pspl_calc_static_link_t);
     }
 }
 

@@ -113,6 +113,13 @@ typedef struct {
 typedef int(*pspl_toolchain_init_hook)(const pspl_toolchain_context_t* driver_context);
 
 /**
+ * Pre-platform generate hook type
+ *
+ * Called for each extension *just before* platforms have their generate hooks called
+ */
+typedef void(*pspl_toolchain_pre_platform_hook)(const pspl_toolchain_context_t* driver_context);
+
+/**
  * Finish hook type
  *
  * Called at the end of *one* PSPL source compiling
@@ -347,7 +354,9 @@ typedef struct _pspl_toolchain_extension {
     
     // Hook fields
     pspl_toolchain_init_hook init_hook;
+    
     pspl_toolchain_finish_hook finish_hook;
+    //pspl_toolchain_pre_platform_hook pre_platform_hook;
     pspl_toolchain_copyright_hook copyright_hook;
     pspl_toolchain_subext_hook subext_hook;
     pspl_toolchain_line_preprocessor_hook line_preprocessor_hook;

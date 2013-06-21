@@ -28,8 +28,11 @@ static int init(const pspl_toolchain_context_t* driver_context) {
     
     pspl_ir_state.vertex.in_matrix_def = 0;
     pspl_ir_state.vertex.tc_count = 0;
-    for (i=0 ; i<MAX_TEX_COORDS ; ++i)
+    pspl_calc_chain_init(&pspl_ir_state.vertex.pos_chain);
+    for (i=0 ; i<MAX_TEX_COORDS ; ++i) {
         pspl_ir_state.vertex.tc_array[i].resolved_name_idx = -1;
+        pspl_calc_chain_init(&pspl_ir_state.vertex.tc_array[i].tc_chain);
+    }
     
     pspl_ir_state.depth.test = PLATFORM;
     pspl_ir_state.depth.write = PLATFORM;
@@ -152,7 +155,7 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
     }
     
     
-    if (current_heading->heading_level == 2) {
+    if (current_heading->heading_level == 1) {
         
         if (is_vert(current_heading->heading_trace->heading_name)) {
             
@@ -210,7 +213,7 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                 
                 if (command_argc == 1) {
                     pspl_calc_chain_add_dynamic_rotation(cur_chain, command_argv[0]);
-                } else if (command_argc == 3) {
+                } else if (command_argc == 4) {
                     pspl_rotation_t rot = {
                         strtof(command_argv[0], NULL),
                         strtof(command_argv[1], NULL),
@@ -243,9 +246,14 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
             
         }
         
-    } else if (current_heading->heading_level == 1) {
+    } else if (current_heading->heading_level == 0) {
         
-        if (!strcasecmp(current_heading->heading_name, "DEPTH")) {
+        if (is_vert(current_heading->heading_name)) {
+            
+            pspl_error(-1, "Invalid VERTEX heading usage",
+                       "under VERTEX heading, an applied usage sub-heading must be specified (POSITION, TEXCOORD)");
+            
+        } else if (!strcasecmp(current_heading->heading_name, "DEPTH")) {
             
             if (is_test(command_name)) {
                 if (!command_argc)
@@ -639,7 +647,7 @@ static void line_read(const pspl_toolchain_context_t* driver_context,
                       const char* line_text) {
     int i;
     
-    if (current_heading->heading_level == 2) {
+    if (current_heading->heading_level == 1) {
         
         if (is_vert(current_heading->heading_trace->heading_name)) {
             
@@ -652,7 +660,7 @@ static void line_read(const pspl_toolchain_context_t* driver_context,
                 if (*line_text == '-') {
                     while (*line_text == ' ' || *line_text == '\t' || *line_text == '-')
                         ++line_text;
-                    if (*line_text == '\0')
+                    if (*line_text == '\0' || *line_text == '\n')
                         return;
                     else
                         pspl_error(-1, "Invalid matrix border line",
@@ -665,7 +673,7 @@ static void line_read(const pspl_toolchain_context_t* driver_context,
                 for (i=0 ; i<4 ; ++i) {
                     while (*line_text == ' ' || *line_text == '\t' || *line_text == '|')
                         ++line_text;
-                    if (*line_text == '\0')
+                    if (*line_text == '\0' || *line_text == '\n')
                         pspl_error(-1, "Insufficient matrix columns defined",
                                    "there needs to be 4 columns in each matrix row");
                     pspl_ir_state.vertex.matrix.matrix[pspl_ir_state.vertex.matrix_row_count][i] =
@@ -679,7 +687,7 @@ static void line_read(const pspl_toolchain_context_t* driver_context,
             
         }
         
-    } else if (current_heading->heading_level == 1) {
+    } else if (current_heading->heading_level == 0) {
         
         if (is_fragment(current_heading->heading_name)) {
             
@@ -695,12 +703,14 @@ static void line_read(const pspl_toolchain_context_t* driver_context,
                     if (*line_text == '-') {
                         
                         pspl_ir_state.fragment.def_stage_op = OP_SUB;
+                        pspl_ir_state.fragment.stage_array[pspl_ir_state.fragment.stage_count].stage_op = OP_SUB;
+                        pspl_ir_state.fragment.stage_array[pspl_ir_state.fragment.stage_count].sources[0] = IN_MAIN;
                         ++pspl_ir_state.fragment.def_stage_op_idx;
 
                         while (*line_text == ' ' || *line_text == '\t' || *line_text == '-')
                             ++line_text;
                         
-                        if (*line_text == '\0') {
+                        if (*line_text == '\0' || *line_text == '\n') {
                             
                             return;
                             
@@ -716,11 +726,13 @@ static void line_read(const pspl_toolchain_context_t* driver_context,
                     } else {
                         
                         pspl_ir_state.fragment.def_stage_op = OP_ADD;
+                        pspl_ir_state.fragment.stage_array[pspl_ir_state.fragment.stage_count].stage_op = OP_ADD;
+                        pspl_ir_state.fragment.stage_array[pspl_ir_state.fragment.stage_count].sources[0] = IN_MAIN;
                         ++pspl_ir_state.fragment.def_stage_op_idx;
 
                         while (*line_text == ' ' || *line_text == '\t' || *line_text == '+')
                             ++line_text;
-                        if (*line_text == '\0') {
+                        if (*line_text == '\0' || *line_text == '\n') {
                             
                             return;
                             
@@ -740,11 +752,13 @@ static void line_read(const pspl_toolchain_context_t* driver_context,
                 else if (*line_text == '*') {
                     
                     pspl_ir_state.fragment.def_stage_op = OP_MUL;
+                    pspl_ir_state.fragment.stage_array[pspl_ir_state.fragment.stage_count].stage_op = OP_MUL;
+                    pspl_ir_state.fragment.stage_array[pspl_ir_state.fragment.stage_count].sources[0] = IN_MAIN;
                     ++pspl_ir_state.fragment.def_stage_op_idx;
                     
                     while (*line_text == ' ' || *line_text == '\t' || *line_text == '*')
                         ++line_text;
-                    if (*line_text == '\0') {
+                    if (*line_text == '\0' || *line_text == '\n') {
                         
                         return;
                         
@@ -762,11 +776,13 @@ static void line_read(const pspl_toolchain_context_t* driver_context,
                 else if (*line_text == '%') {
                     
                     pspl_ir_state.fragment.def_stage_op = OP_BLEND;
+                    pspl_ir_state.fragment.stage_array[pspl_ir_state.fragment.stage_count].stage_op = OP_BLEND;
+                    pspl_ir_state.fragment.stage_array[pspl_ir_state.fragment.stage_count].sources[0] = IN_MAIN;
                     ++pspl_ir_state.fragment.def_stage_op_idx;
                     
                     while (*line_text == ' ' || *line_text == '\t' || *line_text == '%')
                         ++line_text;
-                    if (*line_text == '\0') {
+                    if (*line_text == '\0' || *line_text == '\n') {
                         
                         return;
                         
@@ -793,6 +809,13 @@ static void line_read(const pspl_toolchain_context_t* driver_context,
         
     }
     
+    // Whitespace lines are OK
+    while (*line_text == ' ' || *line_text == '\t')
+        ++line_text;
+    if (*line_text == '\0' || *line_text == '\n')
+        return;
+    
+    // Anything else is not
     pspl_error(-1, "Unrecognised line format", "PSPL-IR doesn't recognise `%s`", line_text);
     
 }
@@ -808,6 +831,7 @@ static const char* claimed_headings[] = {
 pspl_toolchain_extension_t PSPL_IR_toolext = {
     .copyright_hook = copyright_hook,
     .init_hook = init,
+    //.pre_platform_hook = pre_platform,
     .command_call_hook = command_call,
     .line_read_hook = line_read,
     .claimed_heading_names = claimed_headings

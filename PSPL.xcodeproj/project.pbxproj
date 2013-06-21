@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		E43B8EBB174DC28900F8C5FB /* BuiltinsToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DB173462A800B8CDD1 /* BuiltinsToolchain.c */; };
+		E447F7FA17749CB90081E1DF /* CalcChain.c in Sources */ = {isa = PBXBuildFile; fileRef = E49E051C176A04AA002E1492 /* CalcChain.c */; };
+		E447F7FC1774A6780081E1DF /* CalcChain.c in Sources */ = {isa = PBXBuildFile; fileRef = E49E051C176A04AA002E1492 /* CalcChain.c */; };
 		E45034CE175813440079B62D /* libTEST-RUNTIME.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E4E4918017510B35006FCA59 /* libTEST-RUNTIME.a */; };
 		E45034CF175813490079B62D /* test_mac.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034B9175811FB0079B62D /* test_mac.c */; };
 		E45034D11758153E0079B62D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45034D01758153E0079B62D /* OpenGL.framework */; };
@@ -24,7 +26,6 @@
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
 		E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3A1740578E003B06BF /* ReferenceGatherer.c */; };
 		E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3D17411620003B06BF /* ObjectIndexer.c */; };
-		E49E051F176A04FF002E1492 /* CalcChain.c in Sources */ = {isa = PBXBuildFile; fileRef = E49E051C176A04AA002E1492 /* CalcChain.c */; };
 		E4AFAE96172D898B00F7A0BF /* Preprocessor.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE95172D898B00F7A0BF /* Preprocessor.c */; };
 		E4AFAE99172D899D00F7A0BF /* Compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE98172D899D00F7A0BF /* Compiler.c */; };
 		E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAEA117315D4000F7A0BF /* Buffer.c */; };
@@ -709,6 +710,7 @@
 				E45034F3175D80FA0079B62D /* pspl_tm_config.c in Sources */,
 				E45034F51760DC220079B62D /* rgb_enc.c in Sources */,
 				E48FF5601764CF29000231AA /* IRToolchain.c in Sources */,
+				E447F7FA17749CB90081E1DF /* CalcChain.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -721,7 +723,7 @@
 				E4E4918617510B59006FCA59 /* d3d_runtime.c in Sources */,
 				E4E4918717510B5D006FCA59 /* gx_runtime.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
-				E49E051F176A04FF002E1492 /* CalcChain.c in Sources */,
+				E447F7FC1774A6780081E1DF /* CalcChain.c in Sources */,
 				E4E4918E1753FAD3006FCA59 /* pspl_available_runtime_extensions.c in Sources */,
 				E45034E7175CDA5C0079B62D /* TMRuntime.c in Sources */,
 				E48FF5631764D91C000231AA /* IRRuntime.c in Sources */,

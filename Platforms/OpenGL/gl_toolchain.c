@@ -60,9 +60,9 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
     pspl_buffer_addstr(vert, "uniform mat4 projection_mat;\n");
     
     // Texcoord generator transform uniforms
-    {
+    if (ir_state->vertex.tc_count) {
         char uniform[64];
-        snprintf(uniform, 64, "uniform mat4 tc_generator_mats[%u]", ir_state->vertex.tc_count);
+        snprintf(uniform, 64, "uniform mat4 tc_generator_mats[%u];\n", ir_state->vertex.tc_count);
         pspl_buffer_addstr(vert, uniform);
     }
     
@@ -89,10 +89,12 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
     pspl_buffer_addstr(vert, "varying HIGHPREC vec4 normal;\n");
     
     // Varying texcoord linkages
-    char varying_str[64];
-    snprintf(varying_str, 64, "varying HIGHPREC vec2 texCoords[%u];\n\n", ir_state->vertex.tc_count);
-    pspl_buffer_addstr(vert, varying_str);
-    
+    if (ir_state->vertex.tc_count) {
+        char varying_str[64];
+        snprintf(varying_str, 64, "varying HIGHPREC vec2 texCoords[%u];\n\n", ir_state->vertex.tc_count);
+        pspl_buffer_addstr(vert, varying_str);
+    }
+    pspl_buffer_addstr(vert, "\n");
     
     
     // Main vertex code
@@ -188,16 +190,16 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
         int s;
         for (s=0 ; s<3 ; ++s) {
             if (stage->sources[s] == IN_ZERO)
-                snprintf(stagesources[s], 64, "rgba(0.0,0.0,0.0,1.0)");
+                snprintf(stagesources[s], 64, "vec4(0.0,0.0,0.0,1.0)");
             else if (stage->sources[s] == IN_ONE)
-                snprintf(stagesources[s], 64, "rgba(1.0,1.0,1.0,1.0)");
+                snprintf(stagesources[s], 64, "vec4(1.0,1.0,1.0,1.0)");
             else if (stage->sources[s] == IN_TEXTURE)
                 snprintf(stagesources[s], 64, "texture2D(texs[%u], texCoords[%u])",
                          stage->stage_texmap.texmap_idx, stage->stage_texmap.resolved_name_idx);
             else if (stage->sources[s] == IN_LIGHTING)
-                snprintf(stagesources[s], 64, "rgba(1.0,1.0,1.0,1.0)");
+                snprintf(stagesources[s], 64, "vec4(1.0,1.0,1.0,1.0)");
             else if (stage->sources[s] == IN_COLOUR)
-                snprintf(stagesources[s], 64, "rgba(%f,%f,%f,%f)", stage->stage_colour.r,
+                snprintf(stagesources[s], 64, "vec4(%f,%f,%f,%f)", stage->stage_colour.r,
                          stage->stage_colour.g, stage->stage_colour.b, stage->stage_colour.a);
             else if (stage->sources[s] == IN_MAIN)
                 snprintf(stagesources[s], 64, "stage_main");
@@ -205,20 +207,20 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
                 snprintf(stagesources[s], 64, "stage_side_%d", stage->side_in_indices[s]);
         }
         
-        char stagedef[64];
+        char stagedef[256];
         if (stage->stage_op == OP_SET)
-            snprintf(stagedef, 64, "    %s = %s;\n", stagedecl, stagesources[0]);
+            snprintf(stagedef, 256, "    %s = %s;\n", stagedecl, stagesources[0]);
         else if (stage->stage_op == OP_MUL)
-            snprintf(stagedef, 64, "    %s = %s * %s;\n", stagedecl,
+            snprintf(stagedef, 256, "    %s = %s * %s;\n", stagedecl,
                      stagesources[0], stagesources[1]);
         else if (stage->stage_op == OP_ADD)
-            snprintf(stagedef, 64, "    %s = %s + %s;\n", stagedecl,
+            snprintf(stagedef, 256, "    %s = %s + %s;\n", stagedecl,
                      stagesources[0], stagesources[1]);
         else if (stage->stage_op == OP_SUB)
-            snprintf(stagedef, 64, "    %s = %s - %s;\n", stagedecl,
+            snprintf(stagedef, 256, "    %s = %s - %s;\n", stagedecl,
                      stagesources[0], stagesources[1]);
         else if (stage->stage_op == OP_BLEND)
-            snprintf(stagedef, 64, "    %s = ((1.0 - %s) * %s) + (%s * %s);\n", stagedecl,
+            snprintf(stagedef, 256, "    %s = ((1.0 - %s) * %s) + (%s * %s);\n", stagedecl,
                      stagesources[2], stagesources[0], stagesources[2], stagesources[1]);
         
         pspl_buffer_addstr(frag, stagedef);
