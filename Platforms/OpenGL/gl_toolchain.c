@@ -220,8 +220,8 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
             snprintf(stagedef, 256, "    %s = %s - %s;\n", stagedecl,
                      stagesources[0], stagesources[1]);
         else if (stage->stage_op == OP_BLEND)
-            snprintf(stagedef, 256, "    %s = ((1.0 - %s) * %s) + (%s * %s);\n", stagedecl,
-                     stagesources[2], stagesources[0], stagesources[2], stagesources[1]);
+            snprintf(stagedef, 256, "    %s = mix(%s,%s,%s);\n", stagedecl,
+                     stagesources[0], stagesources[2], stagesources[1]);
         
         pspl_buffer_addstr(frag, stagedef);
         
@@ -236,42 +236,47 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
         
 }
 
-static void generate_hook(const pspl_toolchain_context_t* driver_context,
-                          const pspl_ir_state_t* ir_state) {
-    
-    // Config structure
-    gl_config_t config = {
-        .uv_attr_count = ir_state->total_uv_attr_count,
-        .texmap_count = ir_state->total_texmap_count,
-        .depth_write = ir_state->depth.write,
-        .depth_test = ir_state->depth.test,
-        .blending = ir_state->blend.blending,
-        .source_factor = ir_state->blend.source_factor,
-        .dest_factor = ir_state->blend.dest_factor
-    };
-    pspl_embed_platform_integer_keyed_object(GL_CONFIG_STRUCT, &config, &config, sizeof(gl_config_t));
-    
-    // Vertex shader
-    pspl_buffer_t vert_buf;
-    pspl_buffer_init(&vert_buf, 2048);
-    generate_vertex(driver_context, ir_state, &vert_buf);
-    pspl_embed_platform_integer_keyed_object(GL_VERTEX_SOURCE, vert_buf.buf, vert_buf.buf,
-                                             vert_buf.buf_cur - vert_buf.buf + 1);
-    pspl_buffer_free(&vert_buf);
-    
-    // Fragment shader
-    pspl_buffer_t frag_buf;
-    pspl_buffer_init(&frag_buf, 2048);
-    generate_fragment(driver_context, ir_state, &frag_buf);
-    pspl_embed_platform_integer_keyed_object(GL_FRAGMENT_SOURCE, frag_buf.buf, frag_buf.buf,
-                                             frag_buf.buf_cur - frag_buf.buf + 1);
-    pspl_buffer_free(&frag_buf);
-    
+static void instruction_hook(const pspl_toolchain_context_t* driver_context,
+                             const pspl_extension_t* sending_extension,
+                             const char* operation,
+                             const void* data) {
+    if (!strcmp(operation, "PSPL-IR")) {
+        const pspl_ir_state_t* ir_state = data;
+        
+        // Config structure
+        gl_config_t config = {
+            .uv_attr_count = ir_state->total_uv_attr_count,
+            .texmap_count = ir_state->total_texmap_count,
+            .depth_write = ir_state->depth.write,
+            .depth_test = ir_state->depth.test,
+            .blending = ir_state->blend.blending,
+            .source_factor = ir_state->blend.source_factor,
+            .dest_factor = ir_state->blend.dest_factor
+        };
+        pspl_embed_platform_integer_keyed_object(GL_CONFIG_STRUCT, &config, &config, sizeof(gl_config_t));
+        
+        // Vertex shader
+        pspl_buffer_t vert_buf;
+        pspl_buffer_init(&vert_buf, 2048);
+        generate_vertex(driver_context, ir_state, &vert_buf);
+        pspl_embed_platform_integer_keyed_object(GL_VERTEX_SOURCE, vert_buf.buf, vert_buf.buf,
+                                                 vert_buf.buf_cur - vert_buf.buf + 1);
+        pspl_buffer_free(&vert_buf);
+        
+        // Fragment shader
+        pspl_buffer_t frag_buf;
+        pspl_buffer_init(&frag_buf, 2048);
+        generate_fragment(driver_context, ir_state, &frag_buf);
+        pspl_embed_platform_integer_keyed_object(GL_FRAGMENT_SOURCE, frag_buf.buf, frag_buf.buf,
+                                                 frag_buf.buf_cur - frag_buf.buf + 1);
+        pspl_buffer_free(&frag_buf);
+    }
 }
+
 
 /* Toolchain platform definition */
 pspl_toolchain_platform_t GL2_toolplat = {
     .init_hook = init_hook,
     .copyright_hook = copyright_hook,
-    .generate_hook = generate_hook
+    .instruction_hook = instruction_hook
 };

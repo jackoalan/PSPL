@@ -113,11 +113,18 @@ typedef struct {
 typedef int(*pspl_toolchain_init_hook)(const pspl_toolchain_context_t* driver_context);
 
 /**
- * Pre-platform generate hook type
+ * Platform instruct hook type
  *
  * Called for each extension *just before* platforms have their generate hooks called
  */
-typedef void(*pspl_toolchain_pre_platform_hook)(const pspl_toolchain_context_t* driver_context);
+typedef void(*pspl_toolchain_platform_instruct_hook)(const pspl_toolchain_context_t* driver_context);
+
+/**
+ * Send instruction to all platforms
+ *
+ * *Must* be called within `platform_instruct_hook`
+ */
+void pspl_send_platform_instruction(const char* operation, const void* data);
 
 /**
  * Finish hook type
@@ -356,7 +363,7 @@ typedef struct _pspl_toolchain_extension {
     pspl_toolchain_init_hook init_hook;
     
     pspl_toolchain_finish_hook finish_hook;
-    //pspl_toolchain_pre_platform_hook pre_platform_hook;
+    pspl_toolchain_platform_instruct_hook platform_instruct_hook;
     pspl_toolchain_copyright_hook copyright_hook;
     pspl_toolchain_subext_hook subext_hook;
     pspl_toolchain_line_preprocessor_hook line_preprocessor_hook;
@@ -375,11 +382,18 @@ typedef struct _pspl_toolchain_extension {
 
 #include <PSPL/PSPL_IR.h>
 
+/* Platform instruction hook
+ * Sent from participating extensions to *all* platforms 
+ * Intended to unify all platforms together in a similar way */
+typedef void(*pspl_toolchain_platform_instruction_hook)(const pspl_toolchain_context_t* driver_context,
+                                                        const pspl_extension_t* sending_extension,
+                                                        const char* operation,
+                                                        const void* data);
+
 /* Platform generator hook (called once per PSPLC compile after all receive calls)
  * actually generates final data objects for storage into PSPLC 
  * also serves as a finish routine */
-typedef void(*pspl_toolchain_platform_generate_hook)(const pspl_toolchain_context_t* driver_context,
-                                                     const pspl_ir_state_t* ir_state);
+typedef void(*pspl_toolchain_platform_generate_hook)(const pspl_toolchain_context_t* driver_context);
 
 /* Embed data objects for generator */
 
@@ -407,6 +421,7 @@ typedef struct _pspl_toolchain_platform {
     // Hook fields
     pspl_toolchain_init_hook init_hook;
     pspl_toolchain_copyright_hook copyright_hook;
+    pspl_toolchain_platform_instruction_hook instruction_hook;
     pspl_toolchain_platform_generate_hook generate_hook;
     
 } pspl_toolchain_platform_t;

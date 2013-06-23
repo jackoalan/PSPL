@@ -200,8 +200,9 @@ typedef struct {
         PSPL_PHASE_COMPILE               = 6,
         PSPL_PHASE_COMPILE_EXTENSION     = 7,
         PSPL_PHASE_COMPILE_PLATFORM      = 8,
-        PSPL_PHASE_PACKAGE               = 9,
-        PSPL_PHASE_FINISH_EXTENSION      = 10
+        PSPL_PHASE_INSTRUCT_PLATFORM     = 9,
+        PSPL_PHASE_PACKAGE               = 10,
+        PSPL_PHASE_FINISH_EXTENSION      = 11
     } pspl_phase;
     
     // File name

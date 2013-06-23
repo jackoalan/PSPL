@@ -820,6 +820,62 @@ static void line_read(const pspl_toolchain_context_t* driver_context,
     
 }
 
+/* Called when done */
+static void platform_instruct(const pspl_toolchain_context_t* driver_context) {
+    int i,j;
+    
+    // Calculate total UV attr count
+    pspl_ir_state.total_uv_attr_count = 0;
+    for (j=0 ; j<pspl_ir_state.vertex.tc_count ; ++j) {
+        if (pspl_ir_state.vertex.tc_array[j].tc_source == TEXCOORD_UV)
+            if (pspl_ir_state.total_uv_attr_count <= pspl_ir_state.vertex.tc_array[j].uv_idx)
+                pspl_ir_state.total_uv_attr_count = pspl_ir_state.vertex.tc_array[j].uv_idx + 1;
+    }
+    
+    // Calculate total texmap count
+    pspl_ir_state.total_texmap_count = 0;
+    for (j=0 ; j<pspl_ir_state.fragment.stage_count ; ++j) {
+        if (pspl_ir_state.fragment.stage_array[j].using_texture)
+            if (pspl_ir_state.total_texmap_count <= pspl_ir_state.fragment.stage_array[j].stage_texmap.texmap_idx)
+                pspl_ir_state.total_texmap_count = pspl_ir_state.fragment.stage_array[j].stage_texmap.texmap_idx + 1;
+        if (pspl_ir_state.fragment.stage_array[j].using_indirect)
+            if (pspl_ir_state.total_texmap_count <= pspl_ir_state.fragment.stage_array[j].stage_indtexmap.texmap_idx)
+                pspl_ir_state.total_texmap_count = pspl_ir_state.fragment.stage_array[j].stage_indtexmap.texmap_idx + 1;
+    }
+    
+    // Spill names into indices
+    unsigned cur_idx = 0;
+    for (i=0 ; i<pspl_ir_state.fragment.stage_count ; ++i) {
+        pspl_ir_fragment_stage_t* stage = &pspl_ir_state.fragment.stage_array[i];
+        if (stage->using_texture) {
+            uint8_t found = 0;
+            for (j=0 ; j<pspl_ir_state.vertex.tc_count ; ++j) {
+                if (!strcasecmp(stage->stage_texmap.name, pspl_ir_state.vertex.tc_array[j].name)) {
+                    if (pspl_ir_state.vertex.tc_array[j].resolved_name_idx < 0) {
+                        stage->stage_texmap.resolved_name_idx = cur_idx;
+                        pspl_ir_state.vertex.tc_array[j].resolved_name_idx = cur_idx;
+                        ++cur_idx;
+                    } else
+                        stage->stage_texmap.resolved_name_idx = pspl_ir_state.vertex.tc_array[j].resolved_name_idx;
+                    found = 1;
+                    break;
+                }
+            }
+            if (!found)
+                pspl_error(-1, "Texcoord name binding error",
+                           "unable to find paired UV generator '%s' in vertex stage",
+                           stage->stage_texmap.name);
+        }
+    }
+    
+    // Write chains into PSPLC
+    pspl_calc_chain_write_position(&pspl_ir_state.vertex.pos_chain);
+    for (i=0 ; i<pspl_ir_state.vertex.tc_count ; ++i)
+        pspl_calc_chain_write_uv(&pspl_ir_state.vertex.tc_array[i].tc_chain, i);
+    
+    pspl_send_platform_instruction("PSPL-IR", &pspl_ir_state);
+}
+
 
 static const char* claimed_headings[] = {
     "VERTEX",
@@ -831,7 +887,7 @@ static const char* claimed_headings[] = {
 pspl_toolchain_extension_t PSPL_IR_toolext = {
     .copyright_hook = copyright_hook,
     .init_hook = init,
-    //.pre_platform_hook = pre_platform,
+    .platform_instruct_hook = platform_instruct,
     .command_call_hook = command_call,
     .line_read_hook = line_read,
     .claimed_heading_names = claimed_headings

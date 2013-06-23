@@ -899,73 +899,51 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
     } while ((cur_line = strchr(cur_line, '\n')) && ++driver_state.line_num);
     
     
-#   pragma mark Platform Object Generation
-    int j;
+#   pragma mark Platform Instruction Sending
     
-    // Instruct platforms to generate objects
+    i=0;
+    const pspl_extension_t* ext;
+    while ((ext = pspl_available_extensions[i++])) {
+        const pspl_toolchain_extension_t* tool_ext;
+        if ((tool_ext = ext->toolchain_extension)) {
+            if (tool_ext->platform_instruct_hook) {
+                
+                // Set callout context accordingly
+                driver_state.pspl_phase = PSPL_PHASE_INSTRUCT_PLATFORM;
+                driver_state.proc_extension = ext;
+                
+                // Callout
+                tool_ext->platform_instruct_hook(ext_driver_ctx);
+                
+                // Unset callout context
+                driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+                
+            }
+        }
+    }
+    
+}
+
+/**
+ * Send instruction to all platforms
+ *
+ * *Must* be called within `platform_instruct_hook`
+ */
+void pspl_send_platform_instruction(const char* operation, const void* data) {
+    int i;
+    if (driver_state.pspl_phase != PSPL_PHASE_INSTRUCT_PLATFORM)
+        return;
     driver_state.pspl_phase = PSPL_PHASE_COMPILE_PLATFORM;
     
-    // Calculate total UV attr count
-    pspl_ir_state.total_uv_attr_count = 0;
-    for (j=0 ; j<pspl_ir_state.vertex.tc_count ; ++j) {
-        if (pspl_ir_state.vertex.tc_array[j].tc_source == TEXCOORD_UV)
-            if (pspl_ir_state.total_uv_attr_count <= pspl_ir_state.vertex.tc_array[j].uv_idx)
-                pspl_ir_state.total_uv_attr_count = pspl_ir_state.vertex.tc_array[j].uv_idx + 1;
-    }
-    
-    // Calculate total texmap count
-    pspl_ir_state.total_texmap_count = 0;
-    for (j=0 ; j<pspl_ir_state.fragment.stage_count ; ++j) {
-        if (pspl_ir_state.fragment.stage_array[j].using_texture)
-            if (pspl_ir_state.total_texmap_count <= pspl_ir_state.fragment.stage_array[j].stage_texmap.texmap_idx)
-                pspl_ir_state.total_texmap_count = pspl_ir_state.fragment.stage_array[j].stage_texmap.texmap_idx + 1;
-        if (pspl_ir_state.fragment.stage_array[j].using_indirect)
-            if (pspl_ir_state.total_texmap_count <= pspl_ir_state.fragment.stage_array[j].stage_indtexmap.texmap_idx)
-                pspl_ir_state.total_texmap_count = pspl_ir_state.fragment.stage_array[j].stage_indtexmap.texmap_idx + 1;
-    }
-    
-    // Spill names into indices
-    unsigned cur_idx = 0;
-    for (i=0 ; i<pspl_ir_state.fragment.stage_count ; ++i) {
-        pspl_ir_fragment_stage_t* stage = &pspl_ir_state.fragment.stage_array[i];
-        if (stage->using_texture) {
-            uint8_t found = 0;
-            for (j=0 ; j<pspl_ir_state.vertex.tc_count ; ++j) {
-                if (!strcasecmp(stage->stage_texmap.name, pspl_ir_state.vertex.tc_array[j].name)) {
-                    if (pspl_ir_state.vertex.tc_array[j].resolved_name_idx < 0) {
-                        stage->stage_texmap.resolved_name_idx = cur_idx;
-                        pspl_ir_state.vertex.tc_array[j].resolved_name_idx = cur_idx;
-                        ++cur_idx;
-                    } else
-                        stage->stage_texmap.resolved_name_idx = pspl_ir_state.vertex.tc_array[j].resolved_name_idx;
-                    found = 1;
-                    break;
-                }
-            }
-            if (!found)
-                pspl_error(-1, "Texcoord name binding error",
-                           "unable to find paired UV generator '%s' in vertex stage",
-                           stage->stage_texmap.name);
-        }
-    }
-    
-    // Write chains into PSPLC
-    pspl_calc_chain_write_position(&pspl_ir_state.vertex.pos_chain);
-    for (i=0 ; i<pspl_ir_state.vertex.tc_count ; ++i)
-        pspl_calc_chain_write_uv(&pspl_ir_state.vertex.tc_array[i].tc_chain, i);
-    
-    // Have platforms generate their PSPLC contributions
-    for (i=0 ; i<driver_opts->platform_c ; ++i) {
-        const pspl_platform_t* plat = driver_opts->platform_a[i];
-        if (plat && plat->toolchain_platform && plat->toolchain_platform->generate_hook) {
+    for (i=0 ; i<driver_state.tool_ctx->target_runtime_platforms_c ; ++i) {
+        const pspl_platform_t* plat = driver_state.tool_ctx->target_runtime_platforms[i];
+        if (plat && plat->toolchain_platform && plat->toolchain_platform->instruction_hook) {
+            const pspl_extension_t* save_ext = driver_state.proc_extension;
             driver_state.proc_platform = plat;
-            
-            
-            
-            plat->toolchain_platform->generate_hook(ext_driver_ctx, &pspl_ir_state);
+            plat->toolchain_platform->instruction_hook(driver_state.tool_ctx, save_ext, operation, data);
+            driver_state.proc_extension = save_ext;
         }
     }
-    
 }
 
 
