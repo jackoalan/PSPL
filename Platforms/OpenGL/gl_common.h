@@ -9,6 +9,8 @@
 #ifndef PSPL_gl_common_h
 #define PSPL_gl_common_h
 
+#include <stdint.h>
+
 enum gl_object {
     GL_CONFIG_STRUCT   = 1,
     GL_VERTEX_SOURCE   = 2,

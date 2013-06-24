@@ -14,6 +14,25 @@ elseif(PSPL_RUNTIME_HASHING STREQUAL WINDOWS)
   add_definitions(-D PSPL_HASHING_WINDOWS)
 endif()
 
+# Include threading library in runtime (if available)
+unset(THREAD_LIB)
+if(PSPL_WII)
+  add_definitions(-D PSPL_THREADING_OGC)
+elseif(GCD_FOUND)
+  include_directories(${GCD_INCLUDE_DIR})
+  set(THREAD_LIB ${GCD_LINK_LIBRARIES})
+  add_definitions(-D PSPL_THREADING_GCD)
+else()
+  find_package(Threads)
+  set(THREAD_LIB ${CMAKE_THREAD_LIBS_INIT})
+  if(CMAKE_USE_PTHREADS_INIT)
+    add_definitions(-D PSPL_THREADING_PTHREAD)
+  elseif(CMAKE_USE_WIN32_THREADS_INIT)
+    add_definitions(-D PSPL_THREADING_WIN32)
+  endif()
+endif()
+
+
 # Ensure typefile for *specified runtime platform only* is included in runtime sources
 list(GET pspl_platform_typefile_list ${runtime_idx} CONF_RUNTIME_PLATFORM_TYPEFILE)
 configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_runtime_platform_typefile.pch.in
@@ -22,6 +41,7 @@ configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_runtime_platform_typefile
 # Define runtime library
 add_library(pspl-rt STATIC
             RuntimeCore.c
+            RuntimeThreads.c
             ${PSPL_BINARY_DIR}/pspl_available_runtime_extensions.c)
             
 # All sources in `pspl-rt` should be exposed to platform-specific types
@@ -33,6 +53,7 @@ set_target_properties(pspl-rt PROPERTIES
 target_link_libraries(pspl-rt
                       ${pspl_extension_runtime_link_list} 
                       ${HASH_LIB} 
+                      ${THREAD_LIB} 
                       pspl_common)
 
 

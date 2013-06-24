@@ -13,15 +13,21 @@
 /* Platform-specific definitions */
 #if PSPL_RUNTIME_PLATFORM_GL2
 #  ifdef __APPLE__
+#  include <TargetConditionals.h>
+#  if TARGET_OS_IPHONE
+#    include <OpenGLES/ES2/gl.h>
+#    include <OpenGLES/ES2/glext.h>
+#  else
 #    include <OpenGL/gl.h>
+#  endif
 #  else
 #    include <GL/gl.h>
 #  endif
 #  define MAX_MIPS 13
 typedef struct {
     int mip_count;
-    GLuint pbo_obj[MAX_MIPS];
     GLuint tex_obj;
+    uint8_t tex_ready;
 } pspl_tm_gl_stream_tex_t;
 #  define TEX_T pspl_tm_gl_stream_tex_t
 #  define SUB_TEX_FORMAT_T GLenum
@@ -39,6 +45,8 @@ typedef struct {
 #  warning Building TextureManager Runtime with dummy types
 #  define TEX_T void*
 #endif
+
+
 
 
 /* Malloc context to keep map of PSPLC->texobj */
@@ -59,16 +67,6 @@ typedef struct {
 } pspl_tm_map_entry;
 
 static int init(const pspl_extension_t* extension) {
-#   if PSPL_RUNTIME_PLATFORM_GL2
-    const GLubyte* ext_str = glGetString(GL_EXTENSIONS);
-    if (!strstr((const char*)ext_str, "GL_ARB_pixel_buffer_object")) {
-        pspl_error(-1, "Incompatible OpenGL implementation",
-                   "TextureManager requires the 'GL_ARB_pixel_buffer_object' extension to be available");
-        return -1;
-    }
-#   elif PSPL_RUNTIME_PLATFORM_D3D9
-    
-#   endif
     pspl_malloc_context_init(&map_ctx);
     return 0;
 }
@@ -85,27 +83,38 @@ typedef struct {
     unsigned chan_count;
     enum TEX_FORMAT format;
     SUB_TEX_FORMAT_T sub_fmt;
-    const pspl_data_provider_t* provider_hooks;
-    const void* provider_handle;
 } pspl_tm_recurse_t;
 
 /* Reaches out to smallest mip, binds and loads back up to largest
  * Simple means to implement DMA-enabled streamed texure loading */
 static void recursive_mip_load(pspl_tm_recurse_t* info,
                                int mip_c, int i, unsigned width, unsigned height,
-                               size_t data_off) {
+                               void* data_off) {
     
     // Data size of this mip
     size_t dsize = 0;
     if (info->format == TEXTURE_RGB)
         dsize = width * height * info->chan_count;
     else if (info->format == TEXTURE_S3TC) {
+#       if GL_EXT_texture_compression_s3tc
+        unsigned c_width = (width < 4)?4:width;
+        unsigned c_height = (height < 4)?4:height;
         if (info->sub_fmt == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT)
-            dsize = width * height / 2;
+            dsize = c_width * c_height / 2;
         else if (info->sub_fmt == GL_COMPRESSED_RGBA_S3TC_DXT3_EXT)
-            dsize = width * height;
+            dsize = c_width * c_height;
         else if (info->sub_fmt == GL_COMPRESSED_RGBA_S3TC_DXT5_EXT)
-            dsize = width * height;
+            dsize = c_width * c_height;
+#       endif
+    } else if (info->format == TEXTURE_PVRTC) {
+#       if GL_IMG_texture_compression_pvrtc
+        unsigned c_width = (width < 4)?4:width;
+        unsigned c_height = (height < 4)?4:height;
+        if (info->sub_fmt == GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG)
+            dsize = c_width * c_height / 2;
+        else if (info->sub_fmt == GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG)
+            dsize = c_width * c_height / 4;
+#       endif
     }
     
     // Reach out to smallest
@@ -114,24 +123,13 @@ static void recursive_mip_load(pspl_tm_recurse_t* info,
                            (width == 1)?1:width/2, (height == 1)?1:height/2,
                            data_off + dsize);
     
-    // Seek to location in file
-    info->provider_hooks->seek(info->provider_handle, data_off);
-
+    
     
 #   if PSPL_RUNTIME_PLATFORM_GL2
-    glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, info->fill_struct->texture_arr[info->key].pbo_obj[i]);
-    glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, dsize, 0, GL_STREAM_DRAW_ARB);
-    GLubyte* ptr = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY_ARB);
-    info->provider_hooks->read_direct(info->provider_handle, dsize, ptr);
-    glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
-    
-    glBindTexture(GL_TEXTURE_2D, info->fill_struct->texture_arr[info->key].tex_obj);
     if (info->format == TEXTURE_RGB)
-        glTexSubImage2D(GL_TEXTURE_2D, i, 0, 0, width, height, info->sub_fmt, GL_UNSIGNED_BYTE, 0);
+        glTexSubImage2D(GL_TEXTURE_2D, i, 0, 0, width, height, info->sub_fmt, GL_UNSIGNED_BYTE, data_off);
     else if (info->format == TEXTURE_S3TC)
-        glCompressedTexSubImage2D(GL_TEXTURE_2D, i, 0, 0, width, height, info->sub_fmt, (GLsizei)dsize, 0);
-    
-    glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+        glCompressedTexSubImage2D(GL_TEXTURE_2D, i, 0, 0, width, height, info->sub_fmt, (GLsizei)dsize, data_off);
     
 #   elif PSPL_RUNTIME_PLATFORM_D3D9
     
@@ -167,11 +165,21 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
     enum TEX_FORMAT format = 0;
     if (!strcmp(tex_type, "RGB"))
         format = TEXTURE_RGB;
-    else if (!strcmp(tex_type, "S3TC"))
+    else if (!strcmp(tex_type, "S3TC")) {
         format = TEXTURE_S3TC;
-    else if (!strcmp(tex_type, "PVRTC"))
+#       if PSPL_RUNTIME_PLATFORM_GL2 && !GL_EXT_texture_compression_s3tc
+        pspl_warn("Unsupported texture format",
+                  "S3TC textures not supported by this OpenGL platform");
+        return 0;
+#       endif
+    } else if (!strcmp(tex_type, "PVRTC")) {
         format = TEXTURE_PVRTC;
-    else
+#       if PSPL_RUNTIME_PLATFORM_GL2 && !GL_IMG_texture_compression_pvrtc
+        pspl_warn("Unsupported texture format",
+                  "PVRTC textures not supported by this OpenGL platform");
+        return 0;
+#       endif
+    } else
         pspl_error(-1, "Unsupported texture format",
                    "this build of TextureManager doesn't support '%s' textures", tex_type);
     
@@ -186,9 +194,7 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
         .fill_struct = fill_struct,
         .key = key,
         .chan_count = tex_head->chan_count,
-        .format = format,
-        .provider_hooks = provider_hooks,
-        .provider_handle = provider_handle
+        .format = format
     };
     
     // Resolve sub format
@@ -214,6 +220,7 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
                 break;
         }
     } else if (format == TEXTURE_S3TC) {
+#       if GL_EXT_texture_compression_s3tc
         switch (tex_head->chan_count) {
             case 1:
                 recurse_info.sub_fmt = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
@@ -230,6 +237,23 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
                            tex_head->chan_count);
                 break;
         }
+#       endif
+    } else if (format == TEXTURE_PVRTC) {
+#       if GL_IMG_texture_compression_pvrtc
+        switch (tex_head->chan_count) {
+            case 4:
+                recurse_info.sub_fmt = GL_COMPRESSED_RGBA_PVRTC_4BPPV1_IMG;
+                break;
+            case 2:
+                recurse_info.sub_fmt = GL_COMPRESSED_RGBA_PVRTC_2BPPV1_IMG;
+                break;
+            default:
+                pspl_error(-1, "Unsupported texture format",
+                           "unable to init PVRTC texture with mode %u",
+                           tex_head->chan_count);
+                break;
+        }
+#       endif
     }
     
 #   elif PSPL_RUNTIME_PLATFORM_GX
@@ -267,21 +291,51 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
 #   if PSPL_RUNTIME_PLATFORM_GL2
     glGenTextures(1, &fill_struct->texture_arr[key].tex_obj);
     fill_struct->texture_arr[key].mip_count = tex_head->num_mips;
-    glGenBuffersARB(tex_head->num_mips, fill_struct->texture_arr[key].pbo_obj);
+    union {
+        GLuint pbo;
+        void* tex;
+    } load_data;
+#   if GL_ARB_pixel_buffer_object
+        glGenBuffersARB(1, &load_data.pbo);
+#   endif
     
 #   elif PSPL_RUNTIME_PLATFORM_D3D9
     
 #   endif
     
     // Perform load
-#   if PSPL_RUNTIME_PLATFORM_GL2 || PSPL_RUNTIME_PLATFORM_D3D9
-    recursive_mip_load(&recurse_info,
-                       tex_head->num_mips-1, 0, tex_head->size.native.width,
-                       tex_head->size.native.height, init_off + tex_head->data_off);
+    size_t image_size = length - tex_head->data_off;
+    provider_hooks->seek(provider_handle, init_off + tex_head->data_off);
+    
+#   if PSPL_RUNTIME_PLATFORM_GL2
+#   if GL_ARB_pixel_buffer_object
+        glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, load_data.pbo);
+        glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, image_size, 0, GL_STREAM_DRAW_ARB);
+        GLubyte* ptr = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY_ARB);
+        provider_hooks->read_direct(provider_handle, image_size, ptr);
+        glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
+        glBindTexture(GL_TEXTURE_2D, fill_struct->texture_arr[key].tex_obj);
+        recursive_mip_load(&recurse_info,
+                           tex_head->num_mips-1, 0, tex_head->size.native.width,
+                           tex_head->size.native.height, 0);
+        fill_struct->texture_arr[key].tex_ready = 1;
+        glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+        glDeleteBuffersARB(1, &load_data.pbo);
+#   else
+        load_data.tex = malloc(image_size);
+        provider_hooks->read_direct(provider_handle, image_size, load_data.tex);
+        glBindTexture(GL_TEXTURE_2D, fill_struct->texture_arr[key].tex_obj);
+        recursive_mip_load(&recurse_info,
+                           tex_head->num_mips-1, 0, tex_head->size.native.width,
+                           tex_head->size.native.height, load_data.tex);
+        fill_struct->texture_arr[key].tex_ready = 1;
+        free(load_data.tex);
+#   endif
+    
+#   elif PSPL_RUNTIME_PLATFORM_D3D9
     
 #   elif PSPL_RUNTIME_PLATFORM_GX
     void* tex_data = memalign(32, length - tex_head->data_off);
-    provider_hooks->seek(provider_handle, init_off + tex_head->data_off);
     provider_hooks->read_direct(provider_handle, length - tex_head->data_off, tex_data);
     GX_InitTexObj(&fill_struct->texture_arr[key], tex_data,
                   tex_head->size.native.width, tex_head->size.native.height,
@@ -292,15 +346,37 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
     
     return 0;
 }
+
+/* Multi-threading context switch */
+#if PSPL_RUNTIME_PLATFORM_GL2
+extern void gl_set_load_context();
+#endif
+
+struct load_tex_st {
+    pspl_runtime_psplc_t* object;
+    pspl_tm_map_entry* ent;
+};
+static void load_texture_thread(void* load_st) {
+#   if PSPL_RUNTIME_PLATFORM_GL2
+    gl_set_load_context();
+#   endif
+    pspl_runtime_enumerate_integer_embedded_data_objects(((struct load_tex_st*)load_st)->object,
+                                                         (pspl_integer_enumerate_hook)load_enumerate,
+                                                         ((struct load_tex_st*)load_st)->ent);
+}
+
 static void load_object(pspl_runtime_psplc_t* object) {
     int tex_c = pspl_runtime_count_integer_embedded_data_objects(object);
     pspl_tm_map_entry* ent = pspl_malloc_malloc(&map_ctx, sizeof(pspl_tm_map_entry));
     ent->owner = object;
     ent->texture_count = tex_c;
     ent->texture_arr = calloc(tex_c, sizeof(TEX_T));
-    pspl_runtime_enumerate_integer_embedded_data_objects(object,
-                                                         (pspl_integer_enumerate_hook)load_enumerate,
-                                                         (void*)&ent);
+    memset(ent->texture_arr, 0, sizeof(TEX_T) * tex_c);
+    struct load_tex_st st = {
+        .object = object,
+        .ent = ent
+    };
+    pspl_thread_fork(load_texture_thread, &st);
 }
 
 static void unload_object(pspl_runtime_psplc_t* object) {
@@ -312,7 +388,6 @@ static void unload_object(pspl_runtime_psplc_t* object) {
             for (j=0 ; j<ent->texture_count ; ++j) {
 #               if PSPL_RUNTIME_PLATFORM_GL2
                 glDeleteTextures(1, &ent->texture_arr[j].tex_obj);
-                glDeleteBuffersARB(ent->texture_arr[j].mip_count, ent->texture_arr[j].pbo_obj);
                 
 #               elif PSPL_RUNTIME_PLATFORM_GX
                 void* tex_data = GX_GetTexObjUserData(&ent->texture_arr[j]);
@@ -336,7 +411,7 @@ static void bind_object(pspl_runtime_psplc_t* object) {
             for (j=0 ; j<ent->texture_count ; ++j) {
 #               if PSPL_RUNTIME_PLATFORM_GL2
                 glActiveTexture(GL_TEXTURE0+j);
-                glBindTexture(GL_TEXTURE_2D, ent->texture_arr[j].tex_obj);
+                glBindTexture(GL_TEXTURE_2D, ent->texture_arr[j].tex_ready?ent->texture_arr[j].tex_obj:0);
                 if (ent->texture_arr[j].mip_count > 1)
                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
                 

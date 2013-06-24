@@ -13,7 +13,14 @@ elseif(PSPL_WII)
   find_package(WiiStep REQUIRED)
 endif()
 
+# Select Mac SDK
+set(OSX_SDK macosx10.9 CACHE STRING "Selected Mac OS X SDK")
+
 project(PSPL)
+
+# Determine if GCD is available
+include(cmake/FindMacSDK.cmake)
+include(cmake/FindGCD.cmake)
 
 # Codebase `include` directory
 include_directories(include)

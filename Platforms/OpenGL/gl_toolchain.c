@@ -11,7 +11,7 @@
 #include "gl_common.h"
 
 static const char SHADER_HEAD[] =
-"#ifdef GLES\n"
+"#ifdef GL_ES\n"
 "#version 100\n"
 "#define HIGHPREC highp\n"
 "#define MEDPREC mediump\n"

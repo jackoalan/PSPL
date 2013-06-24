@@ -16,13 +16,42 @@
 
 #include <PSPLRuntime.h>
 
+static double last_render_time = 0;
+#define USEC_PER_SEC 1000000
+
 static void renderfunc() {
     
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
+        
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    double time = tv.tv_sec + (tv.tv_usec / USEC_PER_SEC);
+    double diff = time - last_render_time;
+    
+    char fps_str[128];
+    snprintf(fps_str, 128, "FPS: %f", 1.0f/diff);
+    size_t fps_str_len = strlen(fps_str);
+    
+    last_render_time = time;
+    
+    // Render
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, 800, 0.0, 600, -2.0, 500.0);
+    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(0, 585, 0);
+    glScalef(0.1,0.1,0.1);
+    
+    int i;
+    for (i=0 ; i<fps_str_len ; ++i)
+        glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, fps_str[i]);
     
     glutSwapBuffers();
     
+    glutPostRedisplay();
     
 }
 
@@ -33,7 +62,7 @@ static void kbfunc(unsigned char key, int x, int y) {
     }
 }
 
-static int enumerate_psplc_hook(const pspl_runtime_psplc_t* psplc_object) {
+static int enumerate_psplc_hook(pspl_runtime_psplc_t* psplc_object) {
     pspl_runtime_retain_psplc(psplc_object);
     return 0;
 }

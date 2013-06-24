@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <PSPL/PSPLCommon.h>
+#include <PSPL/PSPLRuntimeThreads.h>
 
 
 #pragma mark Runtime API
@@ -168,7 +169,7 @@ unsigned int pspl_runtime_count_psplcs(const pspl_runtime_package_t* package);
  * `psplc_object` provides the complete PSPLC representation
  * Returning negative value from hook will cancel enumeration
  */
-typedef int(*pspl_runtime_enumerate_psplc_hook)(const pspl_runtime_psplc_t* psplc_object);
+typedef int(*pspl_runtime_enumerate_psplc_hook)(pspl_runtime_psplc_t* psplc_object);
 
 /**
  * Enumerate embedded PSPLCs within package

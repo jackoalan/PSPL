@@ -11,10 +11,43 @@
 #include <PSPL/PSPL_IR.h>
 #include "gl_common.h"
 
+/*
 static const char* GLES_HEAD = "#define GLES\n";
 static const char* GL_HEAD = "";
-static const char* HEAD = NULL;
+ */
 
+/* OpenGL load context routines */
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if TARGET_OS_IPHONE
+extern void gl_init_load_context();
+extern void gl_set_load_context();
+#else
+#include <OpenGL/OpenGL.h>
+static CGLContextObj gl_load_context = NULL;
+void gl_init_load_context() {
+    CGLContextObj main_ctx = CGLGetCurrentContext();
+    CGLPixelFormatObj main_pix_fmt = CGLGetPixelFormat(main_ctx);
+    CGLError err;
+    if ((err = CGLCreateContext(main_pix_fmt, main_ctx, &gl_load_context)))
+        pspl_error(-1, "Unable to create OpenGL load context", "error %d - %s", err, CGLErrorString(err));
+}
+void gl_set_load_context() {
+    CGLError err;
+    if ((err = CGLSetCurrentContext(gl_load_context)))
+        pspl_error(-1, "Unable to set OpenGL load context", "error %d - %s", err, CGLErrorString(err));
+}
+#endif
+#endif
+
+static int init(const pspl_platform_t* platform) {
+    // Init Load Context
+    gl_init_load_context();
+    return 0;
+}
+
+static const char* HEAD = "";
+ 
 static const GLint TEX_IDX_ARRAY[16] = {
     0,1,2,3,4,5,6,7,
     8,9,10,11,12,13,14,15
@@ -22,14 +55,6 @@ static const GLint TEX_IDX_ARRAY[16] = {
 
 static void load_object(pspl_runtime_psplc_t* object) {
     int i;
-    
-    // Determine if we're using GLES
-    if (!HEAD) {
-        HEAD = GL_HEAD;
-        const char* version = (char*)glGetString(GL_VERSION);
-        if (!strncmp(version, "OpenGL ES", 9))
-            HEAD = GLES_HEAD;
-    }
     
     // Config structure
     pspl_data_object_t config_struct;
@@ -191,6 +216,7 @@ void pspl_ir_load_finish() {
 }
 
 pspl_runtime_platform_t GL2_runplat = {
+    .init_hook = init,
     .load_object_hook = load_object,
     .unload_object_hook = unload_object,
     .bind_object_hook = bind_object

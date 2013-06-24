@@ -21,6 +21,8 @@
 		E45034F51760DC220079B62D /* rgb_enc.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034F41760DC220079B62D /* rgb_enc.c */; settings = {COMPILER_FLAGS = "-IExtensions/TextureManager"; }; };
 		E45591D6174ADA8F00CE0A08 /* Packager.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE9B172DB2D400F7A0BF /* Packager.c */; };
 		E45591D8174D60C100CE0A08 /* gx_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E45591D7174D60C100CE0A08 /* gx_toolchain.c */; };
+		E462EEA71778C12F00211193 /* PSPLRuntimeThreads.h in Headers */ = {isa = PBXBuildFile; fileRef = E4C527101778A4FF00D1D822 /* PSPLRuntimeThreads.h */; };
+		E462EEA91778FC5B00211193 /* gl_runtime_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = E462EEA81778FC0200211193 /* gl_runtime_ios.m */; };
 		E48FF5601764CF29000231AA /* IRToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E48FF55F1764CF29000231AA /* IRToolchain.c */; };
 		E48FF5631764D91C000231AA /* IRRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E48FF5611764CF31000231AA /* IRRuntime.c */; };
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
@@ -31,6 +33,8 @@
 		E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAEA117315D4000F7A0BF /* Buffer.c */; };
 		E4AFAEA3173161B500F7A0BF /* Driver.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE46171CA34700F7A0BF /* Driver.c */; };
 		E4B7BCF0173C9DC0002A513E /* gx_offline.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6B171D825400F7A0BF /* gx_offline.c */; };
+		E4C5270F1778A36300D1D822 /* SMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C5270E1778A32D00D1D822 /* SMRuntime.c */; };
+		E4C527151778B81300D1D822 /* RuntimeThreads.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C527141778B71900D1D822 /* RuntimeThreads.c */; };
 		E4E4916F17510685006FCA59 /* PSPLCommon.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4916E17510684006FCA59 /* PSPLCommon.c */; };
 		E4E491731751094E006FCA59 /* gl_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E491721751094E006FCA59 /* gl_toolchain.c */; };
 		E4E49179175109D4006FCA59 /* d3d_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E49178175109D4006FCA59 /* d3d_toolchain.c */; };
@@ -92,6 +96,7 @@
 		E45034F61760DC300079B62D /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E45034F71760E2BE0079B62D /* TMCommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMCommon.h; sourceTree = "<group>"; };
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
+		E462EEA81778FC0200211193 /* gl_runtime_ios.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = gl_runtime_ios.m; sourceTree = "<group>"; };
 		E48CCCBC1747D4D500DDDD63 /* ToolchainCrossDarwinMinGW32.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToolchainCrossDarwinMinGW32.cmake; sourceTree = "<group>"; };
 		E48FF55E1764CE15000231AA /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E48FF55F1764CF29000231AA /* IRToolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = IRToolchain.c; sourceTree = "<group>"; };
@@ -160,6 +165,12 @@
 		E4BB18E31734635400B8CDD1 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E4BB18E417347B3D00B8CDD1 /* pspl_platform_def.h.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = pspl_platform_def.h.in; sourceTree = "<group>"; };
 		E4BB18E61734803A00B8CDD1 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		E4C5270D1778A26100D1D822 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		E4C5270E1778A32D00D1D822 /* SMRuntime.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SMRuntime.c; sourceTree = "<group>"; };
+		E4C527101778A4FF00D1D822 /* PSPLRuntimeThreads.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLRuntimeThreads.h; sourceTree = "<group>"; };
+		E4C527111778A8A200D1D822 /* FindGCD.cmake */ = {isa = PBXFileReference; lastKnownFileType = text; path = FindGCD.cmake; sourceTree = "<group>"; };
+		E4C527131778AE5300D1D822 /* FindMacSDK.cmake */ = {isa = PBXFileReference; lastKnownFileType = text; path = FindMacSDK.cmake; sourceTree = "<group>"; };
+		E4C527141778B71900D1D822 /* RuntimeThreads.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = RuntimeThreads.c; sourceTree = "<group>"; };
 		E4E4916C175105FF006FCA59 /* RuntimeCore.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = RuntimeCore.c; sourceTree = "<group>"; };
 		E4E4916E17510684006FCA59 /* PSPLCommon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = PSPLCommon.c; sourceTree = "<group>"; };
 		E4E49170175108C4006FCA59 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -360,6 +371,7 @@
 				E4AFAE2B171C92E000F7A0BF /* README.md */,
 				E4AFAE8517259A2800F7A0BF /* CMakeLists.txt */,
 				E4E4916C175105FF006FCA59 /* RuntimeCore.c */,
+				E4C527141778B71900D1D822 /* RuntimeThreads.c */,
 			);
 			path = Runtime;
 			sourceTree = "<group>";
@@ -405,6 +417,7 @@
 				E4AFAE53171CA6C700F7A0BF /* PSPLToolchainExtension.h */,
 				E4AFAE56171CA74A00F7A0BF /* PSPLRuntimeExtension.h */,
 				E44E3FE9176E3A9C00665937 /* PSPL_IR.h */,
+				E4C527101778A4FF00D1D822 /* PSPLRuntimeThreads.h */,
 			);
 			path = PSPL;
 			sourceTree = "<group>";
@@ -416,6 +429,7 @@
 				E4BB18D7173432EA00B8CDD1 /* PSPLBuiltins */,
 				E48FF55C1764CDB4000231AA /* PSPL_IR */,
 				E4AFAE871726DEC800F7A0BF /* PMDLFormat */,
+				E4C5270C1778A23F00D1D822 /* SceneManager */,
 				E4AFAE38171C978E00F7A0BF /* TextureManager */,
 				E4AFAE43171CA0CD00F7A0BF /* LightingManager */,
 			);
@@ -473,6 +487,7 @@
 				E4E7F23F1770040800E87FCB /* gl_common.h */,
 				E4E491721751094E006FCA59 /* gl_toolchain.c */,
 				E4E4917417510956006FCA59 /* gl_runtime.c */,
+				E462EEA81778FC0200211193 /* gl_runtime_ios.m */,
 			);
 			path = OpenGL;
 			sourceTree = "<group>";
@@ -504,6 +519,8 @@
 				E4AFAE74171EF74600F7A0BF /* PSPLConfig.cmake.in */,
 				E4AFAE76171EF78600F7A0BF /* PSPLExtensionMacros.cmake */,
 				E4AFAE75171EF76100F7A0BF /* PSPLArtPipelineMacros.cmake */,
+				E4C527131778AE5300D1D822 /* FindMacSDK.cmake */,
+				E4C527111778A8A200D1D822 /* FindGCD.cmake */,
 			);
 			path = cmake;
 			sourceTree = "<group>";
@@ -575,6 +592,15 @@
 			path = Platforms;
 			sourceTree = "<group>";
 		};
+		E4C5270C1778A23F00D1D822 /* SceneManager */ = {
+			isa = PBXGroup;
+			children = (
+				E4C5270D1778A26100D1D822 /* CMakeLists.txt */,
+				E4C5270E1778A32D00D1D822 /* SMRuntime.c */,
+			);
+			path = SceneManager;
+			sourceTree = "<group>";
+		};
 		E4E4918817510BAA006FCA59 /* GXStreamGen */ = {
 			isa = PBXGroup;
 			children = (
@@ -593,6 +619,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E462EEA71778C12F00211193 /* PSPLRuntimeThreads.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -718,14 +745,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E462EEA91778FC5B00211193 /* gl_runtime_ios.m in Sources */,
 				E4E4918417510B40006FCA59 /* RuntimeCore.c in Sources */,
 				E4E4918517510B4D006FCA59 /* gl_runtime.c in Sources */,
 				E4E4918617510B59006FCA59 /* d3d_runtime.c in Sources */,
+				E4C527151778B81300D1D822 /* RuntimeThreads.c in Sources */,
 				E4E4918717510B5D006FCA59 /* gx_runtime.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
 				E447F7FC1774A6780081E1DF /* CalcChain.c in Sources */,
 				E4E4918E1753FAD3006FCA59 /* pspl_available_runtime_extensions.c in Sources */,
 				E45034E7175CDA5C0079B62D /* TMRuntime.c in Sources */,
+				E4C5270F1778A36300D1D822 /* SMRuntime.c in Sources */,
 				E48FF5631764D91C000231AA /* IRRuntime.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -916,6 +946,7 @@
 					"PSPL_RUNTIME=1",
 					PSPL_HASHING_COMMON_CRYPTO,
 					"PSPL_RUNTIME_PLATFORM_GL2=1",
+					PSPL_THREADING_GCD,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -954,6 +985,7 @@
 					"PSPL_RUNTIME=1",
 					PSPL_HASHING_COMMON_CRYPTO,
 					"PSPL_RUNTIME_PLATFORM_GL2=1",
+					PSPL_THREADING_GCD,
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;

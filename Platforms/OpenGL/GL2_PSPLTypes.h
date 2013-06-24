@@ -10,7 +10,12 @@
 #define PSPL_GL2_PSPLTypes_h
 
 #ifdef __APPLE__
-#  include <OpenGL/gl.h>
+#include <TargetConditionals.h>
+#  if TARGET_OS_IPHONE
+#    include <OpenGLES/ES2/gl.h>
+#  else
+#    include <OpenGL/gl.h>
+#  endif
 #else
 #  include <GL/gl.h>
 #endif
