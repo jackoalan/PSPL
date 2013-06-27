@@ -6,19 +6,35 @@
 //
 //
 
+#include <malloc.h>
+#include <ogc/cache.h>
 #include <ogc/gx.h>
 #include <PSPLExtension.h>
 
 static void load_object(pspl_runtime_psplc_t* object) {
+    
+    // GX display lists *must* be 32-byte aligned
+    // Therefore, this copies the list into an aligned region
+    // and forces the cache to store into physical memory
     pspl_data_object_t datao;
     pspl_runtime_get_embedded_data_object_from_integer(object, 0, &datao);
-    object->native_shader.disp_list = datao.object_data;
+    object->native_shader.disp_list = memalign(32, datao.object_len);
+    memcpy(object->native_shader.disp_list, datao.object_data, datao.object_len);
     object->native_shader.disp_list_len = (u32)datao.object_len;
+    DCStoreRange(object->native_shader.disp_list, (u32)datao.object_len);
+    
+}
+
+static void unload_object(pspl_runtime_psplc_t* object) {
+    free(object->native_shader.disp_list);
 }
 
 static void bind_object(pspl_runtime_psplc_t* object) {
+    
+    // This will asynchronously instruct the GPU to run the list
     GX_CallDispList((void*)object->native_shader.disp_list,
                     object->native_shader.disp_list_len);
+    
 }
 
 /* PSPL-IR routines */
@@ -41,5 +57,6 @@ void pspl_ir_load_finish() {
 
 pspl_runtime_platform_t GX_runplat = {
     .load_object_hook = load_object,
+    .unload_object_hook = unload_object,
     .bind_object_hook = bind_object
 };

@@ -1566,6 +1566,9 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
     
     int i,j,k;
     
+    // DEBUG
+    //size_t foff = ftell(psplc_file_out);
+    
     // Populate PSPLC object header
     pspl_psplc_header_bi_t psplc_header;
     SET_BI_U32(psplc_header, extension_count, ctx->ext_count);
@@ -1586,6 +1589,8 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
             break;
     }
     
+    // DEBUG
+    //foff = ftell(psplc_file_out);
     
     // Populate and write all per-extension array heading structures
     for (i=0 ; i<ctx->ext_count ; ++i) {
@@ -1643,6 +1648,10 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
             default:
                 break;
         }
+        
+        // DEBUG
+        //foff = ftell(psplc_file_out);
+        
     }
     
     // Populate and write all per-platform array heading structures
@@ -1701,6 +1710,10 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
             default:
                 break;
         }
+        
+        // DEBUG
+        //foff = ftell(psplc_file_out);
+        
     }
     
     // Populate and write all per-extension array objects
@@ -1708,7 +1721,7 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
         const pspl_extension_t* cur_ext = ctx->ext_array[i];
         
         // Hash objects
-        for (j=0 ; j<ctx->h_objects_count ; ++j)
+        for (j=0 ; j<ctx->h_objects_count ; ++j) {
             if (ctx->h_objects_array[j]->owner_ext == cur_ext) {
                 pspl_indexer_entry_t* ent = ctx->h_objects_array[j];
                 
@@ -1750,10 +1763,16 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                 }
                 
             }
+            
+            // DEBUG
+            //foff = ftell(psplc_file_out);
+            
+        }
+
         
         
         // Int objects
-        for (j=0 ; j<ctx->i_objects_count ; ++j)
+        for (j=0 ; j<ctx->i_objects_count ; ++j) {
             if (ctx->i_objects_array[j]->owner_ext == cur_ext) {
                 pspl_indexer_entry_t* ent = ctx->i_objects_array[j];
                 
@@ -1793,6 +1812,11 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                 }
                 
             }
+            
+            // DEBUG
+            //foff = ftell(psplc_file_out);
+            
+        }
         
     }
     
@@ -1801,7 +1825,7 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
         const pspl_platform_t* cur_plat = ctx->plat_array[i];
         
         // Hash objects
-        for (j=0 ; j<ctx->ph_objects_count ; ++j)
+        for (j=0 ; j<ctx->ph_objects_count ; ++j) {
             if (ctx->ph_objects_array[j]->owner_plat == cur_plat) {
                 pspl_indexer_entry_t* ent = ctx->ph_objects_array[j];
                 
@@ -1843,10 +1867,15 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                 }
                 
             }
+            
+            // DEBUG
+            //foff = ftell(psplc_file_out);
+            
+        }
         
         
         // Int objects
-        for (j=0 ; j<ctx->pi_objects_count ; ++j)
+        for (j=0 ; j<ctx->pi_objects_count ; ++j) {
             if (ctx->pi_objects_array[j]->owner_plat == cur_plat) {
                 pspl_indexer_entry_t* ent = ctx->pi_objects_array[j];
                 
@@ -1886,6 +1915,11 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                 }
                 
             }
+            
+            // DEBUG
+            //foff = ftell(psplc_file_out);
+            
+        }
         
     }
     
@@ -1894,7 +1928,7 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
         const pspl_extension_t* cur_ext = ctx->ext_array[i];
         
         // Hash objects
-        for (j=0 ; j<ctx->h_objects_count ; ++j)
+        for (j=0 ; j<ctx->h_objects_count ; ++j) {
             if (ctx->h_objects_array[j]->owner_ext == cur_ext) {
                 pspl_indexer_entry_t* ent = ctx->h_objects_array[j];
                 
@@ -1912,10 +1946,15 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                     fwrite("", 1, 1, psplc_file_out);
                 
             }
+            
+            // DEBUG
+            //foff = ftell(psplc_file_out);
+            
+        }
         
         
         // Int objects
-        for (j=0 ; j<ctx->i_objects_count ; ++j)
+        for (j=0 ; j<ctx->i_objects_count ; ++j) {
             if (ctx->i_objects_array[j]->owner_ext == cur_ext) {
                 pspl_indexer_entry_t* ent = ctx->i_objects_array[j];
                 
@@ -1933,6 +1972,11 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                     fwrite("", 1, 1, psplc_file_out);
                 
             }
+            
+            // DEBUG
+            //foff = ftell(psplc_file_out);
+            
+        }
         
     }
     
@@ -1941,7 +1985,7 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
         const pspl_platform_t* cur_plat = ctx->plat_array[i];
         
         // Hash objects
-        for (j=0 ; j<ctx->ph_objects_count ; ++j)
+        for (j=0 ; j<ctx->ph_objects_count ; ++j) {
             if (ctx->ph_objects_array[j]->owner_plat == cur_plat) {
                 pspl_indexer_entry_t* ent = ctx->ph_objects_array[j];
                 
@@ -1959,10 +2003,14 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                     fwrite("", 1, 1, psplc_file_out);
                 
             }
+            // DEBUG
+            //foff = ftell(psplc_file_out);
+            
+        }
         
         
         // Int objects
-        for (j=0 ; j<ctx->pi_objects_count ; ++j)
+        for (j=0 ; j<ctx->pi_objects_count ; ++j) {
             if (ctx->pi_objects_array[j]->owner_plat == cur_plat) {
                 pspl_indexer_entry_t* ent = ctx->pi_objects_array[j];
                 
@@ -1980,6 +2028,11 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                     fwrite("", 1, 1, psplc_file_out);
                 
             }
+            
+            // DEBUG
+            //foff = ftell(psplc_file_out);
+            
+        }
         
     }
     

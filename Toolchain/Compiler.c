@@ -74,7 +74,8 @@ void pspl_embed_hash_keyed_object(const pspl_platform_t** platforms,
     if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
-        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
+        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_INSTRUCT_PLATFORM)
         return;
     if (!driver_state.indexer_ctx)
         return;
@@ -93,7 +94,8 @@ void pspl_embed_integer_keyed_object(const pspl_platform_t** platforms,
     if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
-        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
+        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_INSTRUCT_PLATFORM)
         return;
     if (!driver_state.indexer_ctx)
         return;
@@ -143,7 +145,8 @@ void pspl_package_file_augment(const pspl_platform_t** plats, const char* path_i
     if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
-        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
+        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_INSTRUCT_PLATFORM)
         return;
     if (!driver_state.indexer_ctx)
         return;
@@ -158,7 +161,8 @@ void pspl_package_membuf_augment(const pspl_platform_t** plats, const char* path
     if (driver_state.pspl_phase != PSPL_PHASE_INIT_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_COMPILE_EXTENSION &&
         driver_state.pspl_phase != PSPL_PHASE_PREPROCESS_EXTENSION &&
-        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION)
+        driver_state.pspl_phase != PSPL_PHASE_FINISH_EXTENSION &&
+        driver_state.pspl_phase != PSPL_PHASE_INSTRUCT_PLATFORM)
         return;
     if (!driver_state.indexer_ctx)
         return;

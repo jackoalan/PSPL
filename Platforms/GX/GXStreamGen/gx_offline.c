@@ -25,7 +25,8 @@
 #include "gx_offline.h"
 
 // Offline GX register state for building transaction
-static struct __gx_regdef *__gx = NULL;
+static struct __gx_regdef gx_o;
+static struct __gx_regdef *__gx = &gx_o;
 
 #pragma mark Offline Transaction Builder for PSGX stream
 
@@ -53,6 +54,7 @@ void pspl_gx_offline_check_capacity() {
 }
 
 void pspl_gx_offline_begin_transaction() {
+    memset(__gx, 0, sizeof(struct __gx_regdef));
     gx_trans_o.mem_cap = 1024;
     gx_trans_o.mem_buf = malloc(gx_trans_o.mem_cap);
     gx_trans_o.mem_cur.buf = gx_trans_o.mem_buf;

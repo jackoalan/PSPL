@@ -64,7 +64,7 @@ static void instruction_hook(const pspl_toolchain_context_t* driver_context,
                 pspl_error(-1, "GX TEV Overflow",
                            "GX supports a maximum of 16 TEV (multi-texturing) stages; this PSPL has %u stages",
                            ir_state->fragment.stage_count);
-            pspl_ir_fragment_stage_t* stage = &ir_state->fragment.stage_array[i];
+            const pspl_ir_fragment_stage_t* stage = &ir_state->fragment.stage_array[i];
             u8 tev_stage = GX_TEVSTAGE0 + tev_count;
             
             u8 tex_coord = GX_TEXCOORDNULL;
