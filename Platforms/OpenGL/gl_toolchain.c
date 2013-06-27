@@ -23,9 +23,6 @@ static const char SHADER_HEAD[] =
 "#define LOWPREC\n"
 "#endif\n\n";
 
-static int init_hook(const pspl_toolchain_context_t* driver_context) {
-    return 0;
-}
 
 static void copyright_hook() {
     
@@ -276,7 +273,6 @@ static void instruction_hook(const pspl_toolchain_context_t* driver_context,
 
 /* Toolchain platform definition */
 pspl_toolchain_platform_t GL2_toolplat = {
-    .init_hook = init_hook,
     .copyright_hook = copyright_hook,
     .instruction_hook = instruction_hook
 };

@@ -17,20 +17,26 @@
 #include <PSPLRuntime.h>
 
 static double last_render_time = 0;
+static double fps_avg = 0;
 #define USEC_PER_SEC 1000000
 
 static void renderfunc() {
+    
+    glUseProgram(0);
     
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
         
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    double time = tv.tv_sec + (tv.tv_usec / USEC_PER_SEC);
+    double time = tv.tv_sec + ((double)tv.tv_usec / (double)USEC_PER_SEC);
     double diff = time - last_render_time;
     
+    fps_avg *= 14.0/15.0;
+    fps_avg += 1.0/diff/15.0;
+    
     char fps_str[128];
-    snprintf(fps_str, 128, "FPS: %f", 1.0f/diff);
+    snprintf(fps_str, 128, "FPS: %.f", fps_avg);
     size_t fps_str_len = strlen(fps_str);
     
     last_render_time = time;

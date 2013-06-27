@@ -354,6 +354,78 @@ typedef struct _gx_tlutreg {
 
 /*! @} */
 
+/*! \addtogroup tevkcolorid TEV constant color register
+ * @{
+ */
+#define GX_KCOLOR0				0			/*!< Constant register 0 */
+#define GX_KCOLOR1				1			/*!< Constant register 1 */
+#define GX_KCOLOR2				2			/*!< Constant register 2 */
+#define GX_KCOLOR3				3			/*!< Constant register 3 */
+#define GX_KCOLOR_MAX			4
+/*! @} */
+
+/*! \addtogroup tevkcolorsel TEV constant color selection
+ * @{
+ */
+#define GX_TEV_KCSEL_1					0x00			/*!< constant 1.0 */
+#define GX_TEV_KCSEL_7_8				0x01			/*!< constant 7/8 */
+#define GX_TEV_KCSEL_3_4				0x02			/*!< constant 3/4 */
+#define GX_TEV_KCSEL_5_8				0x03			/*!< constant 5/8 */
+#define GX_TEV_KCSEL_1_2				0x04			/*!< constant 1/2 */
+#define GX_TEV_KCSEL_3_8				0x05			/*!< constant 3/8 */
+#define GX_TEV_KCSEL_1_4				0x06			/*!< constant 1/4 */
+#define GX_TEV_KCSEL_1_8				0x07			/*!< constant 1/8 */
+#define GX_TEV_KCSEL_K0					0x0C			/*!< K0[RGB] register */
+#define GX_TEV_KCSEL_K1					0x0D			/*!< K1[RGB] register */
+#define GX_TEV_KCSEL_K2					0x0E			/*!< K2[RGB] register */
+#define GX_TEV_KCSEL_K3					0x0F			/*!< K3[RGB] register */
+#define GX_TEV_KCSEL_K0_R				0x10			/*!< K0[RRR] register */
+#define GX_TEV_KCSEL_K1_R				0x11			/*!< K1[RRR] register */
+#define GX_TEV_KCSEL_K2_R				0x12			/*!< K2[RRR] register */
+#define GX_TEV_KCSEL_K3_R				0x13			/*!< K3[RRR] register */
+#define GX_TEV_KCSEL_K0_G				0x14			/*!< K0[GGG] register */
+#define GX_TEV_KCSEL_K1_G				0x15			/*!< K1[GGG] register */
+#define GX_TEV_KCSEL_K2_G				0x16			/*!< K2[GGG] register */
+#define GX_TEV_KCSEL_K3_G				0x17			/*!< K3[GGG] register */
+#define GX_TEV_KCSEL_K0_B				0x18			/*!< K0[BBB] register */
+#define GX_TEV_KCSEL_K1_B				0x19			/*!< K1[BBB] register */
+#define GX_TEV_KCSEL_K2_B				0x1A			/*!< K2[BBB] register */
+#define GX_TEV_KCSEL_K3_B				0x1B			/*!< K3[RBB] register */
+#define GX_TEV_KCSEL_K0_A				0x1C			/*!< K0[AAA] register */
+#define GX_TEV_KCSEL_K1_A				0x1D			/*!< K1[AAA] register */
+#define GX_TEV_KCSEL_K2_A				0x1E			/*!< K2[AAA] register */
+#define GX_TEV_KCSEL_K3_A				0x1F			/*!< K3[AAA] register */
+/*! @} */
+
+/*! \addtogroup tevkalphasel TEV constant alpha selection
+ * @{
+ */
+#define GX_TEV_KASEL_1					0x00			/*!< constant 1.0 */
+#define GX_TEV_KASEL_7_8				0x01			/*!< constant 7/8 */
+#define GX_TEV_KASEL_3_4				0x02			/*!< constant 3/4 */
+#define GX_TEV_KASEL_5_8				0x03			/*!< constant 5/8 */
+#define GX_TEV_KASEL_1_2				0x04			/*!< constant 1/2 */
+#define GX_TEV_KASEL_3_8				0x05			/*!< constant 3/8 */
+#define GX_TEV_KASEL_1_4				0x06			/*!< constant 1/4 */
+#define GX_TEV_KASEL_1_8				0x07			/*!< constant 1/8 */
+#define GX_TEV_KASEL_K0_R				0x10			/*!< K0[R] register */
+#define GX_TEV_KASEL_K1_R				0x11			/*!< K1[R] register */
+#define GX_TEV_KASEL_K2_R				0x12			/*!< K2[R] register */
+#define GX_TEV_KASEL_K3_R				0x13			/*!< K3[R] register */
+#define GX_TEV_KASEL_K0_G				0x14			/*!< K0[G] register */
+#define GX_TEV_KASEL_K1_G				0x15			/*!< K1[G] register */
+#define GX_TEV_KASEL_K2_G				0x16			/*!< K2[G] register */
+#define GX_TEV_KASEL_K3_G				0x17			/*!< K3[G] register */
+#define GX_TEV_KASEL_K0_B				0x18			/*!< K0[B] register */
+#define GX_TEV_KASEL_K1_B				0x19			/*!< K1[B] register */
+#define GX_TEV_KASEL_K2_B				0x1A			/*!< K2[B] register */
+#define GX_TEV_KASEL_K3_B				0x1B			/*!< K3[B] register */
+#define GX_TEV_KASEL_K0_A				0x1C			/*!< K0[A] register */
+#define GX_TEV_KASEL_K1_A				0x1D			/*!< K1[A] register */
+#define GX_TEV_KASEL_K2_A				0x1E			/*!< K2[A] register */
+#define GX_TEV_KASEL_K3_A				0x1F			/*!< K3[A] register */
+/*! @} */
+
 typedef struct _gx_color {
  	u8 r;			/*!< Red color component. */
  	u8 g;			/*!< Green color component. */
@@ -524,6 +596,37 @@ typedef struct {
 #define GX_ITS_128						7
 #define GX_ITS_256						8
 #define GX_MAX_ITSCALE					9
+/*! @} */
+
+/*! \addtogroup pnmtx Position-normal matrix index
+ * @{
+ */
+#define GX_PNMTX0			0
+#define GX_PNMTX1			3
+#define GX_PNMTX2			6
+#define GX_PNMTX3			9
+#define GX_PNMTX4			12
+#define GX_PNMTX5			15
+#define GX_PNMTX6			18
+#define GX_PNMTX7			21
+#define GX_PNMTX8			24
+#define GX_PNMTX9			27
+/*! @} */
+
+/*! \addtogroup texmtx Texture matrix index
+ * @{
+ */
+#define GX_TEXMTX0			30
+#define GX_TEXMTX1			33
+#define GX_TEXMTX2			36
+#define GX_TEXMTX3			39
+#define GX_TEXMTX4			42
+#define GX_TEXMTX5			45
+#define GX_TEXMTX6			48
+#define GX_TEXMTX7			51
+#define GX_TEXMTX8			54
+#define GX_TEXMTX9			57
+#define GX_IDENTITY			60
 /*! @} */
 
 /*! \addtogroup dttmtx Post-transform texture matrix index

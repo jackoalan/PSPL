@@ -361,7 +361,6 @@ typedef struct _pspl_toolchain_extension {
     
     // Hook fields
     pspl_toolchain_init_hook init_hook;
-    
     pspl_toolchain_finish_hook finish_hook;
     pspl_toolchain_platform_instruct_hook platform_instruct_hook;
     pspl_toolchain_copyright_hook copyright_hook;

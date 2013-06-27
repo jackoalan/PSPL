@@ -29,171 +29,72 @@ static struct __gx_regdef *__gx = NULL;
 
 #pragma mark Offline Transaction Builder for PSGX stream
 
-#define GX_OFFLINE_TRANS_DEFSZ 64*16
-
 static struct gx_offline_trans_state {
     // Dynamically-sized buffer
     void* mem_buf;
+    union {
+        void* buf;
+        uint8_t* u8;
+        uint16_t* u16;
+        uint32_t* u32;
+        float* fl;
+    } mem_cur;
     size_t mem_cap;
-    size_t mem_size;
+} gx_trans_o;
 
-    uint32_t* cur_frame_ptr;
-    uint32_t* cur_word_ptr;
-    size_t cur_word_index;
-} _gx_trans_o;
-
-// Made this a reference for flexibility
-static struct gx_offline_trans_state* _gx_trans = NULL;
-
-void pspl_gx_offline_clear_transaction() {
-    if (!_gx_trans)
-        return;
-    free(_gx_trans->mem_buf);
-    _gx_trans->mem_buf = NULL;
-    _gx_trans->mem_cap = 0;
-    _gx_trans->mem_size = 0;
-    _gx_trans->cur_frame_ptr = NULL;
-    _gx_trans->cur_word_ptr = NULL;
-    _gx_trans->cur_word_index = 0;
-}
 
 void pspl_gx_offline_check_capacity() {
-    if (!_gx_trans || !_gx_trans->mem_buf)
-        return;
-    if ((_gx_trans->mem_size)+4 >= _gx_trans->mem_cap) {
-        _gx_trans->mem_cap += GX_OFFLINE_TRANS_DEFSZ;
-        _gx_trans->mem_buf = realloc(_gx_trans->mem_buf, _gx_trans->mem_cap);
-    }
-    if (_gx_trans->cur_word_index >= 15) {
-        _gx_trans->cur_frame_ptr = _gx_trans->cur_word_ptr;
-        _gx_trans->cur_word_ptr += 4;
-        _gx_trans->cur_word_index = 0;
-        _gx_trans->mem_size += 4;
+    size_t size = gx_trans_o.mem_cur.buf - gx_trans_o.mem_buf;
+    if (size+4 > gx_trans_o.mem_cap) {
+        gx_trans_o.mem_cap *= 2;
+        gx_trans_o.mem_buf = realloc(gx_trans_o.mem_buf, gx_trans_o.mem_cap);
+        gx_trans_o.mem_cur.buf = gx_trans_o.mem_buf + size;
     }
 }
 
 void pspl_gx_offline_begin_transaction() {
-    __gx = malloc(STRUCT_REGDEF_SIZE);
-    memset(__gx, 0, STRUCT_REGDEF_SIZE);
-    _gx_trans = &_gx_trans_o;
-    pspl_gx_offline_clear_transaction();
-    _gx_trans->mem_buf = malloc(GX_OFFLINE_TRANS_DEFSZ);
-    _gx_trans->mem_cap = GX_OFFLINE_TRANS_DEFSZ;
-    _gx_trans->mem_size = 8;
-    memcpy(_gx_trans->mem_buf, "PSGX", 4);
-    _gx_trans->cur_frame_ptr = _gx_trans->mem_buf+4;
-    _gx_trans->cur_word_ptr = _gx_trans->mem_buf+8;
-    _gx_trans->cur_word_index = 0;
+    gx_trans_o.mem_cap = 1024;
+    gx_trans_o.mem_buf = malloc(gx_trans_o.mem_cap);
+    gx_trans_o.mem_cur.buf = gx_trans_o.mem_buf;
 }
 
 size_t pspl_gx_offline_end_transaction(void** buf_out) {
-    if (!_gx_trans)
-        return 0;
-    *buf_out = _gx_trans->mem_buf;
-    _gx_trans->mem_buf = NULL;
-    size_t result_sz = _gx_trans->mem_size;
-    pspl_gx_offline_clear_transaction();
-    _gx_trans = NULL;
-    free(__gx);
-    __gx = NULL;
-    return result_sz;
+    *buf_out = gx_trans_o.mem_buf;
+    return gx_trans_o.mem_cur.buf - gx_trans_o.mem_buf;
 }
 
-void pspl_gx_offline_or_head_bits(uint32_t bits) {
-    uint32_t val;
-    
-#if __LITTLE_ENDIAN__
-    val = swap_uint32(*(_gx_trans->cur_frame_ptr));
-#elif __BIG_ENDIAN__
-    val = *(_gx_trans->cur_frame_ptr);
-#endif
-    
-    val |= (bits << (2*_gx_trans->cur_word_index));
-    ++(_gx_trans->cur_word_index);
-    
-#if __LITTLE_ENDIAN__
-    *(_gx_trans->cur_frame_ptr) = swap_uint32(val);
-#elif __BIG_ENDIAN__
-    *(_gx_trans->cur_frame_ptr) = val;
-#endif
-}
 
 void pspl_gx_offline_add_u8(uint8_t val) {
-    if (!_gx_trans)
-        return;
     pspl_gx_offline_check_capacity();
-    
-    uint32_t val32 = val;
-    
-#if __LITTLE_ENDIAN__
-    *(_gx_trans->cur_word_ptr) = swap_uint32(val32);
-#elif __BIG_ENDIAN__
-    *(_gx_trans->cur_word_ptr) = val32;
-#endif
-    
-    (_gx_trans->cur_word_ptr) += 4;
-    (_gx_trans->mem_size) += 4;
-    
-    // Word head bit: 0x2
-    pspl_gx_offline_or_head_bits(0x2);
+    *gx_trans_o.mem_cur.u8 = val;
+    gx_trans_o.mem_cur.buf += 1;
 }
 
 void pspl_gx_offline_add_u16(uint16_t val) {
-    if (!_gx_trans)
-        return;
+#   if __LITTLE_ENDIAN__
+    val = swap_uint16(val);
+#   endif
     pspl_gx_offline_check_capacity();
-    
-    uint32_t val32 = val;
-    
-#if __LITTLE_ENDIAN__
-    *(_gx_trans->cur_word_ptr) = swap_uint32(val32);
-#elif __BIG_ENDIAN__
-    *(_gx_trans->cur_word_ptr) = val32;
-#endif
-    
-    (_gx_trans->cur_word_ptr) += 4;
-    (_gx_trans->mem_size) += 4;
-    
-    // Word head bit: 0x1
-    pspl_gx_offline_or_head_bits(0x1);
+    *gx_trans_o.mem_cur.u16 = val;
+    gx_trans_o.mem_cur.buf += 2;
 }
 
 void pspl_gx_offline_add_u32(uint32_t val) {
-    if (!_gx_trans)
-        return;
+#   if __LITTLE_ENDIAN__
+    val = swap_uint32(val);
+#   endif
     pspl_gx_offline_check_capacity();
-        
-#if __LITTLE_ENDIAN__
-    *(_gx_trans->cur_word_ptr) = swap_uint32(val);
-#elif __BIG_ENDIAN__
-    *(_gx_trans->cur_word_ptr) = val;
-#endif
-    
-    (_gx_trans->cur_word_ptr) += 4;
-    (_gx_trans->mem_size) += 4;
-    
-    // Word head bit: 0x0
-    pspl_gx_offline_or_head_bits(0x0);
+    *gx_trans_o.mem_cur.u32 = val;
+    gx_trans_o.mem_cur.buf += 4;
 }
 
 void pspl_gx_offline_add_float(float val) {
-    if (!_gx_trans)
-        return;
+#   if __LITTLE_ENDIAN__
+    val = swap_float(val);
+#   endif
     pspl_gx_offline_check_capacity();
-    
-    uint32_t val32 = CAST(val, float);
-
-#if __LITTLE_ENDIAN__
-    *(_gx_trans->cur_word_ptr) = swap_uint32(val32);
-#elif __BIG_ENDIAN__
-    *(_gx_trans->cur_word_ptr) = val;
-#endif
-    
-    (_gx_trans->cur_word_ptr) += 4;
-    (_gx_trans->mem_size) += 4;
-    
-    // Word head bit: 0x3
-    pspl_gx_offline_or_head_bits(0x3);
+    *gx_trans_o.mem_cur.fl = val;
+    gx_trans_o.mem_cur.buf += 4;
 }
 
 //#define _GP_DEBUG
