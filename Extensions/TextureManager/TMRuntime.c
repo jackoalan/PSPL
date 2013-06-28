@@ -35,7 +35,7 @@ typedef struct {
 #  include <d3d9.h>
 #  define MAX_MIPS 13
 #  define TEX_T IDirect3DTexture9
-#  define SUB_TEX_FORMAT_T u8
+#  define SUB_TEX_FORMAT_T D3DFORMAT
 #elif PSPL_RUNTIME_PLATFORM_GX
 #  include <ogc/gx.h>
 #  define MAX_MIPS 11
@@ -66,12 +66,12 @@ typedef struct {
     TEX_T* texture_arr;
 } pspl_tm_map_entry;
 
-static int init(const pspl_extension_t* extension) {
+static int init_hook(const pspl_extension_t* extension) {
     pspl_malloc_context_init(&map_ctx);
     return 0;
 }
 
-static void shutdown() {
+static void shutdown_hook() {
     pspl_malloc_context_destroy(&map_ctx);
 }
 
@@ -426,8 +426,8 @@ static void bind_object(pspl_runtime_psplc_t* object) {
 }
 
 pspl_runtime_extension_t TextureManager_runext = {
-    .init_hook = init,
-    .shutdown_hook = shutdown,
+    .init_hook = init_hook,
+    .shutdown_hook = shutdown_hook,
     .load_object_hook = load_object,
     .unload_object_hook = unload_object,
     .bind_object_hook = bind_object

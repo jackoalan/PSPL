@@ -98,7 +98,7 @@ struct thread {
     void* usr_ptr;
     unsigned last_thread;
 };
-#define STACK_SIZE 8192
+#define STACK_SIZE 16384
 static void* run_thread(void* thread) {
     api_load_states[LWP_OBJMASKID(LWP_GetSelf())] = api_load_states[((struct thread*)thread)->last_thread];
     api_load_subject_indices[LWP_OBJMASKID(LWP_GetSelf())] = api_load_subject_indices[((struct thread*)thread)->last_thread];

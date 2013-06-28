@@ -16,12 +16,6 @@
 #include <PSPLExtension.h>
 #include "ReferenceGatherer.h"
 
-#ifdef _WIN32
-char* strtok_r(char *str,
-               const char *delim,
-               char **nextp);
-#endif
-
 /* Escape character sequences to control xterm */
 #define NOBKD     "\E[47;49m"
 #define RED       "\E[47;31m"NOBKD

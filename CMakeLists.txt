@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 2.8)
 
 # Determine which primary platform to build
-option(PSPL_WINDOWS "Build with Windows support using mingw32-gcc (both Toolchain and Runtime)" OFF)
+option(PSPL_WIN32 "Build with 32-bit Windows support using mingw32-gcc (both Toolchain and Runtime)" OFF)
+option(PSPL_WIN64 "Build with 64-bit Windows support using mingw32-gcc (both Toolchain and Runtime)" OFF)
 option(PSPL_WII "Build with Wii support using WiiStep's llvm macros (Runtime only)" OFF)
-if(PSPL_WINDOWS)
-  set(CMAKE_TOOLCHAIN_FILE cmake/ToolchainCrossDarwinMinGW32.cmake)
+if(PSPL_WIN32 OR PSPL_WIN64)
+  set(CMAKE_TOOLCHAIN_FILE cmake/ToolchainCrossMinGW32-w64.cmake)
   set(PSPL_TOOLCHAIN_TARGET_SYSTEM WINDOWS CACHE STRING
       "Select which platform to (cross) compile PSPL Toolchain for [NATIVE, WII, WINDOWS] (default WINDOWS)")
   set(PSPL_RUNTIME_TARGET_SYSTEM WINDOWS CACHE STRING

@@ -96,7 +96,7 @@
 		E45034F71760E2BE0079B62D /* TMCommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMCommon.h; sourceTree = "<group>"; };
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
 		E462EEA81778FC0200211193 /* gl_runtime_ios.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = gl_runtime_ios.m; sourceTree = "<group>"; };
-		E48CCCBC1747D4D500DDDD63 /* ToolchainCrossDarwinMinGW32.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToolchainCrossDarwinMinGW32.cmake; sourceTree = "<group>"; };
+		E48CCCBC1747D4D500DDDD63 /* ToolchainCrossMinGW32-w64.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "ToolchainCrossMinGW32-w64.cmake"; sourceTree = "<group>"; };
 		E48FF55E1764CE15000231AA /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E48FF55F1764CF29000231AA /* IRToolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = IRToolchain.c; sourceTree = "<group>"; };
 		E48FF5611764CF31000231AA /* IRRuntime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = IRRuntime.c; sourceTree = "<group>"; };
@@ -513,7 +513,7 @@
 			isa = PBXGroup;
 			children = (
 				E4AFAE77171EFF7900F7A0BF /* README.md */,
-				E48CCCBC1747D4D500DDDD63 /* ToolchainCrossDarwinMinGW32.cmake */,
+				E48CCCBC1747D4D500DDDD63 /* ToolchainCrossMinGW32-w64.cmake */,
 				E4AFAE7C17218D8300F7A0BF /* Templates */,
 				E4AFAE74171EF74600F7A0BF /* PSPLConfig.cmake.in */,
 				E4AFAE76171EF78600F7A0BF /* PSPLExtensionMacros.cmake */,
