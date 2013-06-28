@@ -1733,7 +1733,7 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                            union_plat_bits(globals, ctx, ent->platform_availability_bits));
                 SET_BI_U16(hash_record, object_bi, (ent->object_little_data && ent->object_big_data &&
                                                     ent->object_little_data != ent->object_big_data));
-                SET_BI_U32(hash_record, object_off, ctx->extension_obj_data_off);
+                SET_BI_U32(hash_record, object_off, ent->object_off);
                 if (ent->object_little_data && ent->object_big_data &&
                     ent->object_little_data != ent->object_big_data) {
 #                   ifdef __LITTLE_ENDIAN__
@@ -1785,7 +1785,7 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                            union_plat_bits(globals, ctx, ent->platform_availability_bits));
                 SET_BI_U16(int_record, object_bi, (ent->object_little_data && ent->object_big_data &&
                                                    ent->object_little_data != ent->object_big_data));
-                SET_BI_U32(int_record, object_off, ctx->extension_obj_data_off);
+                SET_BI_U32(int_record, object_off, ent->object_off);
                 if (ent->object_little_data && ent->object_big_data &&
                     ent->object_little_data != ent->object_big_data) {
 #                   ifdef __LITTLE_ENDIAN__
@@ -1837,7 +1837,7 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                            union_plat_bits(globals, ctx, ent->platform_availability_bits));
                 SET_BI_U16(hash_record, object_bi, (ent->object_little_data && ent->object_big_data &&
                                                     ent->object_little_data != ent->object_big_data));
-                SET_BI_U32(hash_record, object_off, ctx->extension_obj_data_off);
+                SET_BI_U32(hash_record, object_off, ent->object_off);
                 if (ent->object_little_data && ent->object_big_data &&
                     ent->object_little_data != ent->object_big_data) {
 #                   ifdef __LITTLE_ENDIAN__
@@ -1888,7 +1888,7 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
                            union_plat_bits(globals, ctx, ent->platform_availability_bits));
                 SET_BI_U16(int_record, object_bi, (ent->object_little_data && ent->object_big_data &&
                                                    ent->object_little_data != ent->object_big_data));
-                SET_BI_U32(int_record, object_off, ctx->extension_obj_data_off);
+                SET_BI_U32(int_record, object_off, ent->object_off);
                 if (ent->object_little_data && ent->object_big_data &&
                     ent->object_little_data != ent->object_big_data) {
 #                   ifdef __LITTLE_ENDIAN__
@@ -2071,11 +2071,12 @@ void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
     ctx->extension_obj_data_off = acc;
     for (i=0 ; i<ctx->h_objects_count ; ++i) {
         pspl_indexer_entry_t* ent = ctx->h_objects_array[i];
+        ent->object_off = acc;
         if (psplc_endianness == PSPL_LITTLE_ENDIAN)
             ent->object_big_data = NULL;
         else if (psplc_endianness == PSPL_BIG_ENDIAN)
             ent->object_little_data = NULL;
-        ent->object_padding = ROUND_UP_4(acc) - acc;
+        ent->object_padding = ROUND_UP_4(ent->object_len) - ent->object_len;
         if (ent->object_little_data && ent->object_big_data &&
             ent->object_little_data != ent->object_big_data)
             acc += (ent->object_len+ent->object_padding)*2;
@@ -2084,11 +2085,12 @@ void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
     }
     for (i=0 ; i<ctx->i_objects_count ; ++i) {
         pspl_indexer_entry_t* ent = ctx->i_objects_array[i];
+        ent->object_off = acc;
         if (psplc_endianness == PSPL_LITTLE_ENDIAN)
             ent->object_big_data = NULL;
         else if (psplc_endianness == PSPL_BIG_ENDIAN)
             ent->object_little_data = NULL;
-        ent->object_padding = ROUND_UP_4(acc) - acc;
+        ent->object_padding = ROUND_UP_4(ent->object_len) - ent->object_len;
         if (ent->object_little_data && ent->object_big_data &&
             ent->object_little_data != ent->object_big_data)
             acc += (ent->object_len+ent->object_padding)*2;
@@ -2097,11 +2099,12 @@ void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
     }
     for (i=0 ; i<ctx->ph_objects_count ; ++i) {
         pspl_indexer_entry_t* ent = ctx->ph_objects_array[i];
+        ent->object_off = acc;
         if (psplc_endianness == PSPL_LITTLE_ENDIAN)
             ent->object_big_data = NULL;
         else if (psplc_endianness == PSPL_BIG_ENDIAN)
             ent->object_little_data = NULL;
-        ent->object_padding = ROUND_UP_4(acc) - acc;
+        ent->object_padding = ROUND_UP_4(ent->object_len) - ent->object_len;
         if (ent->object_little_data && ent->object_big_data &&
             ent->object_little_data != ent->object_big_data)
             acc += (ent->object_len+ent->object_padding)*2;
@@ -2110,11 +2113,12 @@ void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
     }
     for (i=0 ; i<ctx->pi_objects_count ; ++i) {
         pspl_indexer_entry_t* ent = ctx->pi_objects_array[i];
+        ent->object_off = acc;
         if (psplc_endianness == PSPL_LITTLE_ENDIAN)
             ent->object_big_data = NULL;
         else if (psplc_endianness == PSPL_BIG_ENDIAN)
             ent->object_little_data = NULL;
-        ent->object_padding = ROUND_UP_4(acc) - acc;
+        ent->object_padding = ROUND_UP_4(ent->object_len) - ent->object_len;
         if (ent->object_little_data && ent->object_big_data &&
             ent->object_little_data != ent->object_big_data)
             acc += (ent->object_len+ent->object_padding)*2;

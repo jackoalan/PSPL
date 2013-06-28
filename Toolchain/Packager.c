@@ -202,11 +202,12 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
         indexer->extension_obj_data_off = acc;
         for (j=0 ; j<indexer->h_objects_count ; ++j) {
             pspl_indexer_entry_t* ent = indexer->h_objects_array[j];
+            ent->object_off = acc;
             if (psplp_endianness == PSPL_LITTLE_ENDIAN)
                 ent->object_big_data = NULL;
             else if (psplp_endianness == PSPL_BIG_ENDIAN)
                 ent->object_little_data = NULL;
-            ent->object_padding = ROUND_UP_4(acc) - acc;
+            ent->object_padding = ROUND_UP_4(ent->object_len) - ent->object_len;
             if (ent->object_little_data && ent->object_big_data &&
                 ent->object_little_data != ent->object_big_data)
                 acc += (ent->object_len+ent->object_padding)*2;
@@ -215,11 +216,12 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
         }
         for (j=0 ; j<indexer->i_objects_count ; ++j) {
             pspl_indexer_entry_t* ent = indexer->i_objects_array[j];
+            ent->object_off = acc;
             if (psplp_endianness == PSPL_LITTLE_ENDIAN)
                 ent->object_big_data = NULL;
             else if (psplp_endianness == PSPL_BIG_ENDIAN)
                 ent->object_little_data = NULL;
-            ent->object_padding = ROUND_UP_4(acc) - acc;
+            ent->object_padding = ROUND_UP_4(ent->object_len) - ent->object_len;
             if (ent->object_little_data && ent->object_big_data &&
                 ent->object_little_data != ent->object_big_data)
                 acc += (ent->object_len+ent->object_padding)*2;
@@ -228,11 +230,12 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
         }
         for (j=0 ; j<indexer->ph_objects_count ; ++j) {
             pspl_indexer_entry_t* ent = indexer->ph_objects_array[j];
+            ent->object_off = acc;
             if (psplp_endianness == PSPL_LITTLE_ENDIAN)
                 ent->object_big_data = NULL;
             else if (psplp_endianness == PSPL_BIG_ENDIAN)
                 ent->object_little_data = NULL;
-            ent->object_padding = ROUND_UP_4(acc) - acc;
+            ent->object_padding = ROUND_UP_4(ent->object_len) - ent->object_len;
             if (ent->object_little_data && ent->object_big_data &&
                 ent->object_little_data != ent->object_big_data)
                 acc += (ent->object_len+ent->object_padding)*2;
@@ -241,11 +244,12 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
         }
         for (j=0 ; j<indexer->pi_objects_count ; ++j) {
             pspl_indexer_entry_t* ent = indexer->pi_objects_array[j];
+            ent->object_off = acc;
             if (psplp_endianness == PSPL_LITTLE_ENDIAN)
                 ent->object_big_data = NULL;
             else if (psplp_endianness == PSPL_BIG_ENDIAN)
                 ent->object_little_data = NULL;
-            ent->object_padding = ROUND_UP_4(acc) - acc;
+            ent->object_padding = ROUND_UP_4(ent->object_len) - ent->object_len;
             if (ent->object_little_data && ent->object_big_data &&
                 ent->object_little_data != ent->object_big_data)
                 acc += (ent->object_len+ent->object_padding)*2;

@@ -22,6 +22,7 @@
 #include <string.h>
 #include <math.h>
 #include <PSPL/PSPLValue.h>
+#include <PSPL/PSPLCommon.h>
 #include "gx_offline.h"
 
 // Offline GX register state for building transaction
@@ -60,9 +61,16 @@ void pspl_gx_offline_begin_transaction() {
     gx_trans_o.mem_cur.buf = gx_trans_o.mem_buf;
 }
 
+void pspl_gx_offline_add_u8(uint8_t val);
 size_t pspl_gx_offline_end_transaction(void** buf_out) {
     *buf_out = gx_trans_o.mem_buf;
-    return gx_trans_o.mem_cur.buf - gx_trans_o.mem_buf;
+    size_t size = gx_trans_o.mem_cur.buf - gx_trans_o.mem_buf;
+    size_t extra = ROUND_UP_32(size) - size;
+    size += extra;
+    int i;
+    for (i=0 ; i<extra ; ++i)
+        pspl_gx_offline_add_u8(0);
+    return size;
 }
 
 

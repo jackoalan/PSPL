@@ -46,6 +46,7 @@ typedef struct {
     // (unused for file stubs)
     size_t object_len;
     size_t object_padding;
+    uint32_t object_off;
     const void* object_little_data;
     const void* object_big_data;
     

@@ -12,12 +12,10 @@
 
 static const char SHADER_HEAD[] =
 "#ifdef GL_ES\n"
-"#version 100\n"
 "#define HIGHPREC highp\n"
 "#define MEDPREC mediump\n"
 "#define LOWPREC lowp\n"
 "#else\n"
-"#version 120\n"
 "#define HIGHPREC\n"
 "#define MEDPREC\n"
 "#define LOWPREC\n"
@@ -141,16 +139,20 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
     pspl_buffer_addstr(frag, "varying HIGHPREC vec4 normal;\n");
     
     // Varying texcoord linkages
-    char varying_str[64];
-    snprintf(varying_str, 64, "varying HIGHPREC vec2 texCoords[%u];\n\n", ir_state->vertex.tc_count);
-    pspl_buffer_addstr(frag, varying_str);
+    if (ir_state->vertex.tc_count) {
+        char varying_str[64];
+        snprintf(varying_str, 64, "varying HIGHPREC vec2 texCoords[%u];\n\n", ir_state->vertex.tc_count);
+        pspl_buffer_addstr(frag, varying_str);
+    }
     
     
     
     // Texture map uniforms
-    char uniform_str[64];
-    snprintf(uniform_str, 64, "uniform LOWPREC sampler2D texs[%u];\n\n", ir_state->total_texmap_count);
-    pspl_buffer_addstr(frag, uniform_str);
+    if (ir_state->total_texmap_count) {
+        char uniform_str[64];
+        snprintf(uniform_str, 64, "uniform LOWPREC sampler2D texs[%u];\n\n", ir_state->total_texmap_count);
+        pspl_buffer_addstr(frag, uniform_str);
+    }
     
     
     

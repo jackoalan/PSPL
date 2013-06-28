@@ -519,7 +519,7 @@ int pspl_runtime_get_embedded_data_object_from_integer(const pspl_runtime_psplc_
                                                        pspl_data_object_t* data_object_out) {
     if (!object || !data_object_out)
         return -1;
-    int i,j;
+    int i;
     const _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)object;
     
     intptr_t api_load_state = pspl_api_load_state();
@@ -537,13 +537,7 @@ int pspl_runtime_get_embedded_data_object_from_integer(const pspl_runtime_psplc_
     // Perform lookup
     for (i=0 ; i<idx->i_arr_c ; ++i) {
         const pspl_object_int_record_t* rec = &idx->i_arr[i];
-        for (j=0 ; j<(sizeof(pspl_hash)/4) ; ++j) {
-            if (index != rec->object_index) {
-                rec = NULL;
-                break;
-            }
-        }
-        if (rec) {
+        if (index == rec->object_index) {
             
             // Populate data
             data_object_out->object_data = obj->blobs_buf + rec->object_off;
@@ -969,8 +963,8 @@ static int load_psplp(pspl_runtime_package_t* package) {
             }
             
             // Platform heads
-            _pspl_object_index_t* plat_index_arr = calloc(psplc_head->platform_count,
-                                                          sizeof(_pspl_object_index_t));
+            _pspl_object_index_t* plat_index_arr = calloc(1, sizeof(_pspl_object_index_t));
+            unsigned loaded_plat_count = 0;
             for (k=0 ; k<psplc_head->platform_count ; ++k) {
                 const pspl_object_array_extension_t* ext = off_tables_cur;
                 if (IS_PSPLP_BI) {
@@ -979,6 +973,10 @@ static int load_psplp(pspl_runtime_package_t* package) {
                     off_tables_cur += sizeof(pspl_object_array_extension_t);
                 }
                 off_tables_cur += sizeof(pspl_object_array_extension_t);
+                
+                // Determine if this is (not) the platform we need
+                if (ext->platform_index != package->runtime_platform_index)
+                    continue;
                 
                 // Allocate arrays
                 _pspl_object_hash_record_t* hash_dest_table = calloc(ext->ext_hash_indexed_object_count,
@@ -1000,10 +998,6 @@ static int load_psplp(pspl_runtime_package_t* package) {
                     }
                     ext_off += sizeof(pspl_object_hash_record_t);
                     
-                    // Determine if platform is (not) supported
-                    if (!((rec->platform_availability_bits >> package->runtime_platform_index) & 1))
-                        continue;
-                    
                     // Populate runtime data (simple copy)
                     _pspl_object_hash_record_t* dest = &hash_dest_table[h_arr_c++];
                     pspl_hash_cpy(&dest->hash, hash);
@@ -1023,10 +1017,6 @@ static int load_psplp(pspl_runtime_package_t* package) {
                     }
                     ext_off += sizeof(pspl_object_int_record_t);
                     
-                    // Determine if platform is (not) supported
-                    if (!((rec->platform_availability_bits >> package->runtime_platform_index) & 1))
-                        continue;
-                    
                     // Populate runtime data (simple copy)
                     pspl_object_int_record_t* dest = &int_dest_table[i_arr_c++];
                     *dest = *rec;
@@ -1034,12 +1024,15 @@ static int load_psplp(pspl_runtime_package_t* package) {
                 }
                 
                 // Access index array and apply
-                _pspl_object_index_t* index = &plat_index_arr[k];
+                _pspl_object_index_t* index = &plat_index_arr[loaded_plat_count++];
                 index->platform_index = ext->platform_index;
                 index->h_arr_c = h_arr_c;
                 index->h_arr = hash_dest_table;
                 index->i_arr_c = i_arr_c;
                 index->i_arr = int_dest_table;
+                
+                // Only one platform loaded
+                break;
 
             }
             
@@ -1050,7 +1043,7 @@ static int load_psplp(pspl_runtime_package_t* package) {
             dest_psplc->ref_count = 0;
             dest_psplc->ext_arr_c = psplc_head->extension_count;
             dest_psplc->ext_arr = ext_index_arr;
-            dest_psplc->plat_arr_c = psplc_head->platform_count;
+            dest_psplc->plat_arr_c = loaded_plat_count;
             dest_psplc->plat_arr = plat_index_arr;
             dest_psplc->blobs_off = blobs_off;
             dest_psplc->blobs_len = ent->psplc_blobs_len;
@@ -1526,11 +1519,8 @@ void pspl_runtime_retain_psplc(pspl_runtime_psplc_t* psplc) {
         // Run platform hooks
         pspl_api_set_load_state(PSPL_LOADING_PLAT);
         for (i=0 ; i<obj->plat_arr_c ; ++i) {
-            const _pspl_object_index_t* idx = &obj->plat_arr[i];
-            if (idx->platform_index != psplc->parent->runtime_platform_index)
-                continue;
             
-            // Notify extension of loading
+            // Notify platform of loading
             pspl_api_set_load_subject_index(i);
             if (pspl_runtime_platform->runtime_platform && pspl_runtime_platform->runtime_platform->load_object_hook)
                 pspl_runtime_platform->runtime_platform->load_object_hook(psplc);
@@ -1577,9 +1567,6 @@ static void _pspl_runtime_release_psplc(pspl_runtime_psplc_t* psplc, int total) 
         // Run platform hooks
         pspl_api_set_load_state(PSPL_LOADING_PLAT);
         for (i=0 ; i<obj->plat_arr_c ; ++i) {
-            const _pspl_object_index_t* idx = &obj->plat_arr[i];
-            if (idx->platform_index != psplc->parent->runtime_platform_index)
-                continue;
             
             // Notify platform of unloading
             pspl_api_set_load_subject_index(i);
@@ -1625,9 +1612,6 @@ void pspl_runtime_bind_psplc(pspl_runtime_psplc_t* psplc) {
     // Run platform hooks
     pspl_api_set_load_state(PSPL_LOADING_PLAT);
     for (i=0 ; i<obj->plat_arr_c ; ++i) {
-        const _pspl_object_index_t* idx = &obj->plat_arr[i];
-        if (idx->platform_index != psplc->parent->runtime_platform_index)
-            continue;
         
         // Notify platform of binding
         pspl_api_set_load_subject_index(i);
