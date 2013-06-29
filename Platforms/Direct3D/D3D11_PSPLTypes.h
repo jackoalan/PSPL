@@ -10,12 +10,20 @@
 #define PSPL_D3D11_PSPLTypes_h
 
 #include <d3d11.h>
+#include "d3d_common.h"
+
 
 /* Direct3D-specific type for shader object */
 typedef struct {
     
-    // Shader object
+    // Config struct
+    d3d11_config_t* config;
     
+    // Vertex shader
+    ID3D11VertexShader* vertex_shader;
+    
+    // Pixel Shader
+    ID3D11PixelShader* pixel_shader;
     
 } D3D11_shader_object_t;
 

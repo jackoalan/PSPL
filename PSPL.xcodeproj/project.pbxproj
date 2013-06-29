@@ -36,12 +36,13 @@
 		E4C527151778B81300D1D822 /* RuntimeThreads.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C527141778B71900D1D822 /* RuntimeThreads.c */; };
 		E4C5E8B6177E12DB00D73E7D /* TMRuntime_d3d.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4C5E8B3177E04A600D73E7D /* TMRuntime_d3d.cpp */; };
 		E4C5E8B7177E1BAC00D73E7D /* TMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E5175CDA560079B62D /* TMRuntime.c */; };
+		E4C5E8B8177E79A400D73E7D /* d3d_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4917A175109DD006FCA59 /* d3d_runtime.c */; };
+		E4C5E8BC177E82F100D73E7D /* d3d11_runtime_interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4C5E8BA177E826B00D73E7D /* d3d11_runtime_interface.cpp */; };
 		E4E4916F17510685006FCA59 /* PSPLCommon.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4916E17510684006FCA59 /* PSPLCommon.c */; };
 		E4E491731751094E006FCA59 /* gl_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E491721751094E006FCA59 /* gl_toolchain.c */; };
 		E4E49179175109D4006FCA59 /* d3d_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E49178175109D4006FCA59 /* d3d_toolchain.c */; };
 		E4E4918417510B40006FCA59 /* RuntimeCore.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4916C175105FF006FCA59 /* RuntimeCore.c */; };
 		E4E4918517510B4D006FCA59 /* gl_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4917417510956006FCA59 /* gl_runtime.c */; };
-		E4E4918617510B59006FCA59 /* d3d_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4917A175109DD006FCA59 /* d3d_runtime.c */; };
 		E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4916E17510684006FCA59 /* PSPLCommon.c */; };
 		E4E4918E1753FAD3006FCA59 /* pspl_available_runtime_extensions.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4918C1753FACF006FCA59 /* pspl_available_runtime_extensions.c */; };
 		E4E4918F1753FAD6006FCA59 /* pspl_available_toolchain_extensions.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4918D1753FACF006FCA59 /* pspl_available_toolchain_extensions.c */; };
@@ -173,6 +174,9 @@
 		E4C527141778B71900D1D822 /* RuntimeThreads.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = RuntimeThreads.c; sourceTree = "<group>"; };
 		E4C5E8B3177E04A600D73E7D /* TMRuntime_d3d.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TMRuntime_d3d.cpp; sourceTree = "<group>"; };
 		E4C5E8B4177E04A600D73E7D /* TMRuntime_d3d.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMRuntime_d3d.h; sourceTree = "<group>"; };
+		E4C5E8B9177E813B00D73E7D /* d3d_common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = d3d_common.h; sourceTree = "<group>"; };
+		E4C5E8BA177E826B00D73E7D /* d3d11_runtime_interface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = d3d11_runtime_interface.cpp; sourceTree = "<group>"; };
+		E4C5E8BB177E826C00D73E7D /* d3d11_runtime_interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = d3d11_runtime_interface.h; sourceTree = "<group>"; };
 		E4E4916C175105FF006FCA59 /* RuntimeCore.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = RuntimeCore.c; sourceTree = "<group>"; };
 		E4E4916E17510684006FCA59 /* PSPLCommon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = PSPLCommon.c; sourceTree = "<group>"; };
 		E4E49170175108C4006FCA59 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -463,8 +467,11 @@
 				E4AFAE3F171C9E2C00F7A0BF /* README.md */,
 				E4E49176175109A3006FCA59 /* CMakeLists.txt */,
 				E4E49177175109B7006FCA59 /* D3D11_PSPLTypes.h */,
+				E4C5E8B9177E813B00D73E7D /* d3d_common.h */,
 				E4E49178175109D4006FCA59 /* d3d_toolchain.c */,
 				E4E4917A175109DD006FCA59 /* d3d_runtime.c */,
+				E4C5E8BB177E826C00D73E7D /* d3d11_runtime_interface.h */,
+				E4C5E8BA177E826B00D73E7D /* d3d11_runtime_interface.cpp */,
 			);
 			path = Direct3D;
 			sourceTree = "<group>";
@@ -749,16 +756,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E4C5E8B8177E79A400D73E7D /* d3d_runtime.c in Sources */,
 				E462EEA91778FC5B00211193 /* gl_runtime_ios.m in Sources */,
 				E4C5E8B6177E12DB00D73E7D /* TMRuntime_d3d.cpp in Sources */,
 				E4E4918417510B40006FCA59 /* RuntimeCore.c in Sources */,
 				E4E4918517510B4D006FCA59 /* gl_runtime.c in Sources */,
-				E4E4918617510B59006FCA59 /* d3d_runtime.c in Sources */,
 				E4C5E8B7177E1BAC00D73E7D /* TMRuntime.c in Sources */,
 				E4C527151778B81300D1D822 /* RuntimeThreads.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
 				E447F7FC1774A6780081E1DF /* CalcChain.c in Sources */,
 				E4E4918E1753FAD3006FCA59 /* pspl_available_runtime_extensions.c in Sources */,
+				E4C5E8BC177E82F100D73E7D /* d3d11_runtime_interface.cpp in Sources */,
 				E4C5270F1778A36300D1D822 /* SMRuntime.c in Sources */,
 				E48FF5631764D91C000231AA /* IRRuntime.c in Sources */,
 			);
