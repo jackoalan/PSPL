@@ -89,7 +89,11 @@ configure_file(cmake/pspl_tm_config.c.in pspl_tm_config.c)
 include_directories(.)
 pspl_add_extension(TextureManager "Platform-independent texture conversion and integration")
 pspl_add_extension_toolchain(TextureManager TMToolchain.c ${PSPL_TM_CODER_SRCS} pspl_tm_config.c)
-pspl_add_extension_runtime(TextureManager TMRuntime.c)
+if(PSPL_RUNTIME_PLATFORM MATCHES D3D11)
+  pspl_add_extension_runtime(TextureManager TMRuntime.c TMRuntime_d3d.cpp)
+else()
+  pspl_add_extension_runtime(TextureManager TMRuntime.c)
+endif()
 
 
   

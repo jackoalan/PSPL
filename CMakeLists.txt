@@ -5,7 +5,7 @@ option(PSPL_WIN32 "Build with 32-bit Windows support using mingw32-gcc (both Too
 option(PSPL_WIN64 "Build with 64-bit Windows support using mingw32-gcc (both Toolchain and Runtime)" OFF)
 option(PSPL_WII "Build with Wii support using WiiStep's llvm macros (Runtime only)" OFF)
 if(PSPL_WIN32 OR PSPL_WIN64)
-  set(CMAKE_TOOLCHAIN_FILE cmake/ToolchainCrossMinGW32-w64.cmake)
+  set(CMAKE_TOOLCHAIN_FILE cmake/ToolchainCrossWindows.cmake)
   set(PSPL_TOOLCHAIN_TARGET_SYSTEM WINDOWS CACHE STRING
       "Select which platform to (cross) compile PSPL Toolchain for [NATIVE, WII, WINDOWS] (default WINDOWS)")
   set(PSPL_RUNTIME_TARGET_SYSTEM WINDOWS CACHE STRING
@@ -75,8 +75,8 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
   set(PSPL_RUNTIME_PLATFORM GL2 CACHE STRING 
       "Select which platform to build runtime for [${pspl_platform_list}] (GL2 selected by default)")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Windows)
-  set(PSPL_RUNTIME_PLATFORM D3D9 CACHE STRING 
-      "Select which platform to build runtime for [${pspl_platform_list}] (D3D9 selected by default)")
+  set(PSPL_RUNTIME_PLATFORM D3D11 CACHE STRING 
+      "Select which platform to build runtime for [${pspl_platform_list}] (D3D11 selected by default)")
 else()
   set(PSPL_RUNTIME_PLATFORM "" CACHE STRING 
       "Select which platform to build runtime for [${pspl_platform_list}] (Runtime not built by default)")

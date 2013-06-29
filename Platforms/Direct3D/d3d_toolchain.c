@@ -9,6 +9,6 @@
 #include <PSPLExtension.h>
 
 /* Toolchain platform definition */
-pspl_toolchain_platform_t D3D9_toolplat = {
+pspl_toolchain_platform_t D3D11_toolplat = {
     
 };

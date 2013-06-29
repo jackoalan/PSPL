@@ -52,6 +52,8 @@ typedef struct {
 } pspl_matrix34_t;
 
 /* Common perspective transform representation */
+#undef near
+#undef far
 typedef struct {
     float fov;
     float aspect;

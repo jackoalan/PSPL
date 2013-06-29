@@ -143,4 +143,55 @@ intptr_t pspl_api_load_subject_index() {
 }
 
 
+#elif defined(PSPL_THREADING_WIN32)
+#include <winbase.h>
+
+static DWORD api_load_states = 0;
+static DWORD api_load_subject_indices = 0;
+
+struct thread {
+    void(*func)(void*);
+    void* usr_ptr;
+    intptr_t states;
+    intptr_t indices;
+};
+static DWORD run_thread(LPVOID thread) {
+    TlsSetValue(api_load_states, (LPVOID)((struct thread*)thread)->states);
+    TlsSetValue(api_load_subject_indices, (LPVOID)((struct thread*)thread)->indices);
+    ((struct thread*)thread)->func(((struct thread*)thread)->usr_ptr);
+    return 0;
+}
+int pspl_thread_fork(void(*func)(void*), void* usr_ptr) {
+    struct thread th = {
+        .func = func,
+        .usr_ptr = usr_ptr,
+        .states = pspl_api_load_state(),
+        .indices = pspl_api_load_subject_index()
+    };
+    if (!CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)run_thread, &th, 0, NULL))
+        return -1;
+    return 0;
+}
+
+
+/* Thread-specific values (set on fork) */
+void pspl_api_set_load_state(intptr_t state) {
+    if (!api_load_states)
+        api_load_states = TlsAlloc();
+    TlsSetValue(api_load_states, (LPVOID)state);
+}
+void pspl_api_set_load_subject_index(intptr_t index) {
+    if (!api_load_subject_indices)
+        api_load_subject_indices = TlsAlloc();
+    TlsSetValue(api_load_subject_indices, (LPVOID)index);
+}
+
+intptr_t pspl_api_load_state() {
+    return (intptr_t)TlsGetValue(api_load_states);
+}
+intptr_t pspl_api_load_subject_index() {
+    return (intptr_t)TlsGetValue(api_load_subject_indices);
+}
+
+
 #endif
