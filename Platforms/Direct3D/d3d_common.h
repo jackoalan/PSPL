@@ -9,6 +9,8 @@
 #ifndef PSPL_d3d_common_h
 #define PSPL_d3d_common_h
 
+#include <stdint.h>
+
 enum d3d11_object {
     D3D11_CONFIG_STRUCT   = 1,
     D3D11_VERTEX_SOURCE   = 2,

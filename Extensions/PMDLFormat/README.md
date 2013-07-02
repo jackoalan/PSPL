@@ -28,7 +28,7 @@ by including valued macro-tags within the PMDL file's *metadata*.
 Blender Integration
 -------------------
 
-[**Blender**](http://blender.org) has been chosen as PMDL's initial design and
+[**Blender**](http://blender.org) has been chosen as PMDL's initial 3D design and
 development toolchain. As such, PMDL also includes a series of *Python-language Blender
 Add-ons*. These add-ons allow complete control of mesh data saved into a PMDL
-file, using Blender's conventions. 
+file, using Blender's on-board Python API. 

@@ -59,9 +59,10 @@ static void instruction_hook(const pspl_toolchain_context_t* driver_context,
         
         // Fragment state
         unsigned tev_count = 0;
+        unsigned colour_index = 0;
         for (i=0 ; i<ir_state->fragment.stage_count ; ++i) {
             if (tev_count >= 16)
-                pspl_error(-1, "GX TEV Overflow",
+                pspl_error(-1, "GX TEV Stage Overflow",
                            "GX supports a maximum of 16 TEV (multi-texturing) stages; this PSPL has %u stages",
                            ir_state->fragment.stage_count);
             const pspl_ir_fragment_stage_t* stage = &ir_state->fragment.stage_array[i];
@@ -76,15 +77,19 @@ static void instruction_hook(const pspl_toolchain_context_t* driver_context,
             GX_SetTevOrder(tev_stage, tex_coord, tex_map, GX_COLORNULL);
             
             if (stage->using_colour) {
+                if (colour_index >= GX_KCOLOR_MAX)
+                    pspl_error(-1, "GX TEV Constant Colour Overflow",
+                               "GX supports a maximum of 4 constant colours per TEV stage");
                 GXColor color = {
                     .r = stage->stage_colour.r * 0xff,
                     .g = stage->stage_colour.g * 0xff,
                     .b = stage->stage_colour.b * 0xff,
                     .a = stage->stage_colour.a * 0xff
                 };
-                GX_SetTevKColor(GX_KCOLOR0, color);
-                GX_SetTevKColorSel(tev_stage, GX_TEV_KCSEL_K0);
-                GX_SetTevKAlphaSel(tev_stage, GX_TEV_KASEL_K0_A);
+                GX_SetTevKColor(GX_KCOLOR0 + colour_index, color);
+                GX_SetTevKColorSel(tev_stage, GX_TEV_KCSEL_K0 + colour_index);
+                GX_SetTevKAlphaSel(tev_stage, GX_TEV_KASEL_K0_A + colour_index);
+                ++colour_index;
             }
             
             u8 stagesourcesc[3];

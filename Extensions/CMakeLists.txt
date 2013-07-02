@@ -1,6 +1,6 @@
 add_subdirectory(PSPLBuiltins)
 add_subdirectory(PSPL_IR)
-#add_subdirectory(PMDLFormat)
+add_subdirectory(PMDLFormat)
 add_subdirectory(SceneManager)
 add_subdirectory(TextureManager)
 #add_subdirectory(LightingManager)

@@ -33,7 +33,7 @@ typedef struct {
 #  define SUB_TEX_FORMAT_T GLenum
 #elif PSPL_RUNTIME_PLATFORM_D3D11
 #  include <d3d11.h>
-#  include "TMRuntime_d3d.h"
+#  include "TMRuntime_d3d11.h"
 #  define MAX_MIPS 13
 #  define TEX_T ID3D11ShaderResourceView*
 #  define SUB_TEX_FORMAT_T enum DXGI_FORMAT
@@ -120,20 +120,21 @@ static void recursive_mip_load(pspl_tm_recurse_t* info,
 #       endif
     }
     
+    
+    // Load into OpenGL
+    // (`data_off` is either pointer or offset depending if PBOs are used)
+    if (info->format == TEXTURE_RGB)
+        glTexSubImage2D(GL_TEXTURE_2D, i, 0, 0, width, height, info->sub_fmt, GL_UNSIGNED_BYTE, data_off);
+    else if (info->format == TEXTURE_S3TC)
+        glCompressedTexSubImage2D(GL_TEXTURE_2D, i, 0, 0, width, height, info->sub_fmt, (GLsizei)dsize, data_off);
+    
+    
     // Reach out to smallest
     if (mip_c)
         recursive_mip_load(info, mip_c-1, i+1,
                            (width == 1)?1:width/2, (height == 1)?1:height/2,
                            data_off + dsize);
     
-    
-    
-    if (info->format == TEXTURE_RGB)
-        glTexSubImage2D(GL_TEXTURE_2D, i, 0, 0, width, height, info->sub_fmt, GL_UNSIGNED_BYTE, data_off);
-    else if (info->format == TEXTURE_S3TC)
-        glCompressedTexSubImage2D(GL_TEXTURE_2D, i, 0, 0, width, height, info->sub_fmt, (GLsizei)dsize, data_off);
-
-
 }
 
 #endif
@@ -392,7 +393,7 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
             .CPUAccessFlags = 0,
             .MiscFlags = 0
         };
-        fill_struct->texture_arr[key] = pspl_d3d_create_texture(&desc, tex_buf);
+        fill_struct->texture_arr[key] = pspl_d3d11_create_texture(&desc, tex_buf);
         free(tex_buf);
     
 #   endif

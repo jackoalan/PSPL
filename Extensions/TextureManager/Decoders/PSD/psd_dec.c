@@ -319,9 +319,9 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
             }
             
             // Ensure '8BIM' occurs here
-            char czech[4];
-            fread(czech, 1, 4, psdf);
-            if (memcmp(czech, "8BIM", 4))
+            char check[4];
+            fread(check, 1, 4, psdf);
+            if (memcmp(check, "8BIM", 4))
                 pspl_error(-1, "Inconsistent PSD detected", "unable to find expected blend-mode signature in `%s`",
                            file_path);
             
@@ -352,8 +352,12 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
             name[name_len] = '\0';
             
             // Check against requested name
-            if (!strcasecmp(name, file_path_ext))
+            if (!strcmp(name, file_path_ext)) {
+                if (found_layer)
+                    pspl_error(-1, "Duplicate PSD Layer",
+                               "PSPL can't make assumptions about which identically named `%s` layer you'd like", name);
                 found_layer = 1;
+            }
             
             // Accumulate layer data offset
             if (!found_layer)
@@ -363,7 +367,7 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
             fseek(psdf, data_off, SEEK_SET);
             
         }
-        
+
         // Ensure layer was found
         if (!found_layer)
             pspl_error(-1, "Unable to find PSD layer", "PSD `%s` does not contain a layer named '%s'",
@@ -381,16 +385,17 @@ int PSD_decode(const char* file_path, const char* file_path_ext,
         size_t chan_size = (layer_rect.right-layer_rect.left) * (layer_rect.bottom-layer_rect.top);
         void* chan_cur = im_data;
         for (i=0 ; i<layer_chan_count ; ++i) {
-            uint16_t im_comp_mode = 0;
-            fread(&im_comp_mode, 1, sizeof(uint16_t), psdf);
+            int16_t im_comp_mode = 0;
+            fread(&im_comp_mode, 1, sizeof(int16_t), psdf);
 #           ifdef __LITTLE_ENDIAN__
             im_comp_mode = swap_uint16(im_comp_mode);
 #           endif
-            
+
             if (im_comp_mode == 0) {
-                if (fread(im_data, 1, im_len, psdf) != im_len)
+                if (fread(chan_cur, 1, layer_chan_arr[i].chan_len-2, psdf) != layer_chan_arr[i].chan_len-2)
                     pspl_error(-1, "Unexpected end of PSD", "unable to read layer image data from `%s`",
                                file_path);
+                chan_cur += chan_size;
             } else if (im_comp_mode == 1) {
                 PSD_unpackbits(chan_cur, 1, layer_rect.right-layer_rect.left,
                                layer_rect.bottom-layer_rect.top, psdf);

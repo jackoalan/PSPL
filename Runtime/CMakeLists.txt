@@ -28,7 +28,7 @@ else()
   if(CMAKE_USE_PTHREADS_INIT)
     add_definitions(-D PSPL_THREADING_PTHREAD)
   elseif(CMAKE_USE_WIN32_THREADS_INIT)
-    add_definitions(-D PSPL_THREADING_WIN32)
+    add_definitions(-D PSPL_THREADING_WINDOWS)
   endif()
 endif()
 

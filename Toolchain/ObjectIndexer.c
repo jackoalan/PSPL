@@ -1178,10 +1178,10 @@ void pspl_converter_progress_update(double progress) {
     if (converter_state.path_ext) {
         if (xterm_colour)
             fprintf(stderr, "%c]"SGR0" "GREEN"Converting "
-                    BOLD"%s"NORMAL BOLD":"MAGENTA"%s"SGR0, '%',
+                    BOLD"%s"NORMAL BOLD" : "MAGENTA"%s"SGR0, '%',
                     converter_state.path, converter_state.path_ext);
         else
-            fprintf(stderr, "%c] Converting %s:%s", '%',
+            fprintf(stderr, "%c] Converting %s : %s", '%',
                     converter_state.path, converter_state.path_ext);
     } else {
         if (xterm_colour)

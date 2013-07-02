@@ -499,7 +499,7 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
             default:
                 break;
         }
-        fprintf(stderr, "%s", err_head);
+        fprintf(stderr, "\n%s", err_head);
         if (err_head != err_head_buf)
             free(err_head);
         fprintf(stderr, BOLD"%s:\n"SGR0, brief);
@@ -526,7 +526,7 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
             default:
                 break;
         }
-        fprintf(stderr, "%s", err_head);
+        fprintf(stderr, "\n%s", err_head);
         if (err_head != err_head_buf)
             free(err_head);
         fprintf(stderr, "%s:\n", brief);
@@ -591,7 +591,7 @@ void pspl_warn(const char* brief, const char* msg, ...) {
             default:
                 break;
         }
-        fprintf(stderr, "%s", err_head);
+        fprintf(stderr, "\n%s", err_head);
         if (err_head != err_head_buf)
             free(err_head);
         fprintf(stderr, BOLD"%s:\n"SGR0, brief);
@@ -618,7 +618,7 @@ void pspl_warn(const char* brief, const char* msg, ...) {
             default:
                 break;
         }
-        fprintf(stderr, "%s", err_head);
+        fprintf(stderr, "\n%s", err_head);
         if (err_head != err_head_buf)
             free(err_head);
         fprintf(stderr, "%s:\n", brief);

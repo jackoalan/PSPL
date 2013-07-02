@@ -14,14 +14,14 @@
 
 /* Runtime method to set the Direct3D device being accessed by all
  * runtime extensions */
-ID3D11Device* pspl_d3d_device = NULL;
-void pspl_d3d_set_device(ID3D11Device* device) {
-    pspl_d3d_device = device;
+ID3D11Device* pspl_d3d11_device = NULL;
+void pspl_d3d11_set_device(ID3D11Device* device) {
+    pspl_d3d11_device = device;
 }
 
-ID3D11DeviceContext* pspl_d3d_device_context = NULL;
-void pspl_d3d_set_device_context(ID3D11DeviceContext* context) {
-    pspl_d3d_device_context = context;
+ID3D11DeviceContext* pspl_d3d11_device_context = NULL;
+void pspl_d3d11_set_device_context(ID3D11DeviceContext* context) {
+    pspl_d3d11_device_context = context;
 }
 
 
@@ -32,6 +32,12 @@ static void load_object(pspl_runtime_psplc_t* object) {
     // Config structure
     pspl_data_object_t config_struct;
     pspl_runtime_get_embedded_data_object_from_integer(object, D3D11_CONFIG_STRUCT, &config_struct);
+    object->native_shader.config = config_struct.object_data;
+    
+    
+    // Vertex constant buffer
+    object->native_shader.vertex_constant_buffer =
+    pspl_d3d11_create_constant_buffer(sizeof(pspl_matrix34_t)*(2+object->native_shader.config->uv_attr_count));
     
     
     // Vertex
@@ -53,7 +59,7 @@ static void load_object(pspl_runtime_psplc_t* object) {
     pspl_d3d11_create_vertex_shader(vert_shader_data.object_data, vert_shader_data.object_len);
     
     if (compiled_blob)
-        pspl_d3d11_destroy_something(compiled_blob);
+        pspl_d3d11_destroy_something((IUnknown*)compiled_blob);
     
     
     // Pixel
@@ -75,7 +81,7 @@ static void load_object(pspl_runtime_psplc_t* object) {
     pspl_d3d11_create_pixel_shader(pix_shader_data.object_data, pix_shader_data.object_len);
     
     if (compiled_blob)
-        pspl_d3d11_destroy_something(compiled_blob);
+        pspl_d3d11_destroy_something((IUnknown*)compiled_blob);
     
     
     // Matrix uniforms
@@ -88,22 +94,21 @@ static void load_object(pspl_runtime_psplc_t* object) {
 
 static void unload_object(pspl_runtime_psplc_t* object) {
     
-    pspl_d3d11_destroy_something(object->native_shader.vertex_shader);
-    pspl_d3d11_destroy_something(object->native_shader.pixel_shader);
+    pspl_d3d11_destroy_something((IUnknown*)object->native_shader.vertex_shader);
+    pspl_d3d11_destroy_something((IUnknown*)object->native_shader.pixel_shader);
+    pspl_d3d11_destroy_something((IUnknown*)object->native_shader.vertex_constant_buffer);
     
 }
 
 static pspl_platform_shader_object_t* bound_shader = NULL;
 static void bind_object(pspl_runtime_psplc_t* object) {
     
-    pspl_d3d11_use_vertex_shader(object->native_shader.vertex_shader);
+    pspl_d3d11_use_vertex_shader(object->native_shader.vertex_shader, object->native_shader.vertex_constant_buffer);
     pspl_d3d11_use_pixel_shader(object->native_shader.pixel_shader);
     
 }
 
 pspl_runtime_platform_t D3D11_runplat = {
-    .init_hook = pspl_d3d11_init,
-    .shutdown_hook = pspl_d3d11_shutdown,
     .load_object_hook = load_object,
     .unload_object_hook = unload_object,
     .bind_object_hook = bind_object

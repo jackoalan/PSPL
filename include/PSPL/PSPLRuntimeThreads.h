@@ -41,14 +41,14 @@ typedef mutex_t pspl_mutex_t;
 #define pspl_mutex_unlock(mutex) LWP_MutexUnlock(*mutex)
 #define pspl_mutex_destroy(mutex) LWP_MutexDestroy(*mutex)
 
-#elif defined(PSPL_THREADING_WIN32)
+#elif defined(PSPL_THREADING_WINDOWS)
 #include <winbase.h>
-typedef HANDLE pspl_mutex_t;
-#define pspl_mutex_init(mutex) *mutex = CreateMutex(NULL, FALSE, NULL)
-#define pspl_mutex_lock(mutex) WaitForSingleObject(*mutex, INFINITE)
-#define pspl_mutex_trylock(mutex) WaitForSingleObject(*mutex, 0)
-#define pspl_mutex_unlock(mutex) SignalObjectAndWait(*mutex, NULL, 0, FALSE)
-#define pspl_mutex_destroy(mutex) ReleaseMutex(*mutex)
+typedef CRITICAL_SECTION pspl_mutex_t;
+#define pspl_mutex_init(mutex) InitializeCriticalSection(mutex)
+#define pspl_mutex_lock(mutex) EnterCriticalSection(mutex)
+#define pspl_mutex_trylock(mutex) TryEnterCriticalSection(mutex)
+#define pspl_mutex_unlock(mutex) LeaveCriticalSection(mutex)
+#define pspl_mutex_destroy(mutex) DeleteCriticalSection(mutex)
 
 #endif
 

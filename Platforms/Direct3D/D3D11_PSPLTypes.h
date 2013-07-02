@@ -19,6 +19,9 @@ typedef struct {
     // Config struct
     d3d11_config_t* config;
     
+    // Constant buffer for vertex shader
+    ID3D11Buffer* vertex_constant_buffer;
+    
     // Vertex shader
     ID3D11VertexShader* vertex_shader;
     
@@ -29,10 +32,10 @@ typedef struct {
 
 /* Runtime method to set the Direct3D device being accessed by all 
  * runtime extensions */
-extern ID3D11Device* pspl_d3d_device;
-void pspl_d3d_set_device(ID3D11Device* device);
+extern ID3D11Device* pspl_d3d11_device;
+void pspl_d3d11_set_device(ID3D11Device* device);
 
-extern ID3D11DeviceContext* pspl_d3d_device_context;
-void pspl_d3d_set_device_context(ID3D11DeviceContext* context);
+extern ID3D11DeviceContext* pspl_d3d11_device_context;
+void pspl_d3d11_set_device_context(ID3D11DeviceContext* context);
 
 #endif

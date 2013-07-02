@@ -10,40 +10,8 @@
 #include <d3d11.h>
 #include <d3dcompiler.h>
 
-
-/* Matrix uniform buffers */
-#define BUF_COUNT 10
-ID3D11Buffer* constant_buffers[BUF_COUNT];
-
-void pspl_d3d11_init(const pspl_platform_t* platform) {
-    int i;
-    
-    for (i=0 ; i<BUF_COUNT ; ++i) {
-        
-        D3D11_BUFFER_DESC desc = {
-            .ByteWidth = sizeof(pspl_matrix34_t),
-            .Usage = D3D11_USAGE_DYNAMIC,
-            .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
-            .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
-            .MiscFlags = 0,
-            .StructureByteStride = 0
-        };
-        pspl_d3d_device->CreateBuffer(&desc, NULL, &constant_buffers[i]);
-        
-    }
-    
-}
-
-void pspl_d3d11_shutdown(const pspl_platform_t* platform) {
-    int i;
-    
-    for (i=0 ; i<BUF_COUNT ; ++i)
-        constant_buffers[i]->Release();
-    
-}
-
-int pspl_d3d11_compile_pixel_shader(const void* shader_source, size_t length,
-                                    ID3DBlob** blob_out, void** out, size_t* out_len){
+int pspl_d3d11_compile_vertex_shader(const void* shader_source, size_t length,
+                                     ID3DBlob** blob_out, void** out, size_t* out_len){
     
     ID3DBlob* shader;
     ID3DBlob* error;
@@ -93,7 +61,7 @@ ID3D11VertexShader* pspl_d3d11_create_vertex_shader(const void* shader_binary, s
     
     ID3D11VertexShader* shader = NULL;
     HRESULT result =
-    pspl_d3d_device->CreateVertexShader(shader_binary, length, NULL, &shader);
+    pspl_d3d11_device->CreateVertexShader(shader_binary, length, NULL, &shader);
     
     return shader;
     
@@ -103,49 +71,57 @@ ID3D11PixelShader* pspl_d3d11_create_pixel_shader(const void* shader_binary, siz
     
     ID3D11PixelShader* shader = NULL;
     HRESULT result =
-    pspl_d3d_device->CreatePixelShader(shader_binary, length, NULL, &shader);
+    pspl_d3d11_device->CreatePixelShader(shader_binary, length, NULL, &shader);
     
     return shader;
     
 }
 
 
+ID3D11Buffer* pspl_d3d11_create_constant_buffer(size_t size) {
+    D3D11_BUFFER_DESC desc = {
+        .ByteWidth = size,
+        .Usage = D3D11_USAGE_DYNAMIC,
+        .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+        .CPUAccessFlags = D3D11_CPU_ACCESS_WRITE,
+        .MiscFlags = 0,
+        .StructureByteStride = 0
+    };
+    ID3D11Buffer* output = NULL;
+    pspl_d3d11_device->CreateBuffer(&desc, NULL, &output);
+    return output;
+}
 
-void pspl_d3d11_use_vertex_shader(ID3D11VertexShader* shader) {
-    pspl_d3d_device_context->VSSetShader(shader, NULL, 0);
+
+static ID3D11Buffer* cur_const_buffer = NULL;
+void pspl_d3d11_use_vertex_shader(ID3D11VertexShader* shader, ID3D11Buffer* constant_buffer) {
+    pspl_d3d11_device_context->VSSetShader(shader, NULL, 0);
+    cur_const_buffer = constant_buffer;
 }
 
 void pspl_d3d11_use_pixel_shader(ID3D11PixelShader* shader) {
-    pspl_d3d_device_context->PSSetShader(shader, NULL, 0);
+    pspl_d3d11_device_context->PSSetShader(shader, NULL, 0);
 }
 
 
 /* PSPL-IR routines */
 static int cur_mtx = 0;
+static D3D11_MAPPED_SUBRESOURCE rsrc;
 void pspl_ir_load_pos_mtx(pspl_matrix34_t* mtx) {
-    D3D11_MAPPED_SUBRESOURCE rsrc;
-    pspl_d3d_device_context->Map(constant_buffers[0], 0, D3D11_MAP_WRITE, 0, &rsrc);
+    pspl_d3d11_device_context->Map(cur_const_buffer, 0, D3D11_MAP_WRITE, 0, &rsrc);
     memcpy(rsrc.pData, mtx, sizeof(pspl_matrix34_t));
-    pspl_d3d_device_context->Unmap(constant_buffers[0], 0);
 }
 void pspl_ir_load_norm_mtx(pspl_matrix34_t* mtx) {
-    D3D11_MAPPED_SUBRESOURCE rsrc;
-    pspl_d3d_device_context->Map(constant_buffers[1], 0, D3D11_MAP_WRITE, 0, &rsrc);
-    memcpy(rsrc.pData, mtx, sizeof(pspl_matrix34_t));
-    pspl_d3d_device_context->Unmap(constant_buffers[1], 0);
+    memcpy((uint8_t*)rsrc.pData + sizeof(pspl_matrix34_t), mtx, sizeof(pspl_matrix34_t));
 }
 void pspl_ir_load_uv_mtx(pspl_matrix34_t* mtx) {
-    if (cur_mtx >= 8)
-        pspl_error(-1, "UV Mtx overflow", "only 8 UV XF matrices may be defined");
-    D3D11_MAPPED_SUBRESOURCE rsrc;
-    pspl_d3d_device_context->Map(constant_buffers[2+cur_mtx], 0, D3D11_MAP_WRITE, 0, &rsrc);
-    memcpy(rsrc.pData, mtx, sizeof(pspl_matrix34_t));
-    pspl_d3d_device_context->Unmap(constant_buffers[2+cur_mtx], 0);
+    memcpy((uint8_t*)rsrc.pData + (sizeof(pspl_matrix34_t)*(2+cur_mtx)), mtx, sizeof(pspl_matrix34_t));
     ++cur_mtx;
 }
 void pspl_ir_load_finish() {
     cur_mtx = 0;
-    pspl_d3d_device_context->VSSetConstantBuffers(0, BUF_COUNT, constant_buffers);
+    pspl_d3d11_device_context->Unmap(cur_const_buffer, 0);
+    pspl_d3d11_device_context->VSSetConstantBuffers(0, 1, &cur_const_buffer);
 }
 
 

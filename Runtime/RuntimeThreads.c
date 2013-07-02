@@ -14,7 +14,7 @@ static const char* api_load_states = "pspl_api_load_state";
 static const char* api_load_subject_indices = "pspl_api_load_subject_index";
 
 int pspl_thread_fork(void(*func)(void*), void* usr_ptr) {
-    dispatch_queue_t queue = dispatch_queue_create(NULL, NULL);
+    dispatch_queue_t queue = dispatch_queue_create("PSPL-forked queue", NULL);
     dispatch_queue_set_specific(queue, api_load_states, (void*)pspl_api_load_state(), NULL);
     dispatch_queue_set_specific(queue, api_load_subject_indices, (void*)pspl_api_load_subject_index(), NULL);
     dispatch_async_f(queue, usr_ptr, func);
@@ -112,8 +112,12 @@ static void* run_thread(void* thread) {
 }
 int pspl_thread_fork(void(*func)(void*), void* usr_ptr) {
     u32 level = IRQ_Disable();
-    if (SYS_GetArenaSize() < STACK_SIZE)
+    if (SYS_GetArenaSize() < STACK_SIZE) {
+        IRQ_Restore(level);
+        pspl_error(-1, "Thread-fork error",
+                   "unable to allocate space for forked-thread stack");
         return -1;
+    }
     void* hi = SYS_GetArenaHi();
     hi -= STACK_SIZE;
     SYS_SetArenaHi(hi);
@@ -143,7 +147,7 @@ intptr_t pspl_api_load_subject_index() {
 }
 
 
-#elif defined(PSPL_THREADING_WIN32)
+#elif defined(PSPL_THREADING_WINDOWS)
 #include <winbase.h>
 
 static DWORD api_load_states = 0;

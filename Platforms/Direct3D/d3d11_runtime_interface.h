@@ -30,7 +30,10 @@ ID3D11VertexShader* pspl_d3d11_create_vertex_shader(LPVOID shader_binary, size_t
 ID3D11PixelShader* pspl_d3d11_create_pixel_shader(LPVOID shader_binary, size_t length);
 
 
-void pspl_d3d11_use_vertex_shader(ID3D11VertexShader* shader);
+ID3D11Buffer* pspl_d3d11_create_constant_buffer(size_t size);
+
+
+void pspl_d3d11_use_vertex_shader(ID3D11VertexShader* shader, ID3D11Buffer* constant_buffer);
 
 void pspl_d3d11_use_pixel_shader(ID3D11PixelShader* shader);
 
