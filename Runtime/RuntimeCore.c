@@ -311,6 +311,9 @@ typedef struct {
     // Memory buffer for loading data blobs into
     void* blobs_buf;
     
+    // Per-extension user-pointers (the `count` definition is set via CMake)
+    void** extension_pointers[PSPL_RUNTIME_EXTENSION_COUNT];
+    
 } _pspl_runtime_psplc_t;
 
 /* Internal Archived File representation type */
@@ -372,6 +375,7 @@ enum api_load_state {
 /* Get embedded data object for extension by key (to hash) */
 int pspl_runtime_get_embedded_data_object_from_key(const pspl_runtime_psplc_t* object,
                                                    const char* key,
+                                                   pspl_hash* hash_out,
                                                    pspl_data_object_t* data_object_out) {
     if (!object || !key)
         return -1;
@@ -382,6 +386,8 @@ int pspl_runtime_get_embedded_data_object_from_key(const pspl_runtime_psplc_t* o
     pspl_hash_write(&hash_ctx, key, strlen(key));
     pspl_hash* result;
     pspl_hash_result(&hash_ctx, result);
+    if (hash_out)
+        pspl_hash_cpy(hash_out, result);
     
     return pspl_runtime_get_embedded_data_object_from_hash(object, result, data_object_out);
     
@@ -587,6 +593,26 @@ void pspl_runtime_enumerate_integer_embedded_data_objects(const pspl_runtime_psp
             return;
         
     }
+}
+
+/* Get extension-specific user-data pointer for individual PSPLC object */
+int pspl_runtime_get_extension_user_data_pointer(const pspl_runtime_psplc_t* object,
+                                                 void*** user_ptr) {
+    if (!object || !user_ptr)
+        return -1;
+    const _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)object;
+    
+    intptr_t api_load_state = pspl_api_load_state();
+    intptr_t api_load_subject_index = pspl_api_load_subject_index();
+    
+    const _pspl_object_index_t* idx = NULL;
+    if (api_load_state == PSPL_LOADING_EXT)
+        idx = &obj->ext_arr[api_load_subject_index];
+    else
+        return -1;
+    
+    *user_ptr = (void**)&obj->extension_pointers[idx->extension_index];
+    return 0;
 }
 
 #pragma mark Runtime API

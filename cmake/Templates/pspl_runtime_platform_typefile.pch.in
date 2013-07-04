@@ -8,5 +8,7 @@
 
 typedef @PSPL_RUNTIME_PLATFORM@_shader_object_t pspl_platform_shader_object_t;
 
+#define PSPL_RUNTIME_EXTENSION_COUNT @PSPL_RUNTIME_EXTENSION_COUNT@
+
 #endif // _PSPL_PLATFORM_TYPEFILE_
 
