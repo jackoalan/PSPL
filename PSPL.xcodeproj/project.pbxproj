@@ -131,6 +131,8 @@
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
 		E462EEA81778FC0200211193 /* gl_runtime_ios.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = gl_runtime_ios.m; sourceTree = "<group>"; };
 		E48CCCBC1747D4D500DDDD63 /* ToolchainCrossWindows.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToolchainCrossWindows.cmake; sourceTree = "<group>"; };
+		E48DD1FA1789D8D200D5FF05 /* Specification.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = Specification.md; sourceTree = "<group>"; };
+		E48DD1FB178A2B4E00D5FF05 /* VertexShaderRigging.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = VertexShaderRigging.md; sourceTree = "<group>"; };
 		E48FF55E1764CE15000231AA /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E48FF55F1764CF29000231AA /* IRToolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = IRToolchain.c; sourceTree = "<group>"; };
 		E48FF5611764CF31000231AA /* IRRuntime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = IRRuntime.c; sourceTree = "<group>"; };
@@ -617,8 +619,10 @@
 		E4AFAE871726DEC800F7A0BF /* PMDLFormat */ = {
 			isa = PBXGroup;
 			children = (
-				E44577F01781FA10003EE09C /* Blender */,
 				E4AFAE881726DEC800F7A0BF /* README.md */,
+				E44577F01781FA10003EE09C /* Blender */,
+				E48DD1FA1789D8D200D5FF05 /* Specification.md */,
+				E48DD1FB178A2B4E00D5FF05 /* VertexShaderRigging.md */,
 				E44577BD1781DBA4003EE09C /* CMakeLists.txt */,
 				E4CE71F5178509D2009F5932 /* PMDLCommon.h */,
 				E44577BE1781DC4F003EE09C /* PMDLToolchain.c */,
