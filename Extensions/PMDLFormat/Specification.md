@@ -6,11 +6,11 @@ designed to be used in various scenarios. As such, there are three different
 PMDL *sub-type* formats, each sharing many indexing characteristics, but each 
 bringing their own as well.
 
-* [Non-partitioned model (`PAR0`)](#Non-Partitioned-Models)
+* [Non-partitioned model (`PAR0`)](#non-partitioned-models)
     * For small, static models (ideal for stationary objects)
-* [Rigged non-partitioned model (`PAR1`)](#Rigged-Models)
+* [Rigged non-partitioned model (`PAR1`)](#rigged-models)
     * For small, skeletally-rigged models (ideal for animated characters and objects)
-* [BSP-partitioned model (`PAR2`)](#BSP-Partitioned-Models)
+* [BSP-partitioned model (`PAR2`)](#bsp-partitioned-models)
     * For large, static models (ideal for environments that enclose the camera-view)
 
 PMDL files are designed to be packaged into PSPL package-files and contain
