@@ -26,7 +26,7 @@ All PMDL sub-types have the following general data layout:
     * Magic (`PMDL`)
     * Sub-type (`PAR0`, `PAR1`, `PAR2`)
     * File-wide endianness (`_LIT`, `_BIG`)
-    * Draw-buffer format ([`_GEN`](#general-graw-format), [`__GX`](#gx-draw-format), [`_COL`](#collision-draw-format))
+    * Draw-buffer format ([`_GEN`](#general-draw-format), [`__GX`](#gx-draw-format), [`_COL`](#collision-draw-format))
     * Draw-buffer-collection array offset (32-bit word)
     * Shader-object reference absolute offset (32-bit word)
 * Rigged Skinning Info Section (`PAR1` only)
