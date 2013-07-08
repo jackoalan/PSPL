@@ -97,7 +97,7 @@ Rigged Models
 -------------
 
 Non-Partitioned models may also incorporate **skeletal-rigging** data.
-These are known as `**PAR1**` models. Like regular non-paritioned models,
+These are known as **`PAR1`** models. Like regular non-paritioned models,
 rigged models have *exactly one* OBB and a *master transform* for runtime 
 drawing.
 
