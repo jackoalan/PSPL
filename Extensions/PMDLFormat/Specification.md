@@ -76,7 +76,7 @@ Non-Partitioned Models
 
 Small models that generally fit within the 
 [viewing frustum](http://en.wikipedia.org/wiki/Viewing_frustum) 
-are known as **non-partitioned** or `**PAR0**` models. These models have a single 
+are known as **non-partitioned** or **`PAR0`** models. These models have a single 
 [bounding box](http://en.wikipedia.org/wiki/Bounding_volume)
 that may be oriented with the model's *master transform* at runtime (OBB).
 
@@ -132,6 +132,10 @@ This data is shared across entire PMDL file
 
 BSP-Partitioned Models
 ----------------------
+
+Finally, for efficient, BSP-frustum-culled static-environment rendering, 
+there is the **`PAR2`** format. This format allows a large, volumnous model to be 
+sub-divided using a BSP-octree. 
 
 ### Partitioned BSP Octree Section ###
 
