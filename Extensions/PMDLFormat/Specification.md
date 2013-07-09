@@ -30,9 +30,12 @@ All PMDL sub-types have the following general data layout:
     * Magic (`PMDL`)
     * File-wide endianness (`_LIT`, `_BIG`)
     * Pointer-size (in bytes; 32-bit word)
-        * PMDL features explicit zero-regions to provide the application
+        * PMDL features explicit zero-regions to provide the PMDL runtime
           with pre-allocated space to store internal pointer-references in context.
-          This value marks the length of these regions (generally 4 or 8 bytes)
+          This value marks the length of these regions (generally 4 or 8 bytes).
+          This value is validated early on at load time. For instance,
+          a 64-bit build of the PMDL runtime *rejects* PMDLs that hold pointers 
+          less than 8-bytes in size.
     * Sub-type ([`PAR0`](#non-partitioned-models), [`PAR1`](#rigged-models), [`PAR2`](#partitioned-models))
     * Draw-buffer format ([`_GEN`](#general-draw-format), [`__GX`](#gx-draw-format), [`_COL`](#collision-draw-format))
     * Master [AABB](http://en.wikipedia.org/wiki/Bounding_volume) (2x points; 6x 32-bit floats; (XYZ mins, XYZ maxes))
