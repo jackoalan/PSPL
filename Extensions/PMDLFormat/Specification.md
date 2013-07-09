@@ -39,7 +39,7 @@ All PMDL sub-types have the following general data layout:
     * Draw-buffer-collection array offset (32-bit word)
     * Shader-object reference absolute offset (32-bit word)
 * Rigged Skinning Info Section (`PAR1` only)
-* Partitioned BSP Octree Section (`PAR2` only)
+* Partitioned Octree Section (`PAR2` only)
 * Draw-buffer-collection array
     * Count of draw-buffer collections (32-bit word)
     * Draw-buffer-collection-array-relative offsets for each collection
@@ -55,7 +55,7 @@ All PMDL sub-types have the following general data layout:
         * Drawing-index mesh count (32-bit word)
         * Drawing mesh
             * Mesh blob-relative offset (32-bit word)
-                * In `PAR2` models, the BSP-tree leaves may multiply-reference
+                * In `PAR2` models, the octree leaves may multiply-reference
                   meshes that extend across leaf-nodes. Due to the possibility of
                   over-draw in this indexing-scheme, the MSB of this offset value
                   is set to 1 when this mesh is drawn so the PMDL runtime won't
@@ -155,8 +155,8 @@ AABB in a binary-manner across three dimensions.
     * Octree node array (ordered most-significant hierarchy to least-significant)
         * 8x2-bit sub-node-type-indicator
             * 0b00 - NULL node
-            * 0b01 - BSP sub-node
-            * 0b10 - BSP tree-leaf
+            * 0b01 - sub-node
+            * 0b10 - leaf
         * 16-bit padding
         * For each non-NULL node, a 32-bit Octree-relative offset of sub-node or tree-leaf
 * 4-byte-rounded padding
@@ -239,7 +239,7 @@ the drawing-index. For complex models, this may lead to a smaller overall vertex
 size and more efficient use of the GPU's vertex cache.
 
 Unfortunately, GX doesn't have a very flexible method to apply blended skeletal transforms
-on the GPU. Therefore the `PAR1` format employs a per-vertex *bone-weight-coefficient*
+on the GPU. Therefore, the `PAR1` format employs a per-vertex *bone-weight-coefficient*
 array to match the regular *position* and *normal* arrays. All verts in the arrays
 are computed (on the CPU) against the current bone transforms referenced via the 
 PMDL skin entries.
