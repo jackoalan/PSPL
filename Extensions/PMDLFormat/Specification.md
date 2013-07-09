@@ -171,8 +171,9 @@ General Draw Format
 -------------------
 
 When a PMDL file is made to target OpenGL or Direct3D, the **general draw-format** is used.
-The General format is designed to operate *natively* with OpenGL VBO objects and
-Direct3D buffer objects. 
+The General format is designed to operate *natively* with 
+[OpenGL VBO](http://www.opengl.org/wiki/Vertex_Buffer_Object#Vertex_Buffer_Object) objects and
+[Direct3D buffer](http://msdn.microsoft.com/en-us/library/ff476351.aspx) objects. 
 
 
 ### General Vertex Buffer Format ###
