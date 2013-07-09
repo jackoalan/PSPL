@@ -33,7 +33,7 @@ All PMDL sub-types have the following general data layout:
         * PMDL features explicit zero-regions to provide the application
           with pre-allocated space to store internal pointer-references in context.
           This value marks the length of these regions (generally 4 or 8 bytes)
-    * Sub-type (`PAR0`, `PAR1`, `PAR2`)
+    * Sub-type ([`PAR0`](#non-partitioned-models), [`PAR1`](#rigged-models), [`PAR2`](#partitioned-models))
     * Draw-buffer format ([`_GEN`](#general-draw-format), [`__GX`](#gx-draw-format), [`_COL`](#collision-draw-format))
     * Master AABB (2x points; 6x 32-bit floats; (XYZ mins, XYZ maxes))
     * Draw-buffer-collection array offset (32-bit word)
@@ -147,7 +147,7 @@ sub-divided using an [octree](http://en.wikipedia.org/wiki/Octree). The PMDL run
 [view-frustum culling](http://en.wikipedia.org/wiki/Hidden_surface_determination#Viewing_frustum_culling) via 
 [3D-planar geometry](http://en.wikipedia.org/wiki/Plane_%28geometry%29#Planes_embedded_in_3-dimensional_Euclidean_space) 
 against octree nodes when the model's draw routine is called. The octree subdivides the master 
-AABB in a binary-manner across three dimensions.
+AABB in a uniform manner across three dimensions.
 
 ### Octree Section ###
 
