@@ -10,11 +10,15 @@ bringing their own as well.
     * For small, static models (ideal for stationary objects)
 * [Rigged non-partitioned model (`PAR1`)](#rigged-models)
     * For small, skeletally-rigged models (ideal for animated characters and objects)
-* [BSP-partitioned model (`PAR2`)](#bsp-partitioned-models)
+* [Partitioned model (`PAR2`)](#partitioned-models)
     * For large, static models (ideal for environments that enclose the camera-view)
 
 PMDL files are designed to be packaged into PSPL package-files and contain
 internal references to PSPL objects for shader-specifications.
+
+As far as spacial-representation is concerned, a right-handed, XYZ coordinate system
+is used throughout. The PMDL runtime makes left-handed transformations for graphics
+platforms as necessary.
 
 
 General Layout
@@ -24,9 +28,14 @@ All PMDL sub-types have the following general data layout:
 
 * Header
     * Magic (`PMDL`)
-    * Sub-type (`PAR0`, `PAR1`, `PAR2`)
     * File-wide endianness (`_LIT`, `_BIG`)
+    * Pointer-size (in bytes; 32-bit word)
+        * PMDL features explicit zero-regions to provide the application
+          with pre-allocated space to store internal pointer-references in context.
+          This value marks the length of these regions (generally 4 or 8 bytes)
+    * Sub-type (`PAR0`, `PAR1`, `PAR2`)
     * Draw-buffer format ([`_GEN`](#general-draw-format), [`__GX`](#gx-draw-format), [`_COL`](#collision-draw-format))
+    * Master AABB (2x points; 6x 32-bit floats; (XYZ mins, XYZ maxes))
     * Draw-buffer-collection array offset (32-bit word)
     * Shader-object reference absolute offset (32-bit word)
 * Rigged Skinning Info Section (`PAR1` only)
@@ -34,6 +43,10 @@ All PMDL sub-types have the following general data layout:
 * Draw-buffer-collection array
     * Count of draw-buffer collections (32-bit word)
     * Draw-buffer-collection-array-relative offsets for each collection
+        * UV-attribute count (16-bit word)
+        * Bone count (16-bit word; used by `PAR1` only)
+            * Note that this only indicates the *maximum* number of bones referenced
+              by vertices in this buffer, unused bone-weight-attribute values are zero
         * Vertex-buffer offset (32-bit word)
         * Drawing-index offset (32-bit word)
     * Vertex-buffer data (one for each collection)
@@ -69,6 +82,9 @@ its paired vertex-attribute buffer using a 16-bit index value.
 For complex models with a large number of vertices exceeding 16-bit indexing space,
 latter portions of the model may overflow into a new collection; granting a brand-new
 indexing space.
+
+Another reason to have separate collection is for models that have a widely-varied,
+yet topologically-separable vertex format (UV-attribute or bone counts).
 
 
 Non-Partitioned Models
@@ -109,35 +125,31 @@ how the PMDL runtime will transform data for skeletally-rigged models.
 
 This data is shared across entire PMDL file
 
-* Skin assist structure relative offset (32-bit word)
 * Skin structure count (32-bit word)
-* Skin structures (each of variable length)
-    * Bone count (32-bit word)
+* Skin structure offset array (32-bit words)
+    * Relative offsets into array marking individual entries
+* Skin structure array (each of variable length)
+    * Bone count (32-bit word; up to 8)
     * Bone structure
         * Bone name absolute offset (32-bit word)
             * References into string table at end of file
-        * Bone weight (single precision normalised float)
-* Skin assist structure
+        * Bone object pointer (pointer space)
+            * Allows the application to persistently-reference internal bone 
+              object after performing string lookup.
 
 
-### General Skin Assist Structure ###
+Partitioned Models
+------------------
 
-* Vertex shader offset
-
-
-### GX Skin Assist Structure ###
-
-
-
-
-BSP-Partitioned Models
-----------------------
-
-Finally, for efficient, BSP-frustum-culled static-environment rendering, 
+Finally, for efficient, **hierarchically-frustum-culled** *static-environment* rendering, 
 there is the **`PAR2`** format. This format allows a large, volumnous model to be 
-sub-divided using a BSP-octree. 
+sub-divided using an [octree](http://en.wikipedia.org/wiki/Octree). The PMDL runtime employs recursive 
+[view-frustum culling](http://en.wikipedia.org/wiki/Hidden_surface_determination#Viewing_frustum_culling) via 
+[3D-planar geometry](http://en.wikipedia.org/wiki/Plane_%28geometry%29#Planes_embedded_in_3-dimensional_Euclidean_space) 
+against octree nodes when the model's draw routine is called. The octree subdivides the master 
+AABB in a binary-manner across three dimensions.
 
-### Partitioned BSP Octree Section ###
+### Octree Section ###
 
 * Octree structure
     * Octree node array (ordered most-significant hierarchy to least-significant)
@@ -158,8 +170,8 @@ sub-divided using a BSP-octree.
 General Draw Format
 -------------------
 
-When a PMDL file is made to target OpenGL or Direct3D, the general draw-format is used.
-The General format is designed to operate natively with OpenGL VBO objects and
+When a PMDL file is made to target OpenGL or Direct3D, the **general draw-format** is used.
+The General format is designed to operate *natively* with OpenGL VBO objects and
 Direct3D buffer objects. 
 
 
@@ -168,12 +180,16 @@ Direct3D buffer objects.
 * Buffer Length (32-bit word)
 * Vertex Buffer
     * Attribute-interleaved, single-precision floats
+    * 1x 3-component position
+    * 1x 3-component normal
+    * 0-8x 2-component UV
+    * (`PAR1` only) 1-2x 4-component bone-weight coefficients (8 bone-per-primitive maximum)
     
     
 ### General Drawing Index Buffer Format ###
 
 * Relative offset to element-buffer (32-bit word)
-* Pre-allocated space to store graphics-API object-pointer to element buffer (128-bit structure space)
+* Pre-allocated space to store graphics-API object-pointer to element buffer (pointer space)
 * Mesh count (32-bit word)
 * Mesh offset array
     * Mesh-array-relative offset (32-bit word)
@@ -183,8 +199,10 @@ Direct3D buffer objects.
         * also used to determine UV-attribute count
     * Primitive count (32-bit word)
     * Primitive array
-        * (`PAR1` only) if not 0xffffffff, index of skin-assist structure to be bound (32-bit word)
-            * if 0xffffffff, the previously bound skin-assist structure is used
+        * (`PAR1` only) index of skin structure to be bound (32-bit word)
+            * PMDL generators should take care to arrange same-skin primitives 
+              contiguously within the mesh. If the previously-bound skin is requested
+              again, redundant GPU-loading overhead may be avoided.
         * Primitive-type enumeration (32-bit word)
             * 0 - points
             * 1 - non-batched triangles
@@ -220,16 +238,35 @@ Redundant instances of vertex attributes may be eliminated and multiply-referenc
 the drawing-index. For complex models, this may lead to a smaller overall vertex-buffer
 size and more efficient use of the GPU's vertex cache.
 
+Unfortunately, GX doesn't have a very flexible method to apply blended skeletal transforms
+on the GPU. Therefore the `PAR1` format employs a per-vertex *bone-weight-coefficient*
+array to match the regular *position* and *normal* arrays. All verts in the arrays
+are computed (on the CPU) against the current bone transforms referenced via the 
+PMDL skin entries.
+
 
 ### GX Vertex Buffer Format ###
 
-* Array count (32-bit word)
-* Array offsets (32-bit words)
-    * For each attribute enabled by the bitfield, a vertex-buffer-relative 
-      (from the start of the bitfield) offset is expressed
+* (`PAR1` only) Relative offset to bone-weighting buffers after main buffers
+* *Position/normal* count (32-bit word)
+* *Position* array offset (32-bit word)
+* *Normal* array offset (32-bit word)
+* *UV* attribute count (32-bit word)
+* *UV* offsets and lengths array
+    * *UV* coordinate count (32-bit word)
+    * Array offset (32-bit word)
 * Array Buffers
     * Each array is prepended and appended with 32-byte padding
     * Each value is expressed as 2 or 3 component, single-precision floats
+* (`PAR1` only) Pointer to dynamically-allocated *position-transform* stage (pointer space)
+* (`PAR1` only) Pointer to dynamically-allocated *normal-transform* stage (pointer space)
+* (`PAR1` only) *Bone-weight coefficient* array
+    * Skin-entry index (32-bit word)
+    * Weight-values (32-bit floats; matches count of bones in enclosing collection)
+    * Has same count and order of *position* and *normal* array entries
+    * Before the PMDL is rendered, the transform stages are populated with
+      blended, skeletally-transformed versions for the entire model. The
+      master modelview transform is still applied by the GPU at draw-time.
     
     
 ### GX Drawing Index Buffer Format ###
@@ -245,7 +282,7 @@ size and more efficient use of the GPU's vertex cache.
     * Primitive count (32-bit word)
     * Primitive array
         * Primitive-element display list offset (32-bit word; relative within display list array below)
-        * Primitive-element display list pre-allocated pointer space (32-bit pointer space)
+        * Primitive-element display list pre-allocated pointer space (pointer space)
         * Primitive-element count (32-bit word)
 * Element-buffer dispay list array
     * A series of 32-byte-aligned and 0x0-padded display lists
@@ -254,7 +291,7 @@ size and more efficient use of the GPU's vertex cache.
 Collision Draw Format
 ---------------------
 
-PMDL may also be used to express trimesh-geometry for collision-detection systems.
+PMDL may also be used to express *trimesh-geometry* for **collision-detection** systems.
 In this format, 32-bit indexing is used in the drawing index (rather than 16)
 and *only one* draw buffer collection is specified. 
 
