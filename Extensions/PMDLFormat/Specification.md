@@ -41,8 +41,8 @@ All PMDL sub-types have the following general data layout:
     * Master [AABB](http://en.wikipedia.org/wiki/Bounding_volume) (2x points; 6x 32-bit floats; (XYZ mins, XYZ maxes))
     * Draw-buffer-collection array offset (32-bit word)
     * Shader-object reference absolute offset (32-bit word)
-* Rigged Skinning Info Section (`PAR1` only)
-* Partitioned Octree Section (`PAR2` only)
+* [Rigged Skinning Info Section](#rigged-skinning-info-section) (`PAR1` only)
+* [Partitioned Octree Section](#octree-section) (`PAR2` only)
 * Draw-buffer-collection array
     * Count of draw-buffer collections (32-bit word)
     * Draw-buffer-collection-array-relative offsets for each collection
