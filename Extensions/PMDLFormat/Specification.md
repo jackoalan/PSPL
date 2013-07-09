@@ -35,7 +35,7 @@ All PMDL sub-types have the following general data layout:
           This value marks the length of these regions (generally 4 or 8 bytes)
     * Sub-type ([`PAR0`](#non-partitioned-models), [`PAR1`](#rigged-models), [`PAR2`](#partitioned-models))
     * Draw-buffer format ([`_GEN`](#general-draw-format), [`__GX`](#gx-draw-format), [`_COL`](#collision-draw-format))
-    * Master AABB (2x points; 6x 32-bit floats; (XYZ mins, XYZ maxes))
+    * Master [AABB](http://en.wikipedia.org/wiki/Bounding_volume) (2x points; 6x 32-bit floats; (XYZ mins, XYZ maxes))
     * Draw-buffer-collection array offset (32-bit word)
     * Shader-object reference absolute offset (32-bit word)
 * Rigged Skinning Info Section (`PAR1` only)
