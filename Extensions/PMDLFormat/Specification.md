@@ -43,7 +43,7 @@ All PMDL sub-types have the following general data layout:
     * Shader-object reference absolute offset (32-bit word)
 * [Rigged Skinning Info Section](#rigged-skinning-info-section) (`PAR1` only)
 * [Partitioned Octree Section](#octree-section) (`PAR2` only)
-* Draw-buffer-collection array(#draw-buffer-collections)
+* [Draw-buffer-collection array](#draw-buffer-collections)
     * Count of draw-buffer collections (32-bit word)
     * Draw-buffer-collection-array-relative offsets for each collection
         * UV-attribute count (16-bit word)
