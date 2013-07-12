@@ -134,7 +134,7 @@
 		E487407C178C6400009EAD1A /* pmdl_par2_octree.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pmdl_par2_octree.py; sourceTree = "<group>"; };
 		E487407D178C652D009EAD1A /* pmdl_draw_general.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pmdl_draw_general.py; sourceTree = "<group>"; };
 		E487407E178C654C009EAD1A /* pmdl_draw_gx.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pmdl_draw_gx.py; sourceTree = "<group>"; };
-		E487407F178C6556009EAD1A /* pmdl_draw_col.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pmdl_draw_col.py; sourceTree = "<group>"; };
+		E487407F178C6556009EAD1A /* pmdl_draw_collision.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pmdl_draw_collision.py; sourceTree = "<group>"; };
 		E48CCCBC1747D4D500DDDD63 /* ToolchainCrossWindows.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToolchainCrossWindows.cmake; sourceTree = "<group>"; };
 		E48DD1FA1789D8D200D5FF05 /* Specification.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = Specification.md; sourceTree = "<group>"; };
 		E48DD1FB178A2B4E00D5FF05 /* VertexShaderRigging.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = VertexShaderRigging.md; sourceTree = "<group>"; };
@@ -392,7 +392,7 @@
 				E487407A178C63A6009EAD1A /* pmdl.py */,
 				E487407D178C652D009EAD1A /* pmdl_draw_general.py */,
 				E487407E178C654C009EAD1A /* pmdl_draw_gx.py */,
-				E487407F178C6556009EAD1A /* pmdl_draw_col.py */,
+				E487407F178C6556009EAD1A /* pmdl_draw_collision.py */,
 				E487407B178C63EE009EAD1A /* pmdl_par1_rigging.py */,
 				E487407C178C6400009EAD1A /* pmdl_par2_octree.py */,
 			);

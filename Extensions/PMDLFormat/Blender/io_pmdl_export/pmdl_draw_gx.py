@@ -6,3 +6,6 @@ This file defines the `pmdl_draw_gx` class to generate vertex-attribute
 buffers and display lists to draw them. `PAR1` files also include bone-weight
 coefficients per-vertex for CPU-driven skeletal evaluation.
 '''
+
+class pmdl_draw_gx:
+    pass
