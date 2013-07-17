@@ -12,5 +12,5 @@ class pmdl_par2_octree:
     
     # Set up with collection-populated PMDL object
     def __init__(self, pmdl):
-        for collection in pmdl.collections:
+        pass
             

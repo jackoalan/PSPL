@@ -12,8 +12,6 @@ class pmdl_par1_rigging:
 
     # Set up with PMDL containing ARMATURE `object`
     def __init__(self, pmdl):
-
-
-        # Calculate AABB as proportional cube
+        pass
 
     

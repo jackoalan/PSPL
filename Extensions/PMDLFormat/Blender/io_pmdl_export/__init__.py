@@ -47,7 +47,7 @@ class EXPORT_OT_pmdl(bpy.types.Operator, ExportHelper):
                                         description="File path used for exporting the PMDL file",
                                         maxlen= 1024, default= "")
     
-    # Octree porperties
+    # Octree properties
     export_par2 = bpy.props.BoolProperty(name="PAR2 Octree",
                                          description="Generate `PAR2` PMDL with an Octree for frustum-culling",
                                          default=False)
@@ -60,9 +60,18 @@ class EXPORT_OT_pmdl(bpy.types.Operator, ExportHelper):
                                                subtype='UNSIGNED')
 
     # Draw format property
+    cb_disabled = bpy.props.BoolProperty(name="CB Disabled",
+                                         description="Set when the update callback is disabled",
+                                         default=False,
+                                         options={'HIDDEN'})
     def _export_draw_fmt_update(self, context):
+        if self.cb_disabled:
+            return
+        self.cb_disabled = True
         if self.export_draw_fmt == 'GX':
             self.export_endianness = 'BIG'
+            self.pointer_size = '32-BIT'
+        self.cb_disabled = False
     export_draw_fmt = bpy.props.EnumProperty(name="Draw Format",
                                              description="Selects the target draw format to export",
                                              default='GENERAL',
@@ -71,13 +80,21 @@ class EXPORT_OT_pmdl(bpy.types.Operator, ExportHelper):
                                                     ('COLLISION', "Collision Draw Format", "Format used by collision detection systems")],
                                              update=_export_draw_fmt_update)
 
-    # Endianness Property
+    # Endianness property
     export_endianness = bpy.props.EnumProperty(name="Byte Order",
                                                description="Selects the byte-ordering to export",
                                                default='LITTLE',
                                                items=[('LITTLE', "Little Endian", "Byte ordering used by many Intel and ARM based platforms"),
                                                       ('BIG', "Big Endian", "Byte ordering used by many PowerPC based platforms")],
                                                update=_export_draw_fmt_update)
+                                               
+    # Pointer-size property
+    pointer_size = bpy.props.EnumProperty(name="Pointer Size",
+                                          description="Selects the size of zero-regions to hold pointers at PMDL runtime",
+                                          default='64-BIT',
+                                          items=[('32-BIT', "32-bit", "Space to hold a 32-bit pointer (4-bytes)"),
+                                                 ('64-BIT', "64-bit", "Space to hold a 64-bit pointer (8-bytes)")],
+                                          update=_export_draw_fmt_update)
 
 
     # Blender operator stuff
@@ -87,7 +104,16 @@ class EXPORT_OT_pmdl(bpy.types.Operator, ExportHelper):
 
     def execute(self, context):
         print("Exporting PMDL: ", self.properties.filepath)
-        pmdl_obj = pmdl.pmdl(context.object)
+        
+        generator = None
+        if self.properties.export_draw_fmt == 'GENERAL':
+            generator = pmdl_draw_general.pmdl_draw_general()
+        elif self.properties.export_draw_fmt == 'GX':
+            generator = pmdl_draw_gx.pmdl_draw_gx()
+        elif self.properties.export_draw_fmt == 'COLLISION':
+            generator = pmdl_draw_collision.pmdl_draw_collision()
+        
+        pmdl_obj = pmdl.pmdl(context.object, generator)
         
         if self.properties.export_par2:
             if context.object.type == 'ARMATURE':
@@ -98,16 +124,14 @@ class EXPORT_OT_pmdl(bpy.types.Operator, ExportHelper):
                 self.report({'ERROR_INVALID_INPUT'}, octree_err)
                 return {'CANCELLED'}
         
-        generator = None
-        if self.properties.export_draw_fmt == 'GENERAL':
-            generator = pmdl_draw_general.pmdl_draw_general(pmdl_obj)
-        elif self.properties.export_draw_fmt == 'GX':
-            generator = pmdl_draw_gx.pmdl_draw_gx(pmdl_obj)
-        elif self.properties.export_draw_fmt == 'COLLISION':
-            generator = pmdl_draw_collision.pmdl_draw_collision(pmdl_obj)
 
         if generator:
-            pmdl_obj.generate_file(generator, self.properties.export_endianness, self.properties.filepath)
+            psize = 0
+            if self.properties.pointer_size == '64-BIT':
+                psize = 8
+            elif self.properties.pointer_size == '32-BIT':
+                psize = 4
+            pmdl_obj.generate_file(generator, self.properties.export_endianness, psize, self.properties.filepath)
         else:
             self.report('ERROR_INVALID_INPUT', "Invalid draw type")
 
