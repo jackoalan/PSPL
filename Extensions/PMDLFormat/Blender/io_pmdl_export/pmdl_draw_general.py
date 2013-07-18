@@ -116,7 +116,8 @@ class pmdl_draw_general:
         for vert in mesh.vertices:
             loop_verts = []
             for loop in mesh.loops:
-                _augment_loop_vert_array(loop_verts, mesh, loop)
+                if loop.vertex_index == vert.index:
+                    _augment_loop_vert_array(loop_verts, mesh, loop)
             loop_vert_array.append(loop_verts)
     
 
@@ -156,6 +157,7 @@ class pmdl_draw_general:
                 if 0 == len(tri_strip): # First triangle in strip
                 
                     # Add three loop-vert vertices to tri-strip
+                    print('initial loop indices', temp_poly.loop_indices)
                     for poly_loop_idx in temp_poly.loop_indices:
                         poly_loop = mesh.loops[poly_loop_idx]
                         loop_vert = _get_loop_set(loop_vert_array[poly_loop.vertex_index], mesh, poly_loop)
@@ -164,6 +166,7 @@ class pmdl_draw_general:
                             if is_new_collection:
                                 break
                             best_collection['vertices'].append(loop_vert)
+                            print('appended initial loop', loop_vert[0].loop.index)
                         tri_strip.append(best_collection['vertices'].index(loop_vert))
 
                     if is_new_collection:
@@ -189,6 +192,7 @@ class pmdl_draw_general:
                         if is_new_collection:
                             break
                         best_collection['vertices'].append(loop_vert)
+                        print('appended loop', loop_vert[0].loop.index)
                     tri_strip.append(best_collection['vertices'].index(loop_vert))
                 
                 

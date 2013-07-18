@@ -64,7 +64,7 @@ class pmdl:
             if len(object.data.polygons):
                 
                 # Copy mesh
-                copy_name = object.name + "_tri"
+                copy_name = object.name + "_pmdltri"
                 copy_mesh = bpy.data.meshes.new(copy_name)
                 copy_obj = bpy.data.objects.new(copy_name, copy_mesh)
                 copy_obj.data = object.data.copy()
@@ -73,7 +73,7 @@ class pmdl:
                 bpy.context.scene.objects.link(copy_obj)
                 
                 # Triangulate mesh
-                copy_obj.select = True
+                bpy.context.scene.objects.active = copy_obj
                 bpy.ops.object.mode_set(mode='EDIT')
                 bpy.ops.mesh.select_all(action='SELECT')
                 bpy.ops.mesh.quads_convert_to_tris()
@@ -89,7 +89,9 @@ class pmdl:
 
                 # Delete copied mesh from scene (and add to set to be deleted later)
                 bpy.context.scene.objects.unlink(copy_obj)
-                self.all_mesh_objs.add(copy_obj)
+                self.all_objs.add(copy_obj)
+                self.all_meshes.add(copy_obj.data)
+                self.all_meshes.add(copy_mesh)
     
                 # Account for mesh bounding box
                 self._accumulate_bound_box(object)
@@ -106,8 +108,9 @@ class pmdl:
         
         self.object = object
         
-        # Set of *all* included mesh objects
-        self.all_mesh_objs = set()
+        # Set of *all* included objects and their meshes
+        self.all_objs = set()
+        self.all_meshes = set()
         
         # Array of shader PSPLC hashes
         self.shader_hashes = []
@@ -225,8 +228,11 @@ class pmdl:
                     idx_buf += struct.pack(endian_char + 'f', comp)
                 for comp in mesh_primitives['mesh'].bound_box[6]:
                     idx_buf += struct.pack(endian_char + 'f', comp)
-                shader_idx = self.get_shader_index(mesh_primitives['mesh'].data.materials[0].name)
-                idx_buf += struct.pack(endian_char + 'I', shader_idx)
+                if len(mesh_primitives['mesh'].data.materials):
+                    shader_idx = self.get_shader_index(mesh_primitives['mesh'].data.materials[0].name)
+                else:
+                    shader_idx = -1
+                idx_buf += struct.pack(endian_char + 'i', shader_idx)
                     
             idx_buf += draw_generator.generate_index_buffer(primitive_meshes, endian_char, psize)
             
@@ -366,8 +372,8 @@ class pmdl:
 
     # Delete copied meshes from blender data
     def __del__(self):
-        for obj in self.all_mesh_objs:
+        for obj in self.all_objs:
             bpy.data.objects.remove(obj)
-
-
+        for mesh in self.all_meshes:
+            bpy.data.meshes.remove(mesh)
 

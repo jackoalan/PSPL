@@ -114,7 +114,7 @@ class EXPORT_OT_pmdl(bpy.types.Operator, ExportHelper):
             generator = pmdl_draw_collision.pmdl_draw_collision()
         
         pmdl_obj = pmdl.pmdl(context.object, generator)
-        
+
         if self.properties.export_par2:
             if context.object.type == 'ARMATURE':
                 self.report({'ERROR_INVALID_INPUT'}, "A PAR2 file may not be generated from an ARMATURE object")

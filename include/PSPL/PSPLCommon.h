@@ -262,9 +262,11 @@ typedef struct _pspl_platform {
 
 /* Windows Support */
 #ifdef _WIN32
+
 char* strtok_r(char *str,
                const char *delim,
                char **nextp);
+
 #endif
 
 #endif
