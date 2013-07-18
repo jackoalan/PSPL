@@ -933,7 +933,7 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
  *
  * *Must* be called within `platform_instruct_hook`
  */
-void pspl_send_platform_instruction(const char* operation, const void* data) {
+void pspl_toolchain_send_platform_instruction(const char* operation, const void* data) {
     int i;
     if (driver_state.pspl_phase != PSPL_PHASE_INSTRUCT_PLATFORM)
         return;

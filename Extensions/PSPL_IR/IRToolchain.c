@@ -873,7 +873,7 @@ static void platform_instruct(const pspl_toolchain_context_t* driver_context) {
     for (i=0 ; i<pspl_ir_state.vertex.tc_count ; ++i)
         pspl_calc_chain_write_uv(&pspl_ir_state.vertex.tc_array[i].tc_chain, i);
     
-    pspl_send_platform_instruction("PSPL-IR", &pspl_ir_state);
+    pspl_toolchain_send_platform_instruction("PSPL-IR", &pspl_ir_state);
 }
 
 

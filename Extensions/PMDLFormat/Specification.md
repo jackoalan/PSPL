@@ -42,11 +42,12 @@ All PMDL sub-types have the following general data layout:
     * Draw-buffer-collection array offset (32-bit word)
     * Shader-object reference absolute offset (32-bit word)
     * Bone string-table absolute offset (32-bit word)
+    * 32-byte-alignment padding at end of header (2x 32-bit words)
 * [Rigged Skinning Info Section](#rigged-skinning-info-section) (`PAR1` only)
 * [Partitioned Octree Section](#octree-section) (`PAR2` only)
 * [Draw-buffer-collection array](#draw-buffer-collections)
     * Count of draw-buffer collections (32-bit word)
-    * Draw-buffer-collection-array-relative offsets for each collection
+    * Header data (one for each collection)
         * UV-attribute count (16-bit word)
         * Bone count (16-bit word; used by `PAR1` only)
             * Note that this only indicates the *maximum* number of bones referenced

@@ -124,7 +124,7 @@ typedef void(*pspl_toolchain_platform_instruct_hook)(const pspl_toolchain_contex
  *
  * *Must* be called within `platform_instruct_hook`
  */
-void pspl_send_platform_instruction(const char* operation, const void* data);
+void pspl_toolchain_send_platform_instruction(const char* operation, const void* data);
 
 /**
  * Finish hook type

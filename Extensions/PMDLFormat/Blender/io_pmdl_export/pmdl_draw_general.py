@@ -17,7 +17,7 @@ def ROUND_UP_32(num):
     if num%32:
         return ((num>>5)<<5)+32
     else:
-        num
+        return num
 
 # This routine conditionally inserts a loop into a multi-tiered
 # array/set collection; simultaneously relating verts to loops and
@@ -237,7 +237,8 @@ class pmdl_draw_general:
             bloop = loop_vert[0]
             mesh = bloop.mesh
             bvert = mesh.vertices[bloop.loop.vertex_index]
-            
+            print(bvert.co)
+
             # Position
             for comp in bvert.co:
                 vert_bytes += vstruct.pack(comp)

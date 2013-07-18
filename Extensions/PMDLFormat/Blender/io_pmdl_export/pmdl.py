@@ -31,7 +31,7 @@ def ROUND_UP_32(num):
     if num%32:
         return ((num>>5)<<5)+32
     else:
-        num
+        return num
         
 
 class pmdl:
@@ -249,7 +249,6 @@ class pmdl:
             cur_buf_offset += len(collection_vertex_buffers[i])
         
         # Element buffer offsets
-        cur_buf_offset = headers_len_round
         for i in range(len(collection_header_buffers)):
             collection_header_buffers[i] += struct.pack(endian_char + 'I', cur_buf_offset)
             cur_buf_offset += len(collection_element_buffers[i])
@@ -283,8 +282,10 @@ class pmdl:
         
         
         # Add padding 0s
-        buf_pad = ROUND_UP_32(len(collection_bytes)) - len(collection_bytes)
-        for i in range(buf_pad):
+        buf_end_len = len(collection_bytes)
+        buf_end_round = ROUND_UP_32(buf_end_len)
+        buf_end_pad = buf_end_round - buf_end_len
+        for i in range(buf_end_pad):
             collection_bytes.append(0)
         
         
