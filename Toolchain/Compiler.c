@@ -199,7 +199,7 @@ static const pspl_extension_t* get_heading_ext(const char* name) {
                         if (weak_ext)
                             pspl_warn("Multiple weakly-claimed primary heading",
                                       "Primary heading named `%s` claimed by both `%s` extension and `%s` extension; latter will overload former",
-                                      name, strong_ext->extension_name, ext->extension_name);
+                                      name, weak_ext->extension_name, ext->extension_name);
                         weak_ext = ext;
                     }
             
@@ -264,7 +264,7 @@ static const pspl_extension_t* get_com_hook_ext(const char* name) {
                         if (weak_ext)
                             pspl_warn("Multiple weakly-claimed command",
                                       "Command named `%s` claimed by both `%s` extension and `%s` extension; latter will overload former",
-                                      name, strong_ext->extension_name, ext->extension_name);
+                                      name, weak_ext->extension_name, ext->extension_name);
                         weak_ext = ext;
                     }
             

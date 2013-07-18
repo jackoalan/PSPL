@@ -41,6 +41,7 @@ All PMDL sub-types have the following general data layout:
     * Master [AABB](http://en.wikipedia.org/wiki/Bounding_volume) (2x points; 6x 32-bit floats; (XYZ mins, XYZ maxes))
     * Draw-buffer-collection array offset (32-bit word)
     * Shader-object reference absolute offset (32-bit word)
+    * Bone string-table absolute offset (32-bit word)
 * [Rigged Skinning Info Section](#rigged-skinning-info-section) (`PAR1` only)
 * [Partitioned Octree Section](#octree-section) (`PAR2` only)
 * [Draw-buffer-collection array](#draw-buffer-collections)
@@ -51,13 +52,17 @@ All PMDL sub-types have the following general data layout:
             * Note that this only indicates the *maximum* number of bones referenced
               by vertices in this buffer, unused bone-weight-attribute values are zero
         * Vertex-buffer offset (32-bit word)
+        * Element-buffer offset (32-bit word)
         * Drawing-index offset (32-bit word)
     * Vertex-buffer data (one for each collection)
+        * The format of this blob is indicated by the draw-buffer format
+    * Element-buffer data (one for each collection)
         * The format of this blob is indicated by the draw-buffer format
     * Drawing-index buffer data (one for each collection)
         * Drawing-index mesh count (32-bit word)
         * Drawing mesh
-            * Mesh blob-relative offset (32-bit word)
+            * Mesh AABB (contained within Master AABB; same format)
+            * Mesh shader reference (32-bit word; index into SHA1 table)
                 * In `PAR2` models, the octree leaves may multiply-reference
                   meshes that extend across leaf-nodes. Due to the possibility of
                   over-draw in this indexing-scheme, the MSB of this offset value
@@ -192,15 +197,11 @@ The General format is designed to operate *natively* with
     
 ### General Drawing Index Buffer Format ###
 
-* Relative offset to element-buffer (32-bit word)
 * Pre-allocated space to store graphics-API object-pointer to element buffer (pointer space)
 * Mesh count (32-bit word)
 * Mesh offset array
     * Mesh-array-relative offset (32-bit word)
 * Mesh array (each variable length)
-    * Shader index (32-bit word)
-        * Selects a SHA1 from the table at end of file
-        * also used to determine UV-attribute count
     * Primitive count (32-bit word)
     * Primitive array
         * (`PAR1` only) index of skin structure to be bound (32-bit word)
@@ -216,9 +217,6 @@ The General format is designed to operate *natively* with
             * 5 - line-strips
         * Primitive-element start index (32-bit word)
         * Primitive-element count (32-bit word)
-* Element-buffer
-    * Length (32-bit word; rounded to 4-bytes)
-    * Element Blob (array of 16-bit indices; padded to 4-bytes)
 
 
 GX Draw Format
@@ -280,9 +278,6 @@ PMDL skin entries.
 * Mesh offset array
     * Mesh-array-relative offset (32-bit word)
 * Mesh array (each variable length)
-    * Shader index (32-bit word)
-        * Selects a SHA1 from the table at end of file
-        * also used to determine UV-attribute count
     * Primitive count (32-bit word)
     * Primitive array
         * Primitive-element display list offset (32-bit word; relative within display list array below)

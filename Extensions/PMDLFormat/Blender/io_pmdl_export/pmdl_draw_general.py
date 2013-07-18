@@ -12,6 +12,13 @@ import bpy
 
 from . import pmdl_loop_vert
 
+# Round up to nearest 32 multiple
+def ROUND_UP_32(num):
+    if num%32:
+        return ((num>>5)<<5)+32
+    else:
+        num
+
 # This routine conditionally inserts a loop into a multi-tiered
 # array/set collection; simultaneously relating verts to loops and
 # eliminating redundant loops (containing identical UV coordinates)
@@ -37,11 +44,11 @@ def _augment_loop_vert_array(lv_array, mesh, loop):
                     matches = False
                     break
             if matches:
-                existing_loop_set.add(lv)
+                existing_loop_set.append(lv)
                 return
 
     # If we get here, no match found; add new set to `lv_array`
-    lv_array.append(set([lv]))
+    lv_array.append([lv])
 
 
 # Get loop set from collection generated with above method;
@@ -79,20 +86,14 @@ class pmdl_draw_general:
     
     def __init__(self):
         
+        # 4-byte ID string used in generated PMDL file
+        self.file_identifier = '_GEN'
+        
         # Array that holds collections. A collection is a 16-bit index
         # worth of vertices, elements referencing them, and a
         # primitive array to draw them
         self.collections = []
     
-    
-        # Bound box of all meshes
-        self.bound_box_accounted = False
-        self.bound_box_min = [0,0,0]
-        self.bound_box_max = [0,0,0]
-    
-    
-    def file_identifier(self):
-        return '_GEN'
     
     
     # If vertex index space is exceeded for a single additional vertex,
@@ -107,22 +108,8 @@ class pmdl_draw_general:
 
 
     # Augments draw generator with a single blender MESH data object
-    def add_mesh(self, obj):
+    def add_mesh(self, pmdl, obj):
         mesh = obj.data
-        
-        # Account for bound box
-        bbox = obj.bound_box
-        if not self.bound_box_accounted:
-            self.bound_box_accounted = True
-            for i in range(3):
-                self.bound_box_min[i] = bbox[0][i]
-                self.bound_box_max[i] = bbox[6][i]
-        else:
-            for i in range(3):
-                if self.bound_box_min[i] > bbox[0][i]:
-                    self.bound_box_min[i] = bbox[0][i]
-                if self.bound_box_max[i] < bbox[6][i]:
-                    self.bound_box_max[i] = bbox[6][i]
     
         # First, generate compressed loop-vertex array-array-set collection
         loop_vert_array = []
@@ -224,7 +211,7 @@ class pmdl_draw_general:
                 
                 
             # Add tri-strip to element array
-            best_collection['tri_strips'].append({'mesh':mesh, 'strip':tri_strip})
+            best_collection['tri_strips'].append({'mesh':obj, 'strip':tri_strip})
             
         
 
@@ -236,54 +223,44 @@ class pmdl_draw_general:
     
 
     # Generate binary vertex buffer of collection index
-    def generate_vertex_buffer(self, index, endianness):
+    def generate_vertex_buffer(self, index, endian_char, psize):
         collection = self.collections[index]
         if not collection:
             return None
         
         # Generate vert buffer struct
-        endian_char = None
-        if endianness == 'LITTLE':
-            endian_char = '<'
-        elif endianness == 'BIG':
-            endian_char = '>'
         vstruct = struct.Struct(endian_char + 'f')
         
         # Build byte array
         vert_bytes = bytearray()
         for loop_vert in collection['vertices']:
             bloop = loop_vert[0]
-            mesh = bloop.id_data
-            bvert = mesh.vertices[bloop.vertex_index]
+            mesh = bloop.mesh
+            bvert = mesh.vertices[bloop.loop.vertex_index]
             
             # Position
             for comp in bvert.co:
-                vert_bytes.append(vstruct.pack(comp))
+                vert_bytes += vstruct.pack(comp)
                 
             # Normal
             for comp in bvert.normal:
-                vert_bytes.append(vstruct.pack(comp))
+                vert_bytes += vstruct.pack(comp)
             
             # UVs
             for uv_idx in range(collection['uv_count']):
                 for comp in mesh.uv_layers[uv_idx].data.uv:
-                    vert_bytes.append(vstruct.pack(comp))
+                    vert_bytes += vstruct.pack(comp)
                 
         return collection['uv_count'], collection['max_bone_count'], vert_bytes
         
         
     # Generate binary element buffer of collection index
-    def generate_element_buffer(self, index, endianness):
+    def generate_element_buffer(self, index, endian_char, psize):
         collection = self.collections[index]
         if not collection:
             return None
         
         # Generate element buffer struct
-        endian_char = None
-        if endianness == 'LITTLE':
-            endian_char = '<'
-        elif endianness == 'BIG':
-            endian_char = '>'
         estruct = struct.Struct(endian_char + 'H')
         
         # Build mesh-primitive hierarchy
@@ -303,10 +280,39 @@ class pmdl_draw_general:
             
             # Primitive tri-strip byte array
             for idx in strip['strip']:
-                element_bytes.append(estruct.pack(idx))
+                element_bytes += estruct.pack(idx)
                 
             mesh_primitives['primitives'].append({'offset':cur_offset, 'length':len(strip['strip'])})
             cur_offset += len(strip['strip'])
             
         return collection_primitives, element_bytes
+
+
+    # Generate binary draw-index buffer of collection index
+    def generate_index_buffer(self, collection_primitives, endian_char, psize):
+
+        # Bytearray to fill
+        index_bytes = bytearray()
+
+        # Pointer space to hold collection's element buffer pointer
+        for i in range(psize):
+            index_bytes.append(0)
+
+        # Mesh Count (matches earlier count in main context)
+        index_bytes += struct.pack(endian_char + 'I', len(collection_primitives))
+
+        # And array
+        for mesh in collection_primitives:
+            
+            # Primitive count
+            index_bytes += struct.pack(endian_char + 'I', len(mesh['primitives']))
+
+            # Primitive array
+            for prim in mesh['primitives']:
+                index_bytes += struct.pack(endian_char + 'I', 3)
+                index_bytes += struct.pack(endian_char + 'I', prim['offset'])
+                index_bytes += struct.pack(endian_char + 'I', prim['length'])
+
+
+        return index_bytes
 
