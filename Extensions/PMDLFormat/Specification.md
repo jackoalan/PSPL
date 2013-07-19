@@ -43,7 +43,7 @@ All PMDL sub-types have the following general data layout:
     * Count of draw-buffer collections (32-bit word)
     * Shader-object reference absolute offset (32-bit word)
     * Bone string-table absolute offset (32-bit word)
-    * 32-byte-alignment padding at end of header (1x 32-bit word)
+    * 32-byte alignment padding (4 bytes)
 * [Rigged Skinning Info Section](#rigged-skinning-info-section) (`PAR1` only)
 * [Partitioned Octree Section](#octree-section) (`PAR2` only)
 * [Draw-buffer-collection array](#draw-buffer-collections)
@@ -82,6 +82,7 @@ All PMDL sub-types have the following general data layout:
     * Reference array (array of 20-byte SHA1 hashes)
         * These hashes correspond to PSPL objects defining shader-configurations
 * String table (`PAR1` only)
+    * String Count (32-bit word)
     * Null-terminated strings for bone names
 * 32-byte-rounded `0xff` padding
 

@@ -145,8 +145,9 @@ class pmdl:
         return len(self.shader_hashes) - 1
 
     # Generate hash ref table
-    def gen_shader_refs(self):
+    def gen_shader_refs(self, endian_char):
         table = bytearray()
+        table += struct.pack(endian_char + 'I', len(self.shader_hashes))
         for hash in self.shader_hashes:
             table += hash
         return table
@@ -164,8 +165,9 @@ class pmdl:
 
 
     # Generate bone string table
-    def gen_bone_table(self):
+    def gen_bone_table(self, endian_char):
         table = bytearray()
+        table += struct.pack(endian_char + 'I', len(self.bone_names))
         for bone in self.bone_names:
             table += bone
             table.append(0)
@@ -308,6 +310,12 @@ class pmdl:
     # and endianness ['LITTLE', 'BIG'] at the requested path
     def generate_file(self, draw_generator, endianness, psize, file_path):
 
+        endian_char = None
+        if endianness == 'LITTLE':
+            endian_char = '<'
+        elif endianness == 'BIG':
+            endian_char = '>'
+
 
         # First, calculate various offsets into PMDL file
         header_size = 64
@@ -318,10 +326,10 @@ class pmdl:
         collection_buffer = self.generate_collection_buffer(draw_generator, endianness, psize)
         
         shader_refs_offset = collection_offset + len(collection_buffer)
-        shader_refs_buffer = self.gen_shader_refs()
+        shader_refs_buffer = self.gen_shader_refs(endian_char)
         
         bone_names_offset = shader_refs_offset + len(shader_refs_buffer)
-        bone_names_buffer = self.gen_bone_table()
+        bone_names_buffer = self.gen_bone_table(endian_char)
         
         total_size = bone_names_offset + len(bone_names_buffer)
         total_size_round = ROUND_UP_32(total_size)
@@ -335,13 +343,10 @@ class pmdl:
         
         pmdl_header += b'PMDL'
         
-        endian_char = None
         if endianness == 'LITTLE':
             pmdl_header += b'_LIT'
-            endian_char = '<'
         elif endianness == 'BIG':
             pmdl_header += b'_BIG'
-            endian_char = '>'
 
         pmdl_header += struct.pack(endian_char + 'I', psize)
 
@@ -363,6 +368,7 @@ class pmdl:
 
         for i in range(4):
             pmdl_header.append(0)
+
 
         pmdl_file.write(pmdl_header)
 
