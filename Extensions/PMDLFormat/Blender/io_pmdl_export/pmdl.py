@@ -215,9 +215,11 @@ class pmdl:
         for i in range(len(draw_generator.collections)):
             header = bytearray()
             
+            # Generate platform-specific portion of vertex buffer
             uv_count, max_bone_count, vert_bytes = draw_generator.generate_vertex_buffer(i, endian_char, psize)
             collection_vertex_buffers.append(vert_bytes)
             
+            # Generate platform-specific portion of element buffer
             primitive_meshes, element_bytes = draw_generator.generate_element_buffer(i, endian_char, psize)
             collection_element_buffers.append(element_bytes)
             
@@ -233,7 +235,8 @@ class pmdl:
                 else:
                     shader_idx = -1
                 idx_buf += struct.pack(endian_char + 'i', shader_idx)
-                    
+            
+            # Generate platform-specific portion of index buffer
             idx_buf += draw_generator.generate_index_buffer(primitive_meshes, endian_char, psize)
             
             collection_index_buffers.append(idx_buf)
@@ -244,7 +247,7 @@ class pmdl:
         
         
         # Add together header and buffer sizes to get offsets
-        headers_len = (4 + (len(collection_header_buffers) * 12))
+        headers_len = len(collection_header_buffers) * 24
         headers_len_round = ROUND_UP_32(headers_len)
         headers_len_pad = headers_len_round - headers_len
         
@@ -252,11 +255,13 @@ class pmdl:
         cur_buf_offset = headers_len_round
         for i in range(len(collection_header_buffers)):
             collection_header_buffers[i] += struct.pack(endian_char + 'I', cur_buf_offset)
+            collection_header_buffers[i] += struct.pack(endian_char + 'I', len(collection_vertex_buffers[i]))
             cur_buf_offset += len(collection_vertex_buffers[i])
         
         # Element buffer offsets
         for i in range(len(collection_header_buffers)):
             collection_header_buffers[i] += struct.pack(endian_char + 'I', cur_buf_offset)
+            collection_header_buffers[i] += struct.pack(endian_char + 'I', len(collection_element_buffers[i]))
             cur_buf_offset += len(collection_element_buffers[i])
         
         # Index buffer offsets
@@ -270,7 +275,6 @@ class pmdl:
         
         
         # Begin generating master buffer
-        collection_bytes += struct.pack(endian_char + 'I', len(draw_generator.collections))
         for header in collection_header_buffers:
             collection_bytes += header
         for i in range(headers_len_pad):
@@ -327,35 +331,40 @@ class pmdl:
         # Open file and write in header
         pmdl_file = open(file_path, 'wb')
         
-        pmdl_file.write('PMDL'.encode('utf-8'))
+        pmdl_header = bytearray()
+        
+        pmdl_header += b'PMDL'
         
         endian_char = None
         if endianness == 'LITTLE':
-            pmdl_file.write('_LIT'.encode('utf-8'))
+            pmdl_header += b'_LIT'
             endian_char = '<'
         elif endianness == 'BIG':
-            pmdl_file.write('_BIG'.encode('utf-8'))
+            pmdl_header += b'_BIG'
             endian_char = '>'
 
-        pmdl_file.write(struct.pack(endian_char + 'I', psize))
+        pmdl_header += struct.pack(endian_char + 'I', psize)
 
-        pmdl_file.write(self.sub_type.encode('utf-8'))
+        pmdl_header += self.sub_type.encode('utf-8')
 
-        pmdl_file.write(draw_generator.file_identifier.encode('utf-8'))
+        pmdl_header += draw_generator.file_identifier.encode('utf-8')
 
         for comp in self.bound_box_min:
-            pmdl_file.write(struct.pack(endian_char + 'f', comp))
+            pmdl_header += struct.pack(endian_char + 'f', comp)
         for comp in self.bound_box_max:
-            pmdl_file.write(struct.pack(endian_char + 'f', comp))
+            pmdl_header += struct.pack(endian_char + 'f', comp)
         
-        pmdl_file.write(struct.pack(endian_char + 'I', collection_offset))
+        pmdl_header += struct.pack(endian_char + 'I', collection_offset)
+        pmdl_header += struct.pack(endian_char + 'I', len(draw_generator.collections))
 
-        pmdl_file.write(struct.pack(endian_char + 'I', shader_refs_offset))
+        pmdl_header += struct.pack(endian_char + 'I', shader_refs_offset)
 
-        pmdl_file.write(struct.pack(endian_char + 'I', bone_names_offset))
+        pmdl_header += struct.pack(endian_char + 'I', bone_names_offset)
 
-        for i in range(8):
-            pmdl_file.write(b'\x00')
+        for i in range(4):
+            pmdl_header.append(0)
+
+        pmdl_file.write(pmdl_header)
 
 
         # Now write sub-buffers

@@ -157,7 +157,6 @@ class pmdl_draw_general:
                 if 0 == len(tri_strip): # First triangle in strip
                 
                     # Add three loop-vert vertices to tri-strip
-                    print('initial loop indices', temp_poly.loop_indices)
                     for poly_loop_idx in temp_poly.loop_indices:
                         poly_loop = mesh.loops[poly_loop_idx]
                         loop_vert = _get_loop_set(loop_vert_array[poly_loop.vertex_index], mesh, poly_loop)
@@ -278,6 +277,7 @@ class pmdl_draw_general:
         element_bytes = bytearray()
                 
         for strip in collection['tri_strips']:
+            print('new strip')
             if last_mesh != strip['mesh']:
                 last_mesh = strip['mesh']
                 mesh_primitives = {'mesh':last_mesh, 'primitives':[]}
@@ -285,6 +285,7 @@ class pmdl_draw_general:
             
             # Primitive tri-strip byte array
             for idx in strip['strip']:
+                print(idx)
                 element_bytes += estruct.pack(idx)
                 
             mesh_primitives['primitives'].append({'offset':cur_offset, 'length':len(strip['strip'])})
@@ -299,12 +300,13 @@ class pmdl_draw_general:
         # Bytearray to fill
         index_bytes = bytearray()
 
-        # Pointer space to hold collection's element buffer pointer
+        # Pointer space to hold collection's vertex buffer pointer
         for i in range(psize):
             index_bytes.append(0)
 
-        # Mesh Count (matches earlier count in main context)
-        index_bytes += struct.pack(endian_char + 'I', len(collection_primitives))
+        # Pointer space to hold collection's element buffer pointer
+        for i in range(psize):
+            index_bytes.append(0)
 
         # And array
         for mesh in collection_primitives:

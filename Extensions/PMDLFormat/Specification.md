@@ -40,25 +40,29 @@ All PMDL sub-types have the following general data layout:
     * Draw-buffer format ([`_GEN`](#general-draw-format), [`__GX`](#gx-draw-format), [`_COL`](#collision-draw-format))
     * Master [AABB](http://en.wikipedia.org/wiki/Bounding_volume) (2x points; 6x 32-bit floats; (XYZ mins, XYZ maxes))
     * Draw-buffer-collection array offset (32-bit word)
+    * Count of draw-buffer collections (32-bit word)
     * Shader-object reference absolute offset (32-bit word)
     * Bone string-table absolute offset (32-bit word)
-    * 32-byte-alignment padding at end of header (2x 32-bit words)
+    * 32-byte-alignment padding at end of header (1x 32-bit word)
 * [Rigged Skinning Info Section](#rigged-skinning-info-section) (`PAR1` only)
 * [Partitioned Octree Section](#octree-section) (`PAR2` only)
 * [Draw-buffer-collection array](#draw-buffer-collections)
-    * Count of draw-buffer collections (32-bit word)
     * Header data (one for each collection)
         * UV-attribute count (16-bit word)
         * Bone count (16-bit word; used by `PAR1` only)
             * Note that this only indicates the *maximum* number of bones referenced
               by vertices in this buffer, unused bone-weight-attribute values are zero
         * Vertex-buffer offset (32-bit word)
+        * Vertex-buffer length (32-bit word)
         * Element-buffer offset (32-bit word)
+        * Element-buffer length (32-bit word)
         * Drawing-index offset (32-bit word)
+    * 32-byte alignment padding
     * Vertex-buffer data (one for each collection)
         * The format of this blob is indicated by the draw-buffer format
     * Element-buffer data (one for each collection)
         * The format of this blob is indicated by the draw-buffer format
+    * 32-byte alignment padding
     * Drawing-index buffer data (one for each collection)
         * Drawing-index mesh count (32-bit word)
         * Drawing mesh
@@ -72,6 +76,7 @@ All PMDL sub-types have the following general data layout:
                   of these draw bits are reset to 0.
         * Mesh blob
             * The format of this blob is indicated by the draw-buffer format
+    * 32-byte alignment padding
 * Shader-object references
     * Reference count (32-bit word)
     * Reference array (array of 20-byte SHA1 hashes)
@@ -198,10 +203,8 @@ The General format is designed to operate *natively* with
     
 ### General Drawing Index Buffer Format ###
 
+* Pre-allocated space to store graphics-API object-pointer to vertex buffer (pointer space)
 * Pre-allocated space to store graphics-API object-pointer to element buffer (pointer space)
-* Mesh count (32-bit word)
-* Mesh offset array
-    * Mesh-array-relative offset (32-bit word)
 * Mesh array (each variable length)
     * Primitive count (32-bit word)
     * Primitive array
@@ -274,16 +277,11 @@ PMDL skin entries.
     
 ### GX Drawing Index Buffer Format ###
 
-* Relative offset to element-buffer display lists (32-bit word)
-* Mesh count (32-bit word)
-* Mesh offset array
-    * Mesh-array-relative offset (32-bit word)
 * Mesh array (each variable length)
     * Primitive count (32-bit word)
     * Primitive array
         * Primitive-element display list offset (32-bit word; relative within display list array below)
-        * Primitive-element display list pre-allocated pointer space (pointer space)
-        * Primitive-element count (32-bit word)
+        * Primitive-element display list length (32-bit word)
 * Element-buffer dispay list array
     * A series of 32-byte-aligned and 0x0-padded display lists
 
