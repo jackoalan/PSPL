@@ -46,6 +46,7 @@
 		E45034F51760DC220079B62D /* rgb_enc.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034F41760DC220079B62D /* rgb_enc.c */; settings = {COMPILER_FLAGS = "-IExtensions/TextureManager"; }; };
 		E45591D6174ADA8F00CE0A08 /* Packager.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE9B172DB2D400F7A0BF /* Packager.c */; };
 		E45591D8174D60C100CE0A08 /* gx_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E45591D7174D60C100CE0A08 /* gx_toolchain.c */; };
+		E4600020179D78520013FE3A /* PMDLRuntimeProcessing.c in Sources */ = {isa = PBXBuildFile; fileRef = E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */; };
 		E462EEA71778C12F00211193 /* PSPLRuntimeThreads.h in Headers */ = {isa = PBXBuildFile; fileRef = E4C527101778A4FF00D1D822 /* PSPLRuntimeThreads.h */; };
 		E462EEA91778FC5B00211193 /* gl_runtime_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = E462EEA81778FC0200211193 /* gl_runtime_ios.m */; };
 		E48FF5601764CF29000231AA /* IRToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E48FF55F1764CF29000231AA /* IRToolchain.c */; };
@@ -124,7 +125,7 @@
 		E45034F61760DC300079B62D /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E45034F71760E2BE0079B62D /* TMCommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMCommon.h; sourceTree = "<group>"; };
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
-		E460001F179D74450013FE3A /* PMDLRuntimeLoader.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PMDLRuntimeLoader.c; sourceTree = "<group>"; };
+		E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PMDLRuntimeProcessing.c; sourceTree = "<group>"; };
 		E462EEA81778FC0200211193 /* gl_runtime_ios.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = gl_runtime_ios.m; sourceTree = "<group>"; };
 		E4874077178BA834009EAD1A /* DataGeneration.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = DataGeneration.md; sourceTree = "<group>"; };
 		E4874079178C62E8009EAD1A /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
@@ -637,7 +638,7 @@
 				E4CE71F5178509D2009F5932 /* PMDLCommon.h */,
 				E44577BE1781DC4F003EE09C /* PMDLToolchain.c */,
 				E44577BF1781DC5B003EE09C /* PMDLRuntime.c */,
-				E460001F179D74450013FE3A /* PMDLRuntimeLoader.c */,
+				E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */,
 			);
 			path = PMDLFormat;
 			sourceTree = "<group>";
@@ -936,6 +937,7 @@
 				E44577C11781DDAE003EE09C /* PMDLRuntime.c in Sources */,
 				E4C5E8B7177E1BAC00D73E7D /* TMRuntime.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
+				E4600020179D78520013FE3A /* PMDLRuntimeProcessing.c in Sources */,
 				E447F7FC1774A6780081E1DF /* CalcChain.c in Sources */,
 				E4CE71F41785043D009F5932 /* RuntimeCore.c in Sources */,
 				E4E4918E1753FAD3006FCA59 /* pspl_available_runtime_extensions.c in Sources */,
