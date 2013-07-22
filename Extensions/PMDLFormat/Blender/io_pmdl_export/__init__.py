@@ -131,7 +131,7 @@ class EXPORT_OT_pmdl(bpy.types.Operator, ExportHelper):
                 psize = 8
             elif self.properties.pointer_size == '32-BIT':
                 psize = 4
-            pmdl_obj.generate_file(generator, self.properties.export_endianness, psize, self.properties.filepath)
+            pmdl_obj.generate_file(self.properties.export_endianness, psize, self.properties.filepath)
         else:
             self.report('ERROR_INVALID_INPUT', "Invalid draw type")
 

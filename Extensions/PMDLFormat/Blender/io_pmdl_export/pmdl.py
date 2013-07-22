@@ -107,6 +107,7 @@ class pmdl:
     def __init__(self, object, draw_gen):
         
         self.object = object
+        self.draw_gen = draw_gen
         
         # Set of *all* included objects and their meshes
         self.all_objs = set()
@@ -196,7 +197,7 @@ class pmdl:
 
 
     # Finally, generate complete collection buffer
-    def generate_collection_buffer(self, draw_generator, endianness, psize):
+    def generate_collection_buffer(self, endianness, psize):
         
         endian_char = None
         if endianness == 'LITTLE':
@@ -214,15 +215,15 @@ class pmdl:
         collection_index_buffers = []
         
         # Begin generating individual collection buffers
-        for i in range(len(draw_generator.collections)):
+        for i in range(len(self.draw_gen.collections)):
             header = bytearray()
             
             # Generate platform-specific portion of vertex buffer
-            uv_count, max_bone_count, vert_bytes = draw_generator.generate_vertex_buffer(i, endian_char, psize)
+            uv_count, max_bone_count, vert_bytes = self.draw_gen.generate_vertex_buffer(i, endian_char, psize)
             collection_vertex_buffers.append(vert_bytes)
             
             # Generate platform-specific portion of element buffer
-            primitive_meshes, element_bytes = draw_generator.generate_element_buffer(i, endian_char, psize)
+            primitive_meshes, element_bytes = self.draw_gen.generate_element_buffer(i, endian_char, psize)
             collection_element_buffers.append(element_bytes)
             
             idx_buf = bytearray()
@@ -239,7 +240,7 @@ class pmdl:
                 idx_buf += struct.pack(endian_char + 'i', shader_idx)
             
             # Generate platform-specific portion of index buffer
-            idx_buf += draw_generator.generate_index_buffer(primitive_meshes, endian_char, psize)
+            idx_buf += self.draw_gen.generate_index_buffer(primitive_meshes, endian_char, psize)
             
             collection_index_buffers.append(idx_buf)
             
@@ -306,9 +307,9 @@ class pmdl:
 
 
 
-    # This routine will generate a PMDL file with the requested draw generator
-    # and endianness ['LITTLE', 'BIG'] at the requested path
-    def generate_file(self, draw_generator, endianness, psize, file_path):
+    # This routine will generate a PMDL file with the requested
+    # endianness ['LITTLE', 'BIG'] and pointer-size at the requested path
+    def generate_file(self, endianness, psize, file_path):
 
         endian_char = None
         if endianness == 'LITTLE':
@@ -323,7 +324,7 @@ class pmdl:
         octree_buffer = bytes()
         
         collection_offset = header_size + len(rigging_info_buffer) + len(octree_buffer)
-        collection_buffer = self.generate_collection_buffer(draw_generator, endianness, psize)
+        collection_buffer = self.generate_collection_buffer(endianness, psize)
         
         shader_refs_offset = collection_offset + len(collection_buffer)
         shader_refs_buffer = self.gen_shader_refs(endian_char)
@@ -352,7 +353,7 @@ class pmdl:
 
         pmdl_header += self.sub_type.encode('utf-8')
 
-        pmdl_header += draw_generator.file_identifier.encode('utf-8')
+        pmdl_header += self.draw_gen.file_identifier.encode('utf-8')
 
         for comp in self.bound_box_min:
             pmdl_header += struct.pack(endian_char + 'f', comp)
@@ -360,7 +361,7 @@ class pmdl:
             pmdl_header += struct.pack(endian_char + 'f', comp)
         
         pmdl_header += struct.pack(endian_char + 'I', collection_offset)
-        pmdl_header += struct.pack(endian_char + 'I', len(draw_generator.collections))
+        pmdl_header += struct.pack(endian_char + 'I', len(self.draw_gen.collections))
 
         pmdl_header += struct.pack(endian_char + 'I', shader_refs_offset)
 
