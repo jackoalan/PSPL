@@ -312,7 +312,7 @@ typedef struct {
     void* blobs_buf;
     
     // Per-extension user-pointers (the `count` definition is set via CMake)
-    void** extension_pointers[PSPL_RUNTIME_EXTENSION_COUNT];
+    void* extension_pointers[PSPL_RUNTIME_EXTENSION_COUNT];
     
 } _pspl_runtime_psplc_t;
 
@@ -595,12 +595,11 @@ void pspl_runtime_enumerate_integer_embedded_data_objects(const pspl_runtime_psp
     }
 }
 
-/* Get extension-specific user-data pointer for individual PSPLC object */
-int pspl_runtime_get_extension_user_data_pointer(const pspl_runtime_psplc_t* object,
-                                                 void*** user_ptr) {
-    if (!object || !user_ptr)
+/* Set extension-specific user-data pointer for individual PSPLC object */
+int pspl_runtime_set_extension_user_data_pointer(const pspl_runtime_psplc_t* object, void* ptr) {
+    if (!object)
         return -1;
-    const _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)object;
+    _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)object;
     
     intptr_t api_load_state = pspl_api_load_state();
     intptr_t api_load_subject_index = pspl_api_load_subject_index();
@@ -611,8 +610,26 @@ int pspl_runtime_get_extension_user_data_pointer(const pspl_runtime_psplc_t* obj
     else
         return -1;
     
-    *user_ptr = (void**)&obj->extension_pointers[idx->extension_index];
+    obj->extension_pointers[idx->extension_index] = ptr;
     return 0;
+}
+
+/* Get extension-specific user-data pointer for individual PSPLC object */
+void* pspl_runtime_get_extension_user_data_pointer(const pspl_runtime_psplc_t* object) {
+    if (!object)
+        return NULL;
+    const _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)object;
+    
+    intptr_t api_load_state = pspl_api_load_state();
+    intptr_t api_load_subject_index = pspl_api_load_subject_index();
+    
+    const _pspl_object_index_t* idx = NULL;
+    if (api_load_state == PSPL_LOADING_EXT)
+        idx = &obj->ext_arr[api_load_subject_index];
+    else
+        return NULL;
+    
+    return obj->extension_pointers[idx->extension_index];
 }
 
 #pragma mark Runtime API

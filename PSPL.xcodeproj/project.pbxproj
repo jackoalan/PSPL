@@ -124,6 +124,7 @@
 		E45034F61760DC300079B62D /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E45034F71760E2BE0079B62D /* TMCommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMCommon.h; sourceTree = "<group>"; };
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
+		E460001F179D74450013FE3A /* PMDLRuntimeLoader.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PMDLRuntimeLoader.c; sourceTree = "<group>"; };
 		E462EEA81778FC0200211193 /* gl_runtime_ios.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = gl_runtime_ios.m; sourceTree = "<group>"; };
 		E4874077178BA834009EAD1A /* DataGeneration.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = DataGeneration.md; sourceTree = "<group>"; };
 		E4874079178C62E8009EAD1A /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
@@ -636,6 +637,7 @@
 				E4CE71F5178509D2009F5932 /* PMDLCommon.h */,
 				E44577BE1781DC4F003EE09C /* PMDLToolchain.c */,
 				E44577BF1781DC5B003EE09C /* PMDLRuntime.c */,
+				E460001F179D74450013FE3A /* PMDLRuntimeLoader.c */,
 			);
 			path = PMDLFormat;
 			sourceTree = "<group>";

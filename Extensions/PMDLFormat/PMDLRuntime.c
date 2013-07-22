@@ -45,20 +45,16 @@ static void load_object_hook(pspl_runtime_psplc_t* object) {
         files->files[i] = pspl_runtime_get_archived_file_from_hash(object->parent, (pspl_hash*)data_cur, 1);
     
     // Set user data pointer appropriately
-    void** usr_ptr;
-    pspl_runtime_get_extension_user_data_pointer(object, &usr_ptr);
-    *usr_ptr = (void*)files;
+    pspl_runtime_set_extension_user_data_pointer(object, files);
     
 }
 
 static void unload_object_hook(pspl_runtime_psplc_t* object) {
     
     // Set user data pointer appropriately
-    void** usr_ptr;
-    pspl_runtime_get_extension_user_data_pointer(object, &usr_ptr);
+    struct file_array* files = pspl_runtime_get_extension_user_data_pointer(object);
     
     // Release all referenced files
-    struct file_array* files = *usr_ptr;
     int i;
     for (i=0 ; i<files->count ; ++i)
         pspl_runtime_release_archived_file(files->files[i]);
@@ -69,9 +65,7 @@ static void unload_object_hook(pspl_runtime_psplc_t* object) {
 static void bind_object_hook(pspl_runtime_psplc_t* object) {
     
     // Set user data pointer appropriately
-    void** usr_ptr;
-    pspl_runtime_get_extension_user_data_pointer(object, &usr_ptr);
-    bound_array = *usr_ptr;
+    bound_array = pspl_runtime_get_extension_user_data_pointer(object);
     
 }
 
