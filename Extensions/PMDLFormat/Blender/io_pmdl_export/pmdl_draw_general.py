@@ -300,11 +300,7 @@ class pmdl_draw_general:
         # Bytearray to fill
         index_bytes = bytearray()
 
-        # Pointer space to hold collection's vertex buffer pointer
-        for i in range(psize):
-            index_bytes.append(0)
-
-        # Pointer space to hold collection's element buffer pointer
+        # Pointer space to hold collection's graphics API drawing context
         for i in range(psize):
             index_bytes.append(0)
 

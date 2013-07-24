@@ -1495,7 +1495,7 @@ const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_key(pspl_runtime_package
  *        reference count set to 1 when found
  * @return PSPLC representation (or NULL if not available)
  */
-const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_hash(pspl_runtime_package_t* package,
+const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_hash(const pspl_runtime_package_t* package,
                                                              pspl_hash* hash, int retain) {
     if (!package)
         return NULL;
@@ -1532,7 +1532,7 @@ const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_hash(pspl_runtime_packag
  *
  * @param psplc PSPLC representation
  */
-void pspl_runtime_retain_psplc(pspl_runtime_psplc_t* psplc) {
+void pspl_runtime_retain_psplc(const pspl_runtime_psplc_t* psplc) {
     if (!psplc)
         return;
     
@@ -1556,7 +1556,7 @@ void pspl_runtime_retain_psplc(pspl_runtime_psplc_t* psplc) {
             // Notify extension of loading
             pspl_api_set_load_subject_index(i);
             if (extension->runtime_extension && extension->runtime_extension->load_object_hook)
-                extension->runtime_extension->load_object_hook(psplc);
+                extension->runtime_extension->load_object_hook((pspl_runtime_psplc_t*)psplc);
         }
         
         // Run platform hooks
@@ -1566,7 +1566,7 @@ void pspl_runtime_retain_psplc(pspl_runtime_psplc_t* psplc) {
             // Notify platform of loading
             pspl_api_set_load_subject_index(i);
             if (pspl_runtime_platform->runtime_platform && pspl_runtime_platform->runtime_platform->load_object_hook)
-                pspl_runtime_platform->runtime_platform->load_object_hook(psplc);
+                pspl_runtime_platform->runtime_platform->load_object_hook((pspl_runtime_psplc_t*)psplc);
             
             break;
         }
@@ -1632,10 +1632,10 @@ static void _pspl_runtime_release_psplc(pspl_runtime_psplc_t* psplc, int total) 
     if (total)
         obj->ref_count = 0;
 }
-void pspl_runtime_release_psplc(pspl_runtime_psplc_t* psplc) {
+void pspl_runtime_release_psplc(const pspl_runtime_psplc_t* psplc) {
     if (!psplc)
         return;
-    _pspl_runtime_release_psplc(psplc, 0);
+    _pspl_runtime_release_psplc((pspl_runtime_psplc_t*)psplc, 0);
 }
 
 /**
@@ -1643,7 +1643,7 @@ void pspl_runtime_release_psplc(pspl_runtime_psplc_t* psplc) {
  *
  * @param psplc PSPLC representation
  */
-void pspl_runtime_bind_psplc(pspl_runtime_psplc_t* psplc) {
+void pspl_runtime_bind_psplc(const pspl_runtime_psplc_t* psplc) {
     if (!psplc)
         return;
     
@@ -1659,7 +1659,7 @@ void pspl_runtime_bind_psplc(pspl_runtime_psplc_t* psplc) {
         // Notify platform of binding
         pspl_api_set_load_subject_index(i);
         if (pspl_runtime_platform->runtime_platform && pspl_runtime_platform->runtime_platform->bind_object_hook)
-            pspl_runtime_platform->runtime_platform->bind_object_hook(psplc);
+            pspl_runtime_platform->runtime_platform->bind_object_hook((pspl_runtime_psplc_t*)psplc);
         
         break;
     }
@@ -1673,7 +1673,7 @@ void pspl_runtime_bind_psplc(pspl_runtime_psplc_t* psplc) {
         // Notify extension of binding
         pspl_api_set_load_subject_index(i);
         if (extension->runtime_extension && extension->runtime_extension->bind_object_hook)
-            extension->runtime_extension->bind_object_hook(psplc);
+            extension->runtime_extension->bind_object_hook((pspl_runtime_psplc_t*)psplc);
     }
     
     pspl_api_set_load_state(PSPL_LOADING_NONE);

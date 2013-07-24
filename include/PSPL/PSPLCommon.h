@@ -37,21 +37,18 @@ enum pspl_blend_factor {
 };
 
 /* Common 4-component vector representation */
-typedef struct {
-    float vector[4];
-} pspl_vector4_t;
+typedef float pspl_vector4_t[4];
 
 /* Common 3-component vector representation */
-typedef struct {
-    float vector[3];
-} pspl_vector3_t;
+typedef float pspl_vector3_t[3];
 
-/* Common 3x4 matrix (homogenous) representation */
-typedef struct {
-    float matrix[3][4];
-} pspl_matrix34_t;
+/* Common 3x4 matrix (homogenous) representation; row major */
+typedef float pspl_matrix34_t[3][4];
 
-/* Common perspective transform representation */
+/* Common 4x4 matrix representation; row major */
+typedef float pspl_matrix44_t[4][4];
+
+/* Common perspective/orthographic transform representation */
 #undef near
 #undef far
 typedef struct {
@@ -62,6 +59,21 @@ typedef struct {
     float post_translate_x;
     float post_translate_y;
 } pspl_perspective_t;
+typedef struct {
+    float top;
+    float bottom;
+    float left;
+    float right;
+    float near;
+    float far;
+    float post_translate_x;
+    float post_translate_y;
+} pspl_orthographic_t;
+
+/* Common camera view representation - 3 orthogonal vectors */
+typedef struct {
+    pspl_vector3_t pos, look, up;
+} pspl_camera_view_t;
 
 /* Common rotation representation */
 typedef struct {

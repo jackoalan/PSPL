@@ -48,11 +48,11 @@ typedef struct {
 void pspl_calc_chain_init(pspl_calc_chain_t* chain);
 void pspl_calc_chain_destroy(pspl_calc_chain_t* chain);
 void pspl_calc_chain_add_static_transform(pspl_calc_chain_t* chain,
-                                          const pspl_matrix34_t* matrix);
+                                          const pspl_matrix34_t matrix);
 void pspl_calc_chain_add_dynamic_transform(pspl_calc_chain_t* chain,
                                            const char* bind_name);
 void pspl_calc_chain_add_static_scale(pspl_calc_chain_t* chain,
-                                      const pspl_vector3_t* scale_vector);
+                                      const pspl_vector3_t scale_vector);
 void pspl_calc_chain_add_dynamic_scale(pspl_calc_chain_t* chain,
                                        const char* bind_name);
 void pspl_calc_chain_add_static_rotation(pspl_calc_chain_t* chain,
@@ -60,7 +60,7 @@ void pspl_calc_chain_add_static_rotation(pspl_calc_chain_t* chain,
 void pspl_calc_chain_add_dynamic_rotation(pspl_calc_chain_t* chain,
                                           const char* bind_name);
 void pspl_calc_chain_add_static_translation(pspl_calc_chain_t* chain,
-                                            const pspl_vector3_t* trans_vector);
+                                            const pspl_vector3_t trans_vector);
 void pspl_calc_chain_add_dynamic_translation(pspl_calc_chain_t* chain,
                                              const char* bind_name);
 void pspl_calc_chain_write_position(pspl_calc_chain_t* chain);
@@ -74,13 +74,13 @@ void pspl_calc_chain_write_uv(pspl_calc_chain_t* chain, unsigned uv_idx);
 /* Routines provided by `PSPL-IR` runtime extension */
 void pspl_calc_chain_bind(const pspl_runtime_psplc_t* object);
 void pspl_calc_chain_set_dynamic_transform(const char* bind_name,
-                                           const pspl_matrix34_t* matrix);
+                                           const pspl_matrix34_t matrix);
 void pspl_calc_chain_set_dynamic_scale(const char* bind_name,
-                                       const pspl_vector3_t* scale_vector);
+                                       const pspl_vector3_t scale_vector);
 void pspl_calc_chain_set_dynamic_rotation(const char* bind_name,
                                           const pspl_rotation_t* rotation);
 void pspl_calc_chain_set_dynamic_translation(const char* bind_name,
-                                             const pspl_vector3_t* trans_vector);
+                                             const pspl_vector3_t trans_vector);
 void pspl_calc_chain_flush();
 
 #endif

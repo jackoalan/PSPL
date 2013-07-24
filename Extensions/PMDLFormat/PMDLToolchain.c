@@ -8,7 +8,6 @@
 
 #include <stdio.h>
 #include <PSPLExtension.h>
-#include "PMDLBlenderInterface.h"
 
 static void copyright_hook() {
     
@@ -26,7 +25,6 @@ static void command_call_hook(const pspl_toolchain_context_t* driver_context,
     
     if (!strcasecmp(command_name, "ADD_BLENDER_OBJECT")) {
         
-        pspl_pmdl_blender_connection blender;
         
         
     }

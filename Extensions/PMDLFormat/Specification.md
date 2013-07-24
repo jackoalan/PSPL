@@ -17,8 +17,7 @@ PMDL files are designed to be packaged into PSPL package-files and contain
 internal references to PSPL objects for shader-specifications.
 
 As far as spacial-representation is concerned, a right-handed, XYZ coordinate system
-is used throughout. The PMDL runtime makes left-handed transformations for graphics
-platforms as necessary.
+is used throughout.
 
 
 General Layout
@@ -204,8 +203,7 @@ The General format is designed to operate *natively* with
     
 ### General Drawing Index Buffer Format ###
 
-* Pre-allocated space to store graphics-API object-pointer to vertex buffer (pointer space)
-* Pre-allocated space to store graphics-API object-pointer to element buffer (pointer space)
+* Pre-allocated space to store OpenGL *VAO* or Direct3D *DeviceContext*
 * Mesh array (each variable length)
     * Primitive count (32-bit word)
     * Primitive array

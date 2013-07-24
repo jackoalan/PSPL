@@ -199,7 +199,7 @@ const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_key(pspl_runtime_package
  *        reference count set to 1 when found
  * @return PSPLC representation (or NULL if not available)
  */
-const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_hash(pspl_runtime_package_t* package,
+const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_hash(const pspl_runtime_package_t* package,
                                                              pspl_hash* hash, int retain);
 
 /**
@@ -207,21 +207,21 @@ const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_hash(pspl_runtime_packag
  *
  * @param psplc PSPLC representation
  */
-void pspl_runtime_retain_psplc(pspl_runtime_psplc_t* psplc);
+void pspl_runtime_retain_psplc(const pspl_runtime_psplc_t* psplc);
 
 /**
  * Decrement reference-count of PSPLC representation
  *
  * @param psplc PSPLC representation
  */
-void pspl_runtime_release_psplc(pspl_runtime_psplc_t* psplc);
+void pspl_runtime_release_psplc(const pspl_runtime_psplc_t* psplc);
 
 /**
  * Bind PSPLC representation to GPU (implicitly retains if unloaded)
  *
  * @param psplc PSPLC representation
  */
-void pspl_runtime_bind_psplc(pspl_runtime_psplc_t* psplc);
+void pspl_runtime_bind_psplc(const pspl_runtime_psplc_t* psplc);
 
 
 #pragma mark Archived Files

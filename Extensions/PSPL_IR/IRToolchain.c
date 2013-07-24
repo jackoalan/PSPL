@@ -187,12 +187,12 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                 
                 pspl_ir_state.vertex.in_matrix_def = 0;
                 for (i=pspl_ir_state.vertex.matrix_row_count-1 ; i<3 ; ++i) {
-                    pspl_ir_state.vertex.matrix.matrix[i][0] = 0;
-                    pspl_ir_state.vertex.matrix.matrix[i][1] = 0;
-                    pspl_ir_state.vertex.matrix.matrix[i][2] = 0;
-                    pspl_ir_state.vertex.matrix.matrix[i][3] = 0;
+                    pspl_ir_state.vertex.matrix[i][0] = 0;
+                    pspl_ir_state.vertex.matrix[i][1] = 0;
+                    pspl_ir_state.vertex.matrix[i][2] = 0;
+                    pspl_ir_state.vertex.matrix[i][3] = 0;
                 }
-                pspl_calc_chain_add_static_transform(cur_chain, &pspl_ir_state.vertex.matrix);
+                pspl_calc_chain_add_static_transform(cur_chain, pspl_ir_state.vertex.matrix);
                 
             } else if (is_translation(command_name)) {
                 
@@ -204,7 +204,7 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                         strtof(command_argv[1], NULL),
                         strtof(command_argv[2], NULL)
                     };
-                    pspl_calc_chain_add_static_translation(cur_chain, &trans_vec);
+                    pspl_calc_chain_add_static_translation(cur_chain, trans_vec);
                 } else
                     pspl_error(-1, "Invalid TRANSLATE usage",
                                "either *one* (dynamic) or *three* (static) arguments accepted");
@@ -235,7 +235,7 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                         strtof(command_argv[1], NULL),
                         strtof(command_argv[2], NULL)
                     };
-                    pspl_calc_chain_add_static_scale(cur_chain, &scale_vec);
+                    pspl_calc_chain_add_static_scale(cur_chain, scale_vec);
                 } else
                     pspl_error(-1, "Invalid SCALE usage",
                                "either *one* (dynamic) or *three* (static) arguments accepted");
@@ -676,7 +676,7 @@ static void line_read(const pspl_toolchain_context_t* driver_context,
                     if (*line_text == '\0' || *line_text == '\n')
                         pspl_error(-1, "Insufficient matrix columns defined",
                                    "there needs to be 4 columns in each matrix row");
-                    pspl_ir_state.vertex.matrix.matrix[pspl_ir_state.vertex.matrix_row_count][i] =
+                    pspl_ir_state.vertex.matrix[pspl_ir_state.vertex.matrix_row_count][i] =
                     strtof(line_text, (char**)&line_text);
                 }
                 
