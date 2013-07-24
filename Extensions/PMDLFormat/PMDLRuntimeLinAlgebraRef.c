@@ -304,6 +304,18 @@ void pmdl_vector4_sub(pspl_vector4_t a, pspl_vector4_t b, pspl_vector4_t ab) {
     ab[3] = a[3] - b[3];
 }
 
+void pmdl_vector3_matrix_mul(REGISTER_KEY pspl_matrix34_t mt, REGISTER_KEY pspl_vector3_t src, REGISTER_KEY pspl_vector3_t dst) {
+    pspl_vector3_t tmp;
+	
+    tmp[0] = mt[0][0]*src[0] + mt[0][1]*src[1] + mt[0][2]*src[2] + mt[0][3];
+    tmp[1] = mt[1][0]*src[0] + mt[1][1]*src[1] + mt[1][2]*src[2] + mt[1][3];
+    tmp[2] = mt[2][0]*src[0] + mt[2][1]*src[1] + mt[2][2]*src[2] + mt[2][3];
+    
+    dst[0] = tmp[0];
+    dst[1] = tmp[1];
+    dst[2] = tmp[2];
+}
+
 void _pmdl_matrix_lookat(pspl_matrix34_t mt, pspl_vector3_t pos, pspl_vector3_t up, pspl_vector3_t look) {
     pspl_vector3_t vLook,vRight,vUp;
     

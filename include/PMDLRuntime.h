@@ -10,12 +10,12 @@
 #define PSPL_PMDLRuntime_h
 
 /* OpenGL ES on iOS doesn't support 3x4 matrix uniforms */
-#define TC_MTX_TYPE pspl_matrix34_t
+#define MTX_TYPE pspl_matrix34_t
 #if __APPLE__
 #   include <TargetConditionals.h>
 #   if TARGET_OS_IPHONE
-#       undef TC_MTX_TYPE
-#       define TC_MTX_TYPE pspl_matrix44_t
+#       undef MTX_TYPE
+#       define MTX_TYPE pspl_matrix44_t
 #   endif
 #endif
 
@@ -64,23 +64,22 @@ typedef struct {
     } projection;
     
     /* Texture Coordinate Matrices */
-    TC_MTX_TYPE texcoord_mtx[8];
+    MTX_TYPE texcoord_mtx[8];
     
-    /* DO NOT EDIT FIELDS BELOW!! - Automatically set by invalidate routine */
+    /* DO NOT EDIT FIELDS BELOW!! - Automatically set by update routine */
     
     /* View matrix */
     pspl_matrix34_t cached_view_mtx;
     
     /* Modelview matrix */
-    pspl_matrix44_t cached_modelview_mtx;
-    pspl_matrix44_t cached_modelview_invxpose_mtx;
+    MTX_TYPE cached_modelview_mtx;
+    MTX_TYPE cached_modelview_invxpose_mtx;
+    
+    /* Cached frustum tangents */
+    float f_tanv, f_tanh;
     
     /* Projection matrix */
     pspl_matrix44_t cached_projection_mtx;
-    
-    /* Planar ModelViewProjection-frustum representations 
-     * (top, bottom, left, right, near, far) */
-    pmdl_plane_t frustum_planes[6];
     
 } pmdl_draw_context_t;
 

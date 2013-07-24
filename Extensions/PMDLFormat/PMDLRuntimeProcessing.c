@@ -365,47 +365,7 @@ void pmdl_destroy(pspl_runtime_arc_file_t* pmdl_file) {
 }
 
 
-#pragma mark Planar Frustum Tests
-
-static void set_plane_coefficients(pmdl_plane_t* pl, pspl_vector4_t abcd) {
-    
-    // Get vector normalise factor
-    float dot = pmdl_vector3_dot(abcd, abcd);
-    dot = 1/sqrtf(dot);
-    
-    // Apply normalisation
-    pmdl_vector4_scale(abcd, pl->ABCD, dot);
-    
-}
-
-static void set_mvp_frustum_planes(pmdl_draw_context_t* ctx) {
-    
-    // ModelViewProjection matrix
-    pspl_matrix44_t mtx;
-    pmdl_matrix3444_mul(ctx->cached_modelview_mtx, ctx->cached_projection_mtx, mtx);
-    
-    // Compute coefficient vectors and load into context
-    pspl_vector4_t coeffs;
-    
-    pmdl_vector4_add(mtx[2], mtx[3], coeffs);
-    set_plane_coefficients(&ctx->frustum_planes[PNEAR], coeffs);
-    
-    pmdl_vector4_sub(mtx[3], mtx[2], coeffs);
-    set_plane_coefficients(&ctx->frustum_planes[PFAR], coeffs);
-    
-    pmdl_vector4_add(mtx[1], mtx[3], coeffs);
-    set_plane_coefficients(&ctx->frustum_planes[PBOTTOM], coeffs);
-    
-    pmdl_vector4_sub(mtx[3], mtx[1], coeffs);
-    set_plane_coefficients(&ctx->frustum_planes[PTOP], coeffs);
-    
-    pmdl_vector4_add(mtx[0], mtx[3], coeffs);
-    set_plane_coefficients(&ctx->frustum_planes[PLEFT], coeffs);
-    
-    pmdl_vector4_sub(mtx[3], mtx[0], coeffs);
-    set_plane_coefficients(&ctx->frustum_planes[PRIGHT], coeffs);
-    
-}
+#pragma mark Context Representation and Frustum Testing
 
 /* Invalidate context transformation cache (if values updated) */
 void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv_bits) {
@@ -419,33 +379,139 @@ void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv
     
     if (inv_bits & (PMDL_INVALIDATE_MODEL | PMDL_INVALIDATE_VIEW)) {
         pmdl_matrix34_mul(ctx->model_mtx, ctx->cached_view_mtx, ctx->cached_modelview_mtx);
-        int i;
-        for (i=0 ; i<3 ; ++i)
-            ctx->cached_modelview_mtx[3][i] = 0;
-        ctx->cached_modelview_mtx[3][3] = 1;
+#       if GL_ES_VERSION_2_0
+            int i;
+            for (i=0 ; i<3 ; ++i)
+                ctx->cached_modelview_mtx[3][i] = 0;
+            ctx->cached_modelview_mtx[3][3] = 1;
+#       endif
         pmdl_matrix34_invxpose(ctx->cached_modelview_mtx, ctx->cached_modelview_invxpose_mtx);
-        for (i=0 ; i<3 ; ++i)
-            ctx->cached_modelview_invxpose_mtx[3][i] = 0;
-        ctx->cached_modelview_invxpose_mtx[3][3] = 1;
+#       if GL_ES_VERSION_2_0
+            for (i=0 ; i<3 ; ++i)
+                ctx->cached_modelview_invxpose_mtx[3][i] = 0;
+            ctx->cached_modelview_invxpose_mtx[3][3] = 1;
+#       endif
     }
     
     if (inv_bits & PMDL_INVALIDATE_PROJECTION) {
         if (ctx->projection_type == PMDL_PERSPECTIVE) {
             pmdl_matrix_perspective(ctx->cached_projection_mtx, ctx->projection.perspective);
+            ctx->f_tanv = tanf(ctx->projection.perspective.fov);
+            ctx->f_tanh = ctx->f_tanv * ctx->projection.perspective.aspect;
         } else if (ctx->projection_type == PMDL_ORTHOGRAPHIC) {
             pmdl_matrix_orthographic(ctx->cached_projection_mtx, ctx->projection.orthographic);
         }
-    }
-    
-    if (inv_bits & (PMDL_INVALIDATE_MODEL | PMDL_INVALIDATE_VIEW | PMDL_INVALIDATE_PROJECTION)) {
-        set_mvp_frustum_planes(ctx);
     }
     
 }
 
 /* Perform AABB frustum test */
 static int pmdl_aabb_frustum_test(pmdl_draw_context_t* ctx, float aabb[2][3]) {
-    return 1;
+    
+    // Setup straddle-test state
+    enum {
+        TOO_FAR = 1,
+        TOO_NEAR = 1<<1,
+        TOO_LEFT = 1<<2,
+        TOO_RIGHT = 1<<3,
+        TOO_UP = 1<<4,
+        TOO_DOWN = 1<<5
+    } straddle = 0;
+    
+    // Compute using 8 points of AABB
+    int i;
+    for (i=0 ; i<8 ; ++i) {
+        
+        // Select point
+        pspl_vector3_t point = {aabb[i/4][0], aabb[(i/2)&1][1], aabb[i&1][2]};
+        
+        // Transform point into view->point vector
+        pmdl_vector3_matrix_mul(ctx->cached_modelview_mtx, point, point);
+        
+        // If orthographic, perform some simple tests
+        if (ctx->projection_type == PMDL_ORTHOGRAPHIC) {
+            
+            if (point[2] > ctx->projection.orthographic.far) {
+                straddle |= TOO_FAR;
+                continue;
+            }
+            if (point[2] < ctx->projection.orthographic.near) {
+                straddle |= TOO_NEAR;
+                continue;
+            }
+            
+            if (point[0] > ctx->projection.orthographic.right) {
+                straddle |= TOO_RIGHT;
+                continue;
+            }
+            if (point[0] < ctx->projection.orthographic.left) {
+                straddle |= TOO_LEFT;
+                continue;
+            }
+            
+            if (point[1] > ctx->projection.orthographic.top) {
+                straddle |= TOO_UP;
+                continue;
+            }
+            if (point[1] < ctx->projection.orthographic.bottom) {
+                straddle |= TOO_DOWN;
+                continue;
+            }
+            
+            // Point is in frustum
+            return 1;
+            
+        }
+        
+        // Perspective testing otherwise
+            
+        // See if vector exceeds far plane or comes too near
+        if (point[2] > ctx->projection.perspective.far) {
+            straddle |= TOO_FAR;
+            continue;
+        }
+        if (point[2] < ctx->projection.perspective.near) {
+            straddle |= TOO_NEAR;
+            continue;
+        }
+        
+        // Use radar-test to see if point's Y coordinate is within frustum
+        float y_threshold = ctx->f_tanv * point[2];
+        if (point[1] > y_threshold) {
+            straddle |= TOO_UP;
+            continue;
+        }
+        if (point[1] < -y_threshold) {
+            straddle |= TOO_DOWN;
+            continue;
+        }
+        
+        // Same for X coordinate
+        float x_threshold = ctx->f_tanh * point[2];
+        if (point[0] > x_threshold) {
+            straddle |= TOO_RIGHT;
+            continue;
+        }
+        if (point[0] < -x_threshold) {
+            straddle |= TOO_LEFT;
+            continue;
+        }
+        
+        // Point is in frustum
+        return 1;
+        
+    }
+    
+    // Perform evaluate straddle results as last resort
+    if (straddle & TOO_FAR && straddle & TOO_NEAR)
+        return 1;
+    if (straddle & TOO_LEFT && straddle & TOO_RIGHT)
+        return 1;
+    if (straddle & TOO_UP && straddle & TOO_DOWN)
+        return 1;
+    
+    return 0;
+    
 }
 
 
@@ -599,7 +665,7 @@ static void pmdl_draw_par1(pmdl_draw_context_t* ctx, pspl_runtime_arc_file_t* pm
     
 }
 
-/* This routine will draw PAR1 PMDLs */
+/* This routine will draw PAR2 PMDLs */
 static void pmdl_draw_par2(pmdl_draw_context_t* ctx, pspl_runtime_arc_file_t* pmdl_file) {
     
 }

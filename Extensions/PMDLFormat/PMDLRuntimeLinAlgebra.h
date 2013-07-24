@@ -87,6 +87,8 @@ void pmdl_vector4_add(REGISTER_KEY pspl_vector4_t a, REGISTER_KEY pspl_vector4_t
 void pmdl_vector3_sub(REGISTER_KEY pspl_vector3_t a, REGISTER_KEY pspl_vector3_t b, REGISTER_KEY pspl_vector3_t ab);
 void pmdl_vector4_sub(REGISTER_KEY pspl_vector4_t a, REGISTER_KEY pspl_vector4_t b, REGISTER_KEY pspl_vector4_t ab);
 
+void pmdl_vector3_matrix_mul(REGISTER_KEY pspl_matrix34_t mtx, REGISTER_KEY pspl_vector3_t src, REGISTER_KEY pspl_vector3_t dst);
+
 
 #endif
 
