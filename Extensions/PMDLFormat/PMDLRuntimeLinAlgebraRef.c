@@ -182,6 +182,54 @@ void pmdl_matrix3444_mul(pspl_matrix34_t a, pspl_matrix44_t b, pspl_matrix44_t a
 		pspl_matrix44_cpy(tmp,ab);
 }
 
+void pmdl_matrix34_invxpose(pspl_matrix34_t src, pspl_matrix34_t xPose) {
+    pspl_matrix34_t mTmp;
+    pspl_matrix_ptr_t m;
+    float det;
+    
+    if(src == xPose)
+        m = mTmp;
+    else
+        m = xPose;
+    
+    // Compute the determinant of the upper 3x3 submatrix
+    det =   src[0][0]*src[1][1]*src[2][2] + src[0][1]*src[1][2]*src[2][0] + src[0][2]*src[1][0]*src[2][1]
+    - src[2][0]*src[1][1]*src[0][2] - src[1][0]*src[0][1]*src[2][2] - src[0][0]*src[2][1]*src[1][2];
+    
+    // Check if matrix is singular
+    if(det == 0.0f) return;
+    
+    // Compute the inverse of the upper submatrix:
+    
+    // Find the transposed matrix of cofactors of the upper submatrix
+    // and multiply by (1/det)
+    
+    det = 1.0f / det;
+    
+    m[0][0] =  (src[1][1]*src[2][2] - src[2][1]*src[1][2]) * det;
+    m[0][1] = -(src[1][0]*src[2][2] - src[2][0]*src[1][2]) * det;
+    m[0][2] =  (src[1][0]*src[2][1] - src[2][0]*src[1][1]) * det;
+    
+    m[1][0] = -(src[0][1]*src[2][2] - src[2][1]*src[0][2]) * det;
+    m[1][1] =  (src[0][0]*src[2][2] - src[2][0]*src[0][2]) * det;
+    m[1][2] = -(src[0][0]*src[2][1] - src[2][0]*src[0][1]) * det;
+    
+    m[2][0] =  (src[0][1]*src[1][2] - src[1][1]*src[0][2]) * det;
+    m[2][1] = -(src[0][0]*src[1][2] - src[1][0]*src[0][2]) * det;
+    m[2][2] =  (src[0][0]*src[1][1] - src[1][0]*src[0][1]) * det;
+    
+    
+    // The 4th columns should be zero
+    m[0][3] = 0.0F;
+    m[1][3] = 0.0F;
+    m[2][3] = 0.0F;
+    
+    // Copy back if needed
+    if(m == mTmp)
+        pspl_matrix34_cpy(mTmp, xPose);
+    
+}
+
 /* Reference C implementations from libogc */
 float pmdl_vector3_dot(pspl_vector3_t a, pspl_vector3_t b) {
     float dot;

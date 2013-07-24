@@ -69,7 +69,18 @@ static void bind_object_hook(pspl_runtime_psplc_t* object) {
     
 }
 
+
+#pragma mark Init
+
+static int init_hook(const pspl_extension_t* extension) {
+    
+    //
+    
+    return 0;
+}
+
 pspl_runtime_extension_t PMDL_runext = {
+    .init_hook = init_hook,
     .load_object_hook = load_object_hook,
     .unload_object_hook = unload_object_hook,
     .bind_object_hook = bind_object_hook

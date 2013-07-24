@@ -20,7 +20,11 @@
 /* Platform headers */
 #if PSPL_RUNTIME_PLATFORM_GL2
 #   if __APPLE__
-#       include <OpenGL/glext.h>
+#       if TARGET_OS_MAC
+#           include <OpenGL/glext.h>
+#       elif TARGET_OS_IPHONE
+#           include <OpenGLES/ES2/glext.h>
+#       endif
 #   else
 #       include <GL/glext.h>
 #   endif
@@ -47,7 +51,12 @@
 
 #   if GL2INC
 #       if __APPLE__
-#           include <OpenGL/gl.h>
+#           include <TargetConditionals.h>
+#           if TARGET_OS_MAC
+#               include <OpenGL/gl.h>
+#           elif TARGET_OS_IPHONE
+#               include <OpenGLES/ES2/gl.h>
+#           endif
 #       else
 #           include <GL/gl.h>
 #       endif
@@ -55,7 +64,7 @@
 
 
 #elif PSPL_RUNTIME_PLATFORM_D3D11
-#   include <D3D11.h>
+#   include <d3d11.h>
 
 #elif PSPL_RUNTIME_PLATFORM_GX
 #   include <ogc/gx.h>
@@ -194,17 +203,18 @@ typedef struct {
                 glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, buf_stride, (GLvoid*)12);
                 
                 unsigned j;
+                GLuint idx = 2;
                 for (j=0 ; j<collection_header->uv_count ; ++j) { // UVs
-                    GLuint idx = j+2;
                     glEnableVertexAttribArray(idx);
                     glVertexAttribPointer(idx, 2, GL_FLOAT, GL_FALSE, buf_stride, (GLvoid*)(GLsizeiptr)(24+8*j));
+                    ++idx;
                 }
                 
                 GLsizeiptr weight_offset = 24 + collection_header->uv_count*8;
                 for (j=0 ; j<collection_header->bone_count ; ++j) { // Bone Weight Coefficients
-                    GLuint idx = j+2+collection_header->uv_count;
                     glEnableVertexAttribArray(idx);
                     glVertexAttribPointer(idx, 2, GL_FLOAT, GL_FALSE, buf_stride, (GLvoid*)(weight_offset+4*j));
+                    ++idx;
                 }
             
 #           elif PSPL_RUNTIME_PLATFORM_D3D11
@@ -409,6 +419,14 @@ void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv
     
     if (inv_bits & (PMDL_INVALIDATE_MODEL | PMDL_INVALIDATE_VIEW)) {
         pmdl_matrix34_mul(ctx->model_mtx, ctx->cached_view_mtx, ctx->cached_modelview_mtx);
+        int i;
+        for (i=0 ; i<3 ; ++i)
+            ctx->cached_modelview_mtx[3][i] = 0;
+        ctx->cached_modelview_mtx[3][3] = 1;
+        pmdl_matrix34_invxpose(ctx->cached_modelview_mtx, ctx->cached_modelview_invxpose_mtx);
+        for (i=0 ; i<3 ; ++i)
+            ctx->cached_modelview_invxpose_mtx[3][i] = 0;
+        ctx->cached_modelview_invxpose_mtx[3][3] = 1;
     }
     
     if (inv_bits & PMDL_INVALIDATE_PROJECTION) {
@@ -528,7 +546,25 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, pspl_runtime_arc_file_t* pm
                 else {
                     const pspl_runtime_psplc_t* shader_obj =
                     pspl_runtime_get_psplc_from_hash(pmdl_file->parent, &shader_hashes[mesh_head->shader_index], 0);
-                    pspl_runtime_bind_psplc(shader_obj);
+                    
+                    if (shader_obj) {
+                        pspl_runtime_bind_psplc(shader_obj);
+                        
+#                       if PSPL_RUNTIME_PLATFORM_GL2
+#                           if GL_ES_VERSION_2_0
+                                glUniformMatrix4fv(shader_obj->native_shader.mv_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_mtx);
+                                glUniformMatrix4fv(shader_obj->native_shader.mv_invxpose_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_invxpose_mtx);
+                                glUniformMatrix4fv(shader_obj->native_shader.tc_genmtx_arr, 8, GL_FALSE, (GLfloat*)ctx->texcoord_mtx);
+#                           else
+                                glUniformMatrix3x4fv(shader_obj->native_shader.mv_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_mtx);
+                                glUniformMatrix3x4fv(shader_obj->native_shader.mv_invxpose_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_invxpose_mtx);
+                                glUniformMatrix3x4fv(shader_obj->native_shader.tc_genmtx_arr, 8, GL_FALSE, (GLfloat*)ctx->texcoord_mtx);
+#                           endif
+                        
+#                       elif PSPL_RUNTIME_PLATFORM_D3D11
+                        
+#                       endif
+                    }
                 }
                 
                 // Iterate primitives

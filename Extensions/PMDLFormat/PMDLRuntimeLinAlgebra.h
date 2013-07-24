@@ -42,7 +42,6 @@
 void pspl_matrix44_cpy(REGISTER_KEY pspl_matrix44_t src, REGISTER_KEY pspl_matrix44_t dst);
 
 void pmdl_matrix44_mul(REGISTER_KEY pspl_matrix44_t a, REGISTER_KEY pspl_matrix44_t b, REGISTER_KEY pspl_matrix44_t ab);
-void pmdl_matrix44_mul(REGISTER_KEY pspl_matrix44_t a, REGISTER_KEY pspl_matrix44_t b, REGISTER_KEY pspl_matrix44_t ab);
 void pmdl_matrix3444_mul(REGISTER_KEY pspl_matrix34_t a, REGISTER_KEY pspl_matrix44_t b, REGISTER_KEY pspl_matrix44_t ab);
 
 float pmdl_vector4_dot(REGISTER_KEY pspl_vector4_t a, REGISTER_KEY pspl_vector4_t b);
@@ -68,6 +67,8 @@ void pspl_matrix44_cpy(REGISTER_KEY pspl_matrix44_t src, REGISTER_KEY pspl_matri
 void pmdl_matrix34_mul(REGISTER_KEY pspl_matrix34_t a, REGISTER_KEY pspl_matrix34_t b, REGISTER_KEY pspl_matrix34_t ab);
 void pmdl_matrix44_mul(REGISTER_KEY pspl_matrix44_t a, REGISTER_KEY pspl_matrix44_t b, REGISTER_KEY pspl_matrix44_t ab);
 void pmdl_matrix3444_mul(REGISTER_KEY pspl_matrix34_t a, REGISTER_KEY pspl_matrix44_t b, REGISTER_KEY pspl_matrix44_t ab);
+
+void pmdl_matrix34_invxpose(REGISTER_KEY pspl_matrix34_t src, REGISTER_KEY pspl_matrix34_t xpose);
 
 /* Reference C implementations from libogc */
 float pmdl_vector3_dot(REGISTER_KEY pspl_vector3_t a, REGISTER_KEY pspl_vector3_t b);

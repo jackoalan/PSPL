@@ -9,6 +9,16 @@
 #ifndef PSPL_PMDLRuntime_h
 #define PSPL_PMDLRuntime_h
 
+/* OpenGL ES on iOS doesn't support 3x4 matrix uniforms */
+#define TC_MTX_TYPE pspl_matrix34_t
+#if __APPLE__
+#   include <TargetConditionals.h>
+#   if TARGET_OS_IPHONE
+#       undef TC_MTX_TYPE
+#       define TC_MTX_TYPE pspl_matrix44_t
+#   endif
+#endif
+
 #include <PSPL/PSPLCommon.h>
 #include <PSPLRuntime.h>
 
@@ -53,13 +63,17 @@ typedef struct {
         pspl_orthographic_t orthographic;
     } projection;
     
+    /* Texture Coordinate Matrices */
+    TC_MTX_TYPE texcoord_mtx[8];
+    
     /* DO NOT EDIT FIELDS BELOW!! - Automatically set by invalidate routine */
     
     /* View matrix */
     pspl_matrix34_t cached_view_mtx;
     
     /* Modelview matrix */
-    pspl_matrix34_t cached_modelview_mtx;
+    pspl_matrix44_t cached_modelview_mtx;
+    pspl_matrix44_t cached_modelview_invxpose_mtx;
     
     /* Projection matrix */
     pspl_matrix44_t cached_projection_mtx;
