@@ -114,10 +114,10 @@ static int sample_converter(void** buf_out, size_t* len_out, const char* path_in
         unsigned w_idx, h_idx;
         if (count_bits(image.width, &w_idx) != 1)
             pspl_error(-1, "Invalid mipmap dimensions", "image `%s` has width of %u pixels; it must "
-                       "be an exponent with base 2 in order to be mipmapped", conv->name, image.width);
+                       "be an exponential with base 2 in order to be mipmapped", conv->name, image.width);
         if (count_bits(image.height, &h_idx) != 1)
             pspl_error(-1, "Invalid mipmap dimensions", "image `%s` has height of %u pixels; it must "
-                       "be an exponent with base 2 in order to be mipmapped", conv->name, image.height);
+                       "be an exponential with base 2 in order to be mipmapped", conv->name, image.height);
         
         // Accumulate up buffer size
         if (image.width > image.height)
@@ -283,7 +283,7 @@ static void sample_direc(const pspl_toolchain_context_t* driver_context,
     // Add index as sample parameter
     char tex_idx_str[32];
     snprintf(tex_idx_str, 32, "%u", tex_idx);
-    //pspl_preprocessor_add_command_call("PSPL_SAMPLE_TEXTURE_2D", tex_idx_str, uv);
+    pspl_preprocessor_add_command_call("SAMPLE", tex_idx_str, uv);
     
     // Add to name cache and convert if needed
     if (tex_idx == converted_names.object_num) {

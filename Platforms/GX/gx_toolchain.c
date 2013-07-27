@@ -40,15 +40,15 @@ static void instruction_hook(const pspl_toolchain_context_t* driver_context,
             if (ir_state->vertex.tc_array[j].tc_source == TEXCOORD_UV)
                 GX_SetTexCoordGen(GX_TEXCOORD0 + j, GX_TG_MTX3x4,
                                   GX_TG_TEX0 + ir_state->vertex.tc_array[j].uv_idx,
-                                  GX_TEXMTX0 + ir_state->vertex.tc_array[j].uv_idx);
+                                  GX_TEXMTX0 + (j*3));
             else if (ir_state->vertex.tc_array[j].tc_source == TEXCOORD_POS)
                 GX_SetTexCoordGen(GX_TEXCOORD0 + j, GX_TG_MTX3x4,
                                   GX_TG_POS,
-                                  GX_TEXMTX0 + ir_state->vertex.tc_array[j].uv_idx);
+                                  GX_TEXMTX0 + (j*3));
             else if (ir_state->vertex.tc_array[j].tc_source == TEXCOORD_NORM)
                 GX_SetTexCoordGen(GX_TEXCOORD0 + j, GX_TG_MTX3x4,
                                   GX_TG_NRM,
-                                  GX_TEXMTX0 + ir_state->vertex.tc_array[j].uv_idx);
+                                  GX_TEXMTX0 + (j*3));
         }
         
         
@@ -71,7 +71,7 @@ static void instruction_hook(const pspl_toolchain_context_t* driver_context,
             u8 tex_coord = GX_TEXCOORDNULL;
             u32 tex_map = GX_TEXMAP_NULL;
             if (stage->using_texture) {
-                tex_coord = GX_TEXCOORD0 + stage->stage_texmap.resolved_name_idx;
+                tex_coord = GX_TEXCOORD0 + stage->stage_texmap.texcoord_idx;
                 tex_map = GX_TEXMAP0 + stage->stage_texmap.texmap_idx;
             }
             GX_SetTevOrder(tev_stage, tex_coord, tex_map, GX_COLORNULL);

@@ -67,12 +67,15 @@ typedef struct {
     TEX_T* texture_arr;
 } pspl_tm_map_entry;
 
+static pspl_mutex_t load_tex_st_lock;
 static int init_hook(const pspl_extension_t* extension) {
+    pspl_mutex_init(&load_tex_st_lock);
     pspl_malloc_context_init(&map_ctx);
     return 0;
 }
 
 static void shutdown_hook() {
+    pspl_mutex_destroy(&load_tex_st_lock);
     pspl_malloc_context_destroy(&map_ctx);
 }
 
@@ -124,9 +127,9 @@ static void recursive_mip_load(pspl_tm_recurse_t* info,
     // Load into OpenGL
     // (`data_off` is either pointer or offset depending if PBOs are used)
     if (info->format == TEXTURE_RGB)
-        glTexSubImage2D(GL_TEXTURE_2D, i, 0, 0, width, height, info->sub_fmt, GL_UNSIGNED_BYTE, data_off);
+        glTexImage2D(GL_TEXTURE_2D, i, info->sub_fmt, width, height, 0, info->sub_fmt, GL_UNSIGNED_BYTE, data_off);
     else if (info->format == TEXTURE_S3TC)
-        glCompressedTexSubImage2D(GL_TEXTURE_2D, i, 0, 0, width, height, info->sub_fmt, (GLsizei)dsize, data_off);
+        glCompressedTexImage2D(GL_TEXTURE_2D, i, info->sub_fmt, width, height, 0, (GLsizei)dsize, data_off);
     
     
     // Reach out to smallest
@@ -406,17 +409,22 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
     extern void gl_set_load_context();
 #endif
 
-struct load_tex_st {
+static struct load_tex_st {
     pspl_runtime_psplc_t* object;
     pspl_tm_map_entry* ent;
-};
-static void load_texture_thread(void* load_st) {
+} load_tex_st;
+static void load_texture_thread(void* null) {
+    struct load_tex_st load_tex_st_local = {
+        .object = load_tex_st.object,
+        .ent = load_tex_st.ent
+    };
 #   if PSPL_RUNTIME_PLATFORM_GL2
         gl_set_load_context();
 #   endif
-    pspl_runtime_enumerate_integer_embedded_data_objects(((struct load_tex_st*)load_st)->object,
+    pspl_runtime_enumerate_integer_embedded_data_objects(load_tex_st_local.object,
                                                          (pspl_integer_enumerate_hook)load_enumerate,
-                                                         ((struct load_tex_st*)load_st)->ent);
+                                                         load_tex_st_local.ent);
+    pspl_mutex_unlock(&load_tex_st_lock);
 }
 
 static void load_object(pspl_runtime_psplc_t* object) {
@@ -426,11 +434,10 @@ static void load_object(pspl_runtime_psplc_t* object) {
     ent->texture_count = tex_c;
     ent->texture_arr = calloc(tex_c, sizeof(TEX_T));
     memset(ent->texture_arr, 0, sizeof(TEX_T) * tex_c);
-    struct load_tex_st st = {
-        .object = object,
-        .ent = ent
-    };
-    pspl_thread_fork(load_texture_thread, &st);
+    pspl_mutex_lock(&load_tex_st_lock);
+    load_tex_st.object = object;
+    load_tex_st.ent = ent;
+    pspl_thread_fork(load_texture_thread, NULL);
 }
 
 static void unload_object(pspl_runtime_psplc_t* object) {

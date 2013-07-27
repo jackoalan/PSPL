@@ -11,6 +11,8 @@
 
 #include <stdint.h>
 
+#define MAX_TEX_MAPS 16
+
 enum gl_object {
     GL_CONFIG_STRUCT   = 1,
     GL_VERTEX_SOURCE   = 2,

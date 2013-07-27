@@ -98,9 +98,8 @@ typedef struct {
     // Index of texture map (automatically mapped by toolchain)
     unsigned texmap_idx;
     
-    // Name of texcoord gen (binds fragment stage to vertex stage)
-    char name[IR_NAME_LEN];
-    unsigned resolved_name_idx;
+    // Index of texcoord gen (binds fragment stage to vertex stage)
+    unsigned texcoord_idx;
     
 } pspl_ir_texture_t;
 
@@ -175,21 +174,23 @@ typedef struct {
         pspl_matrix34_t matrix;
         
         // Position transform chain
-        pspl_calc_chain_t pos_chain;
+        //pspl_calc_chain_t pos_chain;
         
         // Texcoord gens
         unsigned tc_count;
         struct {
-            char name[IR_NAME_LEN];
-            int resolved_name_idx;
+            unsigned name_idx;
             enum {
                 TEXCOORD_UV,
                 TEXCOORD_POS,
                 TEXCOORD_NORM
             } tc_source;
             unsigned uv_idx;
-            pspl_calc_chain_t tc_chain;
+            //pspl_calc_chain_t tc_chain;
         } tc_array[MAX_TEX_COORDS];
+        
+        // Bone count
+        unsigned bone_count;
         
     } vertex;
     

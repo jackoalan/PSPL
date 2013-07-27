@@ -48,8 +48,19 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
     
     
     // Modelview transform uniform
-    pspl_buffer_addstr(vert, "uniform mat4 modelview_mat;\n");
-    pspl_buffer_addstr(vert, "uniform mat4 modelview_invtrans_mat;\n");
+    char temp[256];
+    snprintf(temp, 256, "uniform mat4 modelview_mat;\n");
+    pspl_buffer_addstr(vert, temp);
+    snprintf(temp, 256, "uniform mat4 modelview_invtrans_mat;\n");
+    pspl_buffer_addstr(vert, temp);
+    
+    // Bone transforms and base coordinates
+    if (ir_state->vertex.bone_count) {
+        snprintf(temp, 256, "uniform mat4 bone_mat[%u];\n", ir_state->vertex.bone_count);
+        pspl_buffer_addstr(vert, temp);
+        snprintf(temp, 256, "uniform vec4 bone_base[%u];\n", ir_state->vertex.bone_count);
+        pspl_buffer_addstr(vert, temp);
+    }
     
     // Projection transform uniform
     pspl_buffer_addstr(vert, "uniform mat4 projection_mat;\n");
@@ -60,6 +71,8 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
         snprintf(uniform, 64, "uniform mat4 tc_generator_mats[%u];\n", ir_state->vertex.tc_count);
         pspl_buffer_addstr(vert, uniform);
     }
+    
+    
     
     pspl_buffer_addstr(vert, "\n");
     
@@ -77,6 +90,14 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
         pspl_buffer_addstr(vert, uv);
     }
     
+    // Bone weight attributes
+    unsigned bones_round4 = ROUND_UP_4(ir_state->vertex.bone_count) / 4;
+    for (j=0 ; j<bones_round4 ; ++j) {
+        char bone[64];
+        snprintf(bone, 64, "attribute vec4 bone_weights%u;\n", j);
+        pspl_buffer_addstr(vert, bone);
+    }
+    
     pspl_buffer_addstr(vert, "\n");
     
     
@@ -86,33 +107,53 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
     // Varying texcoord linkages
     if (ir_state->vertex.tc_count) {
         char varying_str[64];
-        snprintf(varying_str, 64, "varying HIGHPREC vec2 texCoords[%u];\n\n", ir_state->vertex.tc_count);
+        snprintf(varying_str, 64, "varying HIGHPREC vec2 tex_coords[%u];\n\n", ir_state->vertex.tc_count);
         pspl_buffer_addstr(vert, varying_str);
     }
     pspl_buffer_addstr(vert, "\n");
     
     
     // Main vertex code
-    pspl_buffer_addstr(vert, "void main() {\n");
+    pspl_buffer_addstr(vert, "void main() {\n\n");
     
-    // Position
-    pspl_buffer_addstr(vert, "    gl_Position = projection_mat * modelview_mat * pos;\n");
+    // Position and normal (if no bones)
+    if (!ir_state->vertex.bone_count) {
+        pspl_buffer_addstr(vert, "    // Non-rigged position and normal\n");
+        pspl_buffer_addstr(vert, "    gl_Position = pos * modelview_mat * projection_mat;\n");
+        pspl_buffer_addstr(vert, "    normal = norm * modelview_invtrans_mat;\n");
+    } else { // Bones
+        pspl_buffer_addstr(vert, "    // Rigged position and normal\n");
+        pspl_buffer_addstr(vert, "    gl_Position = vec4(0.0,0.0,0.0,0.0);\n");
+        pspl_buffer_addstr(vert, "    normal = vec4(0.0,0.0,0.0,0.0);\n");
+        unsigned bone_idx = 0;
+        for (j=0 ; j<ir_state->vertex.bone_count ; ++j) {
+            char bone[256];
+            snprintf(bone, 256, "    gl_Position += (((pos - bone_base[%u]) * bone_mat[%u]) + bone_base[%u]) * bone_weights%u[%u];\n", j, j, j, bone_idx, j%4);
+            pspl_buffer_addstr(vert, bone);
+            snprintf(bone, 256, "    normal += (norm * bone_mat[%u]) * bone_weights%u[%u];\n", j, bone_idx, j%4);
+            pspl_buffer_addstr(vert, bone);
+            if (j && !(j%4)) {++bone_idx;}
+        }
+        pspl_buffer_addstr(vert, "    gl_Position = gl_Position * modelview_mat * projection_mat;\n");
+        pspl_buffer_addstr(vert, "    normal = normalize(normal) * modelview_invtrans_mat;\n");
+    }
     
-    // Normal
-    pspl_buffer_addstr(vert, "    normal = modelview_invtrans_mat * norm;\n");
+    pspl_buffer_addstr(vert, "\n");
     
     // Texcoords
     for (j=0 ; j<ir_state->vertex.tc_count ; ++j) {
         char assign[64];
         if (ir_state->vertex.tc_array[j].tc_source == TEXCOORD_UV)
-            snprintf(assign, 64, "    texCoords[%u] = tc_generator_mats[%u] * uv%u;\n", j, j,
+            snprintf(assign, 64, "    tex_coords[%u] = (vec4(uv%u,0,0) * tc_generator_mats[%u]).xy;\n", j, j,
                      ir_state->vertex.tc_array[j].uv_idx);
         else if (ir_state->vertex.tc_array[j].tc_source == TEXCOORD_POS)
-            snprintf(assign, 64, "    texCoords[%u] = tc_generator_mats[%u] * pos;\n", j, j);
+            snprintf(assign, 64, "    tex_coords[%u] = pos * tc_generator_mats[%u];\n", j, j);
         else if (ir_state->vertex.tc_array[j].tc_source == TEXCOORD_NORM)
-            snprintf(assign, 64, "    texCoords[%u] = tc_generator_mats[%u] * normal;\n", j, j);
+            snprintf(assign, 64, "    tex_coords[%u] = normal * tc_generator_mats[%u];\n", j, j);
         pspl_buffer_addstr(vert, assign);
     }
+    
+    pspl_buffer_addstr(vert, "\n");
     
     pspl_buffer_addstr(vert, "}\n\n");
     
@@ -141,16 +182,19 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
     // Varying texcoord linkages
     if (ir_state->vertex.tc_count) {
         char varying_str[64];
-        snprintf(varying_str, 64, "varying HIGHPREC vec2 texCoords[%u];\n\n", ir_state->vertex.tc_count);
+        snprintf(varying_str, 64, "varying HIGHPREC vec2 tex_coords[%u];\n\n", ir_state->vertex.tc_count);
         pspl_buffer_addstr(frag, varying_str);
     }
     
     
     
     // Texture map uniforms
+    if (ir_state->total_texmap_count > MAX_TEX_MAPS)
+        pspl_error(-1, "Too Many TEXMAPS", "PSPL OpenGL implementation supports up to %u texmaps; `%s` defines %u",
+                   MAX_TEX_MAPS, driver_context->pspl_name, ir_state->total_texmap_count);
     if (ir_state->total_texmap_count) {
         char uniform_str[64];
-        snprintf(uniform_str, 64, "uniform LOWPREC sampler2D texs[%u];\n\n", ir_state->total_texmap_count);
+        snprintf(uniform_str, 64, "uniform LOWPREC sampler2D tex_map[%u];\n\n", ir_state->total_texmap_count);
         pspl_buffer_addstr(frag, uniform_str);
     }
     
@@ -160,7 +204,6 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
     pspl_buffer_addstr(frag, "void main() {\n");
     
     // Stage output variables
-    pspl_buffer_addstr(frag, "    LOWPREC vec4 stage_main;\n");
     for (j=0 ; j<ir_state->fragment.stage_count ; ++j) {
         if (ir_state->fragment.stage_array[j].stage_output == OUT_SIDECHAIN) {
             char sidedef[64];
@@ -181,7 +224,7 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
         
         char stagedecl[64];
         if (stage->stage_output == OUT_MAIN)
-            snprintf(stagedecl, 64, "stage_main");
+            snprintf(stagedecl, 64, "gl_FragColor");
         else if (stage->stage_output == OUT_SIDECHAIN)
             snprintf(stagedecl, 64, "stage_side_%d", j);
         
@@ -193,15 +236,15 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
             else if (stage->sources[s] == IN_ONE)
                 snprintf(stagesources[s], 64, "vec4(1.0,1.0,1.0,1.0)");
             else if (stage->sources[s] == IN_TEXTURE)
-                snprintf(stagesources[s], 64, "texture2D(texs[%u], texCoords[%u])",
-                         stage->stage_texmap.texmap_idx, stage->stage_texmap.resolved_name_idx);
+                snprintf(stagesources[s], 64, "texture2D(tex_map[%u], tex_coords[%u])",
+                         stage->stage_texmap.texmap_idx, stage->stage_texmap.texcoord_idx);
             else if (stage->sources[s] == IN_LIGHTING)
                 snprintf(stagesources[s], 64, "vec4(1.0,1.0,1.0,1.0)");
             else if (stage->sources[s] == IN_COLOUR)
                 snprintf(stagesources[s], 64, "vec4(%f,%f,%f,%f)", stage->stage_colour.r,
                          stage->stage_colour.g, stage->stage_colour.b, stage->stage_colour.a);
             else if (stage->sources[s] == IN_MAIN)
-                snprintf(stagesources[s], 64, "stage_main");
+                snprintf(stagesources[s], 64, "gl_FragColor");
             else if (stage->sources[s] == IN_SIDECHAIN)
                 snprintf(stagesources[s], 64, "stage_side_%d", stage->side_in_indices[s]);
         }
@@ -226,9 +269,6 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
         
         pspl_buffer_addstr(frag, "\n");
     }
-    
-    // Colour
-    pspl_buffer_addstr(frag, "    gl_FragColor = stage_main;\n");
     
     
     pspl_buffer_addstr(frag, "}\n\n");

@@ -17,6 +17,10 @@
 #include "PMDLRuntimeLinAlgebra.h"
 
 
+/* Logical XOR */
+#define LXOR(a,b) (((a) || (b)) && !((a) && (b)))
+
+
 /* Platform headers */
 #if PSPL_RUNTIME_PLATFORM_GL2
 #   if __APPLE__
@@ -502,15 +506,24 @@ static int pmdl_aabb_frustum_test(pmdl_draw_context_t* ctx, float aabb[2][3]) {
         
     }
     
-    // Perform evaluate straddle results as last resort
+    // Perform evaluation of straddle results as last resort
+    int p = 0;
     if (straddle & TOO_FAR && straddle & TOO_NEAR)
-        return 1;
+        ++p;
     if (straddle & TOO_LEFT && straddle & TOO_RIGHT)
-        return 1;
+        ++p;
     if (straddle & TOO_UP && straddle & TOO_DOWN)
-        return 1;
+        ++p;
     
-    return 0;
+    int d = 0;
+    if (LXOR(straddle & TOO_FAR, straddle & TOO_NEAR))
+        ++d;
+    if (LXOR(straddle & TOO_LEFT, straddle & TOO_RIGHT))
+        ++d;
+    if (LXOR(straddle & TOO_UP, straddle & TOO_DOWN))
+        ++d;
+    
+    return ((p-d) >= 1);
     
 }
 
