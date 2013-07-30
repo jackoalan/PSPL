@@ -41,7 +41,7 @@ static void load_object(pspl_runtime_psplc_t* object) {
     
     
     // Vertex
-    ID3DBlob* compiled_blob;
+    ID3DBlob* compiled_blob = NULL;
     pspl_data_object_t vert_shader_data;
     if (pspl_runtime_get_embedded_data_object_from_integer(object, D3D11_VERTEX_BINARY, &vert_shader_data) < 0) {
         pspl_data_object_t vert_shader_source;
@@ -72,7 +72,7 @@ static void load_object(pspl_runtime_psplc_t* object) {
         size_t out_len = 0;
         if (pspl_d3d11_compile_pixel_shader(pix_shader_source.object_data, pix_shader_source.object_len,
                                             &compiled_blob, &data_out, &out_len) < 0)
-            pspl_error(-1, "HLSL Vertex Shader Compile Failure", "%s", (char*)data_out);
+            pspl_error(-1, "HLSL Pixel Shader Compile Failure", "%s", (char*)data_out);
         pix_shader_data.object_data = data_out;
         pix_shader_data.object_len = out_len;
     }
