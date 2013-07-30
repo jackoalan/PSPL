@@ -41,7 +41,12 @@ Runtime Extension
 
 The PSPL **Runtime Platform Extension** simply invokes `GX_CallDispList()` which 
 commands the GX hardware to *asynchronously playback* the pre-expressed state
-information. 
+information. It also provides an API of its own to set various rendering parameters:
+
+* **Model Transform** via matrix input
+    * Also incorporates an optional *skeletal rigging system* for performing blended bone deformations
+* **View Transform** via 3 orthogonal camera-vectors
+* **Projection Transform** via standard *perspective* or *orthographic* properties
 
 Anytime a new PSPL compiled object is bound, the display list execution occurs. 
 Once done, native *GX draw commands* may be issued; shader-state applied. 
