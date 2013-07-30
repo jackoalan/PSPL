@@ -18,29 +18,35 @@ Sequential write-gather stores may be performed by the application (via the GX A
 to issue drawing commands and set the GPU into its various state modes. 
 These state modes represent the *GX shader architecture*.
 
-PSPL's *GX Extension* takes advantage of the write-gather pipe by defining
-a bytecode-stream format called **PSGX**. The stream stores a sequence
-of 32-bit PowerPC words. Each word has an associated enumeration bit-pair indicating
-what type of PowerPC store instruction should be used with the write-gather pipe 
-(32-bit `stw`, 16-bit `sth`, 8-bit `stb`, or 32-bit float `stfs`).
 
 
 Toolchain Extension
 -------------------
 
-Extends the PSPL toolchain with an offline version of 
-[libogc's](http://libogc.devkitpro.org/gx_8h.html) GX implementation to 
-generate a PSGX bytecode sequence. The offline GX API is used
-by a code-generator implementing the PSPL source with vertex lighting channel
-and multi-texturing (TEV) states. The resulting bytecode sequence is packaged 
+PSPL's GX platform takes advantage of the write-gather pipe by performing
+an invocation of the [`libogc`](http://devkitpro.org) **GX API**, *all offline.*
+
+It does so via a specialised PSPL **Toolchain Platform Extension**. This extension
+receives an instance of a *PSPL Intermediate Representation* structure that
+orchestrates GX calls. The `libogc` code has been adapted to dump *write-gather-pipe-writes*
+directly into a static append-buffer.
+
+The offline GX API is used to express *vertex lighting channel colors*
+and *multi-texturing (TEV) states*. The resulting bytecode sequence is packaged 
 into the PSPL package.
 
 
 Runtime Extension
 -----------------
 
-Extends the PSPL runtime with a PPC-assembly playback routine to take the
-packaged bytecode and feed it directly into the platform's write-gather pipe
-(as if the API was being used online).
-The runtime also keeps a cached display list of these commands to play them
-back into the GPU as quickly as possible.
+The PSPL **Runtime Platform Extension** simply invokes `GX_CallDispList()` which 
+commands the GX hardware to *asynchronously playback* the pre-expressed state
+information. It also provides an API of its own to set various rendering parameters:
+
+* **Model Transform** via matrix input
+    * Also incorporates an optional *skeletal rigging system* for performing blended bone deformations
+* **View Transform** via 3 orthogonal camera-vectors
+* **Projection Transform** via standard *perspective* or *orthographic* properties
+
+Anytime a new PSPL compiled object is bound, the display list execution occurs. 
+Once done, native *GX draw commands* may be issued; shader-state applied. 
