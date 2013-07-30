@@ -29,7 +29,7 @@ an invocation of the [`libogc`](http://devkitpro.org) **GX API**, *all offline.*
 It does so via a specialised PSPL **Toolchain Platform Extension**. This extension
 receives an instance of a *PSPL Intermediate Representation* structure that
 orchestrates GX calls. The `libogc` code has been adapted to dump *write-gather-pipe-writes*
-directly into a static append-buffer that's embedded in the PSPL. 
+directly into a static append-buffer.
 
 The offline GX API is used to express *vertex lighting channel colors*
 and *multi-texturing (TEV) states*. The resulting bytecode sequence is packaged 
