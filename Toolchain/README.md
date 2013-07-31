@@ -174,9 +174,9 @@ be used for generating the PSPL files. The value of the argument should be one o
 
 ### Output Path (`-o out-path`)
 
-Simply enough, the PSPL toolchain driver will route **output** to `stdout` by 
-default. If the `-o` flag and argument is provided, then the result is written into
-a specified file instead.
+By default, the PSPL toolchain driver will write its **output** to `a.out.pspl*` in
+the current working directory. If the `-o` flag and argument is provided, then the 
+result is written into a specified file instead.
 
 
 ### Reference Gathering (`-G reflist-out-path`)
