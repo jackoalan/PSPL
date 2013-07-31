@@ -311,7 +311,7 @@ void pspl_embed_integer_keyed_object(const pspl_platform_t** platforms,
 
 /* Standard data conversion interface */
 void pspl_converter_progress_update(double progress);
-typedef int(*pspl_converter_file_hook)(char* path_out, const char* path_in, const char* suggested_path, void* user_ptr);
+typedef int(*pspl_converter_file_hook)(char* path_out, const char* path_in, const char* path_ext_in, const char* suggested_path, void* user_ptr);
 typedef int(*pspl_converter_membuf_hook)(void** buf_out, size_t* len_out, const char* path_in, void* user_ptr);
 
 /* The `platforms` argument works as described for psplc_embed_* functions above

@@ -1,13 +1,14 @@
  
 @CONF_EXT_EXTERNS@
-static pspl_extension_t @EXT_NAME@_extension = {
+pspl_extension_t @EXT_NAME@_extension = {
     .extension_name = "@EXT_NAME@",
     .extension_desc = "@EXT_DESC@",
 #   ifdef PSPL_TOOLCHAIN
     .toolchain_extension = @CONF_EXT_TOOLCHAIN@,
 #   endif
 #   ifdef PSPL_RUNTIME
-    .runtime_extension = @CONF_EXT_RUNTIME@
+    .runtime_extension = @CONF_EXT_RUNTIME@,
+    .runtime_extension_index = @CONF_EXT_RUNTIME_IDX@
 #   endif
 };
 

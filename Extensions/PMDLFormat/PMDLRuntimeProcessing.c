@@ -16,6 +16,7 @@
 #include <PMDLRuntime.h>
 #include "PMDLRuntimeLinAlgebra.h"
 #include "PMDLCommon.h"
+#include "PMDLRuntimeProcessing.h"
 
 
 /* Logical XOR */
@@ -249,7 +250,7 @@ typedef struct {
 #endif
 
 /* This routine will validate and load PMDL data into GPU */
-int pmdl_init(pspl_runtime_arc_file_t* pmdl_file) {
+int pmdl_init(const pspl_runtime_arc_file_t* pmdl_file) {
     char hash[PSPL_HASH_STRING_LEN];
     
     // First, validate header members
@@ -329,7 +330,7 @@ int pmdl_init(pspl_runtime_arc_file_t* pmdl_file) {
 }
 
 /* This routine will unload data from GPU */
-void pmdl_destroy(pspl_runtime_arc_file_t* pmdl_file) {
+void pmdl_destroy(const pspl_runtime_arc_file_t* pmdl_file) {
     pmdl_header* header = pmdl_file->file_data;
 
     // Unload shaders from GPU

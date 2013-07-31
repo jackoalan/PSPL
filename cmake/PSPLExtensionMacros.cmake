@@ -100,6 +100,20 @@ macro(pspl_add_extension extension_name extension_desc)
 endmacro(pspl_add_extension)
 
 
+# Hashing library define (for toolchain extensions)
+unset(HASH_LIB)
+unset(TOOL_HASH_DEF)
+if(PSPL_TOOLCHAIN_HASHING STREQUAL BUILTIN)
+  set(HASH_LIB hash_builtin)
+  set(TOOL_HASH_DEF PSPL_HASHING_BUILTIN)
+elseif(PSPL_TOOLCHAIN_HASHING STREQUAL COMMON_CRYPTO)
+  set(TOOL_HASH_DEF PSPL_HASHING_COMMON_CRYPTO)
+elseif(PSPL_TOOLCHAIN_HASHING STREQUAL OPENSSL)
+  find_library(HASH_LIB crypto)
+  set(TOOL_HASH_DEF PSPL_HASHING_OPENSSL)
+elseif(PSPL_TOOLCHAIN_HASHING STREQUAL WINDOWS)
+  set(TOOL_HASH_DEF PSPL_HASHING_WINDOWS)
+endif()
 
 # Add a PSPL Toolchain extension to an extension
 macro(pspl_add_extension_toolchain extension_name)
@@ -118,13 +132,27 @@ macro(pspl_add_extension_toolchain extension_name)
       #set_source_files_properties(${ARGN} PROPERTIES COMPILE_DEFINITIONS PSPL_TOOLCHAIN=1)
       add_library("${extension_name}_toolext" STATIC ${ARGN})
       set_target_properties("${extension_name}_toolext" PROPERTIES
-                            COMPILE_DEFINITIONS PSPL_TOOLCHAIN=1)
+                            COMPILE_DEFINITIONS "PSPL_TOOLCHAIN=1;${TOOL_HASH_DEF}=1")
     endif()
   endif()
   
 endmacro(pspl_add_extension_toolchain)
 
 
+# Hashing library define (for runtime extensions)
+unset(HASH_LIB)
+unset(RUN_HASH_DEF)
+if(PSPL_RUNTIME_HASHING STREQUAL BUILTIN)
+  set(HASH_LIB hash_builtin)
+  set(RUN_HASH_DEF PSPL_HASHING_BUILTIN)
+elseif(PSPL_RUNTIME_HASHING STREQUAL COMMON_CRYPTO)
+  set(RUN_HASH_DEF PSPL_HASHING_COMMON_CRYPTO)
+elseif(PSPL_RUNTIME_HASHING STREQUAL OPENSSL)
+  find_library(HASH_LIB crypto)
+  set(RUN_HASH_DEF PSPL_HASHING_OPENSSL)
+elseif(PSPL_RUNTIME_HASHING STREQUAL WINDOWS)
+  set(RUN_HASH_DEF PSPL_HASHING_WINDOWS)
+endif()
 
 # Add a PSPL Runtime extension to an extension
 macro(pspl_add_extension_runtime extension_name)
@@ -144,7 +172,7 @@ macro(pspl_add_extension_runtime extension_name)
       add_library("${extension_name}_runext" STATIC ${ARGN})
       set_target_properties("${extension_name}_runext" PROPERTIES
                             COMPILE_FLAGS "-include ${PSPL_BINARY_DIR}/Runtime/pspl_runtime_platform_typefile.pch"
-                            COMPILE_DEFINITIONS "PSPL_RUNTIME=1;PSPL_RUNTIME_PLATFORM_${PSPL_RUNTIME_PLATFORM}=1")
+                            COMPILE_DEFINITIONS "PSPL_RUNTIME=1;PSPL_RUNTIME_PLATFORM_${PSPL_RUNTIME_PLATFORM}=1;${RUN_HASH_DEF}=1;${RUN_THREAD_DEF}=1")
     endif()
   endif()
 

@@ -10,17 +10,19 @@
 #include <stdlib.h>
 #include <PSPLExtension.h>
 #include <PSPLRuntime.h>
+#include <PSPL/PSPLHash.h>
 #include "PMDLCommon.h"
+#include "PMDLRuntimeProcessing.h"
 
 
 struct file_array {
     // Byte-order-native array of PMDL files
-    unsigned count;
-    const pspl_runtime_arc_file_t** files;
+    pmdl_bi_integer count;
+    pmdl_ref_entry files[];
 };
 
-/* Currently-bound PMDL array */
-static struct file_array* bound_array;
+/* My own extension */
+extern const pspl_extension_t PMDL_extension;
 
 static uint8_t hash_cached = 0;
 static pspl_hash pmdl_ref_key_hash_cache;
@@ -35,55 +37,63 @@ static void load_object_hook(pspl_runtime_psplc_t* object) {
         pspl_runtime_get_embedded_data_object_from_hash(object, &pmdl_ref_key_hash_cache, &pmdl_ref_data);
     
     // Array to populate
-    void* data_cur = pmdl_ref_data.object_data;
-    struct file_array* files = malloc(*(uint32_t*)data_cur * sizeof(pspl_runtime_arc_file_t*) + sizeof(struct file_array));
-    files->count = *(uint32_t*)data_cur;
-    files->files = (const pspl_runtime_arc_file_t**)((uint8_t*)files + sizeof(struct file_array));
-    data_cur += sizeof(uint32_t);
+    struct file_array* files = pmdl_ref_data.object_data;
     
+    // Initialise PMDLs
     int i;
-    for (i=0 ; i<files->count ; ++i)
-        files->files[i] = pspl_runtime_get_archived_file_from_hash(object->parent, (pspl_hash*)data_cur, 1);
+    for (i=0 ; i<files->count.native.integer ; ++i) {
+        files->files[i].file_ptr =
+        pspl_runtime_get_archived_file_from_hash(object->parent, &files->files[i].pmdl_file_hash, 1);
+        pmdl_init(files->files[i].file_ptr);
+    }
     
     // Set user data pointer appropriately
-    pspl_runtime_set_extension_user_data_pointer(object, files);
+    pspl_runtime_set_extension_user_data_pointer(&PMDL_extension, object, files);
     
 }
 
 static void unload_object_hook(pspl_runtime_psplc_t* object) {
     
     // Set user data pointer appropriately
-    struct file_array* files = pspl_runtime_get_extension_user_data_pointer(object);
+    struct file_array* files = pspl_runtime_get_extension_user_data_pointer(&PMDL_extension, object);
     
     // Release all referenced files
     int i;
-    for (i=0 ; i<files->count ; ++i)
-        pspl_runtime_release_archived_file(files->files[i]);
-    free(files);
-    
-}
-
-static void bind_object_hook(pspl_runtime_psplc_t* object) {
-    
-    // Set user data pointer appropriately
-    bound_array = pspl_runtime_get_extension_user_data_pointer(object);
+    for (i=0 ; i<files->count.native.integer ; ++i) {
+        pmdl_destroy(files->files[i].file_ptr);
+        pspl_runtime_release_archived_file(files->files[i].file_ptr);
+    }
     
 }
 
 
-#pragma mark Init
+#pragma mark PMDL Lookup
 
-static int init_hook(const pspl_extension_t* extension) {
+const pspl_runtime_arc_file_t* pmdl_lookup(pspl_runtime_psplc_t* pspl_object, const char* pmdl_name) {
     
-    //
+    struct file_array* files = pspl_runtime_get_extension_user_data_pointer(&PMDL_extension, pspl_object);
     
-    return 0;
+    // Hash name
+    pspl_hash_ctx_t hash;
+    pspl_hash_init(&hash);
+    pspl_hash_write(&hash, pmdl_name, strlen(pmdl_name));
+    pspl_hash* name_hash = NULL;
+    pspl_hash_result(&hash, name_hash);
+    
+    // Lookup by hash
+    int i;
+    for (i=0 ; i<files->count.native.integer ; ++i) {
+        if (!pspl_hash_cmp(name_hash, &files->files[i].name_hash))
+            return files->files[i].file_ptr;
+    }
+    
+    return NULL;
+    
 }
+
 
 pspl_runtime_extension_t PMDL_runext = {
-    .init_hook = init_hook,
     .load_object_hook = load_object_hook,
-    .unload_object_hook = unload_object_hook,
-    .bind_object_hook = bind_object_hook
+    .unload_object_hook = unload_object_hook
 };
 

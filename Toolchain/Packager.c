@@ -10,7 +10,7 @@
 
 #include <PSPLExtension.h>
 #include <PSPLInternal.h>
-#include <PSPLHash.h>
+#include <PSPL/PSPLHash.h>
 #include <errno.h>
 
 #include "Packager.h"

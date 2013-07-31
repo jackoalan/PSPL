@@ -36,7 +36,7 @@
 #include <PSPL/PSPLCommon.h>
 #include <PSPLExtension.h>
 #include <PSPLInternal.h>
-#include <PSPLHash.h>
+#include <PSPL/PSPLHash.h>
 
 #include "Driver.h"
 #include "Preprocessor.h"

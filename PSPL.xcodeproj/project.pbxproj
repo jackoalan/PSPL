@@ -95,6 +95,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E401AD2117A96BDC00409F7D /* PMDLRuntimeProcessing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PMDLRuntimeProcessing.h; sourceTree = "<group>"; };
 		E40231C017543F2100DE076A /* api.docurium */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = api.docurium; sourceTree = "<group>"; };
 		E403AB971797094900D6B203 /* pmdl_loop_vert.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pmdl_loop_vert.py; sourceTree = "<group>"; };
 		E4069D26179EF34B00FB4D73 /* PMDLRuntime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PMDLRuntime.h; sourceTree = "<group>"; };
@@ -146,7 +147,6 @@
 		E48FF55F1764CF29000231AA /* IRToolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = IRToolchain.c; sourceTree = "<group>"; };
 		E48FF5611764CF31000231AA /* IRRuntime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = IRRuntime.c; sourceTree = "<group>"; };
 		E4995F2B173E8BCE003B06BF /* PSPLHash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLHash.h; sourceTree = "<group>"; };
-		E4995F2C173E8C06003B06BF /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E4995F2D173E8C4D003B06BF /* hash_builtin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hash_builtin.h; sourceTree = "<group>"; };
 		E4995F2E173E8C55003B06BF /* hash_builtin.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hash_builtin.c; sourceTree = "<group>"; };
 		E4995F30173E8C6C003B06BF /* hash_commoncrypto.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hash_commoncrypto.h; sourceTree = "<group>"; };
@@ -421,9 +421,7 @@
 		E4995F2A173E8B3E003B06BF /* Hash */ = {
 			isa = PBXGroup;
 			children = (
-				E4995F2C173E8C06003B06BF /* CMakeLists.txt */,
 				E4995F2D173E8C4D003B06BF /* hash_builtin.h */,
-				E4995F2E173E8C55003B06BF /* hash_builtin.c */,
 				E4995F30173E8C6C003B06BF /* hash_commoncrypto.h */,
 				E4995F31173E8C87003B06BF /* hash_openssl.h */,
 				E4995F32173E8C92003B06BF /* hash_windows.h */,
@@ -443,10 +441,9 @@
 				E4AFAE73171EF72E00F7A0BF /* cmake */,
 				E4AFAE911729D90E00F7A0BF /* PSPLInternal.h */,
 				E4E4916E17510684006FCA59 /* PSPLCommon.c */,
+				E4995F2E173E8C55003B06BF /* hash_builtin.c */,
 				E4AFAE26171C8FF100F7A0BF /* Toolchain */,
 				E4AFAE25171C8FDB00F7A0BF /* Runtime */,
-				E4995F2B173E8BCE003B06BF /* PSPLHash.h */,
-				E4995F2A173E8B3E003B06BF /* Hash */,
 				E4AFAE2E171C936300F7A0BF /* include */,
 				E4BB18E517347F6B00B8CDD1 /* Platforms */,
 				E4AFAE37171C955400F7A0BF /* Extensions */,
@@ -504,6 +501,8 @@
 			isa = PBXGroup;
 			children = (
 				E4AFAE33171C941500F7A0BF /* PSPLCommon.h */,
+				E4995F2A173E8B3E003B06BF /* Hash */,
+				E4995F2B173E8BCE003B06BF /* PSPLHash.h */,
 				E4AFAE4B171CA3DA00F7A0BF /* PSPLValue.h */,
 				E4AFAE53171CA6C700F7A0BF /* PSPLToolchainExtension.h */,
 				E4AFAE56171CA74A00F7A0BF /* PSPLRuntimeExtension.h */,
@@ -650,6 +649,7 @@
 				E4CD266A179F374400172F31 /* PMDLRuntimeLinAlgebraRef.c */,
 				E4CD266C179F386B00172F31 /* PMDLRuntimeLinAlgebraPS.s */,
 				E4CD266D179F396E00172F31 /* PMDLRuntimeLinAlgebraSSE.s */,
+				E401AD2117A96BDC00409F7D /* PMDLRuntimeProcessing.h */,
 				E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */,
 			);
 			path = PMDLFormat;

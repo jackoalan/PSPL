@@ -157,23 +157,25 @@ void pspl_runtime_enumerate_integer_embedded_data_objects(const pspl_runtime_psp
  *
  * * **This routine may only be called within extension/platform `load`, `bind`, and `unload` hooks**
  *
+ * @param extension Pointer to extension object to own the pointer
  * @param object Read-only handle identifying embedded PSPLC object
  *        to get user pointer of
  * @param ptr Pointer value to assign for extension PSPLC object
  * @return Negative if unsuccessful
  */
-int pspl_runtime_set_extension_user_data_pointer(const pspl_runtime_psplc_t* object, void* ptr);
+int pspl_runtime_set_extension_user_data_pointer(const pspl_extension_t* extension, const pspl_runtime_psplc_t* object, void* ptr);
 
 /**
  * Get extension-specific user-data pointer for individual PSPLC object
  *
  * * **This routine may only be called within extension/platform `load`, `bind`, and `unload` hooks**
  *
+ * @param extension Pointer to extension object owning the pointer
  * @param object Read-only handle identifying embedded PSPLC object
  *        to get user pointer of
  * @return Currently set pointer value
  */
-void* pspl_runtime_get_extension_user_data_pointer(const pspl_runtime_psplc_t* object);
+void* pspl_runtime_get_extension_user_data_pointer(const pspl_extension_t* extension, const pspl_runtime_psplc_t* object);
 
 
 #pragma mark Main Runtime Extension Structure

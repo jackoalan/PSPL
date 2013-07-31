@@ -21,7 +21,7 @@
 #include <stdarg.h>
 #include <PSPLExtension.h>
 #include <PSPLInternal.h>
-#include <PSPLHash.h>
+#include <PSPL/PSPLHash.h>
 #if PSPL_ERROR_PRINT_BACKTRACE
 #include <execinfo.h>
 #endif
@@ -596,40 +596,20 @@ void pspl_runtime_enumerate_integer_embedded_data_objects(const pspl_runtime_psp
 }
 
 /* Set extension-specific user-data pointer for individual PSPLC object */
-int pspl_runtime_set_extension_user_data_pointer(const pspl_runtime_psplc_t* object, void* ptr) {
-    if (!object)
+int pspl_runtime_set_extension_user_data_pointer(const pspl_extension_t* extension, const pspl_runtime_psplc_t* object, void* ptr) {
+    if (!extension || !object)
         return -1;
     _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)object;
-    
-    intptr_t api_load_state = pspl_api_load_state();
-    intptr_t api_load_subject_index = pspl_api_load_subject_index();
-    
-    const _pspl_object_index_t* idx = NULL;
-    if (api_load_state == PSPL_LOADING_EXT)
-        idx = &obj->ext_arr[api_load_subject_index];
-    else
-        return -1;
-    
-    obj->extension_pointers[idx->extension_index] = ptr;
+    obj->extension_pointers[extension->runtime_extension_index] = ptr;
     return 0;
 }
 
 /* Get extension-specific user-data pointer for individual PSPLC object */
-void* pspl_runtime_get_extension_user_data_pointer(const pspl_runtime_psplc_t* object) {
-    if (!object)
+void* pspl_runtime_get_extension_user_data_pointer(const pspl_extension_t* extension, const pspl_runtime_psplc_t* object) {
+    if (!extension || !object)
         return NULL;
     const _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)object;
-    
-    intptr_t api_load_state = pspl_api_load_state();
-    intptr_t api_load_subject_index = pspl_api_load_subject_index();
-    
-    const _pspl_object_index_t* idx = NULL;
-    if (api_load_state == PSPL_LOADING_EXT)
-        idx = &obj->ext_arr[api_load_subject_index];
-    else
-        return NULL;
-    
-    return obj->extension_pointers[idx->extension_index];
+    return obj->extension_pointers[extension->runtime_extension_index];
 }
 
 #pragma mark Runtime API

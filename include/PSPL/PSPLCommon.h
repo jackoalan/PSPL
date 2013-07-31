@@ -191,7 +191,11 @@ typedef union {
  * @return 0 if identical, positive or negative otherwise
  */
 static inline int pspl_hash_cmp(const pspl_hash* a, const pspl_hash* b) {
-    return memcmp(a, b, sizeof(pspl_hash));
+    int j;
+    for (j=0 ; j<(sizeof(pspl_hash)/4) ; ++j)
+        if (a->w[j] != b->w[j])
+            return -1;
+    return 0;
 }
 
 /**
@@ -201,7 +205,9 @@ static inline int pspl_hash_cmp(const pspl_hash* a, const pspl_hash* b) {
  * @param src Hash location to copy from
  */
 static inline void pspl_hash_cpy(pspl_hash* dest, const pspl_hash* src) {
-    memcpy(dest, src, sizeof(pspl_hash));
+    int j;
+    for (j=0 ; j<(sizeof(pspl_hash)/4) ; ++j)
+        dest->w[j] = src->w[j];
 }
 
 /**
@@ -243,6 +249,8 @@ typedef struct _pspl_extension {
 #   ifdef PSPL_RUNTIME
     /**< Extension runtime substructure, populated by platform author, named `<EXTNAME>_runext` */
     const struct _pspl_runtime_extension* runtime_extension;
+    /**< Extension index; assigned by CMake, used for extension-table lookups */
+    int runtime_extension_index;
 #   endif
 } pspl_extension_t;
 

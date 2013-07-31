@@ -10,7 +10,8 @@
 #include <errno.h>
 #include <PSPLExtension.h>
 #include "PMDLCommon.h"
-#include <PSPLHash.h>
+#include <PSPL/PSPLHash.h>
+#include <sys/param.h>
 
 #if __APPLE__
 #define BLENDER_DEFAULT "/Applications/blender.app/Contents/MacOS/blender"
@@ -57,8 +58,11 @@ static void finish_hook(const pspl_toolchain_context_t* driver_context) {
     
     if (gen_refs.object_num) {
         
-        size_t buf_sz = sizeof(pmdl_ref_entry)*gen_refs.object_num;
-        pmdl_ref_entry* entries = malloc(buf_sz);
+        size_t buf_sz = sizeof(pmdl_ref_entry)*gen_refs.object_num + sizeof(pmdl_bi_integer);
+        void* entries_buf = malloc(buf_sz);
+        pmdl_bi_integer* count_integer = (pmdl_bi_integer*)entries_buf;
+        SET_BI_U32((*count_integer), integer, gen_refs.object_num);
+        pmdl_ref_entry* entries = entries_buf + sizeof(pmdl_bi_integer);
         for (i=0 ; i<gen_refs.object_num ; ++i)
             entries[i] = *((pmdl_ref_entry*)gen_refs.object_arr[i]);
         pspl_embed_hash_keyed_object(general_plats, "PMDL_References", entries, entries, buf_sz);
@@ -68,8 +72,11 @@ static void finish_hook(const pspl_toolchain_context_t* driver_context) {
     
     if (gx_refs.object_num) {
         
-        size_t buf_sz = sizeof(pmdl_ref_entry)*gx_refs.object_num;
-        pmdl_ref_entry* entries = malloc(buf_sz);
+        size_t buf_sz = sizeof(pmdl_ref_entry)*gx_refs.object_num + sizeof(pmdl_bi_integer);
+        void* entries_buf = malloc(buf_sz);
+        pmdl_bi_integer* count_integer = (pmdl_bi_integer*)entries_buf;
+        SET_BI_U32((*count_integer), integer, gx_refs.object_num);
+        pmdl_ref_entry* entries = entries_buf + sizeof(pmdl_bi_integer);
         for (i=0 ; i<gx_refs.object_num ; ++i)
             entries[i] = *((pmdl_ref_entry*)gx_refs.object_arr[i]);
         pspl_embed_hash_keyed_object(gx_plats, "PMDL_References", entries, entries, buf_sz);
@@ -81,6 +88,55 @@ static void finish_hook(const pspl_toolchain_context_t* driver_context) {
     pspl_malloc_context_destroy(&gx_refs);
 }
 
+
+/* Conversion hook to run Blender instance for auto-export of PMDL */
+static int blender_convert(char* path_out, const char* path_in, const char* path_ext_in,
+                           const char* suggested_path, void* user_ptr) {
+    
+    // Get Blender environment variable
+    char* blender_path = getenv("BLENDER_BIN");
+    if (!blender_path)
+        blender_path = BLENDER_DEFAULT;
+    
+    // Verify Blender binary
+    struct stat test_bin;
+    if (stat(blender_path, &test_bin))
+        pspl_error(-1, "Unable to locate Blender", "`blender` executable not found at `%s`; the path may be"
+                   " set by exporting the 'BLENDER_BIN' environment variable to the Blender binary's absolute path",
+                   blender_path);
+    if (!(S_ISREG(test_bin.st_mode) && (test_bin.st_mode & 0111)))
+        pspl_error(-1, "Provided Blender binary not executable",
+                   "`stat` indicates that `%s` is not executable", blender_path);
+    
+    // Target Draw Format
+    const char* target_draw_fmt = NULL;
+    if (user_ptr == general_plats)
+        target_draw_fmt = "GENERAL";
+    else if (user_ptr == gx_plats)
+        target_draw_fmt = "GX";
+    
+    // Perform conversion
+    pid_t blender_pid;
+    if ((blender_pid = fork()) < 0)
+        pspl_error(-1, "Unable to Fork to Blender", "errno %d - %s", errno, strerror(errno));
+    
+    if (!blender_pid) { // Child process
+        execlp(blender_path, "--background", path_in, "--addons", "io_pmdl_export",
+               "--python-text", "bpy.ops.io_pmdl_export.export_pmdl()", "--", path_ext_in,
+               target_draw_fmt);
+        exit(0);
+    }
+    
+    // Parent process
+    int blender_return = 0;
+    waitpid(blender_pid, &blender_return, 0);
+    if (!WIFEXITED(blender_return) || WEXITSTATUS(blender_return))
+        pspl_error(-1, "Blender did not complete PMDL conversion",
+                   "error code %d from Blender", WEXITSTATUS(blender_return));
+    
+    return 0;
+    
+}
 
 static void command_call_hook(const pspl_toolchain_context_t* driver_context,
                               const pspl_toolchain_heading_context_t* current_heading,
@@ -170,54 +226,35 @@ static void command_call_hook(const pspl_toolchain_context_t* driver_context,
         pspl_hash* name_hash = NULL;
         pspl_hash_result(&hash_ctx, name_hash);
         
-        // BLEND absolute path
-        char* blend_abs_path = NULL;
-        // TODO: Do
-        
-        // Target PMDL
-        
-        
-        // Get Blender environment variable
-        char* blender_path = getenv("BLENDER_BIN");
-        if (!blender_path)
-            blender_path = BLENDER_DEFAULT;
-        
-        // Verify Blender binary
-        struct stat test_bin;
-        if (stat(blender_path, &test_bin))
-            pspl_error(-1, "Unable to locate Blender", "`blender` executable not found at `%s`; the path may be"
-                       " set by exporting the 'BLENDER_BIN' environment variable to the Blender binary's absolute path",
-                       blender_path);
-        if (!(S_ISREG(test_bin.st_mode) && (test_bin.st_mode & 0111)))
-            pspl_error(-1, "Provided Blender binary not executable",
-                       "`stat` indicates that `%s` is not executable", blender_path);
         
         // Export BLEND objects for each target platform
         uint8_t added_general = 0;
         uint8_t added_gx = 0;
+        pmdl_ref_entry* entry = NULL;
+        pspl_hash* pmdl_hash = NULL;
         for (i=0 ; i<driver_context->target_runtime_platforms_c ; ++i) {
             if ((driver_context->target_runtime_platforms[i] == &GL2_platform ||
                  driver_context->target_runtime_platforms[i] == &D3D11_platform) &&
                 !added_general) {
                 
-                // TODO: Move to conversion hook
-                pid_t blender_pid;
-                if ((blender_pid = fork()) < 0)
-                    pspl_error(-1, "Unable to Fork to Blender", "errno %d - %s", errno, strerror(errno));
-                
-                if (!blender_pid) { // Child process
-                    execlp(blender_path, "--background", blend_abs_path, "--addons", "io_pmdl_export",
-                           "--python-text", "bpy.ops.io_pmdl_export.export_pmdl()", "--", "GENERAL");
-                }
-                
+                pspl_package_file_augment(general_plats, command_argv[1], command_argv[2],
+                                          blender_convert, 1, general_plats, &pmdl_hash);
+                entry = pspl_malloc_malloc(&gen_refs, sizeof(pmdl_ref_entry));
                 added_general = 1;
                 
             } else if (driver_context->target_runtime_platforms[i] == &GX_platform && !added_gx) {
                 
+                pspl_package_file_augment(gx_plats, command_argv[1], command_argv[2],
+                                          blender_convert, 1, gx_plats, &pmdl_hash);
+                entry = pspl_malloc_malloc(&gx_refs, sizeof(pmdl_ref_entry));
                 added_gx = 1;
                 
             }
         }
+        
+        // Hashes
+        entry->pmdl_file_hash = *pmdl_hash;
+        entry->name_hash = *name_hash;
         
         
     }

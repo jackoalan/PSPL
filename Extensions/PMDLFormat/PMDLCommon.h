@@ -9,9 +9,22 @@
 #ifndef PSPL_PMDLCommon_h
 #define PSPL_PMDLCommon_h
 
+/* Pointer decl */
+#if PSPL_TOOLCHAIN
+#define P_DECL char ptr_buf[8]
+#elif PSPL_RUNTIME
+#define P_DECL union {const pspl_runtime_arc_file_t* file_ptr; char ptr_buf[8];}
+#endif
+
+/* Bi-uint32 type */
+typedef DEF_BI_OBJ_TYPE(struct {
+    uint32_t integer;
+}) pmdl_bi_integer;
+
 /* PMDL Reference Entry */
 typedef struct {
     pspl_hash name_hash, pmdl_file_hash;
+    P_DECL;
 } pmdl_ref_entry;
 
 /* PMDL Header */

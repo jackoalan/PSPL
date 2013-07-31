@@ -22,7 +22,7 @@
 #include <dirent.h>
 
 #include <PSPLInternal.h>
-#include <PSPLHash.h>
+#include <PSPL/PSPLHash.h>
 
 #include "ObjectIndexer.h"
 #include "Driver.h"
@@ -1280,7 +1280,7 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
             conv_path_buf[0] = '\0';
             int err;
             pspl_converter_progress_update(0.0);
-            if((err = converter_hook(conv_path_buf, path_in, sug_path, user_ptr))) {
+            if((err = converter_hook(conv_path_buf, path_in, path_ext_in, sug_path, user_ptr))) {
                 fprintf(stderr, "\n");
                 pspl_error(-1, "Error converting file", "converter hook returned error '%d' for `%s`",
                            err, path_in);

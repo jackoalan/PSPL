@@ -93,6 +93,9 @@ enum pmdl_invalidate_bits {
 };
 void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv_bits);
 
+/* Lookup routine to get PMDL file reference from PSPLC */
+const pspl_runtime_arc_file_t* pmdl_lookup(pspl_runtime_psplc_t* pspl_object, const char* pmdl_name);
+
 /* Master draw routine */
 void pmdl_draw(pmdl_draw_context_t* ctx, pspl_runtime_arc_file_t* pmdl_file);
 

@@ -13,7 +13,7 @@
 
 #include <PSPLExtension.h>
 #include <PSPLInternal.h>
-#include <PSPLHash.h>
+#include <PSPL/PSPLHash.h>
 
 #include "Compiler.h"
 #include "ObjectIndexer.h"

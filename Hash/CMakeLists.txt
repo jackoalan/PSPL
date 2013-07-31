@@ -1,3 +1,0 @@
-if(PSPL_TOOLCHAIN_HASHING STREQUAL BUILTIN OR PSPL_RUNTIME_HASHING STREQUAL BUILTIN)
-  add_library(hash_builtin hash_builtin.c)
-endif()

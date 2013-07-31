@@ -60,7 +60,28 @@ else()
   endif()
 endif()
 
-add_subdirectory(Hash)
+if(PSPL_TOOLCHAIN_HASHING STREQUAL BUILTIN OR PSPL_RUNTIME_HASHING STREQUAL BUILTIN)
+  add_library(hash_builtin hash_builtin.c)
+endif()
+
+# Runtime Threading API
+unset(RUN_THREAD_LIB)
+unset(RUN_THREAD_DEF)
+if(PSPL_WII)
+  set(RUN_THREAD_DEF PSPL_THREADING_OGC)
+elseif(GCD_FOUND)
+  include_directories(${GCD_INCLUDE_DIR})
+  set(RUN_THREAD_LIB ${GCD_LINK_LIBRARIES})
+  set(RUN_THREAD_DEF PSPL_THREADING_GCD)
+else()
+  find_package(Threads)
+  set(RUN_THREAD_LIB ${CMAKE_THREAD_LIBS_INIT})
+  if(CMAKE_USE_PTHREADS_INIT)
+    set(RUN_THREAD_DEF PSPL_THREADING_PTHREAD)
+  elseif(CMAKE_USE_WIN32_THREADS_INIT)
+    set(RUN_THREAD_DEF PSPL_THREADING_WINDOWS)
+  endif()
+endif()
 
 # Common routines
 add_library(pspl_common STATIC PSPLCommon.c)
@@ -182,6 +203,8 @@ if(len GREATER 0)
     else()
       set(CONF_EXT_RUNTIME "NULL")
     endif()
+    
+    set(CONF_EXT_RUNTIME_IDX ${extension})
 
     # Generate extension definition
     configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_extension_def.h.in
