@@ -912,7 +912,7 @@ int pspl_toolchain_init_other_extension(const char* ext_name) {
 
 #if PSPL_ERROR_CATCH_SIGNALS
 static void catch_sig(int sig) {
-    if (sig == SIGCHLD) // Child exits are OK
+    if (sig == SIGCHLD || sig == SIGWINCH) // Child exits are OK
         return;
 #   ifdef _WIN32
     pspl_error(-1, "Caught signal", "PSPL caught signal %d", sig);

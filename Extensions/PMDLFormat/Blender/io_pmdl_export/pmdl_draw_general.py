@@ -110,6 +110,8 @@ class pmdl_draw_general:
     # Augments draw generator with a single blender MESH data object
     def add_mesh(self, pmdl, obj):
         mesh = obj.data
+        print("Optimising mesh:", obj.name)
+        opt_gpu_vert_count = 0
     
         # First, generate compressed loop-vertex array-array-set collection
         loop_vert_array = []
@@ -165,8 +167,9 @@ class pmdl_draw_general:
                             if is_new_collection:
                                 break
                             best_collection['vertices'].append(loop_vert)
-                            print('appended initial loop', loop_vert[0].loop.index)
                         tri_strip.append(best_collection['vertices'].index(loop_vert))
+                        opt_gpu_vert_count += 1
+                        #print('appended initial loop', loop_vert[0].loop.index)
 
                     if is_new_collection:
                         break
@@ -191,10 +194,11 @@ class pmdl_draw_general:
                         if is_new_collection:
                             break
                         best_collection['vertices'].append(loop_vert)
-                        print('appended loop', loop_vert[0].loop.index)
                     tri_strip.append(best_collection['vertices'].index(loop_vert))
-                
-                
+                    opt_gpu_vert_count += 1
+                    #print('appended loop', loop_vert[0].loop.index)
+
+
                 # This polygon is good
                 visited_polys.add(temp_poly)
                 temp_edge = None
@@ -216,7 +220,8 @@ class pmdl_draw_general:
             # Add tri-strip to element array
             best_collection['tri_strips'].append({'mesh':obj, 'strip':tri_strip})
             
-        
+        print("GPU will receive", opt_gpu_vert_count, "unified vertices out of", len(mesh.loops), "original vertices")
+        print("Mesh contains", len(mesh.polygons), "triangles\n")
 
 
     # Augments draw generator with a single blender MESH data object and
@@ -240,7 +245,7 @@ class pmdl_draw_general:
             bloop = loop_vert[0]
             mesh = bloop.mesh
             bvert = mesh.vertices[bloop.loop.vertex_index]
-            print(bvert.co)
+            #print(bvert.co)
 
             # Position
             for comp in bvert.co:
@@ -277,7 +282,7 @@ class pmdl_draw_general:
         element_bytes = bytearray()
                 
         for strip in collection['tri_strips']:
-            print('new strip')
+            #print('new strip')
             if last_mesh != strip['mesh']:
                 last_mesh = strip['mesh']
                 mesh_primitives = {'mesh':last_mesh, 'primitives':[]}
@@ -285,7 +290,7 @@ class pmdl_draw_general:
             
             # Primitive tri-strip byte array
             for idx in strip['strip']:
-                print(idx)
+                #print(idx)
                 element_bytes += estruct.pack(idx)
                 
             mesh_primitives['primitives'].append({'offset':cur_offset, 'length':len(strip['strip'])})

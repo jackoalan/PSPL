@@ -103,7 +103,7 @@ class EXPORT_OT_pmdl(bpy.types.Operator, ExportHelper):
         return context.object is not None and (context.object.type == 'MESH' or context.object.type == 'ARMATURE')
 
     def execute(self, context):
-        print("Exporting PMDL: ", self.properties.filepath)
+        print("Exporting PMDL: ", self.properties.filepath, "\n")
         
         generator = None
         if self.properties.export_draw_fmt == 'GENERAL':
@@ -162,7 +162,7 @@ class EXPORT_OT_pmdl_cli(bpy.types.Operator):
         pointer_size = sys.argv[arg_idx+5]
 
 
-        print("Exporting PMDL: ", filepath)
+        print("Exporting PMDL: ", filepath, "\n")
         
         generator = None
         if export_draw_fmt == 'GENERAL':
