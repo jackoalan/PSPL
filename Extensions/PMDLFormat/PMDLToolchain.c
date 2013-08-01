@@ -15,10 +15,13 @@
 
 #if __APPLE__
 #define BLENDER_DEFAULT "/Applications/blender.app/Contents/MacOS/blender"
+#define BLENDER_BOOT_SCRIPT "/tmp/pmdl_blender_boot.py"
 #elif _WIN32
 #define BLENDER_DEFAULT "C:/Program Files/Blender Foundation/Blender/blender.exe"
+#define BLENDER_BOOT_SCRIPT "C:/Windows/Temp/pmdl_blender_boot.py"
 #else
 #define BLENDER_DEFAULT "blender"
+#define BLENDER_BOOT_SCRIPT "/tmp/pmdl_blender_boot.py"
 #endif
 #include <sys/stat.h>
 #include <unistd.h>
@@ -47,10 +50,26 @@ static void copyright_hook() {
     
 }
 
+static void subext_hook() {
+    
+    pspl_toolchain_provide_subext("Blender Integration", "Converts named object from .blend file to PMDL", 0);
+    
+}
+
+static const char* BOOT_SCRIPT_TEXT = "import bpy\nbpy.ops.io_export_scene.pmdl_cli()\n";
 static int init_hook(const pspl_toolchain_context_t* driver_context) {
+    
+    // Write boot script
+    FILE* boot_script_file = fopen(BLENDER_BOOT_SCRIPT, "w");
+    if (!boot_script_file)
+        pspl_error(-1, "Blender boot script error", "unable to write temporary python script; errno %d - %s", errno, strerror(errno));
+    fwrite(BOOT_SCRIPT_TEXT, 1, strlen(BOOT_SCRIPT_TEXT), boot_script_file);
+    fclose(boot_script_file);
+    
     pspl_malloc_context_init(&gen_refs);
     pspl_malloc_context_init(&gx_refs);
     return 0;
+    
 }
 
 static void finish_hook(const pspl_toolchain_context_t* driver_context) {
@@ -66,7 +85,7 @@ static void finish_hook(const pspl_toolchain_context_t* driver_context) {
         for (i=0 ; i<gen_refs.object_num ; ++i)
             entries[i] = *((pmdl_ref_entry*)gen_refs.object_arr[i]);
         pspl_embed_hash_keyed_object(general_plats, "PMDL_References", entries, entries, buf_sz);
-        free(entries);
+        free(entries_buf);
 
     }
     
@@ -92,6 +111,8 @@ static void finish_hook(const pspl_toolchain_context_t* driver_context) {
 /* Conversion hook to run Blender instance for auto-export of PMDL */
 static int blender_convert(char* path_out, const char* path_in, const char* path_ext_in,
                            const char* suggested_path, void* user_ptr) {
+    strcpy(path_out, suggested_path);
+    fprintf(stderr, "\n");
     
     // Get Blender environment variable
     char* blender_path = getenv("BLENDER_BIN");
@@ -115,15 +136,30 @@ static int blender_convert(char* path_out, const char* path_in, const char* path
     else if (user_ptr == gx_plats)
         target_draw_fmt = "GX";
     
+    // Endianness
+    const char* endianness = NULL;
+    if (user_ptr == gx_plats)
+        endianness = "BIG";
+    else
+        endianness = "LITTLE";
+    
+    // Pointer size
+    const char* psize = NULL;
+    if (user_ptr == gx_plats)
+        psize = "32-BIT";
+    else
+        psize = "64-BIT";
+    
+    
     // Perform conversion
     pid_t blender_pid;
     if ((blender_pid = fork()) < 0)
         pspl_error(-1, "Unable to Fork to Blender", "errno %d - %s", errno, strerror(errno));
     
     if (!blender_pid) { // Child process
-        execlp(blender_path, "--background", path_in, "--addons", "io_pmdl_export",
-               "--python-text", "bpy.ops.io_pmdl_export.export_pmdl()", "--", path_ext_in,
-               target_draw_fmt);
+        execlp(blender_path, blender_path, "--background", path_in,
+               "-P", BLENDER_BOOT_SCRIPT, "--", suggested_path,
+               path_ext_in, target_draw_fmt, endianness, psize, NULL);
         exit(0);
     }
     
@@ -271,6 +307,7 @@ pspl_toolchain_extension_t PMDL_toolext = {
     .init_hook = init_hook,
     .finish_hook = finish_hook,
     .copyright_hook = copyright_hook,
+    .subext_hook = subext_hook,
     .claimed_global_command_names = claimed_global_command_names,
     .command_call_hook = command_call_hook
 };

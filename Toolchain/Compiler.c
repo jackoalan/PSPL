@@ -341,7 +341,7 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
     
     // Command argument start and end pointers
     const char* com_arg_start;
-    const char* com_arg_end;
+    char* com_arg_end;
     
     // Whitespace line counter
     unsigned int white_line_count = 0;
@@ -721,7 +721,7 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
                     com_name[name_end-cur_line] = '\0';
                     
                     // Initial command state
-                    tok_read_in = malloc(com_arg_end-com_arg_start);
+                    tok_read_in = malloc(com_arg_end-com_arg_start+1);
                     tok_read_ptr = tok_read_in;
                     tok_arr[0] = tok_read_ptr;
                     tok_c = 0;
@@ -780,6 +780,7 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             
             // Directive has finished by this point
             in_com = 0;
+            *tok_read_ptr = '\0';
             
             // Now determine which extension's command hook needs to be dispatched
             if (!strcasecmp(com_name, "NAME")) {
@@ -814,7 +815,7 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             } else if (!strcasecmp(com_name, "POP_HEADING")) {
                 
                 if (!compiler_state.push_count)
-                    pspl_warn("Over-popped heading", "`%s` popped heading more times than pushed",
+                    pspl_warn("Over-popped heading", "`%s` popped heading more times than pushed; pop ignored",
                               source->file_path);
                 else {
                     const pspl_toolchain_heading_context_t* climb_ctx = compiler_state.heading_context;

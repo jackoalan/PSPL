@@ -111,6 +111,7 @@ typedef struct _pspl_indexer_context {
     // packager during file write (volatile)
     uint32_t extension_obj_base_off;
     uint32_t extension_obj_array_off;
+    uint32_t extension_obj_array_padding;
     uint32_t extension_obj_data_off;
     
     uint32_t extension_obj_blobs_len;

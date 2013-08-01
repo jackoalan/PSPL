@@ -531,6 +531,7 @@ void pspl_error(int exit_code, const char* brief, const char* msg, ...) {
             free(err_head);
         fprintf(stderr, "%s:\n", brief);
     }
+    free((void*)brief);
     
     fprintf(stderr, "%s\n", msg_str);
     
@@ -623,13 +624,14 @@ void pspl_warn(const char* brief, const char* msg, ...) {
             free(err_head);
         fprintf(stderr, "%s:\n", brief);
     }
+    free((void*)brief);
     
     fprintf(stderr, "%s\n", msg_str);
 }
 
 /* Report PSPLC read-in underflow */
 void check_psplc_underflow(pspl_toolchain_driver_psplc_t* psplc, const void* cur_ptr) {
-    size_t delta = cur_ptr-(void*)psplc->psplc_data;
+    //size_t delta = cur_ptr-(void*)psplc->psplc_data;
     /*
     if (delta > psplc->psplc_data_len)
         pspl_error(-1, "PSPLC underflow detected",
@@ -910,6 +912,8 @@ int pspl_toolchain_init_other_extension(const char* ext_name) {
 
 #if PSPL_ERROR_CATCH_SIGNALS
 static void catch_sig(int sig) {
+    if (sig == SIGCHLD) // Child exits are OK
+        return;
 #   ifdef _WIN32
     pspl_error(-1, "Caught signal", "PSPL caught signal %d", sig);
 #   else

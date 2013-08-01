@@ -25,12 +25,12 @@ if "bpy" in locals():
 else:
     from . import pmdl, pmdl_draw_general, pmdl_draw_gx, pmdl_draw_collision
 
-import bpy
+import sys, bpy
 from bpy.props import *
 from bpy_extras.io_utils import ExportHelper
 
 
-# Export PMDL
+# Export PMDL (window dialogue)
 class EXPORT_OT_pmdl(bpy.types.Operator, ExportHelper):
     bl_idname = "io_export_scene.pmdl"
     bl_description = "Export current selected mesh object and child meshes to PMDL Model (.pmdl)"
@@ -140,6 +140,67 @@ class EXPORT_OT_pmdl(bpy.types.Operator, ExportHelper):
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
+
+
+# Export PMDL (command-line invocation)
+class EXPORT_OT_pmdl_cli(bpy.types.Operator):
+    bl_idname = "io_export_scene.pmdl_cli"
+    bl_description = "Export current selected mesh object and child meshes to PMDL Model (.pmdl)"
+    bl_label = "Export PMDL Model"
+    bl_space_type = "PROPERTIES"
+
+
+    def execute(self, context):
+        arg_idx = sys.argv.index('--')
+        filepath = sys.argv[arg_idx+1]
+        cli_object = bpy.data.objects[sys.argv[arg_idx+2]]
+        if not cli_object:
+            print("Unable to find blender object named", sys.argv[arg_idx+2])
+            return {'CANCELLED'}
+        export_draw_fmt = sys.argv[arg_idx+3]
+        endianness = sys.argv[arg_idx+4]
+        pointer_size = sys.argv[arg_idx+5]
+
+
+        print("Exporting PMDL: ", filepath)
+        
+        generator = None
+        if export_draw_fmt == 'GENERAL':
+            generator = pmdl_draw_general.pmdl_draw_general()
+        elif export_draw_fmt == 'GX':
+            generator = pmdl_draw_gx.pmdl_draw_gx()
+        elif export_draw_fmt == 'COLLISION':
+            generator = pmdl_draw_collision.pmdl_draw_collision()
+        
+        pmdl_obj = pmdl.pmdl(cli_object, generator)
+
+        '''
+        if self.properties.export_par2:
+            if context.object.type == 'ARMATURE':
+                print("A PAR2 file may not be generated from an ARMATURE object")
+                return {'CANCELLED'}
+            octree_err = pmdl_obj.add_octree(self.properties.export_par2_levels)
+            if octree_err:
+                self.report({'ERROR_INVALID_INPUT'}, octree_err)
+                return {'CANCELLED'}
+        '''
+        
+
+        if generator:
+            psize = 0
+            if pointer_size == '64-BIT':
+                psize = 8
+            elif pointer_size == '32-BIT':
+                psize = 4
+            else:
+                print("Invalid pointer size:", pointer_size)
+                return {'CANCELLED'}
+            pmdl_obj.generate_file(endianness, psize, filepath)
+        else:
+            print("Invalid draw type")
+
+        return {'FINISHED'}
+
 
 
 

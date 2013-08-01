@@ -199,6 +199,8 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_int_record_bi_t) : sizeof(pspl_object_int_record_t)) * indexer->i_objects_count;
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_hash_record_bi_t) : sizeof(pspl_object_hash_record_t) + sizeof(pspl_hash)) * indexer->ph_objects_count;
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_int_record_bi_t) : sizeof(pspl_object_int_record_t)) * indexer->pi_objects_count;
+        indexer->extension_obj_array_padding = ROUND_UP_32(acc) - acc;
+        acc += indexer->extension_obj_array_padding;
         indexer->extension_obj_data_off = acc;
         for (j=0 ; j<indexer->h_objects_count ; ++j) {
             pspl_indexer_entry_t* ent = indexer->h_objects_array[j];
@@ -207,7 +209,7 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
                 ent->object_big_data = NULL;
             else if (psplp_endianness == PSPL_BIG_ENDIAN)
                 ent->object_little_data = NULL;
-            ent->object_padding = ROUND_UP_4(ent->object_len) - ent->object_len;
+            ent->object_padding = ROUND_UP_32(ent->object_len) - ent->object_len;
             if (ent->object_little_data && ent->object_big_data &&
                 ent->object_little_data != ent->object_big_data)
                 acc += (ent->object_len+ent->object_padding)*2;
@@ -221,7 +223,7 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
                 ent->object_big_data = NULL;
             else if (psplp_endianness == PSPL_BIG_ENDIAN)
                 ent->object_little_data = NULL;
-            ent->object_padding = ROUND_UP_4(ent->object_len) - ent->object_len;
+            ent->object_padding = ROUND_UP_32(ent->object_len) - ent->object_len;
             if (ent->object_little_data && ent->object_big_data &&
                 ent->object_little_data != ent->object_big_data)
                 acc += (ent->object_len+ent->object_padding)*2;
@@ -235,7 +237,7 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
                 ent->object_big_data = NULL;
             else if (psplp_endianness == PSPL_BIG_ENDIAN)
                 ent->object_little_data = NULL;
-            ent->object_padding = ROUND_UP_4(ent->object_len) - ent->object_len;
+            ent->object_padding = ROUND_UP_32(ent->object_len) - ent->object_len;
             if (ent->object_little_data && ent->object_big_data &&
                 ent->object_little_data != ent->object_big_data)
                 acc += (ent->object_len+ent->object_padding)*2;
@@ -249,7 +251,7 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
                 ent->object_big_data = NULL;
             else if (psplp_endianness == PSPL_BIG_ENDIAN)
                 ent->object_little_data = NULL;
-            ent->object_padding = ROUND_UP_4(ent->object_len) - ent->object_len;
+            ent->object_padding = ROUND_UP_32(ent->object_len) - ent->object_len;
             if (ent->object_little_data && ent->object_big_data &&
                 ent->object_little_data != ent->object_big_data)
                 acc += (ent->object_len+ent->object_padding)*2;

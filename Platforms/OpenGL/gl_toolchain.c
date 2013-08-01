@@ -37,7 +37,7 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
     
     // Start with preamble
     pspl_buffer_addstr(vert,
-                       "/* PSPL AUTO-GENERATED VERTEX SHADER SOURCE\n"
+                       "/* PSPL AUTO-GENERATED GLSL VERTEX SHADER SOURCE\n"
                        " * generated for `");
     pspl_buffer_addstr(vert, driver_context->pspl_name);
     pspl_buffer_addstr(vert,
@@ -166,7 +166,7 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
     
     // Start with preamble
     pspl_buffer_addstr(frag,
-                       "/* PSPL AUTO-GENERATED FRAGMENT SHADER SOURCE\n"
+                       "/* PSPL AUTO-GENERATED GLSL FRAGMENT SHADER SOURCE\n"
                        " * generated for `");
     pspl_buffer_addstr(frag, driver_context->pspl_name);
     pspl_buffer_addstr(frag,
