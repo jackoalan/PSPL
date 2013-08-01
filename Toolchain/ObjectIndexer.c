@@ -380,9 +380,9 @@ static void __pspl_indexer_hash_object_post_augment(pspl_indexer_context_t* ctx,
                 for (j=0 ; j<driver_state.tool_ctx->target_runtime_platforms_c ; ++j)
                     if (driver_state.tool_ctx->target_runtime_platforms[j] == *plats) {
                         ctx->plat_array[ctx->plat_count++] = *plats;
-                        new_entry->platform_availability_bits |= 1<<i;
                         break;
                     }
+            new_entry->platform_availability_bits |= 1<<i;
         }
     } else
         new_entry->platform_availability_bits = ~0;
@@ -442,9 +442,9 @@ static void __pspl_indexer_integer_object_post_augment(pspl_indexer_context_t* c
                 for (j=0 ; j<driver_state.tool_ctx->target_runtime_platforms_c ; ++j)
                     if (driver_state.tool_ctx->target_runtime_platforms[j] == *plats) {
                         ctx->plat_array[ctx->plat_count++] = *plats;
-                        new_entry->platform_availability_bits |= 1<<i;
                         break;
                     }
+            new_entry->platform_availability_bits |= 1<<i;
         }
     } else
         new_entry->platform_availability_bits = ~0;
@@ -588,9 +588,9 @@ static void __pspl_indexer_stub_file_post_augment(pspl_indexer_context_t* ctx,
                 for (j=0 ; j<driver_state.tool_ctx->target_runtime_platforms_c ; ++j)
                     if (driver_state.tool_ctx->target_runtime_platforms[j] == *plats) {
                         ctx->plat_array[ctx->plat_count++] = *plats;
-                        new_entry->platform_availability_bits |= 1<<i;
                         break;
                     }
+            new_entry->platform_availability_bits |= 1<<i;
         }
     } else
         new_entry->platform_availability_bits = ~0;
@@ -942,9 +942,9 @@ void pspl_indexer_hash_object_augment(pspl_indexer_context_t* ctx, const pspl_ex
                 for (j=0 ; j<driver_state.tool_ctx->target_runtime_platforms_c ; ++j)
                     if (driver_state.tool_ctx->target_runtime_platforms[j] == *plats) {
                         ctx->plat_array[ctx->plat_count++] = *plats;
-                        new_entry->platform_availability_bits |= 1<<i;
                         break;
                     }
+            new_entry->platform_availability_bits |= 1<<i;
             
             // Ensure platform has appropriate data available
             if ((*plats)->byte_order == PSPL_LITTLE_ENDIAN && !little_data)
@@ -1023,9 +1023,9 @@ void pspl_indexer_integer_object_augment(pspl_indexer_context_t* ctx, const pspl
                 for (j=0 ; j<driver_state.tool_ctx->target_runtime_platforms_c ; ++j)
                     if (driver_state.tool_ctx->target_runtime_platforms[j] == *plats) {
                         ctx->plat_array[ctx->plat_count++] = *plats;
-                        new_entry->platform_availability_bits |= 1<<i;
                         break;
                     }
+            new_entry->platform_availability_bits |= 1<<i;
             
             // Ensure platform has appropriate data available
             if ((*plats)->byte_order == PSPL_LITTLE_ENDIAN && !little_data)
@@ -1277,9 +1277,9 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
                 for (j=0 ; j<driver_state.tool_ctx->target_runtime_platforms_c ; ++j)
                     if (driver_state.tool_ctx->target_runtime_platforms[j] == *plats) {
                         ctx->plat_array[ctx->plat_count++] = *plats;
-                        new_entry->platform_availability_bits |= 1<<i;
                         break;
                     }
+            new_entry->platform_availability_bits |= 1<<i;
         }
     } else
         new_entry->platform_availability_bits = ~0;
@@ -1453,9 +1453,9 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
                 for (j=0 ; j<driver_state.tool_ctx->target_runtime_platforms_c ; ++j)
                     if (driver_state.tool_ctx->target_runtime_platforms[j] == *plats) {
                         ctx->plat_array[ctx->plat_count++] = *plats;
-                        new_entry->platform_availability_bits |= 1<<i;
                         break;
                     }
+            new_entry->platform_availability_bits |= 1<<i;
         }
     } else
         new_entry->platform_availability_bits = ~0;
@@ -1848,10 +1848,6 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
         
     }
     
-    // Write padding after offset array
-    char zero = 0;
-    for (i=0 ; i<ctx->extension_obj_array_padding ; ++i)
-        fwrite(&zero, 1, 1, psplc_file_out);
     
     // Populate and write all per-platform array objects
     for (i=0 ; i<ctx->plat_count ; ++i) {
@@ -1956,116 +1952,107 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
         
     }
     
-    // Write all per-extension array object data blobs
-    for (i=0 ; i<ctx->ext_count ; ++i) {
-        const pspl_extension_t* cur_ext = ctx->ext_array[i];
+    
+    // Write padding after offset array
+    char zero = 0;
+    for (i=0 ; i<ctx->extension_obj_array_padding ; ++i)
+        fwrite(&zero, 1, 1, psplc_file_out);
+    fflush(psplc_file_out);
+    
+    
+    // Extension objects
+    
+    // Hash objects
+    for (j=0 ; j<ctx->h_objects_count ; ++j) {
+        pspl_indexer_entry_t* ent = ctx->h_objects_array[j];
         
-        // Hash objects
-        for (j=0 ; j<ctx->h_objects_count ; ++j) {
-            if (ctx->h_objects_array[j]->owner_ext == cur_ext) {
-                pspl_indexer_entry_t* ent = ctx->h_objects_array[j];
-                
-                if (ent->object_little_data && ent->object_big_data &&
-                    ent->object_little_data != ent->object_big_data) {
-                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-                    for (k=0 ; k<ent->object_padding ; ++k)
-                        fwrite("", 1, 1, psplc_file_out);
-                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-                } else if (ent->object_little_data)
-                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-                else
-                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-                for (k=0 ; k<ent->object_padding ; ++k)
-                    fwrite("", 1, 1, psplc_file_out);
-                
-            }
-            
-            // DEBUG
-            //foff = ftell(psplc_file_out);
-            
-        }
+        if (ent->object_little_data && ent->object_big_data &&
+            ent->object_little_data != ent->object_big_data) {
+            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+            for (k=0 ; k<ent->object_padding ; ++k)
+                fwrite("", 1, 1, psplc_file_out);
+            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+        } else if (ent->object_little_data)
+            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+        else
+            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+        for (k=0 ; k<ent->object_padding ; ++k)
+            fwrite("", 1, 1, psplc_file_out);
         
         
-        // Int objects
-        for (j=0 ; j<ctx->i_objects_count ; ++j) {
-            if (ctx->i_objects_array[j]->owner_ext == cur_ext) {
-                pspl_indexer_entry_t* ent = ctx->i_objects_array[j];
-                
-                if (ent->object_little_data && ent->object_big_data &&
-                    ent->object_little_data != ent->object_big_data) {
-                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-                    for (k=0 ; k<ent->object_padding ; ++k)
-                        fwrite("", 1, 1, psplc_file_out);
-                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-                } else if (ent->object_little_data)
-                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-                else
-                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-                for (k=0 ; k<ent->object_padding ; ++k)
-                    fwrite("", 1, 1, psplc_file_out);
-                
-            }
-            
-            // DEBUG
-            //foff = ftell(psplc_file_out);
-            
-        }
+        // DEBUG
+        //foff = ftell(psplc_file_out);
         
     }
     
-    // Write all per-platform array object data blobs
-    for (i=0 ; i<ctx->plat_count ; ++i) {
-        const pspl_platform_t* cur_plat = ctx->plat_array[i];
+    
+    // Int objects
+    for (j=0 ; j<ctx->i_objects_count ; ++j) {
+        pspl_indexer_entry_t* ent = ctx->i_objects_array[j];
         
-        // Hash objects
-        for (j=0 ; j<ctx->ph_objects_count ; ++j) {
-            if (ctx->ph_objects_array[j]->owner_plat == cur_plat) {
-                pspl_indexer_entry_t* ent = ctx->ph_objects_array[j];
-                
-                if (ent->object_little_data && ent->object_big_data &&
-                    ent->object_little_data != ent->object_big_data) {
-                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-                    for (k=0 ; k<ent->object_padding ; ++k)
-                        fwrite("", 1, 1, psplc_file_out);
-                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-                } else if (ent->object_little_data)
-                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-                else
-                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-                for (k=0 ; k<ent->object_padding ; ++k)
-                    fwrite("", 1, 1, psplc_file_out);
-                
-            }
-            // DEBUG
-            //foff = ftell(psplc_file_out);
-            
-        }
+        if (ent->object_little_data && ent->object_big_data &&
+            ent->object_little_data != ent->object_big_data) {
+            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+            for (k=0 ; k<ent->object_padding ; ++k)
+                fwrite("", 1, 1, psplc_file_out);
+            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+        } else if (ent->object_little_data)
+            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+        else
+            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+        for (k=0 ; k<ent->object_padding ; ++k)
+            fwrite("", 1, 1, psplc_file_out);
         
+        // DEBUG
+        //foff = ftell(psplc_file_out);
         
-        // Int objects
-        for (j=0 ; j<ctx->pi_objects_count ; ++j) {
-            if (ctx->pi_objects_array[j]->owner_plat == cur_plat) {
-                pspl_indexer_entry_t* ent = ctx->pi_objects_array[j];
-                
-                if (ent->object_little_data && ent->object_big_data &&
-                    ent->object_little_data != ent->object_big_data) {
-                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-                    for (k=0 ; k<ent->object_padding ; ++k)
-                        fwrite("", 1, 1, psplc_file_out);
-                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-                } else if (ent->object_little_data)
-                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-                else
-                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-                for (k=0 ; k<ent->object_padding ; ++k)
-                    fwrite("", 1, 1, psplc_file_out);
-                
-            }
-            
-            // DEBUG
-            //foff = ftell(psplc_file_out);
-            
-        }
+    }
+    
+    
+    // Platform objects
+    
+    // Hash objects
+    for (j=0 ; j<ctx->ph_objects_count ; ++j) {
+        pspl_indexer_entry_t* ent = ctx->ph_objects_array[j];
+        
+        if (ent->object_little_data && ent->object_big_data &&
+            ent->object_little_data != ent->object_big_data) {
+            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+            for (k=0 ; k<ent->object_padding ; ++k)
+                fwrite("", 1, 1, psplc_file_out);
+            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+        } else if (ent->object_little_data)
+            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+        else
+            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+        for (k=0 ; k<ent->object_padding ; ++k)
+            fwrite("", 1, 1, psplc_file_out);
+        
+        // DEBUG
+        //foff = ftell(psplc_file_out);
+        
+    }
+    
+    
+    // Int objects
+    for (j=0 ; j<ctx->pi_objects_count ; ++j) {
+        pspl_indexer_entry_t* ent = ctx->pi_objects_array[j];
+        
+        if (ent->object_little_data && ent->object_big_data &&
+            ent->object_little_data != ent->object_big_data) {
+            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+            for (k=0 ; k<ent->object_padding ; ++k)
+                fwrite("", 1, 1, psplc_file_out);
+            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+        } else if (ent->object_little_data)
+            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+        else
+            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+        for (k=0 ; k<ent->object_padding ; ++k)
+            fwrite("", 1, 1, psplc_file_out);
+        
+        // DEBUG
+        //foff = ftell(psplc_file_out);
         
     }
     

@@ -33,7 +33,6 @@
 		E44577E21781DEB8003EE09C /* SMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C5270E1778A32D00D1D822 /* SMRuntime.c */; };
 		E44577E31781DEB8003EE09C /* IRRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E48FF5611764CF31000231AA /* IRRuntime.c */; };
 		E44577E61781DEB8003EE09C /* PSPLRuntimeThreads.h in Headers */ = {isa = PBXBuildFile; fileRef = E4C527101778A4FF00D1D822 /* PSPLRuntimeThreads.h */; };
-		E44577EB1781DF97003EE09C /* RuntimeThreads.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C527141778B71900D1D822 /* RuntimeThreads.c */; };
 		E447F7FA17749CB90081E1DF /* CalcChain.c in Sources */ = {isa = PBXBuildFile; fileRef = E49E051C176A04AA002E1492 /* CalcChain.c */; };
 		E447F7FC1774A6780081E1DF /* CalcChain.c in Sources */ = {isa = PBXBuildFile; fileRef = E49E051C176A04AA002E1492 /* CalcChain.c */; };
 		E45034CE175813440079B62D /* libTEST-RUNTIME.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E4E4918017510B35006FCA59 /* libTEST-RUNTIME.a */; };
@@ -49,6 +48,7 @@
 		E4600020179D78520013FE3A /* PMDLRuntimeProcessing.c in Sources */ = {isa = PBXBuildFile; fileRef = E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */; };
 		E462EEA71778C12F00211193 /* PSPLRuntimeThreads.h in Headers */ = {isa = PBXBuildFile; fileRef = E4C527101778A4FF00D1D822 /* PSPLRuntimeThreads.h */; };
 		E462EEA91778FC5B00211193 /* gl_runtime_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = E462EEA81778FC0200211193 /* gl_runtime_ios.m */; };
+		E464158117AAF3EF00CC1CC2 /* RuntimeThreads.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C527141778B71900D1D822 /* RuntimeThreads.c */; };
 		E48FF5601764CF29000231AA /* IRToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E48FF55F1764CF29000231AA /* IRToolchain.c */; };
 		E48FF5631764D91C000231AA /* IRRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E48FF5611764CF31000231AA /* IRRuntime.c */; };
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
@@ -945,7 +945,7 @@
 			files = (
 				E462EEA91778FC5B00211193 /* gl_runtime_ios.m in Sources */,
 				E4E4918517510B4D006FCA59 /* gl_runtime.c in Sources */,
-				E44577EB1781DF97003EE09C /* RuntimeThreads.c in Sources */,
+				E464158117AAF3EF00CC1CC2 /* RuntimeThreads.c in Sources */,
 				E44577C11781DDAE003EE09C /* PMDLRuntime.c in Sources */,
 				E4C5E8B7177E1BAC00D73E7D /* TMRuntime.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,

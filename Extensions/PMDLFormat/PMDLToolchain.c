@@ -84,7 +84,7 @@ static void finish_hook(const pspl_toolchain_context_t* driver_context) {
         pmdl_ref_entry* entries = entries_buf + sizeof(pmdl_bi_integer);
         for (i=0 ; i<gen_refs.object_num ; ++i)
             entries[i] = *((pmdl_ref_entry*)gen_refs.object_arr[i]);
-        pspl_embed_hash_keyed_object(general_plats, "PMDL_References", entries, entries, buf_sz);
+        pspl_embed_hash_keyed_object(general_plats, "PMDL_References", entries_buf, entries_buf, buf_sz);
         free(entries_buf);
 
     }
@@ -98,8 +98,8 @@ static void finish_hook(const pspl_toolchain_context_t* driver_context) {
         pmdl_ref_entry* entries = entries_buf + sizeof(pmdl_bi_integer);
         for (i=0 ; i<gx_refs.object_num ; ++i)
             entries[i] = *((pmdl_ref_entry*)gx_refs.object_arr[i]);
-        pspl_embed_hash_keyed_object(gx_plats, "PMDL_References", entries, entries, buf_sz);
-        free(entries);
+        pspl_embed_hash_keyed_object(gx_plats, "PMDL_References", entries_buf, entries_buf, buf_sz);
+        free(entries_buf);
         
     }
     
