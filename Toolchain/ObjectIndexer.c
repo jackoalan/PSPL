@@ -1596,6 +1596,7 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
     
     // DEBUG
     //size_t foff = ftell(psplc_file_out);
+    printf("Wrote Beginning: %zu\n", ftell(psplc_file_out));
     
     // Populate PSPLC object header
     pspl_psplc_header_bi_t psplc_header;
@@ -1617,10 +1618,13 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
             break;
     }
     
+    printf("Wrote p1: %zu\n", ftell(psplc_file_out));
+
     // DEBUG
     //foff = ftell(psplc_file_out);
     
     // Populate and write all per-extension array heading structures
+    printf("AHH %u\n",ctx->ext_count);
     for (i=0 ; i<ctx->ext_count ; ++i) {
         const pspl_extension_t* cur_ext = ctx->ext_array[i];
         uint32_t hash_count = 0, int_count = 0;
@@ -1681,6 +1685,9 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
         //foff = ftell(psplc_file_out);
         
     }
+    
+    printf("Wrote p2: %zu\n", ftell(psplc_file_out));
+
     
     // Populate and write all per-platform array heading structures
     for (i=0 ; i<ctx->plat_count ; ++i) {
@@ -1743,6 +1750,10 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
         //foff = ftell(psplc_file_out);
         
     }
+    
+    
+    printf("Wrote p3: %zu\n", ftell(psplc_file_out));
+
     
     // Populate and write all per-extension array objects
     for (i=0 ; i<ctx->ext_count ; ++i) {
@@ -1957,105 +1968,125 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
     char zero = 0;
     for (i=0 ; i<ctx->extension_obj_array_padding ; ++i)
         fwrite(&zero, 1, 1, psplc_file_out);
-    fflush(psplc_file_out);
     
     
-    // Extension objects
+    printf("Wrote: %zu\n", ftell(psplc_file_out));
     
-    // Hash objects
-    for (j=0 ; j<ctx->h_objects_count ; ++j) {
-        pspl_indexer_entry_t* ent = ctx->h_objects_array[j];
+    // Per-Extension object data blobs
+    for (i=0 ; i<ctx->ext_count ; ++i) {
+        const pspl_extension_t* cur_ext = ctx->ext_array[i];
         
-        if (ent->object_little_data && ent->object_big_data &&
-            ent->object_little_data != ent->object_big_data) {
-            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-            for (k=0 ; k<ent->object_padding ; ++k)
+        
+        // Hash objects
+        for (j=0 ; j<ctx->h_objects_count ; ++j) {
+            pspl_indexer_entry_t* ent = ctx->h_objects_array[j];
+            if (ent->owner_ext == cur_ext) {
+                
+                if (ent->object_little_data && ent->object_big_data &&
+                    ent->object_little_data != ent->object_big_data) {
+                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+                    for (k=0 ; k<ent->object_padding ; ++k)
+                    fwrite("", 1, 1, psplc_file_out);
+                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+                } else if (ent->object_little_data)
+                fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+                else
+                fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+                for (k=0 ; k<ent->object_padding ; ++k)
                 fwrite("", 1, 1, psplc_file_out);
-            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-        } else if (ent->object_little_data)
-            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-        else
-            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-        for (k=0 ; k<ent->object_padding ; ++k)
-            fwrite("", 1, 1, psplc_file_out);
+                
+                
+                // DEBUG
+                //foff = ftell(psplc_file_out);
+            }
+            
+        }
         
         
-        // DEBUG
-        //foff = ftell(psplc_file_out);
+        // Int objects
+        for (j=0 ; j<ctx->i_objects_count ; ++j) {
+            pspl_indexer_entry_t* ent = ctx->i_objects_array[j];
+            if (ent->owner_ext == cur_ext) {
+                
+                if (ent->object_little_data && ent->object_big_data &&
+                    ent->object_little_data != ent->object_big_data) {
+                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+                    for (k=0 ; k<ent->object_padding ; ++k)
+                    fwrite("", 1, 1, psplc_file_out);
+                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+                } else if (ent->object_little_data)
+                fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+                else
+                fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+                for (k=0 ; k<ent->object_padding ; ++k)
+                fwrite("", 1, 1, psplc_file_out);
+                
+                // DEBUG
+                //foff = ftell(psplc_file_out);
+            }
+                
+        }
         
     }
     
     
-    // Int objects
-    for (j=0 ; j<ctx->i_objects_count ; ++j) {
-        pspl_indexer_entry_t* ent = ctx->i_objects_array[j];
+    // Per-Platform data object blobs
+    for (i=0 ; i<ctx->plat_count ; ++i) {
+        const pspl_platform_t* cur_plat = ctx->plat_array[i];
         
-        if (ent->object_little_data && ent->object_big_data &&
-            ent->object_little_data != ent->object_big_data) {
-            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-            for (k=0 ; k<ent->object_padding ; ++k)
+        
+        // Hash objects
+        for (j=0 ; j<ctx->ph_objects_count ; ++j) {
+            pspl_indexer_entry_t* ent = ctx->ph_objects_array[j];
+            if (ent->owner_plat == cur_plat) {
+                
+                if (ent->object_little_data && ent->object_big_data &&
+                    ent->object_little_data != ent->object_big_data) {
+                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+                    for (k=0 ; k<ent->object_padding ; ++k)
+                    fwrite("", 1, 1, psplc_file_out);
+                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+                } else if (ent->object_little_data)
+                fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+                else
+                fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+                for (k=0 ; k<ent->object_padding ; ++k)
                 fwrite("", 1, 1, psplc_file_out);
-            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-        } else if (ent->object_little_data)
-            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-        else
-            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-        for (k=0 ; k<ent->object_padding ; ++k)
-            fwrite("", 1, 1, psplc_file_out);
+                
+                // DEBUG
+                //foff = ftell(psplc_file_out);
+            }
+            
+        }
         
-        // DEBUG
-        //foff = ftell(psplc_file_out);
+        
+        // Int objects
+        for (j=0 ; j<ctx->pi_objects_count ; ++j) {
+            pspl_indexer_entry_t* ent = ctx->pi_objects_array[j];
+            if (ent->owner_plat == cur_plat) {
+                
+                if (ent->object_little_data && ent->object_big_data &&
+                    ent->object_little_data != ent->object_big_data) {
+                    fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+                    for (k=0 ; k<ent->object_padding ; ++k)
+                    fwrite("", 1, 1, psplc_file_out);
+                    fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+                } else if (ent->object_little_data)
+                fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
+                else
+                fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
+                for (k=0 ; k<ent->object_padding ; ++k)
+                fwrite("", 1, 1, psplc_file_out);
+                
+                // DEBUG
+                //foff = ftell(psplc_file_out);
+            }
+            
+        }
         
     }
-    
-    
-    // Platform objects
-    
-    // Hash objects
-    for (j=0 ; j<ctx->ph_objects_count ; ++j) {
-        pspl_indexer_entry_t* ent = ctx->ph_objects_array[j];
-        
-        if (ent->object_little_data && ent->object_big_data &&
-            ent->object_little_data != ent->object_big_data) {
-            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-            for (k=0 ; k<ent->object_padding ; ++k)
-                fwrite("", 1, 1, psplc_file_out);
-            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-        } else if (ent->object_little_data)
-            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-        else
-            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-        for (k=0 ; k<ent->object_padding ; ++k)
-            fwrite("", 1, 1, psplc_file_out);
-        
-        // DEBUG
-        //foff = ftell(psplc_file_out);
-        
-    }
-    
-    
-    // Int objects
-    for (j=0 ; j<ctx->pi_objects_count ; ++j) {
-        pspl_indexer_entry_t* ent = ctx->pi_objects_array[j];
-        
-        if (ent->object_little_data && ent->object_big_data &&
-            ent->object_little_data != ent->object_big_data) {
-            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-            for (k=0 ; k<ent->object_padding ; ++k)
-                fwrite("", 1, 1, psplc_file_out);
-            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-        } else if (ent->object_little_data)
-            fwrite(ent->object_little_data, 1, ent->object_len, psplc_file_out);
-        else
-            fwrite(ent->object_big_data, 1, ent->object_len, psplc_file_out);
-        for (k=0 ; k<ent->object_padding ; ++k)
-            fwrite("", 1, 1, psplc_file_out);
-        
-        // DEBUG
-        //foff = ftell(psplc_file_out);
-        
-    }
-    
+    printf("Wrote End: %zu\n", ftell(psplc_file_out));
+
 }
 
 /* Write out to PSPLC file */

@@ -116,6 +116,8 @@ typedef struct _pspl_indexer_context {
     
     uint32_t extension_obj_blobs_len;
     
+    //uint32_t extension_obj_padding;
+    
 } pspl_indexer_context_t;
 
 /* This type is castable from `pspl_indexer_context_t` *and* `pspl_packager_context_t` */

@@ -220,7 +220,7 @@ class pmdl_draw_general:
             # Add tri-strip to element array
             best_collection['tri_strips'].append({'mesh':obj, 'strip':tri_strip})
             
-        print("GPU will receive", opt_gpu_vert_count, "unified vertices out of", len(mesh.loops), "original vertices")
+        print("GPU will receive", opt_gpu_vert_count, "unified tri-strip vertices out of", len(mesh.loops), "original vertices")
         print("Mesh contains", len(mesh.polygons), "triangles\n")
 
 
