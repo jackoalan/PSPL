@@ -54,6 +54,12 @@ typedef struct _pspl_loaded_package pspl_runtime_package_t;
 
 
 /**
+ * Opaque duplicate data provider handle 
+ */
+#define MAX_DATA_PROVIDER_HANDLE_SZ 32
+typedef uint8_t pspl_dup_data_provider_handle_t[MAX_DATA_PROVIDER_HANDLE_SZ];
+
+/**
  * Data provider type
  */
 typedef struct {
@@ -78,6 +84,14 @@ typedef struct {
     
     /**< Read count of bytes from handle into already-allocated buffer (returning bytes read) */
     size_t(*read_direct)(const void* handle, size_t num_bytes, void* data_buf);
+    
+    
+    /**< Duplicate data provider handle (for potential multi-threaded loading scenarios) 
+     * Used by PSPL's own `access archived file` routine */
+    void(*duplicate_handle)(pspl_dup_data_provider_handle_t* dup_handle, const void* handle);
+    
+    /**< Destroy duplicate data provider handle */
+    void(*destroy_duplicate_handle)(pspl_dup_data_provider_handle_t* dup_handle);
     
 } pspl_data_provider_t;
 
@@ -294,10 +308,12 @@ void pspl_runtime_retain_archived_file(const pspl_runtime_arc_file_t* file);
 void pspl_runtime_release_archived_file(const pspl_runtime_arc_file_t* file);
 
 /**
- * Get pre-seeked FILE pointer and length of archived file
+ * Create duplicate, pre-seeked FILE pointer and length of archived file
  *
  * An advanced API to bypass the reference-counted loading mechanism of
  * pspl-rt and receive a FILE pointer ready to load data from disk directly
+ *
+ * The handle is duplicated so that it may be used from a different thread (if need be)
  *
  * @param file Archived file object
  * @param provider_hooks_out Hook structure used to access data
@@ -307,8 +323,19 @@ void pspl_runtime_release_archived_file(const pspl_runtime_arc_file_t* file);
  */
 int pspl_runtime_access_archived_file(const pspl_runtime_arc_file_t* file,
                                       const pspl_data_provider_t** provider_hooks_out,
-                                      const void** provider_handle_out,
+                                      pspl_dup_data_provider_handle_t* provider_handle_out,
                                       size_t* len_out);
+
+/**
+ * Destroy duplicate, pre-seeked FILE pointer
+ *
+ * This should be called sometime after each `pspl_runtime_access_archived_file`
+ *
+ * @param provider_hooks Hook structure used to access data
+ * @param provider_handle File instance containing requested data
+ */
+#define pspl_runtime_unaccess_archived_file(provider_hooks, provider_handle) (provider_hooks)->destroy_duplicate_handle(provider_handle)
+
 
 /** @} */
 

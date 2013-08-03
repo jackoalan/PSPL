@@ -154,7 +154,7 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
                    "TextureManager unable to access texture with data hash '%s'", hash);
     }
     const pspl_data_provider_t* provider_hooks;
-    const void* provider_handle;
+    pspl_dup_data_provider_handle_t provider_handle;
     size_t length = 0;
     pspl_runtime_access_archived_file(file, &provider_hooks, &provider_handle, &length);
     size_t init_off = provider_hooks->tell(provider_handle);
@@ -163,7 +163,7 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
     uint8_t meta_buf[256];
     provider_hooks->read_direct(provider_handle, 256, meta_buf);
     pspl_tm_texture_head_t* tex_head = (pspl_tm_texture_head_t*)&meta_buf[0];
-    const char* tex_type = (char*)&meta_buf[sizeof(pspl_tm_texture_head_t)];
+    const char* tex_type = (char*)(meta_buf + sizeof(pspl_tm_texture_head_t));
     
     // Determine texture type
     enum TEX_FORMAT format = 0;
@@ -400,6 +400,8 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
         free(tex_buf);
     
 #   endif
+    
+    pspl_runtime_unaccess_archived_file(provider_hooks, &provider_handle);
     
     return 0;
 }

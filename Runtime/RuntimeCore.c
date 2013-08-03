@@ -15,6 +15,7 @@
 
 #ifndef _WIN32
 #include <sys/ioctl.h>
+#include <sys/param.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -263,6 +264,7 @@ void pspl_warn(const char* brief, const char* msg, ...) {
 struct stdio_handle {
     pspl_malloc_context_t mem_ctx;
     FILE* file;
+    char original_path[MAXPATHLEN];
 };
 
 struct mem_handle {
@@ -1169,15 +1171,17 @@ static int load_psplp(pspl_runtime_package_t* package) {
 
 static int stdio_open(void* handle, const char* path) {
     struct stdio_handle* stdio = ((struct stdio_handle*)handle);
+    strlcpy(stdio->original_path, path, MAXPATHLEN);
     stdio->file = fopen(path, "r");
     if (!stdio->file)
         return -1;
-    pspl_malloc_context_init(&stdio->mem_ctx);
+    stdio->mem_ctx.object_arr = NULL;
     return 0;
 }
 static void stdio_close(const void* handle) {
     struct stdio_handle* stdio = ((struct stdio_handle*)handle);
-    pspl_malloc_context_destroy(&stdio->mem_ctx);
+    if (stdio->mem_ctx.object_arr)
+        pspl_malloc_context_destroy(&stdio->mem_ctx);
     fclose(stdio->file);
 }
 static size_t stdio_len(const void* handle) {
@@ -1195,6 +1199,8 @@ static size_t stdio_tell(const void* handle) {
 }
 static size_t stdio_read(const void* handle, size_t num_bytes, void** data_out) {
     struct stdio_handle* stdio = ((struct stdio_handle*)handle);
+    if (!stdio->mem_ctx.object_arr)
+        pspl_malloc_context_init(&stdio->mem_ctx);
     void* buf = pspl_malloc_malloc(&stdio->mem_ctx, num_bytes);
     *data_out = buf;
     return fread(buf, 1, num_bytes, stdio->file);
@@ -1203,6 +1209,18 @@ static size_t stdio_read_direct(const void* handle, size_t num_bytes, void* data
     struct stdio_handle* stdio = ((struct stdio_handle*)handle);
     return fread(data_buf, 1, num_bytes, stdio->file);
 }
+static void stdio_duplicate_handle(pspl_dup_data_provider_handle_t* dup_handle, const void* handle) {
+    struct stdio_handle* stdio = ((struct stdio_handle*)handle);
+    struct stdio_handle* dup_stdio = ((struct stdio_handle*)dup_handle);
+    dup_stdio->file = fopen(stdio->original_path, "r");
+    dup_stdio->mem_ctx.object_arr = NULL;
+}
+static void stdio_destroy_duplicate_handle(pspl_dup_data_provider_handle_t* dup_handle) {
+    struct stdio_handle* dup_stdio = ((struct stdio_handle*)dup_handle);
+    fclose(dup_stdio->file);
+    if (dup_stdio->mem_ctx.object_arr)
+        pspl_malloc_context_destroy(&dup_stdio->mem_ctx);
+}
 static const pspl_data_provider_t stdio = {
     .open = stdio_open,
     .close = stdio_close,
@@ -1210,7 +1228,9 @@ static const pspl_data_provider_t stdio = {
     .seek = stdio_seek,
     .tell = stdio_tell,
     .read = stdio_read,
-    .read_direct = stdio_read_direct
+    .read_direct = stdio_read_direct,
+    .duplicate_handle = stdio_duplicate_handle,
+    .destroy_duplicate_handle = stdio_destroy_duplicate_handle
 };
 
 /**
@@ -1291,6 +1311,16 @@ static size_t mem_read_direct(const void* handle, size_t num_bytes, void* data_b
     mem->cur += num_bytes;
     return rem;
 }
+static void mem_duplicate_handle(pspl_dup_data_provider_handle_t* dup_handle, const void* handle) {
+    struct mem_handle* mem = ((struct mem_handle*)handle);
+    struct mem_handle* dup_mem = ((struct mem_handle*)dup_handle);
+    dup_mem->data = mem->data;
+    dup_mem->cur = mem->data;
+    dup_mem->len = mem->len;
+}
+static void mem_destroy_duplicate_handle(pspl_dup_data_provider_handle_t* dup_handle) {
+    // Nothing to do!
+}
 static const pspl_data_provider_t membuf = {
     .open = mem_open,
     .close = mem_close,
@@ -1298,7 +1328,9 @@ static const pspl_data_provider_t membuf = {
     .seek = mem_seek,
     .tell = mem_tell,
     .read = mem_read,
-    .read_direct = mem_read_direct
+    .read_direct = mem_read_direct,
+    .duplicate_handle = mem_duplicate_handle,
+    .destroy_duplicate_handle = mem_destroy_duplicate_handle
 };
 
 /**
@@ -1790,10 +1822,12 @@ void pspl_runtime_release_archived_file(const pspl_runtime_arc_file_t* file) {
 }
 
 /**
- * Get pre-seeked FILE pointer and length of archived file
+ * Create duplicate, pre-seeked FILE pointer and length of archived file
  *
  * An advanced API to bypass the reference-counted loading mechanism of
  * pspl-rt and receive a FILE pointer ready to load data from disk directly
+ *
+ * The handle is duplicated so that it may be used from a different thread (if need be)
  *
  * @param file Archived file object
  * @param provider_hooks_out Hook structure used to access data
@@ -1803,16 +1837,17 @@ void pspl_runtime_release_archived_file(const pspl_runtime_arc_file_t* file) {
  */
 int pspl_runtime_access_archived_file(const pspl_runtime_arc_file_t* file,
                                       const pspl_data_provider_t** provider_hooks_out,
-                                      const void** provider_handle_out,
+                                      pspl_dup_data_provider_handle_t* provider_handle_out,
                                       size_t* len_out) {
     if (!file || !provider_handle_out || !provider_hooks_out)
         return -1;
     const _pspl_runtime_arc_file_t* obj = (_pspl_runtime_arc_file_t*)file;
     *provider_hooks_out = file->parent->provider_hooks;
-    *provider_handle_out = PACKAGE_PROVIDER(file->parent);
+    const void* provider_handle = PACKAGE_PROVIDER(file->parent);
+    (*provider_hooks_out)->duplicate_handle(provider_handle_out, provider_handle);
     if (len_out)
         *len_out = obj->public.file_len;
-    (*provider_hooks_out)->seek(*provider_handle_out, obj->file_off);
+    (*provider_hooks_out)->seek(provider_handle_out, obj->file_off);
     return 0;
 }
 
