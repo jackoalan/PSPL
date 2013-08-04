@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <math.h>
 
 #include <OpenGL/OpenGL.h>
 #include <GLUT/GLUT.h>
@@ -27,18 +28,24 @@ static const pspl_runtime_arc_file_t* monkey_model;
 
 static void renderfunc() {
     
-    glUseProgram(0);
     
     glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    glEnable(GL_DEPTH_TEST);
     
     // Current time
     struct timeval tv;
     gettimeofday(&tv, NULL);
     double time = tv.tv_sec + ((double)tv.tv_usec / (double)USEC_PER_SEC);
 
+    // Rotate camera around monkey
+    monkey_ctx.camera_view.pos[0] = sin(time) * 5;
+    monkey_ctx.camera_view.pos[2] = cos(time) * 5;
+    pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_VIEW);
     
     // Draw monkey
+    glDisable(GL_CULL_FACE);
     pmdl_draw(&monkey_ctx, monkey_model);
     glUseProgram(0);
     
@@ -53,7 +60,9 @@ static void renderfunc() {
     char fps_str[128];
     snprintf(fps_str, 128, "FPS: %.f", fps);
     size_t fps_str_len = strlen(fps_str);
-        
+    
+    glDisable(GL_DEPTH_TEST);
+    
     // Render
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -111,18 +120,18 @@ int main(int argc, char* argv[]) {
     monkey_ctx.model_mtx[1][1] = 1;
     monkey_ctx.model_mtx[2][2] = 1;
     monkey_ctx.camera_view.pos[0] = 0;
-    monkey_ctx.camera_view.pos[1] = -5;
-    monkey_ctx.camera_view.pos[2] = 0;
+    monkey_ctx.camera_view.pos[1] = 0;
+    monkey_ctx.camera_view.pos[2] = 5;
     monkey_ctx.camera_view.look[0] = 0;
-    monkey_ctx.camera_view.look[1] = 1;
+    monkey_ctx.camera_view.look[1] = 0;
     monkey_ctx.camera_view.look[2] = 0;
     monkey_ctx.camera_view.up[0] = 0;
-    monkey_ctx.camera_view.up[1] = 0;
-    monkey_ctx.camera_view.up[2] = 1;
+    monkey_ctx.camera_view.up[1] = 1;
+    monkey_ctx.camera_view.up[2] = 0;
     monkey_ctx.projection_type = PMDL_PERSPECTIVE;
     monkey_ctx.projection.perspective.fov = 55;
-    monkey_ctx.projection.perspective.far = 20;
-    monkey_ctx.projection.perspective.near = 2;
+    monkey_ctx.projection.perspective.far = 5;
+    monkey_ctx.projection.perspective.near = 1;
     monkey_ctx.projection.perspective.aspect = 1.3333;
     monkey_ctx.projection.perspective.post_translate_x = 0;
     monkey_ctx.projection.perspective.post_translate_y = 0;
