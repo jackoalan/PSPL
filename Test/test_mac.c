@@ -15,10 +15,15 @@
 #include <GLUT/GLUT.h>
 
 #include <PSPLRuntime.h>
+#include <PMDLRuntime.h>
 
+static unsigned frame_count = 0;
 static double last_render_time = 0;
-static double fps_avg = 0;
+static double fps = 0;
 #define USEC_PER_SEC 1000000
+
+static pmdl_draw_context_t monkey_ctx;
+static const pspl_runtime_arc_file_t* monkey_model;
 
 static void renderfunc() {
     
@@ -26,21 +31,29 @@ static void renderfunc() {
     
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
-        
+    
+    // Current time
     struct timeval tv;
     gettimeofday(&tv, NULL);
     double time = tv.tv_sec + ((double)tv.tv_usec / (double)USEC_PER_SEC);
-    double diff = time - last_render_time;
+
     
-    fps_avg *= 14.0/15.0;
-    fps_avg += 1.0/diff/15.0;
+    // Draw monkey
+    pmdl_draw(&monkey_ctx, monkey_model);
+    glUseProgram(0);
+    
+    if (!((frame_count)%10)) {
+        double diff = time - last_render_time;
+        last_render_time = time;
+        if (frame_count)
+            fps = 10.0/diff;
+    }
+    ++frame_count;
     
     char fps_str[128];
-    snprintf(fps_str, 128, "FPS: %.f", fps_avg);
+    snprintf(fps_str, 128, "FPS: %.f", fps);
     size_t fps_str_len = strlen(fps_str);
-    
-    last_render_time = time;
-    
+        
     // Render
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -90,6 +103,35 @@ int main(int argc, char* argv[]) {
     const pspl_runtime_package_t* package = NULL;
     pspl_runtime_load_package_file("rtest.psplp", &package);
     pspl_runtime_enumerate_psplcs(package, enumerate_psplc_hook);
+    
+    // Setup monkey rendering context
+    memset(monkey_ctx.texcoord_mtx, 0, 8*sizeof(pspl_matrix34_t));
+    memset(monkey_ctx.model_mtx, 0, sizeof(pspl_matrix34_t));
+    monkey_ctx.model_mtx[0][0] = 1;
+    monkey_ctx.model_mtx[1][1] = 1;
+    monkey_ctx.model_mtx[2][2] = 1;
+    monkey_ctx.camera_view.pos[0] = 0;
+    monkey_ctx.camera_view.pos[1] = -5;
+    monkey_ctx.camera_view.pos[2] = 0;
+    monkey_ctx.camera_view.look[0] = 0;
+    monkey_ctx.camera_view.look[1] = 1;
+    monkey_ctx.camera_view.look[2] = 0;
+    monkey_ctx.camera_view.up[0] = 0;
+    monkey_ctx.camera_view.up[1] = 0;
+    monkey_ctx.camera_view.up[2] = 1;
+    monkey_ctx.projection_type = PMDL_PERSPECTIVE;
+    monkey_ctx.projection.perspective.fov = 55;
+    monkey_ctx.projection.perspective.far = 20;
+    monkey_ctx.projection.perspective.near = 2;
+    monkey_ctx.projection.perspective.aspect = 1.3333;
+    monkey_ctx.projection.perspective.post_translate_x = 0;
+    monkey_ctx.projection.perspective.post_translate_y = 0;
+    pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_ALL);
+    
+    // Load monkey
+    const pspl_runtime_psplc_t* rtest = pspl_runtime_get_psplc_from_key(package, "rtest", 1);
+    monkey_ctx.default_shader = rtest;
+    monkey_model = pmdl_lookup(rtest, "monkey");
     
     // Start rendering
     glutMainLoop();

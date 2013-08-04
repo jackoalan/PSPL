@@ -11,7 +11,6 @@
 
 #include "PMDLRuntimeLinAlgebra.h"
 
-#define DegToRad(a)   ( (a) *  0.01745329252f )
 
 void _pmdl_matrix_orthographic(pspl_matrix44_t mt, float t, float b, float l,
                                float r, float n, float f) {

@@ -60,6 +60,10 @@ static struct _pspl_compiler_state {
     // Resolved extension for heading (NULL if 'GLOBAL' heading)
     const pspl_extension_t* heading_extension;
     
+    // Line-read-only mode
+    int next_line_read_only;
+    int line_read_only;
+    
 } compiler_state;
 
 
@@ -321,6 +325,10 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
     // Propogate source reference
     compiler_state.source = source;
     
+    // Line read only off
+    compiler_state.next_line_read_only = 0;
+    compiler_state.line_read_only = 0;
+    
     
     // Determine purpose of each line and handle appropriately
     driver_state.line_num = 0;
@@ -394,470 +402,490 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
         
         
         char* line_buf = NULL;
-        if (!in_com) {
-            
-#           pragma mark Scan For Whitespace
-            
-            // This line is whitespace if first character is newline
-            if (*cur_line == '\n') {
-                
-                ++white_line_count;
-                continue;
-                
-            } else if (white_line_count && compiler_state.heading_extension &&
-                       compiler_state.heading_extension->toolchain_extension) {
-                
-                pspl_toolchain_whitespace_line_read_hook ws_hook =
-                compiler_state.heading_extension->toolchain_extension->whitespace_line_read_hook;
-                
-                // Advise current heading extension that whitespace has occured
-                if (ws_hook) {
-                    
-                    // Set callout context accordingly
-                    driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
-                    driver_state.proc_extension = compiler_state.heading_extension;
-                    
-                    // Call hook
-                    ws_hook(ext_driver_ctx, compiler_state.heading_context, white_line_count);
-                    
-                    // Unset callout context
-                    driver_state.pspl_phase = PSPL_PHASE_COMPILE;
-                    
-                }
-                
-            }
-            white_line_count = 0;
-            
-            
-            
-#           pragma mark Indent Context
-            
-            // Set indent context accordingly (after whitespace since it doesn't count)
-            if (indent_level > compiler_state.indent_context->indent_level)
-                indent_level = compiler_state.indent_context->indent_level + 1;
-            else { // Deallocate same-and-higher-level contexts and bring stack down
-                int down_level = compiler_state.indent_context->indent_level;
-                while (indent_level <= down_level) {
-                    pspl_toolchain_indent_read_t* de_ctx = &indent_ctx_stack[down_level];
-                    free((void*)de_ctx->line_text);
-                    --down_level;
-                }
-            }
-            if (indent_level >= PSPL_INDENT_CTX_STACK_SIZE)
-                pspl_error(-1, "Unsupported indent level",
-                           "specified indent level would cause stack overflow; maximum level count: %u",
-                           PSPL_INDENT_CTX_STACK_SIZE);
-            
-            // Target indent context
-            pspl_toolchain_indent_read_t* target_ctx = &indent_ctx_stack[indent_level];
-            compiler_state.indent_context = target_ctx;
-            target_ctx->indent_level = indent_level;
-            target_ctx->indent_trace = (indent_level)?&indent_ctx_stack[indent_level-1]:NULL;
+        
+        // Line-read-only mode
+        if (compiler_state.next_line_read_only)
+            compiler_state.line_read_only = 1;
+        else
+            compiler_state.line_read_only = 0;
+        
+        if (compiler_state.line_read_only) {
             
             // Generate unchomped line buffer
             size_t line_len = end_of_line-cur_line_unchomped;
-            if (line_len)
-                --line_len;
+            //if (line_len)
+            //    --line_len;
             line_buf = malloc(line_len+1);
             strncpy(line_buf, cur_line_unchomped, line_len);
             line_buf[line_len] = '\0';
-            target_ctx->line_text = line_buf;
             
-            // Chomp leading and end whitespace
-            char* line_start = line_buf;
-            while (*line_start == ' ' || *line_start == '\t')
-                ++line_start;
+        } else { // Line-read-auto mode
             
-            char* line_end = line_buf + line_len;
-            while (line_end > line_start &&
-                   (*line_end == '\0' || *line_end == ' ' || *line_end == '\t'))
-                --line_end;
-            *(line_end+1) = '\0';
-            
-            // See if there is a bullet or number
-            unsigned long bullet = 0;
-            if (*line_start == '*')
-                bullet = PSPL_BULLET_STAR;
-            else if (*line_start == '-')
-                bullet = PSPL_BULLET_DASH;
-            else if (*line_start == '+')
-                bullet = PSPL_BULLET_PLUS;
-            else if ((bullet = strtol(line_start, NULL, 10))) {
-                bullet &= ~PSPL_BULLET_MASK;
-                char* dot = strchr(line_start, '.');
-                if (dot)
-                    line_start = dot;
-                else
-                    bullet = 0;
-            }
-            
-            // Chomp leading whitespace again if bullet present
-            if (bullet) {
-                ++line_start;
-                while (*line_start == ' ' || *line_start == '\t')
-                    ++line_start;
-            }
-            
-            
-            target_ctx->bullet_value = bullet;
-            target_ctx->line_text_stripped = line_start;
-            
-            
-#           pragma mark Scan For Heading
-            
-            // Heading scan state
-            uint8_t is_heading = 0;
-            int level = 0;
-            
-            // Determine if we are entering a new heading with '#'s
-            if (*cur_line == '#') {
-                ++cur_line;
-                is_heading = 1;
-                while (*cur_line == '#') {
-                    ++cur_line;
-                    ++level;
-                }
-                while (*cur_line == ' ' || *cur_line == '\t')
-                    ++cur_line;
-            }
-            
-            // Determine if we are entering a new heading with '='s or '-'s
-            else if (*end_of_line == '\n') {
-                const char* next_line = end_of_line + 1;
-                while (*next_line == ' ' || *next_line == '\t')
-                    ++next_line;
-                if (*next_line == '=') {
-                    while (*next_line == '=' || *next_line == ' ' || *next_line == '\t')
-                        ++next_line;
-                    if (*next_line == '\n' || *next_line == '\0') {
-                        is_heading = 2;
-                        level = 0;
-                    }
-                } else if (*next_line == '-') {
-                    while (*next_line == '-' || *next_line == ' ' || *next_line == '\t')
-                        ++next_line;
-                    if (*next_line == '\n' || *next_line == '\0') {
-                        is_heading = 2;
-                        level = 1;
-                    }
-                }
-            }
-            
-            if (is_heading) { // This is a heading spec
+            if (!in_com) {
                 
-                // Validate heading level (and push one level if level greater)
-                if (level > compiler_state.heading_context->heading_level)
-                    level = compiler_state.heading_context->heading_level + 1;
+#               pragma mark Scan For Whitespace
+                
+                // This line is whitespace if first character is newline
+                if (*cur_line == '\n') {
+                    
+                    ++white_line_count;
+                    continue;
+                    
+                } else if (white_line_count && compiler_state.heading_extension &&
+                           compiler_state.heading_extension->toolchain_extension) {
+                    
+                    pspl_toolchain_whitespace_line_read_hook ws_hook =
+                    compiler_state.heading_extension->toolchain_extension->whitespace_line_read_hook;
+                    
+                    // Advise current heading extension that whitespace has occured
+                    if (ws_hook) {
+                        
+                        // Set callout context accordingly
+                        driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
+                        driver_state.proc_extension = compiler_state.heading_extension;
+                        
+                        // Call hook
+                        ws_hook(ext_driver_ctx, compiler_state.heading_context, white_line_count);
+                        
+                        // Unset callout context
+                        driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+                        
+                    }
+                    
+                }
+                white_line_count = 0;
+                
+                
+                
+#               pragma mark Indent Context
+                
+                // Set indent context accordingly (after whitespace since it doesn't count)
+                if (indent_level > compiler_state.indent_context->indent_level)
+                    indent_level = compiler_state.indent_context->indent_level + 1;
                 else { // Deallocate same-and-higher-level contexts and bring stack down
-                    int down_level = compiler_state.heading_context->heading_level;
-                    while (level <= down_level) {
-                        pspl_toolchain_heading_context_t* de_ctx = &heading_ctx_stack[down_level];
-                        if (de_ctx->heading_name != PSPL_GLOBAL_NAME)
-                            free((void*)de_ctx->heading_name);
-                        if (de_ctx->heading_argc)
-                            free((void*)de_ctx->heading_argv[0]);
+                    int down_level = compiler_state.indent_context->indent_level;
+                    while (indent_level <= down_level) {
+                        pspl_toolchain_indent_read_t* de_ctx = &indent_ctx_stack[down_level];
+                        free((void*)de_ctx->line_text);
                         --down_level;
                     }
                 }
-                if (level >= PSPL_HEADING_CTX_STACK_SIZE)
-                    pspl_error(-1, "Unsupported heading level",
-                               "specified heading level would cause stack overflow; maximum level count: %u",
-                               PSPL_HEADING_CTX_STACK_SIZE);
+                if (indent_level >= PSPL_INDENT_CTX_STACK_SIZE)
+                    pspl_error(-1, "Unsupported indent level",
+                               "specified indent level would cause stack overflow; maximum level count: %u",
+                               PSPL_INDENT_CTX_STACK_SIZE);
                 
-                // Target heading context
-                pspl_toolchain_heading_context_t* target_ctx = &heading_ctx_stack[level];
-                compiler_state.heading_context = target_ctx;
-                target_ctx->heading_argc = 0;
-                target_ctx->heading_level = level;
-                target_ctx->heading_trace = (level)?&heading_ctx_stack[level-1]:NULL;
+                // Target indent context
+                pspl_toolchain_indent_read_t* target_ctx = &indent_ctx_stack[indent_level];
+                compiler_state.indent_context = target_ctx;
+                target_ctx->indent_level = indent_level;
+                target_ctx->indent_trace = (indent_level)?&indent_ctx_stack[indent_level-1]:NULL;
                 
-                // Parse heading characters and (possibly) argument array
-                const char* name_start = cur_line;
-                const char* name_end = end_of_line;
-                --cur_line;
-                while (++cur_line < end_of_line) { // Scan for arguments (end name there)
-                    
-                    if (*cur_line == '(' && name_end == end_of_line) { // Check for arguments
-                        
-                        // Validate argument set
-                        name_end = cur_line;
-                        const char* end_args = strchr(cur_line, ')');
-                        if (end_args >= end_of_line)
-                            pspl_error(-1, "Unclosed heading arguments",
-                                       "please add closing ')' on same line");
+                // Generate unchomped line buffer
+                size_t line_len = end_of_line-cur_line_unchomped;
+                //if (line_len)
+                //    --line_len;
+                line_buf = malloc(line_len+1);
+                strncpy(line_buf, cur_line_unchomped, line_len);
+                line_buf[line_len] = '\0';
+                target_ctx->line_text = line_buf;
+                
+                // Chomp leading and end whitespace
+                char* line_start = line_buf;
+                while (*line_start == ' ' || *line_start == '\t')
+                    ++line_start;
+                
+                char* line_end = line_buf + line_len;
+                while (line_end > line_start &&
+                       (*line_end == '\0' || *line_end == ' ' || *line_end == '\t'))
+                    --line_end;
+                *(line_end+1) = '\0';
+                
+                // See if there is a bullet or number
+                unsigned long bullet = 0;
+                if (*line_start == '*')
+                    bullet = PSPL_BULLET_STAR;
+                else if (*line_start == '-')
+                    bullet = PSPL_BULLET_DASH;
+                else if (*line_start == '+')
+                    bullet = PSPL_BULLET_PLUS;
+                else if ((bullet = strtol(line_start, NULL, 10))) {
+                    bullet &= ~PSPL_BULLET_MASK;
+                    char* dot = strchr(line_start, '.');
+                    if (dot)
+                        line_start = dot;
+                    else
+                        bullet = 0;
+                }
+                
+                // Chomp leading whitespace again if bullet present
+                if (bullet) {
+                    ++line_start;
+                    while (*line_start == ' ' || *line_start == '\t')
+                        ++line_start;
+                }
+                
+                
+                target_ctx->bullet_value = bullet;
+                target_ctx->line_text_stripped = line_start;
+                
+                
+#               pragma mark Scan For Heading
+                
+                // Heading scan state
+                uint8_t is_heading = 0;
+                int level = 0;
+                
+                // Determine if we are entering a new heading with '#'s
+                if (*cur_line == '#') {
+                    ++cur_line;
+                    is_heading = 1;
+                    while (*cur_line == '#') {
                         ++cur_line;
-                        while (*cur_line == ' ' || *cur_line == '\t')
-                            ++cur_line;
-                        if (end_args > cur_line) {
+                        ++level;
+                    }
+                    while (*cur_line == ' ' || *cur_line == '\t')
+                        ++cur_line;
+                }
+                
+                // Determine if we are entering a new heading with '='s or '-'s
+                else if (*end_of_line == '\n') {
+                    const char* next_line = end_of_line + 1;
+                    while (*next_line == ' ' || *next_line == '\t')
+                        ++next_line;
+                    if (*next_line == '=') {
+                        while (*next_line == '=' || *next_line == ' ' || *next_line == '\t')
+                            ++next_line;
+                        if (*next_line == '\n' || *next_line == '\0') {
+                            is_heading = 2;
+                            level = 0;
+                        }
+                    } else if (*next_line == '-') {
+                        while (*next_line == '-' || *next_line == ' ' || *next_line == '\t')
+                            ++next_line;
+                        if (*next_line == '\n' || *next_line == '\0') {
+                            is_heading = 2;
+                            level = 1;
+                        }
+                    }
+                }
+                
+                if (is_heading) { // This is a heading spec
+                    
+                    // Validate heading level (and push one level if level greater)
+                    if (level > compiler_state.heading_context->heading_level)
+                        level = compiler_state.heading_context->heading_level + 1;
+                    else { // Deallocate same-and-higher-level contexts and bring stack down
+                        int down_level = compiler_state.heading_context->heading_level;
+                        while (level <= down_level) {
+                            pspl_toolchain_heading_context_t* de_ctx = &heading_ctx_stack[down_level];
+                            if (de_ctx->heading_name != PSPL_GLOBAL_NAME)
+                                free((void*)de_ctx->heading_name);
+                            if (de_ctx->heading_argc)
+                                free((void*)de_ctx->heading_argv[0]);
+                            --down_level;
+                        }
+                    }
+                    if (level >= PSPL_HEADING_CTX_STACK_SIZE)
+                        pspl_error(-1, "Unsupported heading level",
+                                   "specified heading level would cause stack overflow; maximum level count: %u",
+                                   PSPL_HEADING_CTX_STACK_SIZE);
+                    
+                    // Target heading context
+                    pspl_toolchain_heading_context_t* target_ctx = &heading_ctx_stack[level];
+                    compiler_state.heading_context = target_ctx;
+                    target_ctx->heading_argc = 0;
+                    target_ctx->heading_level = level;
+                    target_ctx->heading_trace = (level)?&heading_ctx_stack[level-1]:NULL;
+                    
+                    // Parse heading characters and (possibly) argument array
+                    const char* name_start = cur_line;
+                    const char* name_end = end_of_line;
+                    --cur_line;
+                    while (++cur_line < end_of_line) { // Scan for arguments (end name there)
+                        
+                        if (*cur_line == '(' && name_end == end_of_line) { // Check for arguments
                             
-                            // Make argument buffer
-                            char* arg_buf = malloc(end_args-cur_line+1);
-                            strncpy(arg_buf, cur_line, end_args-cur_line);
-                            arg_buf[end_args-cur_line] = '\0';
-                            char* space = strchr(cur_line, ' ');
-                            if (space < end_args) {
-                                char* save_ptr;
-                                char* token = strtok_r(arg_buf, " ", &save_ptr);
-                                do {
-                                    if (*token == ' ')
-                                        continue;
-                                    if (target_ctx->heading_argc >= PSPL_MAX_HEADING_ARGS)
-                                        pspl_error(-1, "Maximum heading arguments exceeded",
-                                                   "up to %u heading arguments may be specified",
-                                                   PSPL_MAX_HEADING_ARGS);
-                                    target_ctx->heading_argv[target_ctx->heading_argc] = token;
-                                    ++target_ctx->heading_argc;
-                                } while ((token = strtok_r(save_ptr, " ", &save_ptr)));
-                            } else {
-                                target_ctx->heading_argc = 1;
-                                target_ctx->heading_argv[0] = arg_buf;
+                            // Validate argument set
+                            name_end = cur_line;
+                            const char* end_args = strchr(cur_line, ')');
+                            if (end_args >= end_of_line)
+                                pspl_error(-1, "Unclosed heading arguments",
+                                           "please add closing ')' on same line");
+                            ++cur_line;
+                            while (*cur_line == ' ' || *cur_line == '\t')
+                                ++cur_line;
+                            if (end_args > cur_line) {
+                                
+                                // Make argument buffer
+                                char* arg_buf = malloc(end_args-cur_line+1);
+                                strncpy(arg_buf, cur_line, end_args-cur_line);
+                                arg_buf[end_args-cur_line] = '\0';
+                                char* space = strchr(cur_line, ' ');
+                                if (space < end_args) {
+                                    char* save_ptr;
+                                    char* token = strtok_r(arg_buf, " ", &save_ptr);
+                                    do {
+                                        if (*token == ' ')
+                                            continue;
+                                        if (target_ctx->heading_argc >= PSPL_MAX_HEADING_ARGS)
+                                            pspl_error(-1, "Maximum heading arguments exceeded",
+                                                       "up to %u heading arguments may be specified",
+                                                       PSPL_MAX_HEADING_ARGS);
+                                        target_ctx->heading_argv[target_ctx->heading_argc] = token;
+                                        ++target_ctx->heading_argc;
+                                    } while ((token = strtok_r(save_ptr, " ", &save_ptr)));
+                                } else {
+                                    target_ctx->heading_argc = 1;
+                                    target_ctx->heading_argv[0] = arg_buf;
+                                }
+                                
                             }
+                            break; // Done with heading args
                             
                         }
-                        break; // Done with heading args
                         
                     }
                     
-                }
-                
-                // Chomp whitespace off end of name
-                while (name_end > name_start &&
-                       (*name_end == ' ' || *name_end == '\n' || *name_end == '\0' || *name_end == '('))
-                    --name_end;
-                if (name_end == name_start)
-                    pspl_error(-1, "No-name heading",
-                               "headings must have a name in PSPL");
-                
-                // Add name to context
-                char* name = malloc(name_end-name_start+2);
-                strncpy(name, name_start, name_end-name_start+1);
-                name[name_end-name_start+1] = '\0';
-                target_ctx->heading_name = name;
-                
-                
-                // Skip line if using '='s or '-'s in heading
-                if (is_heading == 2)
-                    cur_line = end_of_line + 1;
-                
-                // Resolve "owner" extension from primary heading name
-                if (!level) {
-                    if (!strcasecmp(name, "GLOBAL"))
-                        compiler_state.heading_extension = NULL;
-                    else
-                        compiler_state.heading_extension = get_heading_ext(name);
-                }
-                
-                // Notify extension that it is now active
-                if (compiler_state.heading_extension &&
-                    compiler_state.heading_extension->toolchain_extension &&
-                    compiler_state.heading_extension->toolchain_extension->heading_switch_hook) {
+                    // Chomp whitespace off end of name
+                    while (name_end > name_start &&
+                           (*name_end == ' ' || *name_end == '\n' || *name_end == '\0' || *name_end == '('))
+                        --name_end;
+                    if (name_end == name_start)
+                        pspl_error(-1, "No-name heading",
+                                   "headings must have a name in PSPL");
                     
-                    // Set callout context accordingly
-                    driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
-                    driver_state.proc_extension = compiler_state.heading_extension;
+                    // Add name to context
+                    char* name = malloc(name_end-name_start+2);
+                    strncpy(name, name_start, name_end-name_start+1);
+                    name[name_end-name_start+1] = '\0';
+                    target_ctx->heading_name = name;
                     
-                    // Callout to hook
-                    compiler_state.heading_extension->toolchain_extension->
-                    heading_switch_hook(ext_driver_ctx, compiler_state.heading_context);
                     
-                    // Unset callout context
-                    driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+                    // Skip line if using '='s or '-'s in heading
+                    if (is_heading == 2)
+                        cur_line = end_of_line + 1;
                     
-                }
-                
-                continue; // On to next line
-                
-            } // Done with heading spec
-        }
-    
-#       pragma mark Scan For Command
+                    // Resolve "owner" extension from primary heading name
+                    if (!level) {
+                        if (!strcasecmp(name, "GLOBAL"))
+                            compiler_state.heading_extension = NULL;
+                        else
+                            compiler_state.heading_extension = get_heading_ext(name);
+                    }
+                    
+                    // Notify extension that it is now active
+                    if (compiler_state.heading_extension &&
+                        compiler_state.heading_extension->toolchain_extension &&
+                        compiler_state.heading_extension->toolchain_extension->heading_switch_hook) {
+                        
+                        // Set callout context accordingly
+                        driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
+                        driver_state.proc_extension = compiler_state.heading_extension;
+                        
+                        // Callout to hook
+                        compiler_state.heading_extension->toolchain_extension->
+                        heading_switch_hook(ext_driver_ctx, compiler_state.heading_context);
+                        
+                        // Unset callout context
+                        driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+                        
+                    }
+                    
+                    continue; // On to next line
+                    
+                } // Done with heading spec
+            }
         
-        if (!in_com) { // Open parenthesis test
+#           pragma mark Scan For Command
             
-            // See if '(' exists on same line
-            com_arg_start = strchr(cur_line, '(');
-            if (com_arg_start && com_arg_start < end_of_line) {
-                in_com = 1;
+            if (!in_com) { // Open parenthesis test
                 
-                // Ensure there is only whitespace between command name and '('
-                const char* first_ws = strchr(cur_line, ' ');
-                if (first_ws && first_ws < com_arg_start) {
-                    while (*first_ws == ' ' || *first_ws == '\t')
-                        ++first_ws;
-                    if (first_ws != com_arg_start)
-                        in_com = 0;
-                }
-                
-                if (in_com) { // Same test for tabs
-                    first_ws = strchr(cur_line, '\t');
+                // See if '(' exists on same line
+                com_arg_start = strchr(cur_line, '(');
+                if (com_arg_start && com_arg_start < end_of_line) {
+                    in_com = 1;
+                    
+                    // Ensure there is only whitespace between command name and '('
+                    const char* first_ws = strchr(cur_line, ' ');
                     if (first_ws && first_ws < com_arg_start) {
                         while (*first_ws == ' ' || *first_ws == '\t')
                             ++first_ws;
                         if (first_ws != com_arg_start)
                             in_com = 0;
                     }
-                }
-                
-                if (in_com) { // This is a valid command; find argument end then get name
-                    com_arg_end = strchr(com_arg_start, ')');
-                    if (!com_arg_end)
-                        pspl_error(-1, "Unclosed command arguments",
-                                   "please add closing ')'");
                     
-                    // Command name
-                    const char* name_end = com_arg_start;
-                    const char* test = strchr(cur_line, ' ');
-                    if (test && test < name_end)
-                        name_end = test;
-                    test = strchr(cur_line, '\t');
-                    if (test && test < name_end)
-                        name_end = test;
+                    if (in_com) { // Same test for tabs
+                        first_ws = strchr(cur_line, '\t');
+                        if (first_ws && first_ws < com_arg_start) {
+                            while (*first_ws == ' ' || *first_ws == '\t')
+                                ++first_ws;
+                            if (first_ws != com_arg_start)
+                                in_com = 0;
+                        }
+                    }
                     
-                    if (cur_line == name_end)
-                        pspl_error(-1, "No-name command",
-                                   "commands must have a name in PSPL");
-                    com_name = malloc(name_end-cur_line+1);
-                    strncpy(com_name, cur_line, name_end-cur_line);
-                    com_name[name_end-cur_line] = '\0';
-                    
-                    // Initial command state
-                    tok_read_in = malloc(com_arg_end-com_arg_start+1);
-                    tok_read_ptr = tok_read_in;
-                    tok_arr[0] = tok_read_ptr;
-                    tok_c = 0;
-                    just_read_tok = 0;
-                    in_quote = 0;
-                    cur_chr = com_arg_start + 1;
-                }
-                
-            }
-            
-        }
-        
-        if (in_com) { // In command
-            
-            // Read in invocation up to end of command args;
-            // saving token pointers using a buffer-array
-            for (; cur_chr<com_arg_end ; ++cur_chr) {
-                
-                // Check for quoted token start or end (toggle)
-                if (*cur_chr == '"' && !(in_quote && *(cur_chr-1) == '\\')) {
-                    in_quote ^= 1;
-                    continue;
-                }
-                
-                // Ignore whitespace (or treat as token delimiter)
-                if (!in_quote && (*cur_chr == ' ' || *cur_chr == '\t' || *cur_chr == '\n')) {
-                    if (just_read_tok) {
+                    if (in_com) { // This is a valid command; find argument end then get name
+                        com_arg_end = strchr(com_arg_start, ')');
+                        if (!com_arg_end)
+                            pspl_error(-1, "Unclosed command arguments",
+                                       "please add closing ')'");
+                        
+                        // Command name
+                        const char* name_end = com_arg_start;
+                        const char* test = strchr(cur_line, ' ');
+                        if (test && test < name_end)
+                            name_end = test;
+                        test = strchr(cur_line, '\t');
+                        if (test && test < name_end)
+                            name_end = test;
+                        
+                        if (cur_line == name_end)
+                            pspl_error(-1, "No-name command",
+                                       "commands must have a name in PSPL");
+                        com_name = malloc(name_end-cur_line+1);
+                        strncpy(com_name, cur_line, name_end-cur_line);
+                        com_name[name_end-cur_line] = '\0';
+                        
+                        // Initial command state
+                        tok_read_in = malloc(com_arg_end-com_arg_start+1);
+                        tok_read_ptr = tok_read_in;
+                        tok_arr[0] = tok_read_ptr;
+                        tok_c = 0;
                         just_read_tok = 0;
-                        *tok_read_ptr = '\0';
-                        ++tok_read_ptr;
-                        tok_arr[tok_c] = tok_read_ptr;
-                        if (tok_c >= PSPL_MAX_COMMAND_ARGS)
-                            pspl_error(-2, "Maximum command arguments exceeded",
-                                       "Up to %u arguments supported", PSPL_MAX_COMMAND_ARGS);
+                        in_quote = 0;
+                        cur_chr = com_arg_start + 1;
                     }
-                    if (*cur_chr == '\n') { // Handle line break
-                        ++cur_chr;
-                        break;
+                    
+                }
+                
+            }
+            
+            if (in_com) { // In command
+                
+                // Read in invocation up to end of command args;
+                // saving token pointers using a buffer-array
+                for (; cur_chr<com_arg_end ; ++cur_chr) {
+                    
+                    // Check for quoted token start or end (toggle)
+                    if (*cur_chr == '"' && !(in_quote && *(cur_chr-1) == '\\')) {
+                        in_quote ^= 1;
+                        continue;
                     }
+                    
+                    // Ignore whitespace (or treat as token delimiter)
+                    if (!in_quote && (*cur_chr == ' ' || *cur_chr == '\t' || *cur_chr == '\n')) {
+                        if (just_read_tok) {
+                            just_read_tok = 0;
+                            *tok_read_ptr = '\0';
+                            ++tok_read_ptr;
+                            tok_arr[tok_c] = tok_read_ptr;
+                            if (tok_c >= PSPL_MAX_COMMAND_ARGS)
+                                pspl_error(-2, "Maximum command arguments exceeded",
+                                           "Up to %u arguments supported", PSPL_MAX_COMMAND_ARGS);
+                        }
+                        if (*cur_chr == '\n') { // Handle line break
+                            ++cur_chr;
+                            break;
+                        }
+                        continue;
+                    }
+                    
+                    // Copy character into read ptr otherwise
+                    if (!just_read_tok) {
+                        just_read_tok = 1;
+                        ++tok_c;
+                    }
+                    *tok_read_ptr = *cur_chr;
+                    ++tok_read_ptr;
+                    
+                }
+                
+                // Do next line if there is more of the directive
+                if (cur_chr < com_arg_end)
                     continue;
+                
+                // Directive has finished by this point
+                in_com = 0;
+                *tok_read_ptr = '\0';
+                
+                // Now determine which extension's command hook needs to be dispatched
+                if (!strcasecmp(com_name, "NAME")) {
+                    
+                    if (!tok_c)
+                        pspl_error(-1, "Invalid command use", "NAME command must have *one* argument");
+                    
+                    pspl_hash_ctx_t hash_ctx;
+                    pspl_hash_init(&hash_ctx);
+                    pspl_hash_write(&hash_ctx, tok_arr[0], strlen(tok_arr[0]));
+                    pspl_hash* result;
+                    pspl_hash_result(&hash_ctx, result);
+                    pspl_hash_cpy(&driver_state.indexer_ctx->psplc_hash, result);
+                    
+                } else if (!strcasecmp(com_name, "PUSH_HEADING")) {
+                    
+                    if (!tok_c)
+                        pspl_error(-1, "Invalid command use",
+                                   "PUSH_HEADING command must have *one* argument");
+                    
+                    pspl_toolchain_heading_context_t* pushed_ctx = &compiler_state.heading_context[1];
+                    pushed_ctx->heading_argc = tok_c - 1;
+                    int l;
+                    for (l=0 ; l<pushed_ctx->heading_argc ; ++l)
+                        pushed_ctx->heading_argv[l] = tok_arr[l+1];
+                    pushed_ctx->heading_level = 0;
+                    pushed_ctx->heading_name = tok_arr[0];
+                    pushed_ctx->heading_trace = NULL;
+                    compiler_state.heading_context = pushed_ctx;
+                    ++compiler_state.push_count;
+                    
+                } else if (!strcasecmp(com_name, "POP_HEADING")) {
+                    
+                    if (!compiler_state.push_count)
+                        pspl_warn("Over-popped heading", "`%s` popped heading more times than pushed; pop ignored",
+                                  source->file_path);
+                    else {
+                        const pspl_toolchain_heading_context_t* climb_ctx = compiler_state.heading_context;
+                        while (climb_ctx->heading_trace)
+                            climb_ctx = climb_ctx->heading_trace;
+                        compiler_state.heading_context = (pspl_toolchain_heading_context_t*)&climb_ctx[-1];
+                        --compiler_state.push_count;
+                    }
+                    
+                } else {
+                    
+                    const pspl_extension_t* hook_ext = get_com_hook_ext(com_name);
+                    
+                    if (hook_ext) {
+                        
+                        // Set callout context accordingly
+                        driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
+                        driver_state.proc_extension = hook_ext;
+                        
+                        // Callout to command hook
+                        hook_ext->toolchain_extension->
+                        command_call_hook(ext_driver_ctx, compiler_state.heading_context,
+                                          com_name, tok_c, (const char**)tok_arr);
+                        
+                        // Unset callout context
+                        driver_state.pspl_phase = PSPL_PHASE_COMPILE;
+                        
+                    } else
+                        pspl_warn("Unrecognised command",
+                                  "command `%s` not handled by any installed extensions; skipping",
+                                  com_name);
+                    
                 }
                 
-                // Copy character into read ptr otherwise
-                if (!just_read_tok) {
-                    just_read_tok = 1;
-                    ++tok_c;
-                }
-                *tok_read_ptr = *cur_chr;
-                ++tok_read_ptr;
-                
-            }
-            
-            // Do next line if there is more of the directive
-            if (cur_chr < com_arg_end)
+                // Free resources
+                free(com_name);
+                free(tok_read_in);
                 continue;
-            
-            // Directive has finished by this point
-            in_com = 0;
-            *tok_read_ptr = '\0';
-            
-            // Now determine which extension's command hook needs to be dispatched
-            if (!strcasecmp(com_name, "NAME")) {
-                
-                if (!tok_c)
-                    pspl_error(-1, "Invalid command use", "NAME command must have *one* argument");
-                
-                pspl_hash_ctx_t hash_ctx;
-                pspl_hash_init(&hash_ctx);
-                pspl_hash_write(&hash_ctx, tok_arr[0], strlen(tok_arr[0]));
-                pspl_hash* result;
-                pspl_hash_result(&hash_ctx, result);
-                pspl_hash_cpy(&driver_state.indexer_ctx->psplc_hash, result);
-                
-            } else if (!strcasecmp(com_name, "PUSH_HEADING")) {
-                
-                if (!tok_c)
-                    pspl_error(-1, "Invalid command use",
-                               "PUSH_HEADING command must have *one* argument");
-                
-                pspl_toolchain_heading_context_t* pushed_ctx = &compiler_state.heading_context[1];
-                pushed_ctx->heading_argc = tok_c - 1;
-                int l;
-                for (l=0 ; l<pushed_ctx->heading_argc ; ++l)
-                    pushed_ctx->heading_argv[l] = tok_arr[l+1];
-                pushed_ctx->heading_level = 0;
-                pushed_ctx->heading_name = tok_arr[0];
-                pushed_ctx->heading_trace = NULL;
-                compiler_state.heading_context = pushed_ctx;
-                ++compiler_state.push_count;
-                
-            } else if (!strcasecmp(com_name, "POP_HEADING")) {
-                
-                if (!compiler_state.push_count)
-                    pspl_warn("Over-popped heading", "`%s` popped heading more times than pushed; pop ignored",
-                              source->file_path);
-                else {
-                    const pspl_toolchain_heading_context_t* climb_ctx = compiler_state.heading_context;
-                    while (climb_ctx->heading_trace)
-                        climb_ctx = climb_ctx->heading_trace;
-                    compiler_state.heading_context = (pspl_toolchain_heading_context_t*)&climb_ctx[-1];
-                    --compiler_state.push_count;
-                }
-                
-            } else {
-                
-                const pspl_extension_t* hook_ext = get_com_hook_ext(com_name);
-                
-                if (hook_ext) {
-                    
-                    // Set callout context accordingly
-                    driver_state.pspl_phase = PSPL_PHASE_COMPILE_EXTENSION;
-                    driver_state.proc_extension = hook_ext;
-                    
-                    // Callout to command hook
-                    hook_ext->toolchain_extension->
-                    command_call_hook(ext_driver_ctx, compiler_state.heading_context,
-                                      com_name, tok_c, (const char**)tok_arr);
-                    
-                    // Unset callout context
-                    driver_state.pspl_phase = PSPL_PHASE_COMPILE;
-                    
-                } else
-                    pspl_warn("Unrecognised command",
-                              "command `%s` not handled by any installed extensions; skipping",
-                              com_name);
                 
             }
-            
-            // Free resources
-            free(com_name);
-            free(tok_read_in);
-            continue;
             
         }
-        
-        
+    
 #       pragma mark Fall Back To Line Read In
         
         if (compiler_state.heading_extension) { // Heading context required
@@ -900,6 +928,9 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
             
         }
         
+        if (compiler_state.line_read_only)
+            free(line_buf);
+        
         
     } while ((cur_line = strchr(cur_line, '\n')) && ++driver_state.line_num);
     
@@ -927,6 +958,25 @@ void pspl_run_compiler(pspl_toolchain_driver_source_t* source,
         }
     }
     
+}
+
+/**
+ * Put compiler into line-read-only mode
+ *
+ * Useful for building source-text buffers where syntax conflicts
+ * with PSPL may occur
+ */
+void pspl_toolchain_line_read_only() {
+    compiler_state.next_line_read_only = 1;
+}
+
+/**
+ * Take compiler out of line-read-only mode
+ *
+ * Reverses effects of `pspl_toolchain_line_read_only`
+ */
+void pspl_toolchain_line_read_auto() {
+    compiler_state.next_line_read_only = 0;
 }
 
 /**

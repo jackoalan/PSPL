@@ -1596,7 +1596,7 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
     
     // DEBUG
     //size_t foff = ftell(psplc_file_out);
-    printf("Wrote Beginning: %zu\n", ftell(psplc_file_out));
+    //printf("Wrote Beginning: %zu\n", ftell(psplc_file_out));
     
     // Populate PSPLC object header
     pspl_psplc_header_bi_t psplc_header;
@@ -1618,13 +1618,13 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
             break;
     }
     
-    printf("Wrote p1: %zu\n", ftell(psplc_file_out));
+    //printf("Wrote p1: %zu\n", ftell(psplc_file_out));
 
     // DEBUG
     //foff = ftell(psplc_file_out);
     
     // Populate and write all per-extension array heading structures
-    printf("AHH %u\n",ctx->ext_count);
+    //printf("AHH %u\n",ctx->ext_count);
     for (i=0 ; i<ctx->ext_count ; ++i) {
         const pspl_extension_t* cur_ext = ctx->ext_array[i];
         uint32_t hash_count = 0, int_count = 0;
@@ -1686,7 +1686,7 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
         
     }
     
-    printf("Wrote p2: %zu\n", ftell(psplc_file_out));
+    //printf("Wrote p2: %zu\n", ftell(psplc_file_out));
 
     
     // Populate and write all per-platform array heading structures
@@ -1752,7 +1752,7 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
     }
     
     
-    printf("Wrote p3: %zu\n", ftell(psplc_file_out));
+    //printf("Wrote p3: %zu\n", ftell(psplc_file_out));
 
     
     // Populate and write all per-extension array objects
@@ -1970,7 +1970,7 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
         fwrite(&zero, 1, 1, psplc_file_out);
     
     
-    printf("Wrote: %zu\n", ftell(psplc_file_out));
+    //printf("Wrote: %zu\n", ftell(psplc_file_out));
     
     // Per-Extension object data blobs
     for (i=0 ; i<ctx->ext_count ; ++i) {
@@ -2085,7 +2085,7 @@ void pspl_indexer_write_psplc_bare(pspl_indexer_context_t* ctx,
         }
         
     }
-    printf("Wrote End: %zu\n", ftell(psplc_file_out));
+    //printf("Wrote End: %zu\n", ftell(psplc_file_out));
 
 }
 

@@ -121,6 +121,7 @@ static void load_object(pspl_runtime_psplc_t* object) {
     // Matrix uniforms
     object->native_shader.mv_mtx_uni = glGetUniformLocation(object->native_shader.program, "modelview_mat");
     object->native_shader.mv_invxpose_uni = glGetUniformLocation(object->native_shader.program, "modelview_invtrans_mat");
+    object->native_shader.proj_mtx_uni = glGetUniformLocation(object->native_shader.program, "projection_mat");
     object->native_shader.tc_genmtx_arr = glGetUniformLocation(object->native_shader.program, "tc_generator_mats");
     
     // Texture map uniforms

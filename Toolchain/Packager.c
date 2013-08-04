@@ -57,8 +57,8 @@ void pspl_packager_indexer_augment(pspl_packager_context_t* ctx,
     for (i=0 ; i<ctx->indexer_count ; ++i) {
         pspl_indexer_context_t* present_idxer = ctx->indexer_array[i];
         if (!pspl_hash_cmp(&present_idxer->psplc_hash, &indexer->psplc_hash))
-            pspl_error(-1, "Duplicate-ID PSPLCs added to package",
-                       "PSPLC '%s' and '%s' have the same identifier hash; "
+            pspl_error(-1, "Duplicate-name PSPLCs added to package",
+                       "PSPLC '%s' and '%s' have the same name hash; "
                        "this is disallowed by PSPL",
                        present_idxer->definer, indexer->definer);
     }
@@ -190,24 +190,24 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
     for (i=0 ; i<ctx->indexer_count ; ++i) {
         pspl_indexer_context_t* indexer = ctx->indexer_array[i];
         
-        printf("Will Write Beginning: %zu\n", acc);
+        //printf("Will Write Beginning: %zu\n", acc);
         indexer->extension_obj_base_off = acc;
         //acc += sizeof(pspl_hash);
         acc += (psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_psplc_header_bi_t) : sizeof(pspl_psplc_header_t);
-        printf("Will Write p1: %zu\n", acc);
-        printf("Will AHH %u\n",indexer->ext_count);
+        //printf("Will Write p1: %zu\n", acc);
+        //printf("Will AHH %u\n",indexer->ext_count);
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_array_extension_bi_t) : sizeof(pspl_object_array_extension_t)) * indexer->ext_count;
-        printf("Will Write p2: %zu\n", acc);
+        //printf("Will Write p2: %zu\n", acc);
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_array_extension_bi_t) : sizeof(pspl_object_array_extension_t)) * indexer->plat_count;
         indexer->extension_obj_array_off = acc - indexer->extension_obj_base_off; // PACKAGER SPECIFIC!!! - BASE-RELATIVE OFFSETS!!!
-        printf("Will Write p3: %zu\n", acc);
+        //printf("Will Write p3: %zu\n", acc);
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_hash_record_bi_t) : sizeof(pspl_object_hash_record_t) + sizeof(pspl_hash)) * indexer->h_objects_count;
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_int_record_bi_t) : sizeof(pspl_object_int_record_t)) * indexer->i_objects_count;
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_hash_record_bi_t) : sizeof(pspl_object_hash_record_t) + sizeof(pspl_hash)) * indexer->ph_objects_count;
         acc += ((psplp_endianness==PSPL_BI_ENDIAN) ? sizeof(pspl_object_int_record_bi_t) : sizeof(pspl_object_int_record_t)) * indexer->pi_objects_count;
         indexer->extension_obj_array_padding = ROUND_UP_32(acc) - acc;
         acc += indexer->extension_obj_array_padding;
-        printf("Will Write: %u\n", acc);
+        //printf("Will Write: %u\n", acc);
         indexer->extension_obj_data_off = acc;
         
         // Per extension object blobs
@@ -296,7 +296,7 @@ void pspl_packager_write_psplp(pspl_packager_context_t* ctx,
         }
         
         indexer->extension_obj_blobs_len = acc - indexer->extension_obj_data_off; // PACKAGER SPECIFIC!!!
-        printf("Will Write End: %u\n", acc);
+        //printf("Will Write End: %u\n", acc);
     }
 
     uint32_t file_stub_array_off = acc;

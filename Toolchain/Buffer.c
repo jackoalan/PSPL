@@ -13,7 +13,7 @@
 #include <errno.h>
 
 #include "Driver.h"
-#include "Buffer.h"
+#include <PSPL/PSPLBuffer.h>
 
 /* Check buffer capacity (realloc if needed) */
 static void pspl_buffer_check_cap(pspl_buffer_t* buf,

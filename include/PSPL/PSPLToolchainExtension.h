@@ -72,6 +72,24 @@ void pspl_toolchain_provide_subext(const char* subext_name, const char* subext_d
 typedef void(*pspl_toolchain_subext_hook)(void);
 
 
+#pragma mark Compiler Line-Read-Only Mode
+
+/**
+ * Put compiler into line-read-only mode
+ *
+ * Useful for building source-text buffers where syntax conflicts
+ * with PSPL may occur
+ */
+void pspl_toolchain_line_read_only();
+
+/**
+ * Take compiler out of line-read-only mode
+ *
+ * Reverses effects of `pspl_toolchain_line_read_only`
+ */
+void pspl_toolchain_line_read_auto();
+
+
 #pragma mark Driver Context
 
 /**

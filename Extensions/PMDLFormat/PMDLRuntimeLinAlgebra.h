@@ -25,6 +25,8 @@
  * link to GX matrix routines or supply identical versions
  * for OpenGL/D3D */
 
+#define DegToRad(a)   ( (a) *  0.01745329252f )
+
 #if PSPL_RUNTIME_PLATFORM_GX
 #include <ogc/gu.h>
 #define _pmdl_matrix_orthographic guOrtho

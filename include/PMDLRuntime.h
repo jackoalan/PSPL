@@ -9,16 +9,6 @@
 #ifndef PSPL_PMDLRuntime_h
 #define PSPL_PMDLRuntime_h
 
-/* OpenGL ES on iOS doesn't support 3x4 matrix uniforms */
-#define MTX_TYPE pspl_matrix34_t
-#if __APPLE__
-#   include <TargetConditionals.h>
-#   if TARGET_OS_IPHONE
-#       undef MTX_TYPE
-#       define MTX_TYPE pspl_matrix44_t
-#   endif
-#endif
-
 #include <PSPL/PSPLCommon.h>
 #include <PSPLRuntime.h>
 
@@ -64,7 +54,10 @@ typedef struct {
     } projection;
     
     /* Texture Coordinate Matrices */
-    MTX_TYPE texcoord_mtx[8];
+    pspl_matrix44_t texcoord_mtx[8];
+    
+    /* Default shader, if model doesn't specify one */
+    const pspl_runtime_psplc_t* default_shader;
     
     /* DO NOT EDIT FIELDS BELOW!! - Automatically set by update routine */
     
@@ -72,8 +65,8 @@ typedef struct {
     pspl_matrix34_t cached_view_mtx;
     
     /* Modelview matrix */
-    MTX_TYPE cached_modelview_mtx;
-    MTX_TYPE cached_modelview_invxpose_mtx;
+    pspl_matrix44_t cached_modelview_mtx;
+    pspl_matrix44_t cached_modelview_invxpose_mtx;
     
     /* Cached frustum tangents */
     float f_tanv, f_tanh;
@@ -94,9 +87,9 @@ enum pmdl_invalidate_bits {
 void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv_bits);
 
 /* Lookup routine to get PMDL file reference from PSPLC */
-const pspl_runtime_arc_file_t* pmdl_lookup(pspl_runtime_psplc_t* pspl_object, const char* pmdl_name);
+const pspl_runtime_arc_file_t* pmdl_lookup(const pspl_runtime_psplc_t* pspl_object, const char* pmdl_name);
 
 /* Master draw routine */
-void pmdl_draw(pmdl_draw_context_t* ctx, pspl_runtime_arc_file_t* pmdl_file);
+void pmdl_draw(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file);
 
 #endif

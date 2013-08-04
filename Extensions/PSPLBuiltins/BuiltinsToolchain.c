@@ -16,7 +16,7 @@ static void message(unsigned int directive_argc,
                     const char** directive_argv) {
     int i;
     uint8_t print_space = 0;
-    for (i=1 ; i<directive_argc ; ++i) {
+    for (i=0 ; i<directive_argc ; ++i) {
         if (print_space)
             fprintf(stderr, " ");
         fprintf(stderr, "%s", directive_argv[i]);

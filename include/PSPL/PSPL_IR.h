@@ -19,6 +19,7 @@
 #pragma mark CalcChain Interface
 
 #if PSPL_TOOLCHAIN
+#include <PSPL/PSPLBuffer.h>
 
 enum CHAIN_LINK_USE {
     LINK_USE_STATIC,
@@ -156,6 +157,21 @@ typedef struct {
     
 } pspl_ir_fragment_stage_t;
 
+enum shader_def_type {
+    DEF_NONE = 0,
+    
+    DEF_GLSL_VERT_PRE,
+    DEF_GLSL_VERT_POST,
+    DEF_GLSL_FRAG_PRE,
+    DEF_GLSL_FRAG_POST,
+    
+    DEF_HLSL_VERT_PRE,
+    DEF_HLSL_VERT_POST,
+    DEF_HLSL_FRAG_PRE,
+    DEF_HLSL_FRAG_POST
+    
+};
+
 /* IR translation state */
 typedef struct {
     
@@ -192,6 +208,18 @@ typedef struct {
         // Bone count
         unsigned bone_count;
         
+        
+        // In shader definition?
+        int shader_def;
+        
+        // GLSL inclusion
+        pspl_buffer_t glsl_pre;
+        pspl_buffer_t glsl_post;
+        
+        // HLSL inclusion
+        pspl_buffer_t hlsl_pre;
+        pspl_buffer_t hlsl_post;
+        
     } vertex;
     
     // Depth state
@@ -212,6 +240,18 @@ typedef struct {
         // Stage Array
         unsigned stage_count;
         pspl_ir_fragment_stage_t stage_array[MAX_FRAG_STAGES];
+        
+        
+        // In shader definition?
+        int shader_def;
+        
+        // GLSL inclusion
+        pspl_buffer_t glsl_pre;
+        pspl_buffer_t glsl_post;
+        
+        // HLSL inclusion
+        pspl_buffer_t hlsl_pre;
+        pspl_buffer_t hlsl_post;
         
     } fragment;
     

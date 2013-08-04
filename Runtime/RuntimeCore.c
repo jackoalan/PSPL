@@ -1319,7 +1319,7 @@ static void mem_duplicate_handle(pspl_dup_data_provider_handle_t* dup_handle, co
     dup_mem->len = mem->len;
 }
 static void mem_destroy_duplicate_handle(pspl_dup_data_provider_handle_t* dup_handle) {
-    // Nothing to do!
+    // Nothing to do; Just let handle go out of scope
 }
 static const pspl_data_provider_t membuf = {
     .open = mem_open,
@@ -1482,7 +1482,7 @@ void pspl_runtime_enumerate_psplcs(const pspl_runtime_package_t* package,
  *        reference count set to 1 when found
  * @return PSPLC representation (or NULL if not available)
  */
-const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_key(pspl_runtime_package_t* package,
+const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_key(const pspl_runtime_package_t* package,
                                                             const char* key, int retain) {
     if (!package)
         return NULL;

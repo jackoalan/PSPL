@@ -39,6 +39,7 @@ typedef struct {
     
     // Uniforms
     GLint mv_mtx_uni, mv_invxpose_uni;
+    GLint proj_mtx_uni;
     GLint tc_genmtx_arr;
     
 } GL2_shader_object_t;

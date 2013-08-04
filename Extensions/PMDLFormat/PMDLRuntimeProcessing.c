@@ -355,6 +355,7 @@ void pmdl_destroy(const pspl_runtime_arc_file_t* pmdl_file) {
 
 /* Invalidate context transformation cache (if values updated) */
 void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv_bits) {
+    int i;
     
     if (!inv_bits)
         return;
@@ -365,24 +366,19 @@ void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv
     
     if (inv_bits & (PMDL_INVALIDATE_MODEL | PMDL_INVALIDATE_VIEW)) {
         pmdl_matrix34_mul(ctx->model_mtx, ctx->cached_view_mtx, ctx->cached_modelview_mtx);
-#       if GL_ES_VERSION_2_0
-            int i;
-            for (i=0 ; i<3 ; ++i)
-                ctx->cached_modelview_mtx[3][i] = 0;
-            ctx->cached_modelview_mtx[3][3] = 1;
-#       endif
+        for (i=0 ; i<3 ; ++i)
+            ctx->cached_modelview_mtx[3][i] = 0;
+        ctx->cached_modelview_mtx[3][3] = 1;
         pmdl_matrix34_invxpose(ctx->cached_modelview_mtx, ctx->cached_modelview_invxpose_mtx);
-#       if GL_ES_VERSION_2_0
-            for (i=0 ; i<3 ; ++i)
-                ctx->cached_modelview_invxpose_mtx[3][i] = 0;
-            ctx->cached_modelview_invxpose_mtx[3][3] = 1;
-#       endif
+        for (i=0 ; i<3 ; ++i)
+            ctx->cached_modelview_invxpose_mtx[3][i] = 0;
+        ctx->cached_modelview_invxpose_mtx[3][3] = 1;
     }
     
     if (inv_bits & PMDL_INVALIDATE_PROJECTION) {
         if (ctx->projection_type == PMDL_PERSPECTIVE) {
             pmdl_matrix_perspective(ctx->cached_projection_mtx, ctx->projection.perspective);
-            ctx->f_tanv = tanf(ctx->projection.perspective.fov);
+            ctx->f_tanv = tanf(DegToRad(ctx->projection.perspective.fov));
             ctx->f_tanh = ctx->f_tanv * ctx->projection.perspective.aspect;
         } else if (ctx->projection_type == PMDL_ORTHOGRAPHIC) {
             pmdl_matrix_orthographic(ctx->cached_projection_mtx, ctx->projection.orthographic);
@@ -417,11 +413,11 @@ static int pmdl_aabb_frustum_test(pmdl_draw_context_t* ctx, float aabb[2][3]) {
         // If orthographic, perform some simple tests
         if (ctx->projection_type == PMDL_ORTHOGRAPHIC) {
             
-            if (point[2] > ctx->projection.orthographic.far) {
+            if (-point[2] > ctx->projection.orthographic.far) {
                 straddle |= TOO_FAR;
                 continue;
             }
-            if (point[2] < ctx->projection.orthographic.near) {
+            if (-point[2] < ctx->projection.orthographic.near) {
                 straddle |= TOO_NEAR;
                 continue;
             }
@@ -450,41 +446,44 @@ static int pmdl_aabb_frustum_test(pmdl_draw_context_t* ctx, float aabb[2][3]) {
         }
         
         // Perspective testing otherwise
+        else if (ctx->projection_type == PMDL_PERSPECTIVE) {
             
-        // See if vector exceeds far plane or comes too near
-        if (point[2] > ctx->projection.perspective.far) {
-            straddle |= TOO_FAR;
-            continue;
+            // See if vector exceeds far plane or comes too near
+            if (-point[2] > ctx->projection.perspective.far) {
+                straddle |= TOO_FAR;
+                continue;
+            }
+            if (-point[2] < ctx->projection.perspective.near) {
+                straddle |= TOO_NEAR;
+                continue;
+            }
+            
+            // Use radar-test to see if point's Y coordinate is within frustum
+            float y_threshold = ctx->f_tanv * (-point[2]);
+            if (point[1] > y_threshold) {
+                straddle |= TOO_UP;
+                continue;
+            }
+            if (point[1] < -y_threshold) {
+                straddle |= TOO_DOWN;
+                continue;
+            }
+            
+            // Same for X coordinate
+            float x_threshold = ctx->f_tanh * (-point[2]);
+            if (point[0] > x_threshold) {
+                straddle |= TOO_RIGHT;
+                continue;
+            }
+            if (point[0] < -x_threshold) {
+                straddle |= TOO_LEFT;
+                continue;
+            }
+            
+            // Point is in frustum
+            return 1;
+            
         }
-        if (point[2] < ctx->projection.perspective.near) {
-            straddle |= TOO_NEAR;
-            continue;
-        }
-        
-        // Use radar-test to see if point's Y coordinate is within frustum
-        float y_threshold = ctx->f_tanv * point[2];
-        if (point[1] > y_threshold) {
-            straddle |= TOO_UP;
-            continue;
-        }
-        if (point[1] < -y_threshold) {
-            straddle |= TOO_DOWN;
-            continue;
-        }
-        
-        // Same for X coordinate
-        float x_threshold = ctx->f_tanh * point[2];
-        if (point[0] > x_threshold) {
-            straddle |= TOO_RIGHT;
-            continue;
-        }
-        if (point[0] < -x_threshold) {
-            straddle |= TOO_LEFT;
-            continue;
-        }
-        
-        // Point is in frustum
-        return 1;
         
     }
     
@@ -555,7 +554,7 @@ static inline void null_shader() {
 
 
 /* This routine will draw PAR0 PMDLs */
-static void pmdl_draw_par0(pmdl_draw_context_t* ctx, pspl_runtime_arc_file_t* pmdl_file) {
+static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file) {
     pmdl_header* header = pmdl_file->file_data;
     
     // Shader hash array
@@ -602,30 +601,27 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, pspl_runtime_arc_file_t* pm
                 }
                 
                 // Apply mesh context
-                if (mesh_head->shader_index < 0)
-                    null_shader();
-                else {
-                    const pspl_runtime_psplc_t* shader_obj =
-                    pspl_runtime_get_psplc_from_hash(pmdl_file->parent, &shader_hashes[mesh_head->shader_index], 0);
+                const pspl_runtime_psplc_t* shader_obj = NULL;
+                if (mesh_head->shader_index < 0) {
+                    if (ctx->default_shader)
+                        shader_obj = ctx->default_shader;
+                    else
+                        null_shader();
+                } else
+                    shader_obj = pspl_runtime_get_psplc_from_hash(pmdl_file->parent, &shader_hashes[mesh_head->shader_index], 0);
                     
-                    if (shader_obj) {
-                        pspl_runtime_bind_psplc(shader_obj);
-                        
-#                       if PSPL_RUNTIME_PLATFORM_GL2
-#                           if GL_ES_VERSION_2_0
-                                glUniformMatrix4fv(shader_obj->native_shader.mv_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_mtx);
-                                glUniformMatrix4fv(shader_obj->native_shader.mv_invxpose_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_invxpose_mtx);
-                                glUniformMatrix4fv(shader_obj->native_shader.tc_genmtx_arr, 8, GL_FALSE, (GLfloat*)ctx->texcoord_mtx);
-#                           else
-                                glUniformMatrix3x4fv(shader_obj->native_shader.mv_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_mtx);
-                                glUniformMatrix3x4fv(shader_obj->native_shader.mv_invxpose_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_invxpose_mtx);
-                                glUniformMatrix3x4fv(shader_obj->native_shader.tc_genmtx_arr, 8, GL_FALSE, (GLfloat*)ctx->texcoord_mtx);
-#                           endif
-                        
-#                       elif PSPL_RUNTIME_PLATFORM_D3D11
-                        
-#                       endif
-                    }
+                if (shader_obj) {
+                    pspl_runtime_bind_psplc(shader_obj);
+                    
+#                   if PSPL_RUNTIME_PLATFORM_GL2
+                        glUniformMatrix4fv(shader_obj->native_shader.mv_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_mtx);
+                        glUniformMatrix4fv(shader_obj->native_shader.mv_invxpose_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_invxpose_mtx);
+                        glUniformMatrix4fv(shader_obj->native_shader.proj_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_projection_mtx);
+                        glUniformMatrix4fv(shader_obj->native_shader.tc_genmtx_arr, 8, GL_FALSE, (GLfloat*)ctx->texcoord_mtx);
+                    
+#                   elif PSPL_RUNTIME_PLATFORM_D3D11
+                    
+#                   endif
                 }
                 
                 // Iterate primitives
@@ -634,7 +630,7 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, pspl_runtime_arc_file_t* pm
                     index_buf += sizeof(pmdl_general_prim);
 #                   if PSPL_RUNTIME_PLATFORM_GL2
                         glDrawElements(resolve_prim(prim->prim_type), prim->prim_count, GL_UNSIGNED_SHORT,
-                                       (GLvoid*)(GLsizeiptr)prim->prim_start_idx);
+                                       (GLvoid*)(GLsizeiptr)(prim->prim_start_idx*2));
 #                   elif PSPL_RUNTIME_PLATFORM_D3D11
                     
 #                   endif
@@ -656,17 +652,17 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, pspl_runtime_arc_file_t* pm
 }
 
 /* This routine will draw PAR1 PMDLs */
-static void pmdl_draw_par1(pmdl_draw_context_t* ctx, pspl_runtime_arc_file_t* pmdl_file) {
+static void pmdl_draw_par1(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file) {
     
 }
 
 /* This routine will draw PAR2 PMDLs */
-static void pmdl_draw_par2(pmdl_draw_context_t* ctx, pspl_runtime_arc_file_t* pmdl_file) {
+static void pmdl_draw_par2(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file) {
     
 }
 
 /* This is the main draw dispatch routine */
-void pmdl_draw(pmdl_draw_context_t* ctx, pspl_runtime_arc_file_t* pmdl_file) {
+void pmdl_draw(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file) {
     pmdl_header* header = pmdl_file->file_data;
 
     // Master Frustum test
@@ -680,7 +676,7 @@ void pmdl_draw(pmdl_draw_context_t* ctx, pspl_runtime_arc_file_t* pmdl_file) {
         pmdl_draw_par1(ctx, pmdl_file);
     else if (header->sub_type_num == '2')
         pmdl_draw_par2(ctx, pmdl_file);
-    
+        
 }
 
 

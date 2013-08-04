@@ -107,6 +107,8 @@ void pspl_gx_offline_add_float(float val) {
     gx_trans_o.mem_cur.buf += 4;
 }
 
+#pragma mark libogc Derivative
+
 //#define _GP_DEBUG
 #define TEXCACHE_TESTING
 

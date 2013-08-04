@@ -17,7 +17,7 @@
 #include <PSPLInternal.h>
 
 #include "Preprocessor.h"
-#include "Buffer.h"
+#include <PSPL/PSPLBuffer.h>
 
 
 #define PSPL_MAX_PREPROCESSOR_TOKENS 64
@@ -506,6 +506,7 @@ void pspl_run_preprocessor(pspl_toolchain_driver_source_t* source,
             
             // Directive has finished by this point
             in_pp = 0;
+            *tok_read_ptr = '\0';
             
             // Ensure the directive was not empty
             if (tok_c) {

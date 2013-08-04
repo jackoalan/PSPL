@@ -86,8 +86,8 @@ typedef struct {
     size_t(*read_direct)(const void* handle, size_t num_bytes, void* data_buf);
     
     
-    /**< Duplicate data provider handle (for potential multi-threaded loading scenarios) 
-     * Used by PSPL's own `access archived file` routine */
+    /**< Duplicate data provider handle (for potentially multi-threaded loading scenarios) 
+     * Used by PSPL's own `access_archived_file` routine */
     void(*duplicate_handle)(pspl_dup_data_provider_handle_t* dup_handle, const void* handle);
     
     /**< Destroy duplicate data provider handle */
@@ -202,7 +202,7 @@ void pspl_runtime_enumerate_psplcs(const pspl_runtime_package_t* package,
  *        reference count set to 1 when found
  * @return PSPLC representation (or NULL if not available)
  */
-const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_key(pspl_runtime_package_t* package,
+const pspl_runtime_psplc_t* pspl_runtime_get_psplc_from_key(const pspl_runtime_package_t* package,
                                                             const char* key, int retain);
 
 /**

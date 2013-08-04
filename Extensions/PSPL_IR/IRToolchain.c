@@ -27,18 +27,24 @@ static int init(const pspl_toolchain_context_t* driver_context) {
     
     pspl_ir_state.vertex.in_matrix_def = 0;
     pspl_ir_state.vertex.tc_count = 0;
-    //pspl_calc_chain_init(&pspl_ir_state.vertex.pos_chain);
-    //for (i=0 ; i<MAX_TEX_COORDS ; ++i) {
-        //pspl_ir_state.vertex.tc_array[i].resolved_name_idx = -1;
-        //pspl_calc_chain_init(&pspl_ir_state.vertex.tc_array[i].tc_chain);
-    //}
     pspl_ir_state.vertex.bone_count = 0;
+    pspl_ir_state.vertex.shader_def = 0;
+    pspl_buffer_init(&pspl_ir_state.vertex.glsl_pre, 512);
+    pspl_buffer_init(&pspl_ir_state.vertex.glsl_post, 512);
+    pspl_buffer_init(&pspl_ir_state.vertex.hlsl_pre, 512);
+    pspl_buffer_init(&pspl_ir_state.vertex.hlsl_post, 512);
     
     pspl_ir_state.depth.test = PLATFORM;
     pspl_ir_state.depth.write = PLATFORM;
     
     pspl_ir_state.fragment.stage_count = 0;
-        
+    pspl_ir_state.fragment.shader_def = 0;
+    pspl_buffer_init(&pspl_ir_state.fragment.glsl_pre, 512);
+    pspl_buffer_init(&pspl_ir_state.fragment.glsl_post, 512);
+    pspl_buffer_init(&pspl_ir_state.fragment.hlsl_pre, 512);
+    pspl_buffer_init(&pspl_ir_state.fragment.hlsl_post, 512);
+
+    
     pspl_ir_state.blend.blending = PLATFORM;
     pspl_ir_state.blend.source_factor = SRC_ALPHA;
     pspl_ir_state.blend.dest_factor = ONE_MINUS | SRC_ALPHA;
@@ -48,11 +54,16 @@ static int init(const pspl_toolchain_context_t* driver_context) {
 }
 
 static void shutdown(const pspl_toolchain_context_t* driver_context) {
-    //int i;
     
-    //pspl_calc_chain_destroy(&pspl_ir_state.vertex.pos_chain);
-    //for (i=0 ; i<MAX_TEX_COORDS ; ++i)
-        //pspl_calc_chain_destroy(&pspl_ir_state.vertex.tc_array[i].tc_chain);
+    pspl_buffer_free(&pspl_ir_state.vertex.glsl_pre);
+    pspl_buffer_free(&pspl_ir_state.vertex.glsl_post);
+    pspl_buffer_free(&pspl_ir_state.vertex.hlsl_pre);
+    pspl_buffer_free(&pspl_ir_state.vertex.hlsl_post);
+    
+    pspl_buffer_free(&pspl_ir_state.fragment.glsl_pre);
+    pspl_buffer_free(&pspl_ir_state.fragment.glsl_post);
+    pspl_buffer_free(&pspl_ir_state.fragment.hlsl_pre);
+    pspl_buffer_free(&pspl_ir_state.fragment.hlsl_post);
     
 }
 
@@ -153,12 +164,6 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                          unsigned int command_argc,
                          const char** command_argv) {
     
-    if (pspl_ir_state.vertex.in_matrix_def) {
-        if (strcasecmp(command_name, "ENDMATRIX"))
-            pspl_error(-1, "Premature MATRIX end",
-                       "a 3x4 matrix must be closed with `ENDMATRIX()`");
-    }
-    
     
     if (is_vert(current_heading->heading_name)) {
         
@@ -208,6 +213,33 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                 
             } else
                 pspl_error(-1, "Invalid TEX_COORD usage", "there must be *two* arguments: TEX_COORD(<name>, <uv source>)");
+            
+        } else if (!strcasecmp(current_heading->heading_name, "SHADER")) {
+            
+            // Begin a vertex shader
+            if (command_argc < 2)
+                pspl_error(-1, "Invalid SHADER command usage", "there must be *two* arguments ([GLSL, HLSL], [PRE, POST])");
+            
+            if (!strcasecmp(command_argv[0], "GLSL")) {
+                if (!strcasecmp(command_argv[1], "PRE"))
+                    pspl_ir_state.vertex.shader_def = DEF_GLSL_VERT_PRE;
+                else if (!strcasecmp(command_argv[1], "POST"))
+                    pspl_ir_state.vertex.shader_def = DEF_GLSL_VERT_POST;
+                else
+                    pspl_error(-1, "Invalid SHADER token", "'%s' is not PRE or POST", command_argv[1]);
+
+            } else if (!strcasecmp(command_argv[0], "HLSL")) {
+                if (!strcasecmp(command_argv[1], "PRE"))
+                    pspl_ir_state.vertex.shader_def = DEF_HLSL_VERT_PRE;
+                else if (!strcasecmp(command_argv[1], "POST"))
+                    pspl_ir_state.vertex.shader_def = DEF_HLSL_VERT_POST;
+                else
+                    pspl_error(-1, "Invalid SHADER token", "'%s' is not PRE or POST", command_argv[1]);
+                
+            } else
+                pspl_error(-1, "Invalid SHADER token", "'%s' is not GLSL or HLSL", command_argv[0]);
+            
+            pspl_toolchain_line_read_only();
             
         } else
             pspl_error(-1, "Invalid VERTEX heading usage",
@@ -498,6 +530,33 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                 
             }
             
+        } else if (!strcasecmp(command_name, "SHADER")) {
+            
+            // Begin a fragment shader
+            if (command_argc < 2)
+                pspl_error(-1, "Invalid SHADER command usage", "there must be *two* arguments ([GLSL, HLSL], [PRE, POST])");
+            
+            if (!strcasecmp(command_argv[0], "GLSL")) {
+                if (!strcasecmp(command_argv[1], "PRE"))
+                    pspl_ir_state.fragment.shader_def = DEF_GLSL_FRAG_PRE;
+                else if (!strcasecmp(command_argv[1], "POST"))
+                    pspl_ir_state.fragment.shader_def = DEF_GLSL_FRAG_POST;
+                else
+                    pspl_error(-1, "Invalid SHADER token", "'%s' is not PRE or POST", command_argv[1]);
+                
+            } else if (!strcasecmp(command_argv[0], "HLSL")) {
+                if (!strcasecmp(command_argv[1], "PRE"))
+                    pspl_ir_state.fragment.shader_def = DEF_HLSL_FRAG_PRE;
+                else if (!strcasecmp(command_argv[1], "POST"))
+                    pspl_ir_state.fragment.shader_def = DEF_HLSL_FRAG_POST;
+                else
+                    pspl_error(-1, "Invalid SHADER token", "'%s' is not PRE or POST", command_argv[1]);
+                
+            } else
+                pspl_error(-1, "Invalid SHADER token", "'%s' is not GLSL or HLSL", command_argv[0]);
+            
+            pspl_toolchain_line_read_only();
+            
         } else
             pspl_error(-1, "Unrecognised FRAGMENT command",
                        "`%s` command not recognised by FRAGMENT heading", command_name);
@@ -612,6 +671,62 @@ static void line_read(const pspl_toolchain_context_t* driver_context,
                       const char* line_text) {
     int i;
     
+    // Check for shader end
+    int shader_end = 0;
+    const char* token = line_text;
+    while (*token == ' ' || *token == '\t')
+        ++token;
+    char testbuf[10];
+    strncpy(testbuf, token, 10);
+    testbuf[9] = '\0';
+    if (!strcasecmp(testbuf, "ENDSHADER"))
+        shader_end = 1;
+    
+    // If defining shader code, pass through to shader buffer
+    pspl_buffer_t* target_buf = NULL;
+    if (pspl_ir_state.vertex.shader_def) {
+        if (shader_end) {
+            pspl_ir_state.vertex.shader_def = DEF_NONE;
+            pspl_toolchain_line_read_auto();
+            return;
+        }
+        
+        if (pspl_ir_state.vertex.shader_def == DEF_GLSL_VERT_PRE)
+            target_buf = &pspl_ir_state.vertex.glsl_pre;
+        else if (pspl_ir_state.vertex.shader_def == DEF_GLSL_VERT_POST)
+            target_buf = &pspl_ir_state.vertex.glsl_post;
+        else if (pspl_ir_state.vertex.shader_def == DEF_HLSL_VERT_PRE)
+            target_buf = &pspl_ir_state.vertex.hlsl_pre;
+        else if (pspl_ir_state.vertex.shader_def == DEF_HLSL_VERT_POST)
+            target_buf = &pspl_ir_state.vertex.hlsl_post;
+        
+    } else if (pspl_ir_state.fragment.shader_def) {
+        if (shader_end) {
+            pspl_ir_state.fragment.shader_def = DEF_NONE;
+            pspl_toolchain_line_read_auto();
+            return;
+        }
+        
+        if (pspl_ir_state.fragment.shader_def == DEF_GLSL_FRAG_PRE)
+            target_buf = &pspl_ir_state.fragment.glsl_pre;
+        else if (pspl_ir_state.fragment.shader_def == DEF_GLSL_FRAG_POST)
+            target_buf = &pspl_ir_state.fragment.glsl_post;
+        else if (pspl_ir_state.fragment.shader_def == DEF_HLSL_FRAG_PRE)
+            target_buf = &pspl_ir_state.fragment.hlsl_pre;
+        else if (pspl_ir_state.fragment.shader_def == DEF_HLSL_FRAG_POST)
+            target_buf = &pspl_ir_state.fragment.hlsl_post;
+        
+    }
+    
+    if (target_buf) {
+        pspl_buffer_addstr(target_buf, "    ");
+        pspl_buffer_addstr(target_buf, line_text);
+        pspl_buffer_addchar(target_buf, '\n');
+        
+        return;
+    }
+    
+    // Matrix or operator definition
     if (current_heading->heading_level == 1) {
         
         if (is_vert(current_heading->heading_trace->heading_name)) {

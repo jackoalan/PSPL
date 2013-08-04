@@ -202,7 +202,6 @@
 		E4AFAE98172D899D00F7A0BF /* Compiler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Compiler.c; sourceTree = "<group>"; };
 		E4AFAE9B172DB2D400F7A0BF /* Packager.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Packager.c; sourceTree = "<group>"; };
 		E4AFAE9C172DB2D400F7A0BF /* Packager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Packager.h; sourceTree = "<group>"; };
-		E4AFAEA017315D3800F7A0BF /* Buffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Buffer.h; sourceTree = "<group>"; };
 		E4AFAEA117315D4000F7A0BF /* Buffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Buffer.c; sourceTree = "<group>"; };
 		E4BB18D81734333800B8CDD1 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4BB18DB173462A800B8CDD1 /* BuiltinsToolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = BuiltinsToolchain.c; sourceTree = "<group>"; };
@@ -224,6 +223,7 @@
 		E4CD266C179F386B00172F31 /* PMDLRuntimeLinAlgebraPS.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = PMDLRuntimeLinAlgebraPS.s; sourceTree = "<group>"; usesTabs = 1; };
 		E4CD266D179F396E00172F31 /* PMDLRuntimeLinAlgebraSSE.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = PMDLRuntimeLinAlgebraSSE.s; sourceTree = "<group>"; };
 		E4CE71F5178509D2009F5932 /* PMDLCommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PMDLCommon.h; sourceTree = "<group>"; };
+		E4E4454717AEB3140077825A /* PSPLBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLBuffer.h; sourceTree = "<group>"; };
 		E4E4916C175105FF006FCA59 /* RuntimeCore.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = RuntimeCore.c; sourceTree = "<group>"; };
 		E4E4916E17510684006FCA59 /* PSPLCommon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = PSPLCommon.c; sourceTree = "<group>"; };
 		E4E49170175108C4006FCA59 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -468,10 +468,9 @@
 			children = (
 				E4AFAE2A171C92D100F7A0BF /* README.md */,
 				E4AFAE8417259A1900F7A0BF /* CMakeLists.txt */,
+				E4AFAEA117315D4000F7A0BF /* Buffer.c */,
 				E4AFAE93172D5F7900F7A0BF /* Driver.h */,
 				E4AFAE46171CA34700F7A0BF /* Driver.c */,
-				E4AFAEA017315D3800F7A0BF /* Buffer.h */,
-				E4AFAEA117315D4000F7A0BF /* Buffer.c */,
 				E4AFAE94172D898100F7A0BF /* Preprocessor.h */,
 				E4AFAE95172D898B00F7A0BF /* Preprocessor.c */,
 				E4AFAE97172D899400F7A0BF /* Compiler.h */,
@@ -501,6 +500,7 @@
 			isa = PBXGroup;
 			children = (
 				E4AFAE33171C941500F7A0BF /* PSPLCommon.h */,
+				E4E4454717AEB3140077825A /* PSPLBuffer.h */,
 				E4995F2A173E8B3E003B06BF /* Hash */,
 				E4995F2B173E8BCE003B06BF /* PSPLHash.h */,
 				E4AFAE4B171CA3DA00F7A0BF /* PSPLValue.h */,

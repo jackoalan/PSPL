@@ -111,7 +111,7 @@ static void instruction_hook(const pspl_toolchain_context_t* driver_context,
                     stagesourcesc[j] = GX_CC_CPREV;
                     stagesourcesa[j] = GX_CA_APREV;
                 } else if (stage->sources[j] == IN_SIDECHAIN) {
-                    stagesourcesc[j] = GX_CC_C0 + stage->side_in_indices[j];
+                    stagesourcesc[j] = GX_CC_C0 + stage->side_in_indices[j]*2;
                     stagesourcesa[j] = GX_CA_A0 + stage->side_in_indices[j];
                 }
             }

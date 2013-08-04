@@ -116,6 +116,10 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
     // Main vertex code
     pspl_buffer_addstr(vert, "void main() {\n\n");
     
+    // Pre-vertex code
+    pspl_buffer_addstr(vert, ir_state->vertex.glsl_pre.buf);
+    pspl_buffer_addchar(vert, '\n');
+    
     // Position and normal (if no bones)
     if (!ir_state->vertex.bone_count) {
         pspl_buffer_addstr(vert, "    // Non-rigged position and normal\n");
@@ -152,6 +156,10 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
             snprintf(assign, 64, "    tex_coords[%u] = normal * tc_generator_mats[%u];\n", j, j);
         pspl_buffer_addstr(vert, assign);
     }
+    
+    // Post-vertex code
+    pspl_buffer_addchar(vert, '\n');
+    pspl_buffer_addstr(vert, ir_state->vertex.glsl_post.buf);
     
     pspl_buffer_addstr(vert, "\n");
     
@@ -202,6 +210,10 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
     
     // Main fragment code
     pspl_buffer_addstr(frag, "void main() {\n");
+    
+    // Pre-fragment code
+    pspl_buffer_addstr(frag, ir_state->fragment.glsl_pre.buf);
+    pspl_buffer_addchar(frag, '\n');
     
     // Stage output variables
     for (j=0 ; j<ir_state->fragment.stage_count ; ++j) {
@@ -270,6 +282,10 @@ static void generate_fragment(const pspl_toolchain_context_t* driver_context,
         pspl_buffer_addstr(frag, "\n");
     }
     
+    // Post-fragment code
+    pspl_buffer_addchar(frag, '\n');
+    pspl_buffer_addstr(frag, ir_state->fragment.glsl_post.buf);
+    pspl_buffer_addchar(frag, '\n');
     
     pspl_buffer_addstr(frag, "}\n\n");
         
