@@ -37,7 +37,7 @@ def _augment_loop_vert_array(lv_array, mesh, loop):
         for existing_loop in existing_loop_set:
             matches = True
             for uv_layer in mesh.uv_layers:
-                existing_uv_coords = uv_layer.data[existing_loop.index].uv
+                existing_uv_coords = uv_layer.data[existing_loop.loop.index].uv
                 check_uv_coords = uv_layer.data[loop.index].uv
                 if (existing_uv_coords[0] != check_uv_coords[0] or
                     existing_uv_coords[1] != check_uv_coords[1]):
@@ -79,6 +79,33 @@ def _find_polygon_opposite_edge(mesh, polygon, edge):
                 
     return None
 
+
+# Method to find edge connecting two vertex indices
+def _find_edge_of_verts(mesh, a, b):
+    if not a or not b:
+        return None
+    
+    for edge in mesh.edges:
+        if (a in edge.vertices) and (b in edge.vertices):
+            return edge
+
+    return None
+
+
+# Method to find triangle opposite another triangle over two loop-vert sets
+def _find_polygon_opposite_lvs(mesh, original_triangle, lv_a, lv_b):
+    a_idx = lv_a[0].loop.vertex_index
+    b_idx = lv_b[0].loop.vertex_index
+    
+    for triangle in mesh.polygons:
+        
+        if triangle == original_triangle:
+            continue
+        
+        if (a_idx in triangle.vertices and b_idx in triangle.vertices):
+            return triangle
+
+    return None
 
 
 
@@ -148,7 +175,10 @@ class pmdl_draw_general:
             
             # Temporary references to trace out strips of triangles
             temp_poly = poly
-            temp_edge = None
+            
+            # Rolling references of last two emitted loop-vert sets (b is older)
+            last_loop_vert_a = None
+            last_loop_vert_b = None
                 
             # In the event of vertex-buffer overflow, this will be made true;
             # resulting in the immediate splitting of a tri-strip
@@ -168,60 +198,67 @@ class pmdl_draw_general:
                                 break
                             best_collection['vertices'].append(loop_vert)
                         tri_strip.append(best_collection['vertices'].index(loop_vert))
+                        last_loop_vert_b = last_loop_vert_a
+                        last_loop_vert_a = loop_vert
                         opt_gpu_vert_count += 1
                         #print('appended initial loop', loop_vert[0].loop.index)
 
                     if is_new_collection:
                         break
-                
-                
-                else: # Not the first triangle in strip
-                    
-                    # Find odd loop-vert out, add to tri-strip
-                    loop_vert = None
-                    for vert_idx in temp_poly.vertices:
-                        if vert_idx in temp_edge.vertices:
-                            continue
-                        for loop_idx in temp_poly.loop_indices:
-                            loop = mesh.loops[loop_idx]
-                            if loop.vertex_index == vert_idx:
-                                loop_vert = _get_loop_set(loop_vert_array[vert_idx], mesh, loop)
-                                break
-                        break
             
-                    if loop_vert not in best_collection['vertices']:
+                
+                else: # Not the first triangle in strip; look up all three loop-verts,
+                      # ensure it matches last-2 rolling reference, emit remaining loop-vert
+                    
+                    # Iterate loop verts
+                    odd_loop_vert_out = None
+                    loop_vert_match_count = 0
+                    for poly_loop_idx in temp_poly.loop_indices:
+                        poly_loop = mesh.loops[poly_loop_idx]
+                        loop_vert = _get_loop_set(loop_vert_array[poly_loop.vertex_index], mesh, poly_loop)
+                    
+                        if (loop_vert == last_loop_vert_a or loop_vert == last_loop_vert_b):
+                            loop_vert_match_count += 1
+                            continue
+                
+                        odd_loop_vert_out = loop_vert
+                    
+                    
+                    # Ensure there are two existing matches to continue tri-strip
+                    if loop_vert_match_count != 2 or not odd_loop_vert_out:
+                        break
+                            
+                    
+                    # Add to tri-strip
+                    if odd_loop_vert_out not in best_collection['vertices']:
                         best_collection, is_new_collection = self._check_collection_overflow(mesh, best_collection)
                         if is_new_collection:
                             break
-                        best_collection['vertices'].append(loop_vert)
-                    tri_strip.append(best_collection['vertices'].index(loop_vert))
+                        best_collection['vertices'].append(odd_loop_vert_out)
+                    tri_strip.append(best_collection['vertices'].index(odd_loop_vert_out))
+                    last_loop_vert_b = last_loop_vert_a
+                    last_loop_vert_a = odd_loop_vert_out
                     opt_gpu_vert_count += 1
-                    #print('appended loop', loop_vert[0].loop.index)
+
 
 
                 # This polygon is good
                 visited_polys.add(temp_poly)
-                temp_edge = None
-                find_poly = temp_poly
-                temp_poly = None
+                
                 
                 # Find a polygon directly connected to this one to continue strip
-                for poly_loop_idx in find_poly.loop_indices:
-                    poly_loop = mesh.loops[poly_loop_idx]
-                    poly_edge = mesh.edges[poly_loop.edge_index]
-                
-                    opposite_poly = _find_polygon_opposite_edge(mesh, find_poly, poly_edge)
-                    if opposite_poly and opposite_poly not in visited_polys:
-                        temp_edge = poly_edge
-                        temp_poly = opposite_poly
-                        break
-                
-                
+                temp_poly = _find_polygon_opposite_lvs(mesh, temp_poly, last_loop_vert_a, last_loop_vert_b)
+                if temp_poly in visited_polys:
+                    temp_poly = None
+
+
+
             # Add tri-strip to element array
             best_collection['tri_strips'].append({'mesh':obj, 'strip':tri_strip})
             
         print("GPU will receive", opt_gpu_vert_count, "unified tri-strip vertices out of", len(mesh.loops), "original vertices")
         print("Mesh contains", len(mesh.polygons), "triangles\n")
+        
 
 
     # Augments draw generator with a single blender MESH data object and
@@ -257,7 +294,7 @@ class pmdl_draw_general:
             
             # UVs
             for uv_idx in range(collection['uv_count']):
-                for comp in mesh.uv_layers[uv_idx].data.uv:
+                for comp in mesh.uv_layers[uv_idx].data[loop_vert.loop.index].uv:
                     vert_bytes += vstruct.pack(comp)
                 
         return collection['uv_count'], collection['max_bone_count'], vert_bytes
@@ -280,21 +317,43 @@ class pmdl_draw_general:
         # Collection element byte-array
         cur_offset = 0
         element_bytes = bytearray()
-                
+        
+        # Last element index entry and strip length for forming degenerate strip
+        last_elem = None
+        strip_len = 0
+
+        # Build single degenerate tri-strip
         for strip in collection['tri_strips']:
-            #print('new strip')
+            #print('new strip', collection['tri_strips'].index(strip))
+            
             if last_mesh != strip['mesh']:
+                #print('splitting primitive')
+                # New mesh; force new strip
+                mesh_primitives['primitives'].append({'offset':cur_offset, 'length':strip_len})
+                cur_offset += strip_len
+                last_elem = None
+                strip_len = 0
                 last_mesh = strip['mesh']
                 mesh_primitives = {'mesh':last_mesh, 'primitives':[]}
                 collection_primitives.append(mesh_primitives)
             
+            elif last_elem:
+                #print('extending primitive')
+                # Existing mesh being extended as degenerate strip
+                strip_len += 2
+                element_bytes += estruct.pack(last_elem)
+                element_bytes += estruct.pack(strip['strip'][0])
+            
             # Primitive tri-strip byte array
             for idx in strip['strip']:
                 #print(idx)
+                strip_len += 1
                 element_bytes += estruct.pack(idx)
-                
-            mesh_primitives['primitives'].append({'offset':cur_offset, 'length':len(strip['strip'])})
-            cur_offset += len(strip['strip'])
+                last_elem = idx
+    
+        # Final mesh entry
+        mesh_primitives['primitives'].append({'offset':cur_offset, 'length':strip_len})
+        cur_offset += strip_len
             
         return collection_primitives, element_bytes
 

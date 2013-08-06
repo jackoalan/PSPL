@@ -47,6 +47,7 @@ static void renderfunc() {
     // Draw monkey
     glDisable(GL_CULL_FACE);
     pmdl_draw(&monkey_ctx, monkey_model);
+    glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
     glUseProgram(0);
     
     if (!((frame_count)%10)) {
@@ -64,6 +65,7 @@ static void renderfunc() {
     glDisable(GL_DEPTH_TEST);
     
     // Render
+    /*
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0, 800, 0.0, 600, -2.0, 500.0);
@@ -76,6 +78,7 @@ static void renderfunc() {
     int i;
     for (i=0 ; i<fps_str_len ; ++i)
         glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, fps_str[i]);
+     */
     
     glutSwapBuffers();
     

@@ -184,9 +184,11 @@ typedef struct {
                 
                 glEnableVertexAttribArray(0); // Position
                 glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, buf_stride, 0);
+            glVertexPointer(3, GL_FLOAT, buf_stride, 0);
                 
                 glEnableVertexAttribArray(1); // Normal
                 glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, buf_stride, (GLvoid*)12);
+            glNormalPointer(GL_FLOAT, buf_stride, (GLvoid*)12);
                 
                 unsigned j;
                 GLuint idx = 2;
@@ -539,8 +541,12 @@ static inline int resolve_prim(uint32_t prim) {
 
 /* Set NULL shader (some sort of fixed-function preset) */
 #if PSPL_RUNTIME_PLATFORM_GL2
-static inline void null_shader() {
+static inline void null_shader(pmdl_draw_context_t* ctx) {
     glUseProgram(0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadMatrixf((GLfloat*)ctx->cached_modelview_mtx);
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixf((GLfloat*)ctx->cached_projection_mtx);
 }
 #elif PSPL_RUNTIME_PLATFORM_GX
 static inline void null_shader() {
@@ -557,12 +563,20 @@ static inline void null_shader() {
 static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file) {
     pmdl_header* header = pmdl_file->file_data;
     
+    // DEBUG!
+    // Current time
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    double time = tv.tv_sec + ((double)tv.tv_usec / (double)USEC_PER_SEC);
+    time /= 1;
+    int allowed_elements = (int)time % 13;
+    
     // Shader hash array
     pspl_hash* shader_hashes = pmdl_file->file_data + header->shader_table_offset + sizeof(uint32_t);
     
     void* collection_buf = pmdl_file->file_data + header->collection_offset;
     pmdl_col_header* collection_header = collection_buf;
-    int i,j,k;
+    int i,j,k,p;
     for (i=0 ; i<header->collection_count; ++i) {
         
         void* index_buf = collection_buf + collection_header->draw_idx_off;
@@ -587,6 +601,11 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
             
             
             // Iterate meshes
+            // Three passes: first is shaded solid, second is wireframe, third is point debug pass
+        //void* saved_index_buf = index_buf;
+        //for (p=0 ; p<3 ; ++p) {
+            //index_buf = saved_index_buf;
+            
             for (j=0 ; j<mesh_count ; ++j) {
                 pmdl_mesh_header* mesh_head = &mesh_heads[j];
                 
@@ -606,10 +625,10 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                     if (ctx->default_shader)
                         shader_obj = ctx->default_shader;
                     else
-                        null_shader();
+                        null_shader(ctx);
                 } else
                     shader_obj = pspl_runtime_get_psplc_from_hash(pmdl_file->parent, &shader_hashes[mesh_head->shader_index], 0);
-                    
+                
                 if (shader_obj) {
                     pspl_runtime_bind_psplc(shader_obj);
                     
@@ -624,20 +643,46 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
 #                   endif
                 }
                 
+                /*
+                glPushMatrix();
+                if (p == 1) {
+                    null_shader(ctx);
+                    glColor3f(1.0, 0.0, 0.0);
+                } else if (p == 2) {
+                    null_shader(ctx);
+                    glColor3f(0.0, 1.0, 0.0);
+                }*/
+                
                 // Iterate primitives
                 for (k=0 ; k<prim_count ; ++k) {
                     pmdl_general_prim* prim = index_buf;
                     index_buf += sizeof(pmdl_general_prim);
 #                   if PSPL_RUNTIME_PLATFORM_GL2
-                        glDrawElements(resolve_prim(prim->prim_type), prim->prim_count, GL_UNSIGNED_SHORT,
-                                       (GLvoid*)(GLsizeiptr)(prim->prim_start_idx*2));
+                        //glDrawElements(resolve_prim(prim->prim_type), prim->prim_count, GL_UNSIGNED_SHORT,
+                                       //(GLvoid*)(GLsizeiptr)(prim->prim_start_idx*2));
+                    glDrawElements(resolve_prim(prim->prim_type), prim->prim_count, GL_UNSIGNED_SHORT,
+                                   (GLvoid*)(GLsizeiptr)(prim->prim_start_idx*2));
+                    /*
+                    if (p == 1) {
+                    glDrawElements(GL_LINE_STRIP, prim->prim_count, GL_UNSIGNED_SHORT,
+                                   (GLvoid*)(GLsizeiptr)(prim->prim_start_idx*2));
+                    } else if (p == 2) {
+                    glDrawElements(GL_POINTS, prim->prim_count, GL_UNSIGNED_SHORT,
+                                   (GLvoid*)(GLsizeiptr)(prim->prim_start_idx*2));
+                    }
+                     */
 #                   elif PSPL_RUNTIME_PLATFORM_D3D11
                     
 #                   endif
                     
                 }
+                //glPopMatrix();
                 
             }
+            
+            //glClear(GL_DEPTH_BUFFER_BIT);
+            
+        //}
         
 
         
