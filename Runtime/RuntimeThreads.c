@@ -6,6 +6,7 @@
 //
 //
 
+#include <PSPL/PSPLCommon.h>
 #include <PSPL/PSPLRuntimeThreads.h>
 
 #if defined(PSPL_THREADING_GCD)
@@ -89,6 +90,7 @@ intptr_t pspl_api_load_subject_index() {
 
 #elif defined(PSPL_THREADING_OGC)
 #include <ogc/lwp_config.h>
+#include <ogc/lwp_objmgr.h>
 
 static intptr_t api_load_states[LWP_MAX_THREADS+1];
 static intptr_t api_load_subject_indices[LWP_MAX_THREADS+1];

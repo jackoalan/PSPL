@@ -6,6 +6,7 @@
 //
 //
 
+#include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <PSPL/PSPLCommon.h>
@@ -60,6 +61,20 @@ void* pspl_malloc_malloc(pspl_malloc_context_t* context, size_t size) {
     }
     return (context->object_arr[context->object_num++] = malloc(size));
 }
+
+#if GEKKO
+void* pspl_malloc_memalign(pspl_malloc_context_t* context, size_t size, size_t align) {
+    int i;
+    for (i=0 ; i<context->object_num ; ++i)
+    if (!context->object_arr[i])
+    return (context->object_arr[i] = memalign(size, align));
+    if (context->object_num >= context->object_cap) {
+        context->object_cap *= 2;
+        context->object_arr = realloc(context->object_arr, context->object_cap*sizeof(const void*));
+    }
+    return (context->object_arr[context->object_num++] = malloc(size));
+}
+#endif
 
 void pspl_malloc_free(pspl_malloc_context_t* context, void* ptr) {
     int i;

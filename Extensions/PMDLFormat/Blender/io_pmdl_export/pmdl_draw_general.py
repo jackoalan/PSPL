@@ -64,34 +64,6 @@ def _get_loop_set(lv_array, mesh, loop):
     return None
 
 
-# Method to find polygon on opposite side of edge
-def _find_polygon_opposite_edge(mesh, polygon, edge):
-    for poly in mesh.polygons:
-        
-        # Skip provided polygon
-        if poly == polygon:
-            continue
-
-        # Determine if polygon touches edge
-        for loop_idx in poly.loop_indices:
-            if edge.index == mesh.loops[loop_idx].edge_index:
-                return poly
-                
-    return None
-
-
-# Method to find edge connecting two vertex indices
-def _find_edge_of_verts(mesh, a, b):
-    if not a or not b:
-        return None
-    
-    for edge in mesh.edges:
-        if (a in edge.vertices) and (b in edge.vertices):
-            return edge
-
-    return None
-
-
 # Method to find triangle opposite another triangle over two loop-vert sets
 def _find_polygon_opposite_lvs(mesh, original_triangle, lv_a, lv_b):
     a_idx = lv_a[0].loop.vertex_index

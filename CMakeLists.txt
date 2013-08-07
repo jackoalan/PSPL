@@ -10,8 +10,40 @@ if(PSPL_WIN32 OR PSPL_WIN64)
       "Select which platform to (cross) compile PSPL Toolchain for [NATIVE, WII, WINDOWS] (default WINDOWS)")
   set(PSPL_RUNTIME_TARGET_SYSTEM WINDOWS CACHE STRING
       "Select which platform to (cross) compile PSPL Runtime for [NATIVE, WII, WINDOWS] (default WINDOWS)")
+  macro(pspl_add_library name)
+    add_library(${name} ${ARGN})
+  endmacro(pspl_add_library)
+  macro(pspl_add_executable name)
+    add_executable(${name} ${ARGN})
+  endmacro(pspl_add_executable)
+  macro(pspl_target_link_libraries name)
+    target_link_libraries(${name} ${ARGN})
+  endmacro(pspl_target_link_libraries)
 elseif(PSPL_WII)
   find_package(WiiStep REQUIRED)
+  set(PSPL_TOOLCHAIN_TARGET_SYSTEM WII CACHE STRING
+      "Select which platform to (cross) compile PSPL Toolchain for [NATIVE, WII, WINDOWS] (default WII)")
+  set(PSPL_RUNTIME_TARGET_SYSTEM WII CACHE STRING
+      "Select which platform to (cross) compile PSPL Runtime for [NATIVE, WII, WINDOWS] (default WII)")
+  macro(pspl_add_library name)
+    add_wii_library(${name} ${ARGN})
+  endmacro(pspl_add_library)
+  macro(pspl_add_executable name)
+    add_wii_executable(${name} ${ARGN})
+  endmacro(pspl_add_executable)
+  macro(pspl_target_link_libraries name)
+    target_link_wii_llvm_libraries(${name} ${ARGN})
+  endmacro(pspl_target_link_libraries)
+else()
+  macro(pspl_add_library name)
+    add_library(${name} ${ARGN})
+  endmacro(pspl_add_library)
+  macro(pspl_add_executable name)
+    add_executable(${name} ${ARGN})
+  endmacro(pspl_add_executable)
+  macro(pspl_target_link_libraries name)
+    target_link_libraries(${name} ${ARGN})
+  endmacro(pspl_target_link_libraries)
 endif()
 
 # Select Mac SDK
@@ -50,6 +82,9 @@ endif()
 if(PSPL_RUNTIME_TARGET_SYSTEM STREQUAL WINDOWS)
   set(PSPL_RUNTIME_HASHING WINDOWS CACHE STRING 
       "Select which hashing library to use for run-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (WINDOWS selected by default)")
+elseif(PSPL_RUNTIME_TARGET_SYSTEM STREQUAL WII)
+  set(PSPL_RUNTIME_HASHING BUILTIN CACHE STRING 
+      "Select which hashing library to use for run-time object hashing [BUILTIN, COMMON_CRYPTO, OPENSSL, WINDOWS] (BUILTIN selected by default)")
 else()
   if(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
     set(PSPL_RUNTIME_HASHING COMMON_CRYPTO CACHE STRING 
@@ -61,7 +96,7 @@ else()
 endif()
 
 if(PSPL_TOOLCHAIN_HASHING STREQUAL BUILTIN OR PSPL_RUNTIME_HASHING STREQUAL BUILTIN)
-  add_library(hash_builtin hash_builtin.c)
+  pspl_add_library(hash_builtin hash_builtin.c)
 endif()
 
 # Runtime Threading API
@@ -84,7 +119,7 @@ else()
 endif()
 
 # Common routines
-add_library(pspl_common STATIC PSPLCommon.c)
+pspl_add_library(pspl_common STATIC PSPLCommon.c)
 
 
 ############################
@@ -92,7 +127,10 @@ add_library(pspl_common STATIC PSPLCommon.c)
 ############################
 
 # Runtime platform options
-if(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
+if(PSPL_WII)
+  set(PSPL_RUNTIME_PLATFORM GX CACHE STRING 
+      "Select which platform to build runtime for [${pspl_platform_list}] (GX selected by default)")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
   set(PSPL_RUNTIME_PLATFORM GL2 CACHE STRING 
       "Select which platform to build runtime for [${pspl_platform_list}] (GL2 selected by default)")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Windows)
@@ -234,7 +272,9 @@ configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_available_extensions.c.in
 ################
 
 # Target subdirectories
-add_subdirectory(Toolchain)
+if(NOT PSPL_WII)
+  add_subdirectory(Toolchain)
+endif()
 
 list(FIND pspl_platform_list ${PSPL_RUNTIME_PLATFORM} runtime_idx)
 if(runtime_idx GREATER -1)
@@ -265,5 +305,11 @@ get_filename_component(PSPL_RT_TARGET_FILE ${PSPL_BINARY_DIR}/pspl-rt-targets.cm
 get_target_property(PSPL_BINARY_LOC pspl LOCATION)
 configure_file(${PSPL_SOURCE_DIR}/cmake/PSPLConfig.cmake.in
                PSPLConfig.cmake)
-export(PACKAGE PSPL)
+if(PSPL_WII)
+  export(PACKAGE PSPL-WII)
+elseif(PSPL_WIN32 OR PSPL_WIN64)
+  export(PACKAGE PSPL-WIN)
+else()
+  export(PACKAGE PSPL)
+endif()
 

@@ -40,15 +40,15 @@ static void bind_object(pspl_runtime_psplc_t* object) {
 /* PSPL-IR routines */
 static int cur_mtx = 0;
 void pspl_ir_load_pos_mtx(pspl_matrix34_t* mtx) {
-    GX_LoadPosMtxImm(mtx, GX_PNMTX0);
+    GX_LoadPosMtxImm(mtx[0], GX_PNMTX0);
     GX_SetCurrentMtx(GX_PNMTX0);
 }
 void pspl_ir_load_norm_mtx(pspl_matrix34_t* mtx) {
-    GX_LoadNrmMtxImm(mtx, GX_PNMTX0);
+    GX_LoadNrmMtxImm(mtx[0], GX_PNMTX0);
     GX_SetCurrentMtx(GX_PNMTX0);
 }
 void pspl_ir_load_uv_mtx(pspl_matrix34_t* mtx) {
-    GX_LoadTexMtxImm(mtx, GX_TEXMTX0+cur_mtx, GX_MTX3x4);
+    GX_LoadTexMtxImm(mtx[0], GX_TEXMTX0+cur_mtx, GX_MTX3x4);
     ++cur_mtx;
 }
 void pspl_ir_load_finish() {

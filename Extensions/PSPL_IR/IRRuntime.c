@@ -7,7 +7,7 @@
 //
 
 #include <stdio.h>
-#include <PSPLExtension.h>
+#include <PSPLRuntime.h>
 #include <PSPL/PSPL_IR.h>
 
 static void bind_object(pspl_runtime_psplc_t* object) {

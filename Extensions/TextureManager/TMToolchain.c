@@ -12,6 +12,21 @@
 #include "TMToolchain.h"
 #include "TMCommon.h"
 
+/* General PMDL platforms */
+extern pspl_platform_t GL2_platform;
+extern pspl_platform_t D3D11_platform;
+static const pspl_platform_t* general_plats[] = {
+    &GL2_platform,
+    &D3D11_platform,
+    NULL};
+
+/* GX PMDL platforms */
+extern pspl_platform_t GX_platform;
+static const pspl_platform_t* gx_plats[] = {
+    &GX_platform,
+    NULL};
+
+
 extern pspl_tm_decoder_t* pspl_tm_available_decoders[];
 extern pspl_tm_encoder_t* pspl_tm_available_encoders[];
 
@@ -35,6 +50,7 @@ typedef struct {
     const char* name_ext;
     const char* name_fext;
     uint8_t mipmap;
+    uint8_t gx;
 } pspl_tm_convert_t;
 
 /* Box filter algorithm (for mipmapping) */
@@ -153,6 +169,8 @@ static int sample_converter(void** buf_out, size_t* len_out, const char* path_in
     
     // Perform encode
     pspl_tm_encoder_t* enc = pspl_tm_available_encoders[0];
+    if (conv->gx)
+        enc = pspl_tm_available_encoders[1];
     if (!enc->encoder_hook)
         pspl_error(-1, "Unimplemented encoder hook", "encoder '%s' doesn't implement encoder hook",
                    enc->name);
@@ -228,6 +246,17 @@ static void sample_direc(const pspl_toolchain_context_t* driver_context,
     
     int i;
     
+    // Platforms to convert for
+    uint8_t make_general = 0;
+    uint8_t make_gx = 0;
+    for (i=0 ; i<driver_context->target_runtime_platforms_c; ++i) {
+        const pspl_platform_t* plat = driver_context->target_runtime_platforms[i];
+        if (plat == &GL2_platform || plat == &D3D11_platform)
+            make_general = 1;
+        else if (plat == &GX_platform)
+            make_gx = 1;
+    }
+    
     // Converter state
     pspl_tm_convert_t convert_state;
     
@@ -297,9 +326,20 @@ static void sample_direc(const pspl_toolchain_context_t* driver_context,
         }
         
         pspl_hash* hash;
-        pspl_package_membuf_augment(NULL, convert_state.name, convert_state.name_ext,
-                                    (pspl_converter_membuf_hook)sample_converter, &convert_state, &hash);
-        pspl_embed_integer_keyed_object(NULL, tex_idx, hash, hash, sizeof(pspl_hash));
+        
+        if (make_general) {
+            convert_state.gx = 0;
+            pspl_package_membuf_augment(general_plats, convert_state.name, convert_state.name_ext,
+                                        (pspl_converter_membuf_hook)sample_converter, &convert_state, &hash);
+            pspl_embed_integer_keyed_object(general_plats, tex_idx, hash, hash, sizeof(pspl_hash));
+        }
+        
+        if (make_gx) {
+            convert_state.gx = 1;
+            pspl_package_membuf_augment(gx_plats, convert_state.name, convert_state.name_ext,
+                                        (pspl_converter_membuf_hook)sample_converter, &convert_state, &hash);
+            pspl_embed_integer_keyed_object(gx_plats, tex_idx, hash, hash, sizeof(pspl_hash));
+        }
 
     }
     

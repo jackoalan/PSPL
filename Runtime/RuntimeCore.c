@@ -68,7 +68,7 @@ extern void pspl_api_set_load_subject_index(intptr_t index);
 
 /* Way to get terminal width (for line wrapping) */
 static int term_cols() {
-#   if _WIN32
+#   if _WIN32 || GEKKO
     return 80;
 #   else
     struct winsize w;
@@ -180,6 +180,13 @@ static void print_backtrace() {
     char **strings;
     size_t i;
     
+#   if GEKKO
+    size = backtrace(array, BACKTRACE_DEPTH);
+    
+    for (i = 0; i < size; i++)
+        fprintf(stderr, "%p\n", array[i]);
+    
+#   else
     size = backtrace(array, BACKTRACE_DEPTH);
     strings = backtrace_symbols(array, (int)size);
     
@@ -187,6 +194,9 @@ static void print_backtrace() {
         fprintf(stderr, "%s\n", strings[i]);
     
     free(strings);
+    
+#   endif
+    
 }
 #endif
 
@@ -1201,7 +1211,11 @@ static size_t stdio_read(const void* handle, size_t num_bytes, void** data_out) 
     struct stdio_handle* stdio = ((struct stdio_handle*)handle);
     if (!stdio->mem_ctx.object_arr)
         pspl_malloc_context_init(&stdio->mem_ctx);
+#   if PSPL_RUNTIME_PLATFORM_GX
+    void* buf = pspl_malloc_memalign(&stdio->mem_ctx, num_bytes, 32);
+#   else
     void* buf = pspl_malloc_malloc(&stdio->mem_ctx, num_bytes);
+#   endif
     *data_out = buf;
     return fread(buf, 1, num_bytes, stdio->file);
 }

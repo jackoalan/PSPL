@@ -137,6 +137,10 @@ typedef struct {
         uint32_t skin_idx;
         pmdl_general_prim prim;
     } pmdl_general_prim_par1;
+#elif PMDL_GX
+    typedef struct {
+        uint32_t dl_offset, dl_length;
+    } pmdl_gx_mesh;
 #endif
 
 
@@ -528,10 +532,6 @@ static inline GLenum resolve_prim(uint32_t prim) {
         return GL_LINES;
     return GL_POINTS;
 }
-#elif PSPL_RUNTIME_PLATFORM_GX
-static inline u8 resolve_prim(uint32_t prim) {
-    
-}
 #elif PSPL_RUNTIME_PLATFORM_D3D11
 static inline int resolve_prim(uint32_t prim) {
     
@@ -549,7 +549,7 @@ static inline void null_shader(pmdl_draw_context_t* ctx) {
     glLoadMatrixf((GLfloat*)ctx->cached_projection_mtx);
 }
 #elif PSPL_RUNTIME_PLATFORM_GX
-static inline void null_shader() {
+static inline void null_shader(pmdl_draw_context_t* ctx) {
     
 }
 #elif PSPL_RUNTIME_PLATFORM_D3D11
@@ -562,21 +562,29 @@ static inline void null_shader() {
 /* This routine will draw PAR0 PMDLs */
 static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file) {
     pmdl_header* header = pmdl_file->file_data;
-    
-    // DEBUG!
-    // Current time
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    double time = tv.tv_sec + ((double)tv.tv_usec / (double)USEC_PER_SEC);
-    time /= 1;
-    int allowed_elements = (int)time % 13;
+
+    int i,j;
+
     
     // Shader hash array
     pspl_hash* shader_hashes = pmdl_file->file_data + header->shader_table_offset + sizeof(uint32_t);
     
+#   if PMDL_GX
+    // Load in GX transformation context here
+    GX_LoadPosMtxImm(ctx->cached_modelview_mtx, GX_PNMTX0);
+    GX_LoadNrmMtxImm(ctx->cached_modelview_invxpose_mtx, GX_PNMTX0);
+    
+    for (i=0 ; i<PMDL_MAX_TEXCOORD_MATS ; ++i)
+        GX_LoadTexMtxImm(ctx->texcoord_mtx[i], GX_TEXMTX0 + (i*3), GX_TG_MTX2x4);
+    
+#   endif
+    
+    
     void* collection_buf = pmdl_file->file_data + header->collection_offset;
     pmdl_col_header* collection_header = collection_buf;
-    int i,j,k,p;
+#   if PMDL_GENERAL
+    int k,p;
+#   endif
     for (i=0 ; i<header->collection_count; ++i) {
         
         void* index_buf = collection_buf + collection_header->draw_idx_off;
@@ -598,13 +606,7 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
             
 #           endif
             index_buf += header->pointer_size;
-            
-            
-            // Iterate meshes
-            // Three passes: first is shaded solid, second is wireframe, third is point debug pass
-        //void* saved_index_buf = index_buf;
-        //for (p=0 ; p<3 ; ++p) {
-            //index_buf = saved_index_buf;
+
             
             for (j=0 ; j<mesh_count ; ++j) {
                 pmdl_mesh_header* mesh_head = &mesh_heads[j];
@@ -626,7 +628,7 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                         shader_obj = ctx->default_shader;
                     else
                         null_shader(ctx);
-                } else
+                } else // TODO: ADD CACHING SPACE TO PMDL FOR SHADER!!!!
                     shader_obj = pspl_runtime_get_psplc_from_hash(pmdl_file->parent, &shader_hashes[mesh_head->shader_index], 0);
                 
                 if (shader_obj) {
@@ -643,50 +645,88 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
 #                   endif
                 }
                 
-                /*
-                glPushMatrix();
-                if (p == 1) {
-                    null_shader(ctx);
-                    glColor3f(1.0, 0.0, 0.0);
-                } else if (p == 2) {
-                    null_shader(ctx);
-                    glColor3f(0.0, 1.0, 0.0);
-                }*/
-                
                 // Iterate primitives
                 for (k=0 ; k<prim_count ; ++k) {
                     pmdl_general_prim* prim = index_buf;
                     index_buf += sizeof(pmdl_general_prim);
 #                   if PSPL_RUNTIME_PLATFORM_GL2
-                        //glDrawElements(resolve_prim(prim->prim_type), prim->prim_count, GL_UNSIGNED_SHORT,
-                                       //(GLvoid*)(GLsizeiptr)(prim->prim_start_idx*2));
-                    glDrawElements(resolve_prim(prim->prim_type), prim->prim_count, GL_UNSIGNED_SHORT,
-                                   (GLvoid*)(GLsizeiptr)(prim->prim_start_idx*2));
-                    /*
-                    if (p == 1) {
-                    glDrawElements(GL_LINE_STRIP, prim->prim_count, GL_UNSIGNED_SHORT,
-                                   (GLvoid*)(GLsizeiptr)(prim->prim_start_idx*2));
-                    } else if (p == 2) {
-                    glDrawElements(GL_POINTS, prim->prim_count, GL_UNSIGNED_SHORT,
-                                   (GLvoid*)(GLsizeiptr)(prim->prim_start_idx*2));
-                    }
-                     */
+                        glDrawElements(resolve_prim(prim->prim_type), prim->prim_count, GL_UNSIGNED_SHORT,
+                                       (GLvoid*)(GLsizeiptr)(prim->prim_start_idx*2));
 #                   elif PSPL_RUNTIME_PLATFORM_D3D11
                     
 #                   endif
                     
                 }
-                //glPopMatrix();
                 
             }
             
-            //glClear(GL_DEPTH_BUFFER_BIT);
-            
-        //}
-        
 
         
 #       elif PMDL_GX
+        
+            // Set GX Attribute Table
+            GX_ClearVtxDesc();
+            
+            GX_SetVtxDesc(GX_VA_POS, GX_INDEX16);
+            GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+            
+            GX_SetVtxDesc(GX_VA_NRM, GX_INDEX16);
+            GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
+
+            for (j=0 ; j<collection_header->uv_count ; ++j) {
+                GX_SetVtxDesc(GX_VA_TEX0+j, GX_INDEX16);
+                GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0+j, GX_TEX_ST, GX_F32, 0);
+            }
+        
+        
+            // Load in GX buffer context here
+            void* vert_buf = collection_buf + collection_header->vert_buf_off;
+            uint32_t vert_count = *(uint32_t*)vert_buf;
+            uint32_t loop_vert_count = *(uint32_t*)(vert_buf+4);
+            vert_buf += 32;
+            GX_SetArray(GX_VA_POS, vert_buf, 12);
+            vert_buf += vert_count * 12;
+            GX_SetArray(GX_VA_NRM, vert_buf, 12);
+            vert_buf += vert_count * 12;
+        
+            for (j=0 ; j<collection_header->uv_count ; ++j) {
+                GX_SetArray(GX_VA_TEX0+j, vert_buf, 8);
+                vert_buf += loop_vert_count * 8;
+            }
+        
+            // Offset anchor for display list buffers
+            void* buf_anchor = index_buf;
+        
+            // Iterate each mesh
+            for (j=0 ; j<mesh_count ; ++j) {
+                pmdl_mesh_header* mesh_head = &mesh_heads[j];
+                pmdl_gx_mesh* gx_mesh = index_buf;
+                
+                // Frustum test
+                if (!pmdl_aabb_frustum_test(ctx, mesh_head->mesh_aabb)) {
+                    index_buf += sizeof(pmdl_gx_mesh);
+                    continue;
+                }
+                
+                // Apply mesh context
+                const pspl_runtime_psplc_t* shader_obj = NULL;
+                if (mesh_head->shader_index < 0) {
+                    if (ctx->default_shader)
+                        shader_obj = ctx->default_shader;
+                    else
+                        null_shader(ctx);
+                } else // TODO: ADD CACHING SPACE TO PMDL FOR SHADER!!!!
+                    shader_obj = pspl_runtime_get_psplc_from_hash(pmdl_file->parent, &shader_hashes[mesh_head->shader_index], 0);
+                
+                if (shader_obj)
+                    pspl_runtime_bind_psplc(shader_obj);
+                
+                // Draw mesh
+                GX_CallDispList(buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);
+                
+                index_buf += sizeof(pmdl_gx_mesh);
+                
+            }
         
 #       endif
         

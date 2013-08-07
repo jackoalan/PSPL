@@ -14,6 +14,8 @@
 
 /* NOTE - This entire API is NOT THREAD SAFE!!! */
 
+#define PMDL_MAX_TEXCOORD_MATS 8
+
 /* Projection type enumeration */
 enum pmdl_projection_type {
     PMDL_PERSPECTIVE = 0,
@@ -54,7 +56,7 @@ typedef struct {
     } projection;
     
     /* Texture Coordinate Matrices */
-    pspl_matrix44_t texcoord_mtx[8];
+    pspl_matrix44_t texcoord_mtx[PMDL_MAX_TEXCOORD_MATS];
     
     /* Default shader, if model doesn't specify one */
     const pspl_runtime_psplc_t* default_shader;

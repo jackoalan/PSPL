@@ -31,14 +31,16 @@
 #include <ogc/gu.h>
 #define _pmdl_matrix_orthographic guOrtho
 #define _pmdl_matrix_perspective guPerspective
-#define _pmdl_matrix_lookat guLookAt
+#define _pmdl_matrix_lookat(m,p,u,l) guLookAt((m),(guVector*)(p),(guVector*)(u),(guVector*)(l))
 #define pmdl_matrix34_mul guMtxConcat
+#define pmdl_matrix34_invxpose guMtxInvXpose
 #define pmdl_vector3_dot(a,b) guVecDotProduct((guVector*)(a),(guVector*)(b))
 #define pmdl_vector3_cross(a,b,axb) guVecCross((guVector*)(a),(guVector*)(b),(guVector*)(axb))
 #define pmdl_vector3_normalise(v) guVecNormalize((guVector*)(v))
 #define pmdl_vector3_scale(src,dst,scale) guVecScale((guVector*)(src),(guVector*)(dst),(scale))
 #define pmdl_vector3_add(a,b,ab) guVecAdd((guVector*)(a),(guVector*)(b),(guVector*)(ab))
 #define pmdl_vector3_sub(a,b,ab) guVecSub((guVector*)(a),(guVector*)(b),(guVector*)(ab))
+#define pmdl_vector3_matrix_mul(m,s,d) guVecMultiply((m),(guVector*)(s),(guVector*)(d))
 
 /* Extended libogc matrix routines */
 void pspl_matrix44_cpy(REGISTER_KEY pspl_matrix44_t src, REGISTER_KEY pspl_matrix44_t dst);

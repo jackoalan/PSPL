@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "hash_builtin.h"
+#include <PSPL/Hash/hash_builtin.h>
 
 /* code */
 #define SHA1_K0 0x5a827999

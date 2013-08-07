@@ -254,12 +254,8 @@ PMDL skin entries.
 
 * (`PAR1` only) Relative offset to bone-weighting buffers after main buffers
 * *Position/normal* count (32-bit word)
-* *Position* array offset (32-bit word)
-* *Normal* array offset (32-bit word)
-* *UV* attribute count (32-bit word)
-* *UV* offsets and lengths array
-    * *UV* coordinate count (32-bit word)
-    * Array offset (32-bit word)
+* *UV* count (32-bit word)
+* 32-byte-aligned padding
 * Array Buffers
     * Each array is prepended and appended with 32-byte padding
     * Each value is expressed as 2 or 3 component, single-precision floats

@@ -164,6 +164,10 @@ void pspl_malloc_context_destroy(pspl_malloc_context_t* context);
  */
 void* pspl_malloc_malloc(pspl_malloc_context_t* context, size_t size);
 
+#if PSPL_RUNTIME_PLATFORM_GX
+void* pspl_malloc_memalign(pspl_malloc_context_t* context, size_t size, size_t align);
+#endif
+
 /**
  * Free memory object from within context
  *

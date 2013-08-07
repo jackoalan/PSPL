@@ -11,6 +11,7 @@
 
 #include "PMDLRuntimeLinAlgebra.h"
 
+#if !PSPL_RUNTIME_PLATFORM_GX
 
 void _pmdl_matrix_orthographic(pspl_matrix44_t mt, float t, float b, float l,
                                float r, float n, float f) {
@@ -343,3 +344,5 @@ void _pmdl_matrix_lookat(pspl_matrix34_t mt, pspl_vector3_t pos, pspl_vector3_t 
     mt[2][2] = vLook[2];
     mt[2][3] = -( pos[0] * vLook[0] + pos[1] * vLook[1] + pos[2] * vLook[2] );
 }
+
+#endif

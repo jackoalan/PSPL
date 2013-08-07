@@ -15,7 +15,7 @@
 typedef struct {
     
     // Idempotent display-list buffer for `GX_CallDisplayList`
-    const void* disp_list;
+    void* disp_list;
     u32 disp_list_len;
     
 } GX_shader_object_t;

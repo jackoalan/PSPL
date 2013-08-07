@@ -15,7 +15,7 @@ elseif(PSPL_TOOLCHAIN_HASHING STREQUAL WINDOWS)
 endif()
 
 # Define toolchain executable
-add_executable(pspl
+pspl_add_executable(pspl
                Driver.c
                Preprocessor.c
                Compiler.c
@@ -29,4 +29,4 @@ set_target_properties(pspl PROPERTIES
                       COMPILE_DEFINITIONS PSPL_TOOLCHAIN=1)
 
 # Link toolchain extensions
-target_link_libraries(pspl ${pspl_extension_toolchain_link_list} ${HASH_LIB} pspl_common)
+pspl_target_link_libraries(pspl ${pspl_extension_toolchain_link_list} ${HASH_LIB} pspl_common)

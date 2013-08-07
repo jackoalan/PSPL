@@ -104,7 +104,7 @@ void pspl_d3d11_use_pixel_shader(ID3D11PixelShader* shader) {
 }
 
 
-/* PSPL-IR routines */
+/* PSPL-IR routines - CALL THESE IN TOP-TO-BOTTOM ORDER!! */
 static int cur_mtx = 0;
 static D3D11_MAPPED_SUBRESOURCE rsrc;
 void pspl_ir_load_pos_mtx(pspl_matrix34_t* mtx) {

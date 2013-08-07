@@ -7,7 +7,7 @@ configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_runtime_platform_typefile
                pspl_runtime_platform_typefile.pch)
 
 # Define runtime library
-add_library(pspl-rt STATIC
+pspl_add_library(pspl-rt STATIC
             RuntimeCore.c
             RuntimeThreads.c
             ${PSPL_BINARY_DIR}/pspl_available_runtime_extensions.c)
@@ -17,10 +17,10 @@ set_target_properties(pspl-rt PROPERTIES
                       COMPILE_DEFINITIONS "PSPL_RUNTIME=1;PSPL_RUNTIME_PLATFORM_${PSPL_RUNTIME_PLATFORM}=1;${RUN_HASH_DEF}=1;${RUN_THREAD_DEF}=1")            
 
 # Link runtime extensions
-target_link_libraries(pspl-rt
-                      ${pspl_extension_runtime_link_list} 
-                      ${HASH_LIB} 
-                      ${THREAD_LIB} 
-                      pspl_common)
+pspl_target_link_libraries(pspl-rt
+                           ${pspl_extension_runtime_link_list} 
+                           ${HASH_LIB} 
+                           ${THREAD_LIB} 
+                           pspl_common)
 
 

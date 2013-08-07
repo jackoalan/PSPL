@@ -38,6 +38,7 @@ typedef struct {
 #  define TEX_T ID3D11ShaderResourceView*
 #  define SUB_TEX_FORMAT_T enum DXGI_FORMAT
 #elif PSPL_RUNTIME_PLATFORM_GX
+#  include <malloc.h>
 #  include <ogc/gx.h>
 #  define MAX_MIPS 11
 #  define TEX_T GXTexObj
