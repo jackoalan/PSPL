@@ -12,44 +12,26 @@
 #define HASH_LENGTH 20
 #define BLOCK_LENGTH 64
 
-union _buffer {
-	uint8_t b[BLOCK_LENGTH];
-	uint32_t w[BLOCK_LENGTH/4];
-};
+typedef struct {
+    uint32_t state[5];
+    uint32_t count[2];
+    uint8_t  buffer[64];
+    uint8_t  result[20];
+} SHA1_CTX;
 
-union _state {
-	uint8_t b[HASH_LENGTH];
-	uint32_t w[HASH_LENGTH/4];
-};
+#define SHA1_DIGEST_SIZE 20
 
-typedef struct sha1nfo {
-	union _buffer buffer;
-	uint8_t bufferOffset;
-	union _state state;
-	uint32_t byteCount;
-	uint8_t keyBuffer[BLOCK_LENGTH];
-	uint8_t innerHash[HASH_LENGTH];
-} sha1nfo;
+void SHA1_Init(SHA1_CTX* context);
+void SHA1_Update(SHA1_CTX* context, const uint8_t* data, const size_t len);
+void SHA1_Final(SHA1_CTX* context, uint8_t digest[SHA1_DIGEST_SIZE]);
 
-/**
- */
-void sha1_init(sha1nfo *s);
-/**
- */
-void sha1_writebyte(sha1nfo *s, uint8_t data);
-/**
- */
-void sha1_write(sha1nfo *s, const char *data, size_t len);
-/**
- */
-uint8_t* sha1_result(sha1nfo *s);
 
 #define PSPL_HASH_LENGTH HASH_LENGTH
 
 /* PSPL defines */
-typedef sha1nfo pspl_hash_ctx_t;
-#define pspl_hash_init(ctx_ptr) sha1_init(ctx_ptr)
-#define pspl_hash_write(ctx_ptr, data_ptr, len) sha1_write(ctx_ptr, (const char*)data_ptr, len)
-#define pspl_hash_result(ctx_ptr, out_ptr) out_ptr = (pspl_hash*)sha1_result(ctx_ptr)
+typedef SHA1_CTX pspl_hash_ctx_t;
+#define pspl_hash_init(ctx_ptr) SHA1_Init((SHA1_CTX*)(ctx_ptr))
+#define pspl_hash_write(ctx_ptr, data_ptr, len) SHA1_Update((SHA1_CTX*)(ctx_ptr), (const uint8_t*)(data_ptr), (const size_t)(len))
+#define pspl_hash_result(ctx_ptr, out_ptr) SHA1_Final((SHA1_CTX*)(ctx_ptr), ((SHA1_CTX*)ctx_ptr)->result); out_ptr = (pspl_hash*)((SHA1_CTX*)ctx_ptr)->result
 
 #endif

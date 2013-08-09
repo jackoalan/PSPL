@@ -98,6 +98,8 @@ static int enumerate_psplc_hook(pspl_runtime_psplc_t* psplc_object) {
     return 0;
 }
 
+#define PSPL_HASHING_BUILTIN 1
+#include <PSPL/PSPLHash.h>
 int main(int argc, char* argv[]) {
     
     // Setup GLUT
@@ -108,6 +110,7 @@ int main(int argc, char* argv[]) {
 	glutCreateWindow("PSPL Test");
     glutDisplayFunc(renderfunc);
     glutKeyboardFunc(kbfunc);
+    
     
     // Setup PSPL
     const pspl_platform_t* plat;

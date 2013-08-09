@@ -6,10 +6,17 @@ list(LENGTH pspl_extension_list PSPL_RUNTIME_EXTENSION_COUNT)
 configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_runtime_platform_typefile.pch.in
                pspl_runtime_platform_typefile.pch)
 
+# If targeting Wii, ensure WiiHeaps is included
+unset(WII_HEAPS_SRC)
+if(PSPL_WII)
+  set(WII_HEAPS_SRC RuntimeWiiHeaps.c)
+endif()
+
 # Define runtime library
 pspl_add_library(pspl-rt STATIC
             RuntimeCore.c
             RuntimeThreads.c
+            ${WII_HEAPS_SRC}
             ${PSPL_BINARY_DIR}/pspl_available_runtime_extensions.c)
 
 set_target_properties(pspl-rt PROPERTIES

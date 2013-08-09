@@ -42,6 +42,8 @@ static void load_object_hook(pspl_runtime_psplc_t* object) {
     // Initialise PMDLs
     int i;
     for (i=0 ; i<files->count.native.integer ; ++i) {
+        char hash[PSPL_HASH_STRING_LEN];
+        pspl_hash_fmt(hash, &files->files[i].pmdl_file_hash);
         files->files[i].file_ptr =
         pspl_runtime_get_archived_file_from_hash(object->parent, &files->files[i].pmdl_file_hash, 1);
         pmdl_init(files->files[i].file_ptr);

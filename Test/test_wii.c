@@ -10,6 +10,7 @@
 #include <malloc.h>
 #include <sys/time.h>
 #include <math.h>
+#include <unistd.h>
 
 #include <PSPLRuntime.h>
 #include <PMDLRuntime.h>
@@ -28,12 +29,17 @@
 static pmdl_draw_context_t monkey_ctx;
 static const pspl_runtime_arc_file_t* monkey_model;
 
-/* GX embedded framebuffer */
-void* efb = NULL;
+/* GX external framebuffer */
+static void* xfb = NULL;
 
-static void renderfunc(u32 r_cnt) {
+/* Reset button pressed */
+static uint8_t reset_pressed = 0;
+
+/* Ready to render */
+static uint8_t ready_to_render = 0;
+
+static void renderfunc() {
     
-        
     // Current time
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -43,15 +49,18 @@ static void renderfunc(u32 r_cnt) {
     monkey_ctx.camera_view.pos[0] = sin(time) * 5;
     monkey_ctx.camera_view.pos[2] = cos(time) * 5;
     pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_VIEW);
-    
+        
     // Draw monkey
     GX_SetCullMode(GX_CULL_NONE);
     GX_SetZMode(GX_TRUE, GX_LESS, GX_TRUE);
     pmdl_draw(&monkey_ctx, monkey_model);
     
-    
     // Swap buffers
-    GX_CopyDisp(efb, GX_TRUE);
+    GX_DrawDone();
+    //GX_CopyDisp(xfb, GX_TRUE);
+    
+    //printf("Console active\n");
+
     
 }
 
@@ -60,16 +69,37 @@ static int enumerate_psplc_hook(pspl_runtime_psplc_t* psplc_object) {
     return 0;
 }
 
+static void reset_press_cb() {
+    reset_pressed = 1;
+}
+
+static void post_retrace_cb(uint32_t rcnt) {
+    ready_to_render = 1;
+}
+
+#define PSPL_HASHING_BUILTIN 1
+#include <PSPL/PSPLHash.h>
 int main(int argc, char* argv[]) {
     
-    // Framebuffer
-    efb = SYS_AllocateFramebuffer(&TVNtsc480Prog);
-    
+        
     // Setup video
     VIDEO_Init();
-    VIDEO_Configure(&TVNtsc480Prog);
-    VIDEO_SetNextFramebuffer(efb);
+    GXRModeObj* pref_vid_mode = VIDEO_GetPreferredMode(NULL);
+    VIDEO_Configure(pref_vid_mode);
+    xfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(pref_vid_mode));
+    VIDEO_SetNextFramebuffer(xfb);
+
+    // Console
+    console_init(xfb,20,20,pref_vid_mode->fbWidth,pref_vid_mode->xfbHeight,pref_vid_mode->fbWidth*VI_DISPLAY_PIX_SZ);
     
+    // Make display visible
+    VIDEO_SetBlack(FALSE);
+    VIDEO_Flush();
+    VIDEO_WaitVSync();
+    if(pref_vid_mode->viTVMode&VI_NON_INTERLACE) VIDEO_WaitVSync();
+    
+    printf("Console active\n");
+
     // Setup GX
     void *gp_fifo = NULL;
     gp_fifo = memalign(32,DEFAULT_FIFO_SIZE);
@@ -79,16 +109,41 @@ int main(int argc, char* argv[]) {
     GXColor background = {0,0,0,0xff};
     GX_SetCopyClear(background, 0x00ffffff);
     
+    f32 yscale;
+	u32 xfbHeight;
+    yscale = GX_GetYScaleFactor(pref_vid_mode->efbHeight,pref_vid_mode->xfbHeight);
+	xfbHeight = GX_SetDispCopyYScale(yscale);
+	GX_SetScissor(0,0,pref_vid_mode->fbWidth,pref_vid_mode->efbHeight);
+	GX_SetDispCopySrc(0,0,pref_vid_mode->fbWidth,pref_vid_mode->efbHeight);
+	GX_SetDispCopyDst(pref_vid_mode->fbWidth,xfbHeight);
+	GX_SetCopyFilter(pref_vid_mode->aa,pref_vid_mode->sample_pattern,GX_TRUE,pref_vid_mode->vfilter);
+	GX_SetFieldMode(pref_vid_mode->field_rendering,((pref_vid_mode->viHeight==2*pref_vid_mode->xfbHeight)?GX_ENABLE:GX_DISABLE));
+    
+	if (pref_vid_mode->aa)
+		GX_SetPixelFmt(GX_PF_RGB565_Z16, GX_ZC_LINEAR);
+	else
+		GX_SetPixelFmt(GX_PF_RGB8_Z24, GX_ZC_LINEAR);
+    
+	GX_SetDispCopyGamma(GX_GM_1_0);
+    
+    
     // Setup SD Card
     fatInitDefault();
     fatMountSimple("sd", &__io_wiisd);
     
+    printf("SD mounted\n");
+
+    
     // Setup PSPL
     const pspl_platform_t* plat;
     pspl_runtime_init(&plat);
+    printf("PSPL initted\n");
+    sleep(2);
     const pspl_runtime_package_t* package = NULL;
     pspl_runtime_load_package_file("sd:/rtest.psplp", &package);
     pspl_runtime_enumerate_psplcs(package, enumerate_psplc_hook);
+    
+    printf("PSPL package read\n");
     
     // Setup monkey rendering context
     memset(monkey_ctx.texcoord_mtx, 0, 8*sizeof(pspl_matrix34_t));
@@ -119,9 +174,23 @@ int main(int argc, char* argv[]) {
     monkey_ctx.default_shader = rtest;
     monkey_model = pmdl_lookup(rtest, "monkey");
     
+    printf("Monkey loaded\n");
+
+    
     // Start rendering
-    VIDEO_SetPostRetraceCallback(renderfunc);
+    VIDEO_SetPostRetraceCallback(post_retrace_cb);
+    
+    
+    // Loop until reset button pressed
+    SYS_SetResetCallback(reset_press_cb);
+    while (!reset_pressed) {
+        if (ready_to_render) {
+            ready_to_render = 0;
+            renderfunc();
+        }
+    }
     
     return 0;
     
 }
+

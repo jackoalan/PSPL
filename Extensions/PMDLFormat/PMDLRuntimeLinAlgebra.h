@@ -14,7 +14,7 @@
 
 /* Use assembly leaf implementations */
 #ifdef PMDL_ASM
-#define GEKKO 1
+#define HW_RVL 1
 #define REGISTER_KEY register
 #else
 #define REGISTER_KEY

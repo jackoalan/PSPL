@@ -6,7 +6,9 @@
 //
 //
 
+#ifdef HW_RVL
 #include <malloc.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <PSPL/PSPLCommon.h>
@@ -62,7 +64,7 @@ void* pspl_malloc_malloc(pspl_malloc_context_t* context, size_t size) {
     return (context->object_arr[context->object_num++] = malloc(size));
 }
 
-#if GEKKO
+#if HW_RVL
 void* pspl_malloc_memalign(pspl_malloc_context_t* context, size_t size, size_t align) {
     int i;
     for (i=0 ; i<context->object_num ; ++i)

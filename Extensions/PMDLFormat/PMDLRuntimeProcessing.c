@@ -558,6 +558,23 @@ static inline void null_shader() {
 }
 #endif
 
+static void print_bytes(void* ptr, size_t size) {
+    
+    int i;
+    
+    for (i=0 ; i<size ; ++i) {
+        
+        if (!(i%32))
+            
+            printf("\n");
+        
+        printf("%02X", *(uint8_t*)(ptr+i));
+        
+    }
+    
+    printf("\n\n");
+    
+}
 
 /* This routine will draw PAR0 PMDLs */
 static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file) {
@@ -694,6 +711,8 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                 vert_buf += loop_vert_count * 8;
             }
         
+            GX_InvVtxCache();
+        
             // Offset anchor for display list buffers
             void* buf_anchor = index_buf;
         
@@ -722,6 +741,9 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                     pspl_runtime_bind_psplc(shader_obj);
                 
                 // Draw mesh
+                printf("About to run:\n");
+                print_bytes(buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);
+                sleep(10);
                 GX_CallDispList(buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);
                 
                 index_buf += sizeof(pmdl_gx_mesh);

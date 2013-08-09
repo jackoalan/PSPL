@@ -45,6 +45,50 @@
 #define PSPL_RUNTIME_INITIAL_LOAD_SIZE 256
 
 
+/* Heap Stuff */
+#ifdef HW_RVL
+
+extern void _pspl_wii_mem_init();
+#define _pspl_mem_init _pspl_wii_mem_init
+
+#define _pspl_mem_shutdown()
+
+extern void* pspl_wii_allocate_media_block(size_t size);
+#define pspl_allocate_media_block pspl_wii_allocate_media_block
+
+extern void* pspl_wii_allocate_indexing_block(size_t size);
+#define pspl_allocate_indexing_block pspl_wii_allocate_indexing_block
+
+extern void pspl_wii_free_media_block(void* ptr);
+#define pspl_free_media_block pspl_wii_free_media_block
+
+extern void pspl_wii_free_indexing_block(void* ptr);
+#define pspl_free_indexing_block pspl_wii_free_indexing_block
+
+#else
+
+pspl_malloc_context_t media_heap;
+pspl_malloc_context_t indexing_heap;
+void _pspl_mem_init() {
+    pspl_malloc_context_init(&media_heap);
+    pspl_malloc_context_init(&indexing_heap);
+}
+
+void _pspl_mem_shutdown() {
+    pspl_malloc_context_destroy(&media_heap);
+    pspl_malloc_context_destroy(&indexing_heap);
+}
+
+#define pspl_allocate_media_block(size) pspl_malloc_malloc(&media_heap, (size))
+
+#define pspl_allocate_indexing_block(size) pspl_malloc_malloc(&indexing_heap, (size))
+
+#define pspl_free_media_block(ptr) pspl_malloc_free(&media_heap, (ptr))
+
+#define pspl_free_indexing_block(ptr) pspl_malloc_free(&indexing_heap, (ptr))
+
+#endif
+
 
 /* Active runtime extensions */
 extern const pspl_extension_t* pspl_available_extensions[];
@@ -68,7 +112,7 @@ extern void pspl_api_set_load_subject_index(intptr_t index);
 
 /* Way to get terminal width (for line wrapping) */
 static int term_cols() {
-#   if _WIN32 || GEKKO
+#   if _WIN32 || HW_RVL
     return 80;
 #   else
     struct winsize w;
@@ -180,7 +224,7 @@ static void print_backtrace() {
     char **strings;
     size_t i;
     
-#   if GEKKO
+#   if HW_RVL
     size = backtrace(array, BACKTRACE_DEPTH);
     
     for (i = 0; i < size; i++)
@@ -641,6 +685,9 @@ static pspl_malloc_context_t package_mem_ctx;
  */
 int pspl_runtime_init(const pspl_platform_t** platform_out) {
     
+    // Setup memory heaps
+    _pspl_mem_init();
+    
     // Check for xterm
     const char* term_type = getenv("TERM");
     if (term_type && strlen(term_type) >= 5 && !strncmp("xterm", term_type, 5))
@@ -709,6 +756,9 @@ void pspl_runtime_shutdown() {
     if (plat->runtime_platform && plat->runtime_platform->shutdown_hook)
         plat->runtime_platform->shutdown_hook();
     
+    // Destroy heaps
+    _pspl_mem_shutdown();
+    
 }
 
 
@@ -730,6 +780,8 @@ static const pspl_extension_t* lookup_ext(const char* ext_name, unsigned int* id
 
 
 static const pspl_data_provider_t stdio;
+static const pspl_data_provider_t membuf;
+
 
 /* Private routine to load PSPLP data */
 #define PACKAGE_PROVIDER(package) (package->provider_local)?&package->provider.provider:package->provider.provider
@@ -743,12 +795,21 @@ static int load_psplp(pspl_runtime_package_t* package) {
 #   pragma mark Header Read
     
     // Read header chunk of data
-    void* header_data = NULL;
-    package->provider_hooks->read(package_provider,
-                                  sizeof(pspl_header_t) +
-                                  sizeof(pspl_off_header_bi_t) +
-                                  sizeof(pspl_psplp_header_bi_t),
-                                  &header_data);
+    struct {
+        pspl_header_t header;
+        pspl_off_header_bi_t off_header;
+        pspl_psplp_header_bi_t psplp_header;
+    } h_data;
+    void* header_data = &h_data;
+    if (package->provider_hooks == &membuf) {
+        package->provider_hooks->read(package_provider,
+                                      sizeof(h_data),
+                                      &header_data);
+    } else {
+        package->provider_hooks->read_direct(package_provider,
+                                             sizeof(h_data),
+                                             header_data);
+    }
     
     // Bind header
     const pspl_header_t* pspl_head = header_data;
@@ -806,7 +867,12 @@ static int load_psplp(pspl_runtime_package_t* package) {
     size_t strings_len = package_len - off_header->extension_name_table_off;
     if (strings_len && strings_len < package_len) {
         package->provider_hooks->seek(package_provider, off_header->extension_name_table_off);
-        package->provider_hooks->read(package_provider, strings_len, &strings_data);
+        if (package->provider_hooks == &membuf)
+            package->provider_hooks->read(package_provider, strings_len, &strings_data);
+        else {
+            strings_data = pspl_allocate_indexing_block(strings_len);
+            package->provider_hooks->read_direct(package_provider, strings_len, strings_data);
+        }
     }
     
     if (strings_data) {
@@ -860,10 +926,8 @@ static int load_psplp(pspl_runtime_package_t* package) {
                       "graphics functionality will not be utilised",
                       pspl_runtime_platform->platform_name);
         
-        
-        // Free strings if loaded using stdio
-        if (package->provider_hooks == &stdio)
-            pspl_malloc_free(&package->provider.stdio.mem_ctx, (void*)strings_data);
+        // Free strings data
+        pspl_free_indexing_block(strings_data);
         
     }
     
@@ -876,11 +940,16 @@ static int load_psplp(pspl_runtime_package_t* package) {
                       sizeof(pspl_psplp_psplc_index_bi_t):
                       sizeof(pspl_psplp_psplc_index_t))+
                      sizeof(pspl_hash))*psplp_header->psplc_count;
-    const void* i1_table = NULL;
+    void* i1_table = NULL;
     
     if (i1_len && i1_len < package_len) {
         package->provider_hooks->seek(package_provider, i1_off);
-        package->provider_hooks->read(package_provider, i1_len, (void*)&i1_table);
+        if (package->provider_hooks == &membuf)
+            package->provider_hooks->read(package_provider, i1_len, &i1_table);
+        else {
+            i1_table = pspl_allocate_indexing_block(i1_len);
+            package->provider_hooks->read_direct(package_provider, i1_len, i1_table);
+        }
     }
     
     package->psplc_count = 0;
@@ -908,9 +977,14 @@ static int load_psplp(pspl_runtime_package_t* package) {
             uint32_t blobs_off = ent->psplc_base + ent->psplc_tables_len;
             
             // Read offset tables
-            const void* off_tables = NULL;
+            void* off_tables = NULL;
             package->provider_hooks->seek(package_provider, ent->psplc_base);
-            package->provider_hooks->read(package_provider, ent->psplc_tables_len, (void*)&off_tables);
+            if (package->provider_hooks == &membuf)
+                package->provider_hooks->read(package_provider, ent->psplc_tables_len, &off_tables);
+            else {
+                off_tables = pspl_allocate_indexing_block(ent->psplc_tables_len);
+                package->provider_hooks->read_direct(package_provider, ent->psplc_tables_len, off_tables);
+            }
             const void* off_tables_cur = off_tables;
             
             // PSPLC head
@@ -1085,14 +1159,14 @@ static int load_psplp(pspl_runtime_package_t* package) {
             dest_psplc->blobs_buf = NULL;
             
             // Free offset tables if loaded using stdio
-            if (package->provider_hooks == &stdio)
-                pspl_malloc_free(&package->provider.stdio.mem_ctx, (void*)off_tables);
+            if (package->provider_hooks != &membuf)
+                pspl_free_indexing_block(off_tables);
             
         }
         
         // Free i1 table if loaded using stdio
-        if (package->provider_hooks == &stdio)
-            pspl_malloc_free(&package->provider.stdio.mem_ctx, (void*)i1_table);
+        if (package->provider_hooks != &membuf)
+            pspl_free_indexing_block(i1_table);
         
         // Apply to package
         package->psplc_count = psplp_header->psplc_count;
@@ -1112,11 +1186,16 @@ static int load_psplp(pspl_runtime_package_t* package) {
                       sizeof(pspl_file_stub_bi_t):
                       sizeof(pspl_file_stub_t))+
                      sizeof(pspl_hash))*off_header->file_table_c;
-    const void* ft_table = NULL;
+    void* ft_table = NULL;
     
     if (ft_len && ft_len < package_len) {
         package->provider_hooks->seek(package_provider, ft_off);
-        package->provider_hooks->read(package_provider, ft_len, (void*)&ft_table);
+        if (package->provider_hooks == &membuf)
+            package->provider_hooks->read(package_provider, ft_len, &ft_table);
+        else {
+            ft_table = pspl_allocate_indexing_block(ft_len);
+            package->provider_hooks->read_direct(package_provider, ft_len, ft_table);
+        }
     }
     
     package->file_count = 0;
@@ -1156,17 +1235,13 @@ static int load_psplp(pspl_runtime_package_t* package) {
         }
         
         // Free file table if loaded using stdio
-        if (package->provider_hooks == &stdio)
-            pspl_malloc_free(&package->provider.stdio.mem_ctx, (void*)ft_table);
+        if (package->provider_hooks != &membuf)
+            pspl_free_indexing_block(ft_table);
             
         // Apply to package
         package->file_count = file_count;
         package->file_array = dest_table;
     }
-    
-    // Free header data if loaded using stdio
-    if (package->provider_hooks == &stdio)
-        pspl_malloc_free(&package->provider.stdio.mem_ctx, (void*)header_data);
     
     
     // All good!!
@@ -1571,7 +1646,12 @@ void pspl_runtime_retain_psplc(const pspl_runtime_psplc_t* psplc) {
         
         // Load data objects
         psplc->parent->provider_hooks->seek(package_provider, obj->blobs_off);
-        psplc->parent->provider_hooks->read(package_provider, obj->blobs_len, &obj->blobs_buf);
+        if (psplc->parent->provider_hooks == &membuf)
+            psplc->parent->provider_hooks->read(package_provider, obj->blobs_len, &obj->blobs_buf);
+        else {
+            obj->blobs_buf = pspl_allocate_media_block(obj->blobs_len);
+            psplc->parent->provider_hooks->read_direct(package_provider, obj->blobs_len, obj->blobs_buf);
+        }
         
         // Run extension hooks
         pspl_api_set_load_state(PSPL_LOADING_EXT);
@@ -1648,8 +1728,8 @@ static void _pspl_runtime_release_psplc(pspl_runtime_psplc_t* psplc, int total) 
         pspl_api_set_load_state(PSPL_LOADING_NONE);
         
         // Free data buffer if allocated with stdio
-        if (psplc->parent->provider_hooks == &stdio)
-            pspl_malloc_free((pspl_malloc_context_t*)&psplc->parent->provider.stdio.mem_ctx, (void*)obj->blobs_buf);
+        if (psplc->parent->provider_hooks != &membuf)
+            pspl_free_media_block(obj->blobs_buf);
         obj->blobs_buf = NULL;
         
     }
@@ -1795,7 +1875,12 @@ void pspl_runtime_retain_archived_file(const pspl_runtime_arc_file_t* file) {
         
         // Load data objects
         file->parent->provider_hooks->seek(package_provider, obj->file_off);
-        file->parent->provider_hooks->read(package_provider, obj->public.file_len, &obj->public.file_data);
+        if (file->parent->provider_hooks == &membuf)
+            file->parent->provider_hooks->read(package_provider, obj->public.file_len, &obj->public.file_data);
+        else {
+            obj->public.file_data = pspl_allocate_media_block(obj->public.file_len);
+            file->parent->provider_hooks->read_direct(package_provider, obj->public.file_len, obj->public.file_data);
+        }
         
     }
     
@@ -1819,8 +1904,8 @@ static void _pspl_runtime_release_archived_file(const pspl_runtime_arc_file_t* f
     if (obj->ref_count == 1 || total) {
         
         // Free data buffer if allocated with stdio
-        if (file->parent->provider_hooks == &stdio)
-            pspl_malloc_free((pspl_malloc_context_t*)&file->parent->provider.stdio.mem_ctx, (void*)&obj->public.file_data);
+        if (file->parent->provider_hooks != &membuf)
+            pspl_free_media_block(obj->public.file_data);
         obj->public.file_data = NULL;
         
     }

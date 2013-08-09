@@ -168,7 +168,7 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
     
     // Determine texture type
     enum TEX_FORMAT format = 0;
-    if (!strcmp(tex_type, "RGB"))
+    if (!strcmp(tex_type, "RGBA"))
         format = TEXTURE_RGB;
     else if (!strcmp(tex_type, "S3TC")) {
         format = TEXTURE_S3TC;
