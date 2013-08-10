@@ -19,7 +19,7 @@ SET(CMAKE_CXX_COMPILER ${MINGW_PATH}/bin/${MINGW_PREFIX}-g++)
 SET(CMAKE_RC_COMPILER ${MINGW_PATH}/bin/${MINGW_PREFIX}-windres)
 
 # here is the target environment located
-SET(CMAKE_FIND_ROOT_PATH ${MINGW_PATH}/mingw)
+SET(CMAKE_FIND_ROOT_PATH ${MINGW_PATH}/${MINGW_PREFIX})
 
 # adjust the default behaviour of the FIND_XXX() commands:
 # search headers and libraries in the target environment, search 
