@@ -65,7 +65,7 @@ Forming an Art Pipeline
 PSPL integrates with CMake in a bi-directional manner. This means that any user of CMake
 may call `find_package(PSPL REQUIRED)` in a CMake project and start using a series of 
 macros that ease PSPL package construction effort. In turn, PSPL will provide data about
-*asset-dependencies* back to CMake. This way, if a Photoshop artwork-file is referenced by a PSPL 
+*asset-dependencies* back to CMake. For example, if a Photoshop artwork-file is referenced by a PSPL 
 source-file referenced by CMake, making an edit *to the Photoshop file* will then cause the
 next invocation of `make` to recompile the PSPL referencing the artwork.
 
