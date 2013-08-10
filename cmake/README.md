@@ -69,15 +69,20 @@ macros that ease PSPL package construction effort. In turn, PSPL will provide da
 source-file referenced by CMake, making an edit *to the Photoshop file* will then cause the
 next invocation of `make` to recompile the PSPL referencing the artwork.
 
-The two macros are as follows:
 
-### set_pspl_platforms(plat1 plat2 ...)
+### Setting Target Graphics Platform(s)
+```cmake
+set_pspl_platforms(plat1 plat2 ...)
+```
 
 Allows the CMake-author to specify which target platforms should be included in
 packages declared using `add_pspl_package`.
 
 
-### add_pspl_package(package_name pspl1 pspl2 ...)
+### Adding PSPL Package Targets
+```cmake
+add_pspl_package(package_name pspl1 pspl2 ...)
+```
 
 Declare a CMake target in the form of a PSPLP package-file. Provide a
 *package name* (which may be treated as a CMake target later) and
