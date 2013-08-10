@@ -46,7 +46,8 @@ After that, extract them to `/opt/mingw-w32` and/or `/opt/mingw-w64`.
 #### Wii
 
 In the interest of demonstrating PSPL's flexibility, the PowerPC-driven, embedded-platform
-known as [Wii](http://en.wikipedia.org/wiki/Wii) is also an included cross-compile.
+known as [Wii](http://en.wikipedia.org/wiki/Wii) is also an included cross-compile. The 
+GameCube/Wii *GX API* provides runtime graphics.
 
 A **Wii Cross Compile** involves invoking `cmake -DPSPL_WII=1 <PSPL_SOURCE>`.
 Note that *only the runtime* is built when targeting Wii.
