@@ -76,7 +76,8 @@ set_pspl_platforms(plat1 plat2 ...)
 ```
 
 Allows the CMake-author to specify which target platforms should be included in
-packages declared using `add_pspl_package`.
+packages declared using `add_pspl_package`. So far, `GL2`, `GX`, and `D3D11` are
+valid platforms.
 
 
 ### Adding PSPL Package Targets
