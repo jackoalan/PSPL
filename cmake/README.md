@@ -97,6 +97,8 @@ Extending PSPL
 
 PSPL uses an *extension-paradigm* allowing additional *PSPL-lexer-processing* code to be
 added. So far, [preliminary runtime docs](http://jackoalan.github.io/PSPL) are in place.
-Extensions are contained within the `Extensions` directory in the codebase. They
+Extensions are contained within the 
+[`Extensions`](https://github.com/jackoalan/PSPL/tree/master/Extensions) 
+directory in the codebase. They
 may be listed as-built by running `pspl` without arguments.
 
