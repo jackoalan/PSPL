@@ -32,11 +32,11 @@ Specify the file path to write \fBpspl\fR \fBoutput\fR\. By default, output is w
 .
 .TP
 \fB\-E\fR
-Only run the \fBPSPL preprocessor\fR on \fIsource1\fR and output to \fIout\-path\fR a directive\-expanded \fBPSPL source file\fR (\fI\.pspl)\fRMay not be combined with \fB\-c\fR*\.
+Only run the \fBPSPL preprocessor\fR on \fIsource1\fR and output to \fIout\-path\fR a directive\-expanded \fBPSPL source file\fR (*\.pspl) May not be combined with \fB\-c\fR\.
 .
 .TP
 \fB\-c\fR
-Only run the \fBPSPL preprocessor and compiler\fR on \fIsource1\fR and output to \fIout\-path\fR a directive\-expanded and compiled \fBPSPL object file\fR (\fI\.psplc)\.\fRMay not be combined with \fB\-E\fR*\.
+Only run the \fBPSPL preprocessor and compiler\fR on \fIsource1\fR and output to \fIout\-path\fR a directive\-expanded and compiled \fBPSPL object file\fR (*\.psplc)\. May not be combined with \fB\-E\fR\.
 .
 .TP
 \fB\-G\fR \fIreflist\-out\-path\fR
@@ -44,7 +44,7 @@ Instruct toolchain to additionally assemble a \fBCMake reference list file\fR (\
 .
 .TP
 \fB\-S\fR \fIstaging\-root\-path\fR
-Specify a \fBstaging directory path\fR (\fIworking directory\fR by default) to put a single subdirectory named \fBPSPLFiles\fR\. This subdirectory contains archived\-file objects, converted for the target platform[s] during compilation; awaiting packaging\. With \fBPSPLFiles\fR, conversion \fIdoesn\'t redundantly occur\fR on repeated PSPL source compilations\.
+Specify a \fBstaging directory path\fR (working directory by default) to put a single subdirectory named \fBPSPLFiles\fR\. This subdirectory contains archived\-file objects, converted for the target platform[s] during compilation; awaiting packaging\. With \fBPSPLFiles\fR, conversion doesn\'t redundantly occur on repeated PSPL source compilations\.
 .
 .TP
 \fB\-D\fR \fIdef\-name\fR[=\fIdef\-value\fR]\.\.\.
@@ -56,7 +56,7 @@ Add a \fBtarget platform\fR for the PSPL package or object being output\. Curren
 .
 .TP
 \fB\-e\fR \fBLITTLE\fR,\fBBIG\fR,\fBBI\fR
-Set \fBdefault endianness\fR for the PSPL package or object being output\. By default, the endianness used is either \fIoverridden by the target platform\fR or the \fInative\-endianness of the PSPL toolchain execution\fR\.
+Set \fBdefault endianness\fR for the PSPL package or object being output\. By default, the endianness used is either overridden by the target platform or the native\-endianness of the PSPL toolchain execution\.
 .
 .SH "AUTHOR"
 Jack Andersen \fIjackoalan@gmail\.com\fR

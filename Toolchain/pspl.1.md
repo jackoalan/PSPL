@@ -41,12 +41,12 @@ OPTIONS
 * `-E`:
   Only run the **PSPL preprocessor** on _source1_ and output to _out-path_ a 
   directive-expanded **PSPL source file** (*.pspl)
-  *May not be combined with `-c`*.
+  May not be combined with `-c`.
   
 * `-c`:
   Only run the **PSPL preprocessor and compiler** on _source1_ and output to _out-path_ a
   directive-expanded and compiled **PSPL object file** (*.psplc). 
-  *May not be combined with `-E`*.
+  May not be combined with `-E`.
   
 * `-G` _reflist-out-path_:
   Instruct toolchain to additionally assemble a **CMake reference list file** (*.cmake).
@@ -54,10 +54,10 @@ OPTIONS
   passed through the compiler.
   
 * `-S` _staging-root-path_:
-  Specify a **staging directory path** (*working directory* by default) to put
+  Specify a **staging directory path** (working directory by default) to put
   a single subdirectory named `PSPLFiles`. This subdirectory contains archived-file
   objects, converted for the target platform[s] during compilation; awaiting packaging.
-  With `PSPLFiles`, conversion *doesn't redundantly occur* on repeated PSPL source 
+  With `PSPLFiles`, conversion doesn't redundantly occur on repeated PSPL source
   compilations.
   
 * `-D` _def-name_[=_def-value_]...:
@@ -69,8 +69,8 @@ OPTIONS
   
 * `-e` `LITTLE`,`BIG`,`BI`:
   Set **default endianness** for the PSPL package or object being output.
-  By default, the endianness used is either *overridden by the target platform*
-  or the *native-endianness of the PSPL toolchain execution*.
+  By default, the endianness used is either overridden by the target platform
+  or the native-endianness of the PSPL toolchain execution.
 
 
 AUTHOR
