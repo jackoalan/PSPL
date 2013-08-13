@@ -12,7 +12,7 @@ DESCRIPTION
 -----------
 
 The **PSPL toolchain driver** is the data-generation portion of the **PSPL software package**.
-The driver is similarly designed as a typical **C-language compiler toolchain**.
+It's vaguely designed as a typical **C-language compiler toolchain**.
 
 As with **C**, there are driver modes reflecting **compilation** and **linking**. 
 PSPL's toolchain has a literal **compiler stage**, but the linking process is 
