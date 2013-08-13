@@ -65,19 +65,25 @@ Forming an Art Pipeline
 PSPL integrates with CMake in a bi-directional manner. This means that any user of CMake
 may call `find_package(PSPL REQUIRED)` in a CMake project and start using a series of 
 macros that ease PSPL package construction effort. In turn, PSPL will provide data about
-*asset-dependencies* back to CMake. This way, if a Photoshop artwork-file is referenced by a PSPL 
+*asset-dependencies* back to CMake. For example, if a Photoshop artwork-file is referenced by a PSPL 
 source-file referenced by CMake, making an edit *to the Photoshop file* will then cause the
 next invocation of `make` to recompile the PSPL referencing the artwork.
 
-The two macros are as follows:
 
-### set_pspl_platforms(plat1 plat2 ...)
+### Setting Target Graphics Platform(s)
+```cmake
+set_pspl_platforms(plat1 plat2 ...)
+```
 
 Allows the CMake-author to specify which target platforms should be included in
-packages declared using `add_pspl_package`.
+packages declared using `add_pspl_package`. So far, `GL2`, `GX`, and `D3D11` are
+valid platforms.
 
 
-### add_pspl_package(package_name pspl1 pspl2 ...)
+### Adding PSPL Package Targets
+```cmake
+add_pspl_package(package_name pspl1 pspl2 ...)
+```
 
 Declare a CMake target in the form of a PSPLP package-file. Provide a
 *package name* (which may be treated as a CMake target later) and
@@ -91,6 +97,8 @@ Extending PSPL
 
 PSPL uses an *extension-paradigm* allowing additional *PSPL-lexer-processing* code to be
 added. So far, [preliminary runtime docs](http://jackoalan.github.io/PSPL) are in place.
-Extensions are contained within the `Extensions` directory in the codebase. They
+Extensions are contained within the 
+[`Extensions`](https://github.com/jackoalan/PSPL/tree/master/Extensions) 
+directory in the codebase. They
 may be listed as-built by running `pspl` without arguments.
 
