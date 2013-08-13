@@ -1,7 +1,10 @@
 **If you need to build PSPL**, follow the 
 [CMake usage instructions](https://github.com/jackoalan/PSPL/blob/master/cmake/README.md). 
 
-**For information on using the `pspl` Toolchain**, review the [Toolchain Usage Help](https://github.com/jackoalan/PSPL/blob/master/Toolchain/README.md#toolchain-driver-usage). 
+**For information on using the `pspl` Toolchain**, 
+[view the manpage](http://jackoalan.github.io/PSPL/pspl.1.html). 
+Additional information can be found in the 
+[Toolchain Usage Help](https://github.com/jackoalan/PSPL/blob/master/Toolchain/README.md#toolchain-driver-usage). 
 
 PSPL Shader Language
 ====================
