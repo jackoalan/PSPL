@@ -45,12 +45,12 @@ OPTIONS
   
 * `-c`:
   Only run the **PSPL preprocessor and compiler** on _source1_ and output to _out-path_ a
-  directive-expanded and compiled **PSPL object file** (*.psplc). 
+  directive-expanded and compiled **PSPL object file** (*.psplc) 
   May not be combined with `-E`.
   
 * `-G` _reflist-out-path_:
-  Instruct toolchain to additionally assemble a **CMake reference list file** (*.cmake).
-  This file provides data to CMake; conveying dependencies on *packaged files* 
+  Instruct toolchain to additionally assemble a **CMake reference list file** (*.cmake)
+  This file provides data to CMake; conveying dependencies on packaged files 
   passed through the compiler.
   
 * `-S` _staging-root-path_:
