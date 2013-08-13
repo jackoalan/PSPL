@@ -23,7 +23,7 @@ default C compiler for the platform in question is used.
 **Please Note** - Only *OS X 10.8* with [*Xcode command-line tools*](https://developer.apple.com/downloads) 
 has been tested as a build platform.
 
-This process requires a *C-compilation toolchain*, [*Git*](http://git-scm.com), and [*CMake*](http://cmake.org)
+Building PSPL requires a *C-compilation toolchain*, [*Git*](http://git-scm.com), and [*CMake*](http://cmake.org)
 
 ### Building and Installing
 
