@@ -102,7 +102,7 @@
 		E403AB971797094900D6B203 /* pmdl_loop_vert.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pmdl_loop_vert.py; sourceTree = "<group>"; };
 		E4069D26179EF34B00FB4D73 /* PMDLRuntime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PMDLRuntime.h; sourceTree = "<group>"; };
 		E4069D27179F021500FB4D73 /* PMDLRuntimeLinAlgebra.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PMDLRuntimeLinAlgebra.h; sourceTree = "<group>"; };
-		E4360CB717B9C16D0016DCDD /* PSPL.1.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = PSPL.1.md; sourceTree = "<group>"; };
+		E4360CB717B9C16D0016DCDD /* pspl.1.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = pspl.1.md; sourceTree = "<group>"; };
 		E44577BD1781DBA4003EE09C /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E44577BE1781DC4F003EE09C /* PMDLToolchain.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PMDLToolchain.c; sourceTree = "<group>"; };
 		E44577BF1781DC5B003EE09C /* PMDLRuntime.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PMDLRuntime.c; sourceTree = "<group>"; };
@@ -160,6 +160,7 @@
 		E4995F3C17411617003B06BF /* ObjectIndexer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjectIndexer.h; sourceTree = "<group>"; };
 		E4995F3D17411620003B06BF /* ObjectIndexer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = ObjectIndexer.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		E49E051C176A04AA002E1492 /* CalcChain.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = CalcChain.c; sourceTree = "<group>"; };
+		E4AF3F7717B9DE7100D21DC6 /* pspl.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = pspl.1; sourceTree = "<group>"; };
 		E4AFAE28171C92B900F7A0BF /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		E4AFAE29171C92BE00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		E4AFAE2A171C92D100F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
@@ -472,7 +473,8 @@
 			isa = PBXGroup;
 			children = (
 				E4AFAE2A171C92D100F7A0BF /* README.md */,
-				E4360CB717B9C16D0016DCDD /* PSPL.1.md */,
+				E4360CB717B9C16D0016DCDD /* pspl.1.md */,
+				E4AF3F7717B9DE7100D21DC6 /* pspl.1 */,
 				E4AFAE8417259A1900F7A0BF /* CMakeLists.txt */,
 				E4AFAEA117315D4000F7A0BF /* Buffer.c */,
 				E4AFAE93172D5F7900F7A0BF /* Driver.h */,
@@ -1081,6 +1083,7 @@
 					"PSPL_HASHING_OGC=1",
 					"PSPL_RUNTIME_PLATFORM_GX=1",
 					"PSPL_THREADING_OGC=1",
+					"HW_RVL=1",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1122,6 +1125,7 @@
 					"PSPL_HASHING_OGC=1",
 					"PSPL_RUNTIME_PLATFORM_GX=1",
 					"PSPL_THREADING_OGC=1",
+					"HW_RVL=1",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;

@@ -1,0 +1,68 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "PSPL" "1" "August 2013" "" ""
+.
+.SH "NAME"
+\fBpspl\fR \- toolchain driver to generate PSPL package files
+.
+.SH "SYNOPSIS"
+\fBpspl\fR [\fB\-o\fR \fIout\-path\fR] [\fB\-E\fR|\fB\-c\fR] [\fB\-G\fR \fIreflist\-out\-path\fR] [\fB\-S\fR \fIstaging\-root\-path\fR] [\fB\-D\fR \fIdef\-name\fR[=\fIdef\-value\fR]]\.\.\. [\fB\-T\fR \fItarget\-platform\fR]\.\.\. [\fB\-e\fR \fBLITTLE\fR,\fBBIG\fR,\fBBI\fR] \fIsource1\fR [\fIsource2\fR [\fIsourceN\fR]]\.\.\.
+.
+.SH "DESCRIPTION"
+The \fBPSPL toolchain driver\fR is the data\-generation portion of the \fBPSPL software package\fR\. The driver is similarly designed as a typical \fBC\-language compiler toolchain\fR\.
+.
+.P
+As with \fBC\fR, there are driver modes reflecting \fBcompilation\fR and \fBlinking\fR\. PSPL\'s toolchain has a literal \fBcompiler stage\fR, but the linking process is known as the \fBpackaging stage\fR\.
+.
+.P
+The \fBPSPL package\fR file (\fB*\.psplp\fR) is the ultimate output of the \fBpspl\fR toolchain\. It contains data, converted for the target platform(s) assembled into a [fat ]package indexing scheme\.
+.
+.P
+As for input, there are two options\. One or many \fBPSPL source\fR files (\fB*\.pspl\fR) may be offered to form a complete package\. Alternatively, pre\-compiled \fBPSPL object\fR files (\fB*\.psplc\fR) may substitute source files in forming the package\. A PSPL object is formed from only one PSPL source and may be output with the \fB\-c\fR flag\.
+.
+.P
+\fBTo determine the capabilities\fR of a \fBpspl\fR toolchain build, simply run \fBpspl\fR without arguments\.
+.
+.SH "OPTIONS"
+.
+.TP
+\fB\-o\fR \fIout\-path\fR
+Specify the file path to write \fBpspl\fR \fBoutput\fR\. By default, output is written to \fBa\.out\.pspl[p|c]\fR
+.
+.TP
+\fB\-E\fR
+Only run the \fBPSPL preprocessor\fR on \fIsource1\fR and output to \fIout\-path\fR a directive\-expanded \fBPSPL source file\fR (\fI\.pspl)\fRMay not be combined with \fB\-c\fR*\.
+.
+.TP
+\fB\-c\fR
+Only run the \fBPSPL preprocessor and compiler\fR on \fIsource1\fR and output to \fIout\-path\fR a directive\-expanded and compiled \fBPSPL object file\fR (\fI\.psplc)\.\fRMay not be combined with \fB\-E\fR*\.
+.
+.TP
+\fB\-G\fR \fIreflist\-out\-path\fR
+Instruct toolchain to additionally assemble a \fBCMake reference list file\fR (\fI\.cmake)\. This file provides data to CMake; conveying dependencies on\fRpackaged files* passed through the compiler\.
+.
+.TP
+\fB\-S\fR \fIstaging\-root\-path\fR
+Specify a \fBstaging directory path\fR (\fIworking directory\fR by default) to put a single subdirectory named \fBPSPLFiles\fR\. This subdirectory contains archived\-file objects, converted for the target platform[s] during compilation; awaiting packaging\. With \fBPSPLFiles\fR, conversion \fIdoesn\'t redundantly occur\fR on repeated PSPL source compilations\.
+.
+.TP
+\fB\-D\fR \fIdef\-name\fR[=\fIdef\-value\fR]\.\.\.
+Add a \fBkeyed definition string\fR for PSPL toolchain extensions to utilise\.
+.
+.TP
+\fB\-T\fR \fItarget\-platform\fR\.\.\.
+Add a \fBtarget platform\fR for the PSPL package or object being output\. Currently, \fBGL2\fR,\fBGX\fR,\fBD3D11\fR are the options\.
+.
+.TP
+\fB\-e\fR \fBLITTLE\fR,\fBBIG\fR,\fBBI\fR
+Set \fBdefault endianness\fR for the PSPL package or object being output\. By default, the endianness used is either \fIoverridden by the target platform\fR or the \fInative\-endianness of the PSPL toolchain execution\fR\.
+.
+.SH "AUTHOR"
+Jack Andersen \fIjackoalan@gmail\.com\fR
+.
+.SH "COPYRIGHT"
+Copyright (c) 2013 Jack Andersen
+.
+.P
+View licences of \fBthird\-party code\fR used in \fBpspl\fR by running \fBpspl \-l\fR

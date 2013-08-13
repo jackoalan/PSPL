@@ -24,6 +24,14 @@ pspl_add_executable(pspl
                ReferenceGatherer.c
                ObjectIndexer.c
                ${PSPL_BINARY_DIR}/pspl_available_toolchain_extensions.c)
+
+# Install
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX /usr
+    CACHE PATH "Installation prefix (system-wide) directory for PSPL toolchain" FORCE)
+endif()
+install(TARGETS pspl DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(FILES pspl.1 DESTINATION ${CMAKE_INSTALL_PREFIX}/share/man/man1)
                
 set_target_properties(pspl PROPERTIES
                       COMPILE_DEFINITIONS PSPL_TOOLCHAIN=1)

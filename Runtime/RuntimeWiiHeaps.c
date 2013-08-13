@@ -20,7 +20,7 @@
  * * MEM2 - 0x10000000 - 64 MiB - GDDR3-SDRAM
  * 
  * The two banks are accessible system-wide and both benefit from the 
- * PowerPC's caching system
+ * PowerPC's caching system. 
  * 
  * PSPL has a major responsibility in loading data for multimedia
  * subsystems. Therefore, PSPL maintains a *media heap* to provide 
@@ -42,8 +42,8 @@
  * or `pspl_wii_free_media_block`
  */
 
-static size_t MEDIA_HEAP_SIZE = 1<<25;
-static size_t INDEXING_HEAP_SIZE = 1<<19;
+static size_t MEDIA_HEAP_SIZE = 1<<25; // (32 MiB)
+static size_t INDEXING_HEAP_SIZE = 1<<19; // (512 KiB)
 
 size_t pspl_wii_set_media_heap_size(size_t size) {
     MEDIA_HEAP_SIZE = size;
@@ -79,7 +79,7 @@ void _pspl_wii_mem_init() {
         media_set = 1;
     }
     
-    // Make Heap
+    // Make Heap (32-byte paging for pspl-data's alignment expectations)
     __lwp_heap_init(&media_heap, low2, MEDIA_HEAP_SIZE, 32);
     
     
@@ -98,7 +98,7 @@ void _pspl_wii_mem_init() {
         indexing_set = 1;
     }
     
-    // Make Heap
+    // Make Heap (minimum PowerPC 8-byte paging for *all 32-bit* indexing)
     __lwp_heap_init(&indexing_heap, new_hi1, INDEXING_HEAP_SIZE, 8);
     
     
