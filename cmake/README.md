@@ -24,6 +24,17 @@ In most cases, a default `cmake <PSPL_SOURCE>` invocation followed by a run
 of `make` will build a complete PSPL toolchain/runtime pair for the host 
 build machine. 
 
+In practice, this looks like the following
+```sh
+$ git clone https://github.com/jackoalan/PSPL.git
+$ cd PSPL
+$ mkdir build
+$ cd build
+$ cmake ..
+$ make
+# make install
+```
+
 
 ### Cross Compiling To Other Targets
 
