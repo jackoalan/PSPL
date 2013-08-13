@@ -22,7 +22,7 @@
 
 
 /* For GX compatibility, this file is conditionally compiled to
- * link to GX matrix routines or supply identical versions
+ * link to libogc matrix routines or supply identical versions
  * for OpenGL/D3D */
 
 #define DegToRad(a)   ( (a) *  0.01745329252f )
@@ -40,7 +40,7 @@
 #define pmdl_vector3_scale(src,dst,scale) guVecScale((guVector*)(src),(guVector*)(dst),(scale))
 #define pmdl_vector3_add(a,b,ab) guVecAdd((guVector*)(a),(guVector*)(b),(guVector*)(ab))
 #define pmdl_vector3_sub(a,b,ab) guVecSub((guVector*)(a),(guVector*)(b),(guVector*)(ab))
-#define pmdl_vector3_matrix_mul(m,s,d) guVecMultiply((m),(guVector*)(s),(guVector*)(d))
+#define pmdl_vector3_matrix_mul(m,s,d) guVecMultiply((m),(guVector*)(&s[0]),(guVector*)(&d[0]))
 
 /* Extended libogc matrix routines */
 void pspl_matrix44_cpy(REGISTER_KEY pspl_matrix44_t src, REGISTER_KEY pspl_matrix44_t dst);

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E4360CB517B9BA380016DCDD /* PMDLRuntimeProcessing.c in Sources */ = {isa = PBXBuildFile; fileRef = E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */; };
 		E43B8EBB174DC28900F8C5FB /* BuiltinsToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DB173462A800B8CDD1 /* BuiltinsToolchain.c */; };
 		E43C50F617B49C5C00F25742 /* RuntimeWiiHeaps.c in Sources */ = {isa = PBXBuildFile; fileRef = E4D6302417B47C6D001D1E0E /* RuntimeWiiHeaps.c */; };
 		E44577C01781DD57003EE09C /* PMDLToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E44577BE1781DC4F003EE09C /* PMDLToolchain.c */; };
@@ -32,7 +33,6 @@
 		E44577E21781DEB8003EE09C /* SMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C5270E1778A32D00D1D822 /* SMRuntime.c */; };
 		E44577E31781DEB8003EE09C /* IRRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E48FF5611764CF31000231AA /* IRRuntime.c */; };
 		E44577E61781DEB8003EE09C /* PSPLRuntimeThreads.h in Headers */ = {isa = PBXBuildFile; fileRef = E4C527101778A4FF00D1D822 /* PSPLRuntimeThreads.h */; };
-		E4461F7D17B1FA120039B479 /* PMDLRuntimeProcessing.c in Sources */ = {isa = PBXBuildFile; fileRef = E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */; };
 		E4461F7E17B31EFD0039B479 /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
 		E447F7FA17749CB90081E1DF /* CalcChain.c in Sources */ = {isa = PBXBuildFile; fileRef = E49E051C176A04AA002E1492 /* CalcChain.c */; };
 		E447F7FC1774A6780081E1DF /* CalcChain.c in Sources */ = {isa = PBXBuildFile; fileRef = E49E051C176A04AA002E1492 /* CalcChain.c */; };
@@ -954,10 +954,10 @@
 				E44577C11781DDAE003EE09C /* PMDLRuntime.c in Sources */,
 				E4461F7E17B31EFD0039B479 /* hash_builtin.c in Sources */,
 				E4C5E8B7177E1BAC00D73E7D /* TMRuntime.c in Sources */,
+				E4360CB517B9BA380016DCDD /* PMDLRuntimeProcessing.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
 				E4CD266E179F39B800172F31 /* PMDLRuntimeLinAlgebraSSE.s in Sources */,
 				E4CD266B179F376300172F31 /* PMDLRuntimeLinAlgebraRef.c in Sources */,
-				E4461F7D17B1FA120039B479 /* PMDLRuntimeProcessing.c in Sources */,
 				E447F7FC1774A6780081E1DF /* CalcChain.c in Sources */,
 				E4CE71F41785043D009F5932 /* RuntimeCore.c in Sources */,
 				E4E4918E1753FAD3006FCA59 /* pspl_available_runtime_extensions.c in Sources */,

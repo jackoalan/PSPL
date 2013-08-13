@@ -74,6 +74,7 @@
 
 #elif PSPL_RUNTIME_PLATFORM_GX
 #   include <ogc/gx.h>
+#   include <ogc/cache.h>
 
 #endif
 
@@ -327,6 +328,9 @@ int pmdl_init(const pspl_runtime_arc_file_t* pmdl_file) {
     // Load collections into GPU
 #   if PMDL_GENERAL
         return pmdl_init_collections_general(pmdl_file->file_data);
+#   elif PMDL_GX
+        DCStoreRange(pmdl_file->file_data, pmdl_file->file_len);
+        return 0;
 #   else
         return 0;
 #   endif
@@ -359,6 +363,15 @@ void pmdl_destroy(const pspl_runtime_arc_file_t* pmdl_file) {
 
 #pragma mark Context Representation and Frustum Testing
 
+void print_matrix(pspl_matrix34_t mtx) {
+    printf("%f | %f | %f | %f\n"
+           "%f | %f | %f | %f\n"
+           "%f | %f | %f | %f\n",
+           mtx[0][0], mtx[0][1], mtx[0][2], mtx[0][3],
+           mtx[1][0], mtx[1][1], mtx[1][2], mtx[1][3],
+           mtx[2][0], mtx[2][1], mtx[2][2], mtx[2][3]);
+}
+
 /* Invalidate context transformation cache (if values updated) */
 void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv_bits) {
     int i;
@@ -368,13 +381,37 @@ void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv
     
     if (inv_bits & PMDL_INVALIDATE_VIEW) {
         pmdl_matrix_lookat(ctx->cached_view_mtx, ctx->camera_view);
+//#       ifdef GEKKO
+//        DCStoreRange(ctx->cached_view_mtx, sizeof(pspl_matrix34_t));
+//#       endif
     }
     
     if (inv_bits & (PMDL_INVALIDATE_MODEL | PMDL_INVALIDATE_VIEW)) {
+        /*
+        printf("Model:\n");
+        print_matrix(ctx->model_mtx);
+        
+        printf("\nView:\n");
+        print_matrix(ctx->cached_view_mtx);
+         */
+        
         pmdl_matrix34_mul(ctx->model_mtx, ctx->cached_view_mtx, ctx->cached_modelview_mtx);
         for (i=0 ; i<3 ; ++i)
             ctx->cached_modelview_mtx[3][i] = 0;
         ctx->cached_modelview_mtx[3][3] = 1;
+        
+        /*
+        printf("ModelView:\n");
+        print_matrix(ctx->cached_modelview_mtx);
+        sleep(5);
+        */
+        
+
+//#       ifdef GEKKO
+//        DCStoreRange(ctx->cached_modelview_mtx, sizeof(pspl_matrix34_t));
+//#       endif
+        
+
         pmdl_matrix34_invxpose(ctx->cached_modelview_mtx, ctx->cached_modelview_invxpose_mtx);
         for (i=0 ; i<3 ; ++i)
             ctx->cached_modelview_invxpose_mtx[3][i] = 0;
@@ -594,6 +631,10 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
     for (i=0 ; i<PMDL_MAX_TEXCOORD_MATS ; ++i)
         GX_LoadTexMtxImm(ctx->texcoord_mtx[i], GX_TEXMTX0 + (i*3), GX_TG_MTX2x4);
     
+    GX_LoadProjectionMtx(ctx->cached_projection_mtx,
+                         (ctx->projection_type == PMDL_PERSPECTIVE)?
+                         GX_PERSPECTIVE:GX_ORTHOGRAPHIC);
+    
 #   endif
     
     
@@ -684,9 +725,13 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
             // Set GX Attribute Table
             GX_ClearVtxDesc();
             
+            //GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
+            //GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+        
+            
             GX_SetVtxDesc(GX_VA_POS, GX_INDEX16);
             GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
-            
+        
             GX_SetVtxDesc(GX_VA_NRM, GX_INDEX16);
             GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
 
@@ -694,8 +739,8 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                 GX_SetVtxDesc(GX_VA_TEX0+j, GX_INDEX16);
                 GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0+j, GX_TEX_ST, GX_F32, 0);
             }
-        
-        
+            
+            
             // Load in GX buffer context here
             void* vert_buf = collection_buf + collection_header->vert_buf_off;
             uint32_t vert_count = *(uint32_t*)vert_buf;
@@ -741,10 +786,32 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                     pspl_runtime_bind_psplc(shader_obj);
                 
                 // Draw mesh
-                printf("About to run:\n");
-                print_bytes(buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);
-                sleep(10);
+                //printf("About to run:\n");
+                //sleep(2);
+                //print_bytes(buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);
+                //sleep(10);
+                GX_SetNumTevStages(1);
+                GXColor tev_color = {255, 255, 255, 255};
+                GX_SetTevKColor(GX_KCOLOR0, tev_color);
+                GX_SetTevKColorSel(GX_TEVSTAGE0, GX_TEV_KCSEL_K0);
+                GX_SetTevKAlphaSel(GX_TEVSTAGE0, GX_TEV_KASEL_1);
+                GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXMAP_NULL, GX_TEXCOORDNULL, GX_COLORNULL);
+                GX_SetTevColorOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+                GX_SetTevAlphaOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+                GX_SetTevColorIn(GX_TEVSTAGE0, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO, GX_CC_KONST);
+                GX_SetTevAlphaIn(GX_TEVSTAGE0, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_KONST);
+                /*
+                GX_Begin(GX_QUADS, 0, 4);
+                GX_Position3f32(-1, 2, 0);
+                GX_Position3f32(-1, -2, 0);
+                GX_Position3f32(1, -2, 0);
+                GX_Position3f32(1, 2, 0);
+                GX_End();
+                 */
+                //printf("Running %p : %d\n", buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);
+                //sleep(5);
                 GX_CallDispList(buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);
+                GX_Flush();
                 
                 index_buf += sizeof(pmdl_gx_mesh);
                 
@@ -773,8 +840,12 @@ void pmdl_draw(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_fil
     pmdl_header* header = pmdl_file->file_data;
 
     // Master Frustum test
-    if (!pmdl_aabb_frustum_test(ctx, header->master_aabb))
+    if (!pmdl_aabb_frustum_test(ctx, header->master_aabb)) {
+        //printf("Failed master\n");
         return;
+    }
+    //printf("Passed master\n");
+
     
     // Select draw routine based on sub-type
     if (header->sub_type_num == '0')

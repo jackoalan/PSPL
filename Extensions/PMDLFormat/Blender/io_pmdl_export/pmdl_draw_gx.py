@@ -370,6 +370,14 @@ class pmdl_draw_gx:
                 gx_bytes += struct.pack('>H', collection_index_vert)
                 for uv_idx in range(collection['uv_count']):
                     gx_bytes += struct.pack('>H', last_elem)
+                
+                loop_vert = collection['vertices'][strip['strip'][0]]
+                collection_index_vert = self._get_collection_vertex_index(loop_vert[0].mesh, loop_vert[0].loop.vertex_index)
+                gx_bytes += struct.pack('>H', collection_index_vert)
+                gx_bytes += struct.pack('>H', collection_index_vert)
+                for uv_idx in range(collection['uv_count']):
+                    gx_bytes += struct.pack('>H', strip['strip'][0])
+                
                 strip_len += 2
             
             # Primitive tri-strip byte array

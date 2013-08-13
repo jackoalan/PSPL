@@ -26,6 +26,8 @@
 
 #define DEFAULT_FIFO_SIZE (256 * 1024)
 
+extern void pmdl_vector3_matrix_mul(pspl_matrix34_t mt, pspl_vector3_t src, pspl_vector3_t dst);
+
 static pmdl_draw_context_t monkey_ctx;
 static const pspl_runtime_arc_file_t* monkey_model;
 
@@ -38,16 +40,17 @@ static uint8_t reset_pressed = 0;
 /* Ready to render */
 static uint8_t ready_to_render = 0;
 
+/* Frame Count */
+u32 cur_frame = 0;
+
 static void renderfunc() {
     
     // Current time
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    double time = tv.tv_sec + ((double)tv.tv_usec / (double)USEC_PER_SEC);
+    float time = (float)cur_frame / 60.0f;
     
     // Rotate camera around monkey
-    monkey_ctx.camera_view.pos[0] = sin(time) * 5;
-    monkey_ctx.camera_view.pos[2] = cos(time) * 5;
+    monkey_ctx.camera_view.pos[0] = sinf(time) * 5;
+    monkey_ctx.camera_view.pos[2] = cosf(time) * 5;
     pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_VIEW);
         
     // Draw monkey
@@ -57,7 +60,7 @@ static void renderfunc() {
     
     // Swap buffers
     GX_DrawDone();
-    //GX_CopyDisp(xfb, GX_TRUE);
+    GX_CopyDisp(xfb, GX_TRUE);
     
     //printf("Console active\n");
 
@@ -74,6 +77,7 @@ static void reset_press_cb() {
 }
 
 static void post_retrace_cb(uint32_t rcnt) {
+    cur_frame = rcnt;
     ready_to_render = 1;
 }
 
@@ -81,7 +85,6 @@ static void post_retrace_cb(uint32_t rcnt) {
 #include <PSPL/PSPLHash.h>
 int main(int argc, char* argv[]) {
     
-        
     // Setup video
     VIDEO_Init();
     GXRModeObj* pref_vid_mode = VIDEO_GetPreferredMode(NULL);
@@ -100,13 +103,14 @@ int main(int argc, char* argv[]) {
     
     printf("Console active\n");
 
+
     // Setup GX
     void *gp_fifo = NULL;
     gp_fifo = memalign(32,DEFAULT_FIFO_SIZE);
     memset(gp_fifo,0,DEFAULT_FIFO_SIZE);
     GX_Init(gp_fifo, DEFAULT_FIFO_SIZE);
     
-    GXColor background = {0,0,0,0xff};
+    GXColor background = {0x50,0x50,0x50,0xff};
     GX_SetCopyClear(background, 0x00ffffff);
     
     f32 yscale;
@@ -137,8 +141,6 @@ int main(int argc, char* argv[]) {
     // Setup PSPL
     const pspl_platform_t* plat;
     pspl_runtime_init(&plat);
-    printf("PSPL initted\n");
-    sleep(2);
     const pspl_runtime_package_t* package = NULL;
     pspl_runtime_load_package_file("sd:/rtest.psplp", &package);
     pspl_runtime_enumerate_psplcs(package, enumerate_psplc_hook);
@@ -162,9 +164,9 @@ int main(int argc, char* argv[]) {
     monkey_ctx.camera_view.up[2] = 0;
     monkey_ctx.projection_type = PMDL_PERSPECTIVE;
     monkey_ctx.projection.perspective.fov = 55;
-    monkey_ctx.projection.perspective.far = 5;
+    monkey_ctx.projection.perspective.far = 10;
     monkey_ctx.projection.perspective.near = 1;
-    monkey_ctx.projection.perspective.aspect = 1.3333;
+    monkey_ctx.projection.perspective.aspect = 1.77;
     monkey_ctx.projection.perspective.post_translate_x = 0;
     monkey_ctx.projection.perspective.post_translate_y = 0;
     pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_ALL);

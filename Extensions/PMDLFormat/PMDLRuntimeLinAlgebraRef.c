@@ -314,6 +314,7 @@ void pmdl_vector3_matrix_mul(pspl_matrix34_t mt, pspl_vector3_t src, pspl_vector
     dst[0] = tmp[0];
     dst[1] = tmp[1];
     dst[2] = tmp[2];
+
 }
 
 void _pmdl_matrix_lookat(pspl_matrix34_t mt, pspl_vector3_t pos, pspl_vector3_t up, pspl_vector3_t look) {

@@ -29,11 +29,37 @@ static void unload_object(pspl_runtime_psplc_t* object) {
     free(object->native_shader.disp_list);
 }
 
+static void print_bytes(void* ptr, size_t size) {
+    
+    int i;
+    
+    for (i=0 ; i<size ; ++i) {
+        
+        if (!(i%32))
+            
+            printf("\n");
+        
+        printf("%02X", *(uint8_t*)(ptr+i));
+        
+    }
+    
+    printf("\n\n");
+    
+}
+
 static void bind_object(pspl_runtime_psplc_t* object) {
     
+    /*
+    printf("About to run:\n");
+    sleep(2);
+    print_bytes((void*)object->native_shader.disp_list, object->native_shader.disp_list_len);
+    sleep(10);
+     */
+    //GX_SetTev
+    
     // This will asynchronously instruct the GPU to run the list
-    GX_CallDispList((void*)object->native_shader.disp_list,
-                    object->native_shader.disp_list_len);
+    //GX_CallDispList((void*)object->native_shader.disp_list,
+    //                object->native_shader.disp_list_len);
     
 }
 
