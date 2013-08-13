@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv='content-type' value='text/html;charset=utf8'>
+  <meta name='generator' value='Ronn/v0.7.3 (http://github.com/rtomayko/ronn/tree/0.7.3)'>
+  <title>pspl(1) - toolchain driver to generate PSPL package files</title>
+  <style type='text/css' media='all'>
+  /* style: man */
+  body#manpage {margin:0}
+  .mp {max-width:100ex;padding:0 9ex 1ex 4ex}
+  .mp p,.mp pre,.mp ul,.mp ol,.mp dl {margin:0 0 20px 0}
+  .mp h2 {margin:10px 0 0 0}
+  .mp > p,.mp > pre,.mp > ul,.mp > ol,.mp > dl {margin-left:8ex}
+  .mp h3 {margin:0 0 0 4ex}
+  .mp dt {margin:0;clear:left}
+  .mp dt.flush {float:left;width:8ex}
+  .mp dd {margin:0 0 0 9ex}
+  .mp h1,.mp h2,.mp h3,.mp h4 {clear:left}
+  .mp pre {margin-bottom:20px}
+  .mp pre+h2,.mp pre+h3 {margin-top:22px}
+  .mp h2+pre,.mp h3+pre {margin-top:5px}
+  .mp img {display:block;margin:auto}
+  .mp h1.man-title {display:none}
+  .mp,.mp code,.mp pre,.mp tt,.mp kbd,.mp samp,.mp h3,.mp h4 {font-family:monospace;font-size:14px;line-height:1.42857142857143}
+  .mp h2 {font-size:16px;line-height:1.25}
+  .mp h1 {font-size:20px;line-height:2}
+  .mp {text-align:justify;background:#fff}
+  .mp,.mp code,.mp pre,.mp pre code,.mp tt,.mp kbd,.mp samp {color:#131211}
+  .mp h1,.mp h2,.mp h3,.mp h4 {color:#030201}
+  .mp u {text-decoration:underline}
+  .mp code,.mp strong,.mp b {font-weight:bold;color:#131211}
+  .mp em,.mp var {font-style:italic;color:#232221;text-decoration:none}
+  .mp a,.mp a:link,.mp a:hover,.mp a code,.mp a pre,.mp a tt,.mp a kbd,.mp a samp {color:#0000ff}
+  .mp b.man-ref {font-weight:normal;color:#434241}
+  .mp pre {padding:0 4ex}
+  .mp pre code {font-weight:normal;color:#434241}
+  .mp h2+pre,h3+pre {padding-left:0}
+  ol.man-decor,ol.man-decor li {margin:3px 0 10px 0;padding:0;float:left;width:33%;list-style-type:none;text-transform:uppercase;color:#999;letter-spacing:1px}
+  ol.man-decor {width:100%}
+  ol.man-decor li.tl {text-align:left}
+  ol.man-decor li.tc {text-align:center;letter-spacing:4px}
+  ol.man-decor li.tr {text-align:right;float:right}
+  </style>
+</head>
+<!--
+  The following styles are deprecated and will be removed at some point:
+  div#man, div#man ol.man, div#man ol.head, div#man ol.man.
+
+  The .man-page, .man-decor, .man-head, .man-foot, .man-title, and
+  .man-navigation should be used instead.
+-->
+<body id='manpage'>
+  <div class='mp' id='man'>
+
+  <div class='man-navigation' style='display:none'>
+    <a href="#NAME">NAME</a>
+    <a href="#SYNOPSIS">SYNOPSIS</a>
+    <a href="#DESCRIPTION">DESCRIPTION</a>
+    <a href="#OPTIONS">OPTIONS</a>
+    <a href="#AUTHOR">AUTHOR</a>
+    <a href="#COPYRIGHT">COPYRIGHT</a>
+  </div>
+
+  <ol class='man-decor man-head man head'>
+    <li class='tl'>pspl(1)</li>
+    <li class='tc'></li>
+    <li class='tr'>pspl(1)</li>
+  </ol>
+
+  <h2 id="NAME">NAME</h2>
+<p class="man-name">
+  <code>pspl</code> - <span class="man-whatis">toolchain driver to generate PSPL package files</span>
+</p>
+
+<h2 id="SYNOPSIS">SYNOPSIS</h2>
+
+<p><code>pspl</code> [<code>-o</code> <em>out-path</em>] [<code>-E</code>|<code>-c</code>] [<code>-G</code> <em>reflist-out-path</em>] [<code>-S</code> <em>staging-root-path</em>] [<code>-D</code> <em>def-name</em>[=<em>def-value</em>]]... [<code>-T</code> <em>target-platform</em>]... [<code>-e</code> <code>LITTLE</code>,<code>BIG</code>,<code>BI</code>] <em>source1</em> [<em>source2</em> [<em>sourceN</em>]]...</p>
+
+<h2 id="DESCRIPTION">DESCRIPTION</h2>
+
+<p>The <strong>PSPL toolchain driver</strong> is the data-generation portion of the <strong>PSPL software package</strong>.
+It's vaguely designed as a typical <strong>C-language compiler toolchain</strong>.</p>
+
+<p>As with <strong>C</strong>, there are driver modes reflecting <strong>compilation</strong> and <strong>linking</strong>.
+PSPL's toolchain has a literal <strong>compiler stage</strong>, but the linking process is
+known as the <strong>packaging stage</strong>.</p>
+
+<p>The <strong>PSPL package</strong> file (<code>*.psplp</code>) is the ultimate output of the <code>pspl</code> toolchain.
+It contains data, converted for the target platform(s) assembled into a [fat ]package
+indexing scheme.</p>
+
+<p>As for input, there are two options. One or many <strong>PSPL source</strong> files (<code>*.pspl</code>)
+may be offered to form a complete package. Alternatively, pre-compiled <strong>PSPL object</strong>
+files (<code>*.psplc</code>) may substitute source files in forming the package. A PSPL object
+is formed from only one PSPL source and may be output with the <code>-c</code> flag.</p>
+
+<p><strong>To determine the capabilities</strong> of a <code>pspl</code> toolchain build, simply run
+<code>pspl</code> without arguments.</p>
+
+<h2 id="OPTIONS">OPTIONS</h2>
+
+<dl>
+<dt><code>-o</code> <em>out-path</em></dt><dd><p>Specify the file path to write <code>pspl</code> <strong>output</strong>. By default, output is written
+to <code>a.out.pspl[p|c]</code></p></dd>
+<dt class="flush"><code>-E</code></dt><dd><p>Only run the <strong>PSPL preprocessor</strong> on <em>source1</em> and output to <em>out-path</em> a
+directive-expanded <strong>PSPL source file</strong> (*.pspl)
+May not be combined with <code>-c</code>.</p></dd>
+<dt class="flush"><code>-c</code></dt><dd><p>Only run the <strong>PSPL preprocessor and compiler</strong> on <em>source1</em> and output to <em>out-path</em> a
+directive-expanded and compiled <strong>PSPL object file</strong> (*.psplc).
+May not be combined with <code>-E</code>.</p></dd>
+<dt><code>-G</code> <em>reflist-out-path</em></dt><dd><p>Instruct toolchain to additionally assemble a <strong>CMake reference list file</strong> (<em>.cmake).
+This file provides data to CMake; conveying dependencies on </em>packaged files*
+passed through the compiler.</p></dd>
+<dt><code>-S</code> <em>staging-root-path</em></dt><dd><p>Specify a <strong>staging directory path</strong> (working directory by default) to put
+a single subdirectory named <code>PSPLFiles</code>. This subdirectory contains archived-file
+objects, converted for the target platform[s] during compilation; awaiting packaging.
+With <code>PSPLFiles</code>, conversion doesn't redundantly occur on repeated PSPL source
+compilations.</p></dd>
+<dt><code>-D</code> <em>def-name</em>[=<em>def-value</em>]...</dt><dd><p>Add a <strong>keyed definition string</strong> for PSPL toolchain extensions to utilise.</p></dd>
+<dt><code>-T</code> <em>target-platform</em>...</dt><dd><p>Add a <strong>target platform</strong> for the PSPL package or object being output.
+Currently, <code>GL2</code>,<code>GX</code>,<code>D3D11</code> are the options.</p></dd>
+<dt><code>-e</code> <code>LITTLE</code>,<code>BIG</code>,<code>BI</code></dt><dd><p>Set <strong>default endianness</strong> for the PSPL package or object being output.
+By default, the endianness used is either overridden by the target platform
+or the native-endianness of the PSPL toolchain execution.</p></dd>
+</dl>
+
+
+<h2 id="AUTHOR">AUTHOR</h2>
+
+<p>Jack Andersen <a href="&#109;&#x61;&#x69;&#x6c;&#x74;&#111;&#x3a;&#x6a;&#97;&#99;&#107;&#111;&#97;&#108;&#97;&#x6e;&#x40;&#103;&#109;&#x61;&#105;&#x6c;&#46;&#x63;&#111;&#109;" data-bare-link="true">&#x6a;&#97;&#x63;&#107;&#x6f;&#97;&#x6c;&#97;&#x6e;&#64;&#103;&#109;&#97;&#x69;&#108;&#46;&#x63;&#x6f;&#109;</a></p>
+
+<h2 id="COPYRIGHT">COPYRIGHT</h2>
+
+<p>Copyright (c) 2013 Jack Andersen</p>
+
+<p>View licences of <strong>third-party code</strong> used in <code>pspl</code> by running <code>pspl -l</code></p>
+
+
+  <ol class='man-decor man-foot man foot'>
+    <li class='tl'></li>
+    <li class='tc'>August 2013</li>
+    <li class='tr'>pspl(1)</li>
+  </ol>
+
+  </div>
+</body>
+</html>
