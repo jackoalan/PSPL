@@ -26,13 +26,13 @@ build machine.
 
 In practice, this looks like the following
 ```sh
-$ git clone https://github.com/jackoalan/PSPL.git
-$ cd PSPL
-$ mkdir build
-$ cd build
-$ cmake ..
-$ make
-# make install
+>$ git clone https://github.com/jackoalan/PSPL.git
+>$ cd PSPL
+>$ mkdir build
+>$ cd build
+>$ cmake ..
+>$ make
+># make install
 ```
 
 
