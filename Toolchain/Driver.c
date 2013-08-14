@@ -216,14 +216,14 @@ void pspl_toolchain_provide_copyright(const char* component_name,
                             const char* licence) {
     
     if (xterm_colour) {
-        fprintf(stderr, BOLD BLUE"%s\n"SGR0, component_name);
-        fprintf(stderr, BLUE"%s\n\n"SGR0, copyright);
+        fprintf(stdout, BOLD BLUE"%s\n"SGR0, component_name);
+        fprintf(stdout, BLUE"%s\n\n"SGR0, copyright);
     } else {
-        fprintf(stderr, "%s\n", component_name);
-        fprintf(stderr, "%s\n\n", copyright);
+        fprintf(stdout, "%s\n", component_name);
+        fprintf(stdout, "%s\n\n", copyright);
     }
     
-    fprintf(stderr, "%s\n\n\n", licence);
+    fprintf(stdout, "%s\n\n\n", licence);
     
 }
 
@@ -235,7 +235,7 @@ static void print_copyrights() {
     pspl_toolchain_provide_copyright("PSPL (Toolchain and Runtime)", "Copyright (c) 2013 Jack Andersen <jackoalan@gmail.com>",
                            PSPL_MIT_LICENCE);
     
-    fprintf(stderr, "\n\n");
+    fprintf(stdout, "\n\n");
     
     
 #   ifdef _WIN32
@@ -257,7 +257,7 @@ static void print_copyrights() {
                            "Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>",
                            PSPL_FREEBSD_LICENCE);
     
-    fprintf(stderr, "\n\n");
+    fprintf(stdout, "\n\n");
     
 #   endif
     
@@ -267,16 +267,16 @@ static void print_copyrights() {
     while (plat[0]) {
         if (plat[0]->toolchain_platform && plat[0]->toolchain_platform->copyright_hook) {
             if (xterm_colour)
-                fprintf(stderr, BOLD RED"--- %s Platform ---\n\n\n"SGR0, plat[0]->platform_name);
+                fprintf(stdout, BOLD RED"--- %s Platform ---\n\n\n"SGR0, plat[0]->platform_name);
             else
-                fprintf(stderr, "--- %s Platform ---\n\n\n", plat[0]->platform_name);
+                fprintf(stdout, "--- %s Platform ---\n\n\n", plat[0]->platform_name);
             plat[0]->toolchain_platform->copyright_hook();
-            fprintf(stderr, "\n\n");
+            fprintf(stdout, "\n\n");
         }
         ++plat;
     }
     
-    fprintf(stderr, "\n\n");
+    fprintf(stdout, "\n\n");
 
     
     // Extensions
@@ -284,16 +284,16 @@ static void print_copyrights() {
     while (ext[0]) {
         if (ext[0]->toolchain_extension && ext[0]->toolchain_extension->copyright_hook) {
             if (xterm_colour)
-                fprintf(stderr, BOLD RED"--- %s Extension ---\n\n\n"SGR0, ext[0]->extension_name);
+                fprintf(stdout, BOLD RED"--- %s Extension ---\n\n\n"SGR0, ext[0]->extension_name);
             else
-                fprintf(stderr, "--- %s Extension ---\n\n\n", ext[0]->extension_name);
+                fprintf(stdout, "--- %s Extension ---\n\n\n", ext[0]->extension_name);
             ext[0]->toolchain_extension->copyright_hook();
-            fprintf(stderr, "\n\n");
+            fprintf(stdout, "\n\n");
         }
         ++ext;
     }
     
-    fprintf(stderr, "\n\n");
+    fprintf(stdout, "\n\n");
 
 }
 
@@ -306,14 +306,14 @@ void pspl_toolchain_provide_subext(const char* subext_name, const char* subext_d
         indent_level = 1;
     int i;
     for (i=0 ; i<indent_level ; ++i)
-        fprintf(stderr, "  ");
+        fprintf(stdout, "  ");
     if (xterm_colour)
-        fprintf(stderr, "  "BOLD"- %s"NORMAL, subext_name);
+        fprintf(stdout, "  "BOLD"- %s"NORMAL, subext_name);
     else
-        fprintf(stderr, "  - %s", subext_name);
+        fprintf(stdout, "  - %s", subext_name);
     if (subext_desc)
-        fprintf(stderr, " - %s", subext_desc);
-    fprintf(stderr, "\n");
+        fprintf(stdout, " - %s", subext_desc);
+    fprintf(stdout, "\n");
 }
 
 static void print_help(const char* prog_name) {
@@ -322,94 +322,94 @@ static void print_help(const char* prog_name) {
         
         // We have xterm colour support!
         
-        fprintf(stderr,
+        fprintf(stdout,
                 BOLD RED "PSPL Toolchain\n"
                 BOLD MAGENTA "By Jack Andersen "GREEN"<jackoalan@gmail.com>\n"
                 UNDERLINE CYAN "https://github.com/jackoalan/PSPL\n" NORMAL
                 "\n");
-        fprintf(stderr, BLUE"Run with "BOLD"-l"NORMAL BLUE
+        fprintf(stdout, BLUE"Run with "BOLD"-l"NORMAL BLUE
                 " to see licences on contained software components"SGR0);
-        fprintf(stderr, "\n\n\n"
+        fprintf(stdout, "\n\n\n"
                 BOLD"Available Extensions:\n"NORMAL);
         pspl_extension_t* ext = NULL;
         int i = 0;
         while ((ext = pspl_available_extensions[i++])) {
-            fprintf(stderr, "  "BOLD"* %s"NORMAL" - %s\n",
+            fprintf(stdout, "  "BOLD"* %s"NORMAL" - %s\n",
                     ext->extension_name, ext->extension_desc);
             if (ext->toolchain_extension && ext->toolchain_extension->subext_hook)
                 ext->toolchain_extension->subext_hook();
         }
         if (i==1)
-            fprintf(stderr, "  "BOLD"-- No extensions available --"NORMAL"\n");
-        fprintf(stderr,
+            fprintf(stdout, "  "BOLD"-- No extensions available --"NORMAL"\n");
+        fprintf(stdout,
                 "\n"
                 "\n"
                 BOLD"Available Target Platforms:\n"NORMAL);
         pspl_platform_t* plat = NULL;
         i = 0;
         while ((plat = pspl_available_platforms[i++])) {
-            fprintf(stderr, "  "BOLD"* %s"NORMAL" - %s",
+            fprintf(stdout, "  "BOLD"* %s"NORMAL" - %s",
                     plat->platform_name, plat->platform_desc);
-            fprintf(stderr, "\n");
+            fprintf(stdout, "\n");
         }
         if (i==1)
-            fprintf(stderr, "  "BOLD"-- No target platforms available --"NORMAL"\n");
-        fprintf(stderr,
+            fprintf(stdout, "  "BOLD"-- No target platforms available --"NORMAL"\n");
+        fprintf(stdout,
                 "\n"
                 "\n");
         
         // Now print usage info
-        fprintf(stderr, BOLD BLUE"Command Synopsis:\n"NORMAL);
+        fprintf(stdout, BOLD BLUE"Command Synopsis:\n"NORMAL);
         const char* help =
         wrap_string("pspl ["BOLD"-o"NORMAL" "UNDERLINE"out-path"NORMAL"] ["BOLD"-E"NORMAL"|"BOLD"-c"NORMAL"] ["BOLD"-G"NORMAL" "UNDERLINE"reflist-out-path"NORMAL"] ["BOLD"-S"NORMAL" "UNDERLINE"staging-root-path"NORMAL"] ["BOLD"-D"NORMAL" "UNDERLINE"def-name"NORMAL"[="UNDERLINE"def-value"NORMAL"]]... ["BOLD"-T"NORMAL" "UNDERLINE"target-platform"NORMAL"]... ["BOLD"-e"NORMAL" <"UNDERLINE"LITTLE"NORMAL","UNDERLINE"BIG"NORMAL","UNDERLINE"BI"NORMAL">] "UNDERLINE"source1"NORMAL" ["UNDERLINE"source2"NORMAL" ["UNDERLINE"sourceN"NORMAL"]]...", 1);
-        fprintf(stderr, "%s\n\n\n", help);
+        fprintf(stdout, "%s\n\n\n", help);
         free((char*)help);
         
     } else {
         
         // No colour support
         
-        fprintf(stderr,
+        fprintf(stdout,
                 "PSPL Toolchain\n"
                 "By Jack Andersen <jackoalan@gmail.com>\n"
                 "https://github.com/jackoalan/PSPL\n"
                 "\n");
-        fprintf(stderr, "Run with `-l`"
+        fprintf(stdout, "Run with `-l`"
                 " to see licences on contained software components");
-        fprintf(stderr,
+        fprintf(stdout,
                 "\n\n\nAvailable Extensions:\n");
         pspl_extension_t* ext = NULL;
         int i = 0;
         while ((ext = pspl_available_extensions[i++])) {
-            fprintf(stderr, "  * %s - %s\n",
+            fprintf(stdout, "  * %s - %s\n",
                     ext->extension_name, ext->extension_desc);
             if (ext->toolchain_extension && ext->toolchain_extension->subext_hook)
                 ext->toolchain_extension->subext_hook();
         }
         if (i==1)
-            fprintf(stderr, "  -- No extensions available --\n");
-        fprintf(stderr,
+            fprintf(stdout, "  -- No extensions available --\n");
+        fprintf(stdout,
                 "\n"
                 "\n"
                 "Available Target Platforms:\n");
         pspl_platform_t* plat = NULL;
         i = 0;
         while ((plat = pspl_available_platforms[i++])) {
-            fprintf(stderr, "  * %s - %s",
+            fprintf(stdout, "  * %s - %s",
                     plat->platform_name, plat->platform_desc);
-            fprintf(stderr, "\n");
+            fprintf(stdout, "\n");
         }
         if (i==1)
-            fprintf(stderr, "  -- No target platforms available --\n");
-        fprintf(stderr,
+            fprintf(stdout, "  -- No target platforms available --\n");
+        fprintf(stdout,
                 "\n"
                 "\n");
         
         // Now print usage info
-        fprintf(stderr, "Command Synopsis:\n");
+        fprintf(stdout, "Command Synopsis:\n");
         const char* help =
         wrap_string("pspl [-o out-path] [-E|-c] [-G reflist-out-path] [-S staging-root-path] [-D def-name[=def-value]]... [-T target-platform]... [-e <LITTLE,BIG,BI>] source1 [source2 [sourceN]]...", 1);
-        fprintf(stderr, "%s\n\n\n", help);
+        fprintf(stdout, "%s\n\n\n", help);
         free((char*)help);
                 
     }
@@ -956,9 +956,16 @@ int main(int argc, char** argv) {
                 print_help(argv[0]);
                 return 0;
                 
-            } else if (token_char == 'l') {
+            } else if (token_char == 'L') {
                 
                 print_copyrights();
+                return 0;
+                
+            } else if (token_char == 'l') {
+                
+                char execstr[MAXPATHLEN];
+                snprintf(execstr, MAXPATHLEN, "%s -L | less -r", argv[0]);
+                system(execstr);
                 return 0;
                 
             } else if (token_char == 'o') {
