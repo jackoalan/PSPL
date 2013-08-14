@@ -425,7 +425,7 @@ graphics API of choice.
 Flexible Integrability
 ----------------------
 
-*Read More:* [*CMake usage*](https://github.com/jackoalan/PSPL/tree/master/cmake/#readme)
+*Read More:* [*Extending PSPL*](https://github.com/jackoalan/PSPL/tree/master/cmake/#extending-pspl)
 
 PSPL is designed to be adaptable beyond what it brings built-in.
 *Markdown primary-level headings* serve as *extension routers*
