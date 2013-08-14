@@ -9,7 +9,7 @@ Additional information can be found in the
 PSPL Shader Language
 ====================
 
-The **Photon (Static|Shader) Preprocess Language (PSPL)** aims to simplify the task 
+The **Photon (Static | Shader) Preprocess Language (PSPL)** aims to simplify the task 
 of designing and authoring 
 [*shader programs*](http://en.wikipedia.org/wiki/Shader) and 
 *pipeline configurations* for a wide variety of 
@@ -41,14 +41,14 @@ attributes are rendered through *preprocessor tools* and also
 through its *plain-text perceptibility*. 
 
 ```markdown
-Markdown Within Markdown (this README)
-======================================
+Markdown Within Markdown
+========================
 
 That's my primary heading up there with that line of '=' characters.
 
 
-Perhaps Markdown Could Be Extended (???)
-----------------------------------------
+Perhaps Markdown Could Be Extended (???...!!!)
+----------------------------------------------
 
 As this secondary heading ponders, the simplicity of Markdown also
 marks the ability to extend into other applications
@@ -381,16 +381,10 @@ The compiler will add a set of platform-specific directories within the *interme
 containing the binary `.psplc` files. The compiler will then perform asset
 conversion and place the converted assets alongside the binaries. 
 
-Once the `.pspld` intermediate directory is established, it may be ran through
+Once enough `.psplc` files are generated, they're linked together via
 the **packager**. The packager links all `.psplc` files into a monolithic object-buffer 
 for the runtime and archives platform-specific assets together. The output is a single
-`.psplp` compiled-flat-file, containing the entire shader package.
-
-An alternative to generating a `.psplp` flat-file package is to generate a `.psplpd` 
-*package directory* package.
-Making a package directory may be useful during a development cycle, where a monolithic
-asset structure is not desired. The structure of the package directory remains browsable
-and may be audited before the final `.psplp` is generated.
+`.psplp` binary flat-file. It contains an arbitrarily sized resource set.
 
 
 That And The Kitchen Sink
@@ -434,7 +428,4 @@ Flexible Integrability
 *Read More:* [*CMake usage*](https://github.com/jackoalan/PSPL/tree/master/cmake/#readme)
 
 PSPL is designed to be adaptable beyond what it brings built-in.
-Headings (and sub-headings) are able to trigger routines at the *preprocessing*, 
-*compiling*, and *runtime playback* stages. Commands also exist to programmatically
-invoke processing routines during the same stages. It's also possible to provide 
-syntactic access to more esoteric features not available
+Headings serve as 

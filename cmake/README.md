@@ -45,6 +45,13 @@ In practice, this looks like the following:
 
 ### Cross Compiling To Other Targets
 
+**Cross compiling** is accessible via cached CMake options. 
+**They aren't without caveats.** The builder must have the necessary
+cross compiler installed. Also, *separate* CMake build directories
+must be maintained for the *Toolchain* and *Runtime* each 
+(assuming PSPL is also used as a cross compiler).
+
+
 So far, PSPL includes two pre-configured *cross-compiled platforms*:
 
 #### Windows 7 and 8 (32/64 bit)
