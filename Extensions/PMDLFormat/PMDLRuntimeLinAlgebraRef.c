@@ -9,9 +9,9 @@
 /* This is a pure C reference implementation of the 
  * PMDL runtime linear algebra routines */
 
-#include "PMDLRuntimeLinAlgebra.h"
+#include <PMDLRuntime.h>
 
-#if !PSPL_RUNTIME_PLATFORM_GX
+#if !HW_RVL
 
 void _pmdl_matrix_orthographic(pspl_matrix44_t mt, float t, float b, float l,
                                float r, float n, float f) {
@@ -69,6 +69,17 @@ void _pmdl_matrix_perspective(pspl_matrix44_t mt, float fovy, float aspect, floa
 	mt[3][1] = 0.0f;
 	mt[3][2] = -1.0f;
 	mt[3][3] = 0.0f;
+}
+
+void pmdl_matrix34_identity(REGISTER_KEY pspl_matrix34_t mt) {
+    int i,j;
+    
+	for(i=0;i<3;i++) {
+		for(j=0;j<4;j++) {
+			if(i==j) mt[i][j] = 1.0;
+			else mt[i][j] = 0.0;
+		}
+	}
 }
 
 void pspl_matrix34_cpy(pspl_matrix34_t src, pspl_matrix34_t dst) {

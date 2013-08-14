@@ -144,6 +144,10 @@ static void prepare_staged_file(pspl_indexer_entry_t* ent) {
     strlcat(path, driver_state.staging_path, MAXPATHLEN);
     strlcat(path, path_hash_str, MAXPATHLEN);
     strlcat(path, "_", MAXPATHLEN);
+    char bitfield_str[32];
+    snprintf(bitfield_str, 32, "%x", ent->platform_availability_bits);
+    strlcat(path, bitfield_str, MAXPATHLEN);
+    strlcat(path, "_", MAXPATHLEN);
     char object_hash_str[PSPL_HASH_STRING_LEN];
     pspl_hash_fmt(object_hash_str, &ent->object_hash);
     strlcat(path, object_hash_str, MAXPATHLEN);

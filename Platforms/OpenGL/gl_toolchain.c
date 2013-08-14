@@ -151,9 +151,9 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
             snprintf(assign, 64, "    tex_coords[%u] = (vec4(uv%u,0,0) * tc_generator_mats[%u]).xy;\n", j, j,
                      ir_state->vertex.tc_array[j].uv_idx);
         else if (ir_state->vertex.tc_array[j].tc_source == TEXCOORD_POS)
-            snprintf(assign, 64, "    tex_coords[%u] = pos * tc_generator_mats[%u];\n", j, j);
+            snprintf(assign, 64, "    tex_coords[%u] = (pos * tc_generator_mats[%u]).xy;\n", j, j);
         else if (ir_state->vertex.tc_array[j].tc_source == TEXCOORD_NORM)
-            snprintf(assign, 64, "    tex_coords[%u] = normal * tc_generator_mats[%u];\n", j, j);
+            snprintf(assign, 64, "    tex_coords[%u] = (normal * tc_generator_mats[%u]).xy;\n", j, j);
         pspl_buffer_addstr(vert, assign);
     }
     
@@ -302,6 +302,7 @@ static void instruction_hook(const pspl_toolchain_context_t* driver_context,
         gl_config_t config = {
             .uv_attr_count = ir_state->total_uv_attr_count,
             .texmap_count = ir_state->total_texmap_count,
+            .texgen_count = ir_state->vertex.tc_count,
             .depth_write = ir_state->depth.write,
             .depth_test = ir_state->depth.test,
             .blending = ir_state->blend.blending,

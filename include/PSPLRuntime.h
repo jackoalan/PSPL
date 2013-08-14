@@ -336,6 +336,22 @@ int pspl_runtime_access_archived_file(const pspl_runtime_arc_file_t* file,
  */
 #define pspl_runtime_unaccess_archived_file(provider_hooks, provider_handle) (provider_hooks)->destroy_duplicate_handle(provider_handle)
 
+/* Heap Stuff */
+#ifdef HW_RVL
+extern void* pspl_wii_allocate_media_block(size_t size);
+#define pspl_allocate_media_block pspl_wii_allocate_media_block
+extern void* pspl_wii_allocate_indexing_block(size_t size);
+#define pspl_allocate_indexing_block pspl_wii_allocate_indexing_block
+extern void pspl_wii_free_media_block(void* ptr);
+#define pspl_free_media_block pspl_wii_free_media_block
+extern void pspl_wii_free_indexing_block(void* ptr);
+#define pspl_free_indexing_block pspl_wii_free_indexing_block
+#else
+#define pspl_allocate_media_block(size) pspl_malloc_malloc(&media_heap, (size))
+#define pspl_allocate_indexing_block(size) pspl_malloc_malloc(&indexing_heap, (size))
+#define pspl_free_media_block(ptr) pspl_malloc_free(&media_heap, (ptr))
+#define pspl_free_indexing_block(ptr) pspl_malloc_free(&indexing_heap, (ptr))
+#endif
 
 /** @} */
 

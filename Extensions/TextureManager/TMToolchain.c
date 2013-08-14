@@ -120,6 +120,20 @@ static int sample_converter(void** buf_out, size_t* len_out, const char* path_in
                    dec->name, err, conv->name);
     pspl_converter_progress_update(0.5);
     
+    // GX doesn't support 3-component textures; insert full alpha
+    uint8_t* image_buffer = (uint8_t*)image.image_buffer;
+    if (conv->gx && image.image_type == 3) {
+        uint8_t* image_cur = (uint8_t*)image.image_buffer;
+        image_buffer = malloc(image.width * image.height * 4);
+        int i,j;
+        for (i=0 ; i<image.width*image.height ; ++i) {
+            for (j=0 ; j<3 ; ++j)
+                image_buffer[i*4+j] = *(image_cur++);
+            image_buffer[i*4+3] = 0xff; // Full Alpha
+        }
+        image.image_type = 4;
+    }
+    
     // Image series (for mipmapping)
     unsigned series_count = 1;
     unsigned series_pixel_count = image.width * image.height;
@@ -153,7 +167,7 @@ static int sample_converter(void** buf_out, size_t* len_out, const char* path_in
     // Perform mipmap
     void* final_buf = malloc(series_pixel_count * image.image_type);
     void* final_cur = final_buf;
-    memcpy(final_cur, image.image_buffer, image.width * image.height * image.image_type);
+    memcpy(final_cur, image_buffer, image.width * image.height * image.image_type);
     unsigned mip_width = image.width;
     unsigned mip_height = image.height;
     for (i=1 ; i<series_count ; ++i) {
@@ -203,9 +217,9 @@ static int sample_converter(void** buf_out, size_t* len_out, const char* path_in
     }
     
     // Populate header
-    size_t data_off = ROUND_UP_4(sizeof(pspl_tm_texture_head_t) + strlen(enc->name) + 1);
-    void* output_buf = malloc(data_off + ROUND_UP_4(total_size));
-    memset(output_buf, 0, data_off);
+    size_t data_off = ROUND_UP_32(sizeof(pspl_tm_texture_head_t) + strlen(enc->name) + 1);
+    void* output_buf = malloc(data_off + ROUND_UP_32(total_size));
+    memset(output_buf, 0, data_off + ROUND_UP_32(total_size));
     pspl_tm_texture_head_t* head = output_buf;
     head->key1 = 'T';
     head->chan_count = image.image_type;
@@ -222,6 +236,17 @@ static int sample_converter(void** buf_out, size_t* len_out, const char* path_in
         output_cur += enc_sizes[i];
     }
     
+    if (conv->gx && image.image_type == 3) {
+        uint8_t* image_cur = (uint8_t*)image.image_buffer;
+        uint8_t* new_image_cur = malloc(image.width * image.height * 4);
+        int i,j;
+        for (i=0 ; i<image.width*image.height ; ++i) {
+            for (j=0 ; j<3 ; ++j)
+                new_image_cur[i*4+j] = *(image_cur++);
+            new_image_cur[i*4+3] = 0xff; // Full Alpha
+        }
+    }
+    
     // Done with malloc context
     free(final_buf);
     free(enc_bufs);
@@ -230,7 +255,7 @@ static int sample_converter(void** buf_out, size_t* len_out, const char* path_in
     
     // Return buffer
     *buf_out = output_buf;
-    *len_out = data_off + ROUND_UP_4(total_size);
+    *len_out = data_off + ROUND_UP_32(total_size);
     
     
     return 0;
@@ -294,7 +319,7 @@ static void sample_direc(const pspl_toolchain_context_t* driver_context,
     if (!uv)
         pspl_error(-1, "Incomplete use of [SAMPLE] directive",
                    "missing required 'UV' argument in `SAMPLE <tex_file> "
-                   "[LAYER <layer_name>] [MIPMAP] UV <uv_key>` syntax");
+                   "[LAYER <layer_name>] [MIPMAP] UV <TEXGEN_IDX>` syntax");
     
     // Determine if file was already cached for this PSPLC (allows shared bindings)
     size_t name_len = strlen(convert_state.name);

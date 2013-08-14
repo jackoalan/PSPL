@@ -47,46 +47,20 @@
 
 /* Heap Stuff */
 #ifdef HW_RVL
-
 extern void _pspl_wii_mem_init();
 #define _pspl_mem_init _pspl_wii_mem_init
-
 #define _pspl_mem_shutdown()
-
-extern void* pspl_wii_allocate_media_block(size_t size);
-#define pspl_allocate_media_block pspl_wii_allocate_media_block
-
-extern void* pspl_wii_allocate_indexing_block(size_t size);
-#define pspl_allocate_indexing_block pspl_wii_allocate_indexing_block
-
-extern void pspl_wii_free_media_block(void* ptr);
-#define pspl_free_media_block pspl_wii_free_media_block
-
-extern void pspl_wii_free_indexing_block(void* ptr);
-#define pspl_free_indexing_block pspl_wii_free_indexing_block
-
 #else
-
 pspl_malloc_context_t media_heap;
 pspl_malloc_context_t indexing_heap;
 void _pspl_mem_init() {
     pspl_malloc_context_init(&media_heap);
     pspl_malloc_context_init(&indexing_heap);
 }
-
 void _pspl_mem_shutdown() {
     pspl_malloc_context_destroy(&media_heap);
     pspl_malloc_context_destroy(&indexing_heap);
 }
-
-#define pspl_allocate_media_block(size) pspl_malloc_malloc(&media_heap, (size))
-
-#define pspl_allocate_indexing_block(size) pspl_malloc_malloc(&indexing_heap, (size))
-
-#define pspl_free_media_block(ptr) pspl_malloc_free(&media_heap, (ptr))
-
-#define pspl_free_indexing_block(ptr) pspl_malloc_free(&indexing_heap, (ptr))
-
 #endif
 
 

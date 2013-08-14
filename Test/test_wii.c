@@ -26,7 +26,6 @@
 
 #define DEFAULT_FIFO_SIZE (256 * 1024)
 
-extern void pmdl_vector3_matrix_mul(pspl_matrix34_t mt, pspl_vector3_t src, pspl_vector3_t dst);
 
 static pmdl_draw_context_t monkey_ctx;
 static const pspl_runtime_arc_file_t* monkey_model;
@@ -42,6 +41,15 @@ static uint8_t ready_to_render = 0;
 
 /* Frame Count */
 u32 cur_frame = 0;
+
+/* Texcoord scale matrix */
+/*
+static pspl_matrix34_t TC_SCALE = {
+    0.5, 0.0, 0.0, 0.5,
+    0.0, 0.5, 0.0, 0.5,
+    0.0, 0.0, 1.0, 0.0
+};
+ */
 
 static void renderfunc() {
     
@@ -110,7 +118,7 @@ int main(int argc, char* argv[]) {
     memset(gp_fifo,0,DEFAULT_FIFO_SIZE);
     GX_Init(gp_fifo, DEFAULT_FIFO_SIZE);
     
-    GXColor background = {0x50,0x50,0x50,0xff};
+    GXColor background = {0x0,0x0,0x0,0xff};
     GX_SetCopyClear(background, 0x00ffffff);
     
     f32 yscale;
@@ -149,6 +157,11 @@ int main(int argc, char* argv[]) {
     
     // Setup monkey rendering context
     memset(monkey_ctx.texcoord_mtx, 0, 8*sizeof(pspl_matrix34_t));
+    monkey_ctx.texcoord_mtx[0][0][0] = 1.0;
+    monkey_ctx.texcoord_mtx[0][1][1] = 1.0;
+    monkey_ctx.texcoord_mtx[0][0][3] = 1.0;
+    monkey_ctx.texcoord_mtx[0][1][3] = 1.0;
+    
     memset(monkey_ctx.model_mtx, 0, sizeof(pspl_matrix34_t));
     monkey_ctx.model_mtx[0][0] = 1;
     monkey_ctx.model_mtx[1][1] = 1;

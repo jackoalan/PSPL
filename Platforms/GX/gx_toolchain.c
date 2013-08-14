@@ -8,6 +8,7 @@
 
 #include <PSPLExtension.h>
 #include "GXStreamGen/gx_offline.h"
+#include "gx_common.h"
 
 static void copyright_hook() {
     
@@ -49,6 +50,11 @@ static void instruction_hook(const pspl_toolchain_context_t* driver_context,
     if (!strcmp(operation, "PSPL-IR")) {
         const pspl_ir_state_t* ir_state = data;
         
+        // Config struct
+        gx_config_t gx_config = {
+            .texgen_count = ir_state->vertex.tc_count
+        };
+        pspl_embed_platform_integer_keyed_object(GX_SHADER_CONFIG, &gx_config, &gx_config, sizeof(gx_config_t));
         
         // Begin GX transaction
         pspl_gx_offline_begin_transaction();
@@ -218,7 +224,7 @@ static void instruction_hook(const pspl_toolchain_context_t* driver_context,
         GX_Flush();
         void* gx_buf = NULL;
         size_t gx_size = pspl_gx_offline_end_transaction(&gx_buf);
-        pspl_embed_platform_integer_keyed_object(0, NULL, gx_buf, gx_size);
+        pspl_embed_platform_integer_keyed_object(GX_SHADER_DL, NULL, gx_buf, gx_size);
         free(gx_buf);
         
     }

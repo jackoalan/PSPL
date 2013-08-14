@@ -57,14 +57,18 @@ typedef uint32_t u32;
 int RGBAGX_encode(pspl_malloc_context_t* mem_ctx, const uint8_t* image_in, unsigned chan_count,
                   unsigned width, unsigned height, uint8_t** image_out, size_t* size_out) {
     
+    uint8_t* bits = (uint8_t*)image_in;
+    size_t alloc_sz = 4 * width * height;
+    if (alloc_sz < 64)
+        alloc_sz = 64;
+    
     /* Perform tiling for GX */
-    void* tiled_data = pspl_malloc_malloc(mem_ctx, chan_count * width * height);
+    void* tiled_data = pspl_malloc_malloc(mem_ctx, alloc_sz);
     void* td_cur = tiled_data;
     
     int x,y,ix,iy;
     uint16_t color;
     
-    const uint8_t* bits = image_in;
     for(y=0;y<height;y+=4) {
         for(x=0;x<width;x+=4) {
             for(iy=0;iy<4;++iy) {
@@ -90,7 +94,7 @@ int RGBAGX_encode(pspl_malloc_context_t* mem_ctx, const uint8_t* image_in, unsig
         }
     }
     
-    *size_out = chan_count * width * height;
+    *size_out = 4 * width * height;
     *image_out = (uint8_t*)tiled_data;
     return 0;
     

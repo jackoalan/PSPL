@@ -47,6 +47,7 @@
 /* Determine if referenced file is newer than last-known hashed binary object (For PSPLCs) */
 static int is_psplc_ref_newer_than_staged_output(const char* abs_ref_path,
                                                  const char* abs_ref_path_ext,
+                                                 uint32_t platform_bitfield,
                                                  const pspl_hash* hash) {
     // Stat source
     struct stat src_stat;
@@ -75,6 +76,10 @@ static int is_psplc_ref_newer_than_staged_output(const char* abs_ref_path,
     strlcat(obj_path, driver_state.staging_path, MAXPATHLEN);
     strlcat(obj_path, abs_ref_path_hash_str, MAXPATHLEN);
     strlcat(obj_path, "_", MAXPATHLEN);
+    char bitfield_str[32];
+    snprintf(bitfield_str, 32, "%x", platform_bitfield);
+    strlcat(obj_path, bitfield_str, MAXPATHLEN);
+    strlcat(obj_path, "_", MAXPATHLEN);
     char data_hash_str[PSPL_HASH_STRING_LEN];
     pspl_hash_fmt(data_hash_str, hash);
     strlcat(obj_path, data_hash_str, MAXPATHLEN);
@@ -100,6 +105,7 @@ static int is_psplc_ref_newer_than_staged_output(const char* abs_ref_path,
 #endif
 static int is_source_ref_newer_than_staged_output(const char* abs_ref_path,
                                                   const char* abs_ref_path_ext,
+                                                  uint32_t platform_bitfield,
                                                   char* abs_ref_path_hash_str_out,
                                                   char* newest_ref_data_hash_str_out,
                                                   int delete_if_newer) {
@@ -138,7 +144,7 @@ static int is_source_ref_newer_than_staged_output(const char* abs_ref_path,
     if (!staging_dir)
         pspl_error(-1, "Unable to open staging directory",
                    "error opening `%s`", driver_state.staging_path);
-    
+        
     struct dirent* dent;
     while ((dent = readdir(staging_dir))) {
 #       ifdef _WIN32
@@ -147,17 +153,26 @@ static int is_source_ref_newer_than_staged_output(const char* abs_ref_path,
         if (dent->d_type == DT_REG && dent->d_namlen >= PSPL_HASH_STRING_LEN-1)
 #       endif
             if (!strncmp(abs_ref_path_hash_str_out, dent->d_name, PSPL_HASH_STRING_LEN-1)) {
-                // Found a match, stat it and set newest
-                matched_path[0] = '\0';
-                strlcat(matched_path, driver_state.staging_path, MAXPATHLEN);
-                strlcat(matched_path, dent->d_name, MAXPATHLEN);
-                if (stat(matched_path, &matched_stat))
-                    pspl_error(-1, "Unable to stat matched staged output",
-                               "while staging `%s`, unable to stat matched output `%s`; "
-                               "errno: %d (%s)",
-                               abs_ref_path, matched_path, errno, strerror(errno));
-                if (TIME_A_NEWER_B(MTIME(matched_stat), newest_match_mtime))
-                    newest_match_mtime = MTIME(matched_stat);
+                
+                // Verify platforms
+                char* platform_str = strchr(dent->d_name, '_') + 1;
+                long platform_bits = strtol(platform_str, NULL, 16);
+                if (platform_bits == platform_bitfield) {
+                
+                    // Found a match, stat it and set newest
+                    matched_path[0] = '\0';
+                    strlcat(matched_path, driver_state.staging_path, MAXPATHLEN);
+                    strlcat(matched_path, dent->d_name, MAXPATHLEN);
+                    if (stat(matched_path, &matched_stat))
+                        pspl_error(-1, "Unable to stat matched staged output",
+                                   "while staging `%s`, unable to stat matched output `%s`; "
+                                   "errno: %d (%s)",
+                                   abs_ref_path, matched_path, errno, strerror(errno));
+                    if (TIME_A_NEWER_B(MTIME(matched_stat), newest_match_mtime))
+                        newest_match_mtime = MTIME(matched_stat);
+                    
+                }
+                
             }
     }
     
@@ -182,11 +197,16 @@ static int is_source_ref_newer_than_staged_output(const char* abs_ref_path,
                 if (dent->d_type == DT_REG && dent->d_namlen >= PSPL_HASH_STRING_LEN-1)
 #               endif
                     if (!strncmp(abs_ref_path_hash_str_out, dent->d_name, PSPL_HASH_STRING_LEN-1)) {
-                        // Found a match, delete it
-                        matched_path[0] = '\0';
-                        strlcat(matched_path, driver_state.staging_path, MAXPATHLEN);
-                        strlcat(matched_path, dent->d_name, MAXPATHLEN);
-                        unlink(matched_path);
+                        // Found a match, delete it if platforms verify
+                        // Verify platforms
+                        char* platform_str = strchr(dent->d_name, '_') + 1;
+                        long platform_bits = strtol(platform_str, NULL, 16);
+                        if (platform_bits == platform_bitfield) {
+                            matched_path[0] = '\0';
+                            strlcat(matched_path, driver_state.staging_path, MAXPATHLEN);
+                            strlcat(matched_path, dent->d_name, MAXPATHLEN);
+                            unlink(matched_path);
+                        }
                     }
             }
         }
@@ -559,13 +579,6 @@ static void __pspl_indexer_stub_file_post_augment(pspl_indexer_context_t* ctx,
         if (!strcmp(ctx->stubs_array[i]->stub_source_path, path_in))
             return;
     
-    // Warn user if the source ref is newer than the newest object (necessitating recompile)
-    if (is_psplc_ref_newer_than_staged_output(path_in, path_ext_in, hash_in))
-        pspl_warn("Newer data source detected",
-                  "PSPL detected that `%s` has changed since `%s` was last compiled. "
-                  "Old converted object will be used. Recompile if this is not desired.",
-                  path_in, definer->file_path);
-    
     // Allocate and add
     ++ctx->stubs_count;
     if (ctx->stubs_count >= ctx->stubs_cap) {
@@ -594,6 +607,14 @@ static void __pspl_indexer_stub_file_post_augment(pspl_indexer_context_t* ctx,
         }
     } else
         new_entry->platform_availability_bits = ~0;
+    
+    // Warn user if the source ref is newer than the newest object (necessitating recompile)
+    if (is_psplc_ref_newer_than_staged_output(path_in, path_ext_in, new_entry->platform_availability_bits, hash_in))
+        pspl_warn("Newer data source detected",
+                  "PSPL detected that `%s` has changed since `%s` was last compiled. "
+                  "Old converted object will be used. Recompile if this is not desired.",
+                  path_in, definer->file_path);
+
     
     // Populate structure
     new_entry->parent->definer = definer->file_path;
@@ -1287,7 +1308,7 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
     // Determine if reference is newer
     char path_hash_str[PSPL_HASH_STRING_LEN];
     char newest_data_hash_str[PSPL_HASH_STRING_LEN];
-    int is_newer = is_source_ref_newer_than_staged_output(path_in, path_ext_in,
+    int is_newer = is_source_ref_newer_than_staged_output(path_in, path_ext_in, new_entry->platform_availability_bits,
                                                           path_hash_str, newest_data_hash_str, 1);
     char sug_path[MAXPATHLEN];
     sug_path[0] = '\0';
@@ -1340,6 +1361,10 @@ void pspl_indexer_stub_file_augment(pspl_indexer_context_t* ctx,
         final_hash_path_str[0] = '\0';
         strlcat(final_hash_path_str, driver_state.staging_path, MAXPATHLEN);
         strlcat(final_hash_path_str, path_hash_str, MAXPATHLEN);
+        strlcat(final_hash_path_str, "_", MAXPATHLEN);
+        char bitfield_str[32];
+        snprintf(bitfield_str, 32, "%x", new_entry->platform_availability_bits);
+        strlcat(final_hash_path_str, bitfield_str, MAXPATHLEN);
         strlcat(final_hash_path_str, "_", MAXPATHLEN);
         strlcat(final_hash_path_str, final_hash_str, MAXPATHLEN);
         
@@ -1463,7 +1488,7 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
     // Determine if reference is newer
     char path_hash_str[PSPL_HASH_STRING_LEN];
     char newest_data_hash_str[PSPL_HASH_STRING_LEN];
-    int is_newer = is_source_ref_newer_than_staged_output(path_in, path_ext_in,
+    int is_newer = is_source_ref_newer_than_staged_output(path_in, path_ext_in, new_entry->platform_availability_bits,
                                                           path_hash_str, newest_data_hash_str, 1);
     
     if (is_newer) {
@@ -1507,6 +1532,10 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
         final_hash_path_str[0] = '\0';
         strlcat(final_hash_path_str, driver_state.staging_path, MAXPATHLEN);
         strlcat(final_hash_path_str, path_hash_str, MAXPATHLEN);
+        strlcat(final_hash_path_str, "_", MAXPATHLEN);
+        char bitfield_str[32];
+        snprintf(bitfield_str, 32, "%x", new_entry->platform_availability_bits);
+        strlcat(final_hash_path_str, bitfield_str, MAXPATHLEN);
         strlcat(final_hash_path_str, "_", MAXPATHLEN);
         strlcat(final_hash_path_str, final_hash_str, MAXPATHLEN);
         

@@ -10,9 +10,13 @@
 #define PSPL_GX_PSPLTypes_h
 
 #include "gctypes.h"
+#include "gx_common.h"
 
 /* GX-specific type for shader object */
 typedef struct {
+    
+    // Config structure
+    gx_config_t* config;
     
     // Idempotent display-list buffer for `GX_CallDisplayList`
     void* disp_list;

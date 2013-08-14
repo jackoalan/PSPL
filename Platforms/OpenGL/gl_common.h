@@ -20,7 +20,7 @@ enum gl_object {
 };
 
 typedef struct __attribute__ ((__packed__)) {
-    uint8_t uv_attr_count, texmap_count;
+    uint8_t uv_attr_count, texmap_count, texgen_count;
     uint8_t depth_write, depth_test;
     uint8_t blending, source_factor, dest_factor;
 } gl_config_t;

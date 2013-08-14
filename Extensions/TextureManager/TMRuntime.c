@@ -38,8 +38,8 @@ typedef struct {
 #  define TEX_T ID3D11ShaderResourceView*
 #  define SUB_TEX_FORMAT_T enum DXGI_FORMAT
 #elif PSPL_RUNTIME_PLATFORM_GX
-#  include <malloc.h>
 #  include <ogc/gx.h>
+#  include <ogc/cache.h>
 #  define MAX_MIPS 11
 #  define TEX_T GXTexObj
 #  define SUB_TEX_FORMAT_T u8
@@ -49,6 +49,12 @@ typedef struct {
 #endif
 
 
+/* RGBA Format */
+#if PSPL_RUNTIME_PLATFORM_GX
+#  define RGBA_FORMAT "RGBAGX"
+#else
+#  define RGBA_FORMAT "RGBA"
+#endif
 
 
 /* Malloc context to keep map of PSPLC->texobj */
@@ -168,7 +174,7 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
     
     // Determine texture type
     enum TEX_FORMAT format = 0;
-    if (!strcmp(tex_type, "RGBA"))
+    if (!strcmp(tex_type, RGBA_FORMAT))
         format = TEXTURE_RGB;
     else if (!strcmp(tex_type, "S3TC")) {
         format = TEXTURE_S3TC;
@@ -374,12 +380,15 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
 #       endif
     
 #   elif PSPL_RUNTIME_PLATFORM_GX
-        void* tex_data = memalign(32, image_size);
+        void* tex_data = pspl_allocate_media_block(image_size);
         provider_hooks->read_direct(provider_handle, image_size, tex_data);
+        DCStoreRange(tex_data, image_size);
         GX_InitTexObj(&fill_struct->texture_arr[key], tex_data,
                       tex_head->size.native.width, tex_head->size.native.height,
                       recurse_info.sub_fmt, GX_REPEAT, GX_REPEAT, (tex_head->num_mips > 1)?GX_TRUE:GX_FALSE);
         GX_InitTexObjUserData(&fill_struct->texture_arr[key], tex_data);
+        GX_LoadTexObj(&fill_struct->texture_arr[key], GX_TEXMAP0);
+        GX_InvalidateTexAll();
     
 #   elif PSPL_RUNTIME_PLATFORM_D3D11
         BYTE* tex_buf = malloc(image_size);
@@ -440,7 +449,11 @@ static void load_object(pspl_runtime_psplc_t* object) {
     pspl_mutex_lock(&load_tex_st_lock);
     load_tex_st.object = object;
     load_tex_st.ent = ent;
-    pspl_thread_fork(load_texture_thread, NULL);
+#   if PSPL_RUNTIME_PLATFORM_GX
+        load_texture_thread(NULL);
+#   else
+        pspl_thread_fork(load_texture_thread, NULL);
+#   endif
 }
 
 static void unload_object(pspl_runtime_psplc_t* object) {
@@ -455,7 +468,7 @@ static void unload_object(pspl_runtime_psplc_t* object) {
                 
 #               elif PSPL_RUNTIME_PLATFORM_GX
                     void* tex_data = GX_GetTexObjUserData(&ent->texture_arr[j]);
-                    free(tex_data);
+                    pspl_free_media_block(tex_data);
                 
 #               elif PSPL_RUNTIME_PLATFORM_D3D11
                     pspl_d3d_destroy_texture(ent->texture_arr[j]);

@@ -181,10 +181,10 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                 char* nametest = (char*)command_argv[0];
                 long name_idx = strtol(command_argv[0], &nametest, 10);
                 if ((unsigned)name_idx >= 10)
-                    pspl_error(-1, "Invalid TEX_COORD usage", "texcoord generator index must be in range [0,9]");
+                    pspl_error(-1, "Invalid TEXGEN usage", "texcoord generator index must be in range [0,9]");
                 
                 if (nametest == command_argv[0])
-                    pspl_error(-1, "Invalid TEX_COORD usage", "first argument must be texcoord generator index");
+                    pspl_error(-1, "Invalid TEXGEN usage", "first argument must be texcoord generator index");
                 
                 char* numtest = (char*)command_argv[1];
                 long idx = strtol(command_argv[1], &numtest, 10);
@@ -209,10 +209,10 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                     ++pspl_ir_state.vertex.tc_count;
                     
                 } else
-                    pspl_error(-1, "Invalid TEX_COORD usage", "there must be *three* arguments with the UV generator index and a numeric index [0-7] indicating which UV layer should be used as coordinate source. Alternatively, the keyword `POSITION` or `NORMAL` may be used for dynamic coordinate source");
+                    pspl_error(-1, "Invalid TEXGEN usage", "there must be *three* arguments with the UV generator index and a numeric index [0-7] indicating which UV layer should be used as coordinate source. Alternatively, the keyword `POSITION` or `NORMAL` may be used for dynamic coordinate source");
                 
             } else
-                pspl_error(-1, "Invalid TEX_COORD usage", "there must be *two* arguments: TEX_COORD(<name>, <uv source>)");
+                pspl_error(-1, "Invalid TEXGEN usage", "there must be *two* arguments: TEXGEN(<NAME>, <UV SOURCE>)");
             
         } else if (!strcasecmp(current_heading->heading_name, "SHADER")) {
             
@@ -268,7 +268,7 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
             // Texture sample definition
             if (command_argc < 2)
                 pspl_error(-1, "Invalid command use",
-                           "`SAMPLE` must specify 2 arguments in `SAMPLE(<MAPIDX> <UVIDX>)` format");
+                           "`SAMPLE` must specify 2 arguments in `SAMPLE(<MAPIDX> <TEXGENIDX>)` format");
             
             
             unsigned stage_idx = pspl_ir_state.fragment.stage_count;

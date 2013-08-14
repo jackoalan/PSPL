@@ -14,7 +14,6 @@
 #include <PSPLExtension.h>
 #include <PSPLRuntime.h>
 #include <PMDLRuntime.h>
-#include "PMDLRuntimeLinAlgebra.h"
 #include "PMDLCommon.h"
 #include "PMDLRuntimeProcessing.h"
 
@@ -416,6 +415,7 @@ void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv
         for (i=0 ; i<3 ; ++i)
             ctx->cached_modelview_invxpose_mtx[3][i] = 0;
         ctx->cached_modelview_invxpose_mtx[3][3] = 1;
+        
     }
     
     if (inv_bits & PMDL_INVALIDATE_PROJECTION) {
@@ -627,9 +627,9 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
     // Load in GX transformation context here
     GX_LoadPosMtxImm(ctx->cached_modelview_mtx, GX_PNMTX0);
     GX_LoadNrmMtxImm(ctx->cached_modelview_invxpose_mtx, GX_PNMTX0);
+    GX_LoadTexMtxImm(ctx->cached_modelview_invxpose_mtx, GX_TEXMTX9, GX_MTX3x4);
     
-    for (i=0 ; i<PMDL_MAX_TEXCOORD_MATS ; ++i)
-        GX_LoadTexMtxImm(ctx->texcoord_mtx[i], GX_TEXMTX0 + (i*3), GX_TG_MTX2x4);
+    unsigned gx_loaded_texcoord_mats = 0;
     
     GX_LoadProjectionMtx(ctx->cached_projection_mtx,
                          (ctx->projection_type == PMDL_PERSPECTIVE)?
@@ -696,7 +696,9 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                         glUniformMatrix4fv(shader_obj->native_shader.mv_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_mtx);
                         glUniformMatrix4fv(shader_obj->native_shader.mv_invxpose_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_invxpose_mtx);
                         glUniformMatrix4fv(shader_obj->native_shader.proj_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_projection_mtx);
-                        glUniformMatrix4fv(shader_obj->native_shader.tc_genmtx_arr, 8, GL_FALSE, (GLfloat*)ctx->texcoord_mtx);
+                        glUniformMatrix4fv(shader_obj->native_shader.tc_genmtx_arr,
+                                           shader_obj->native_shader.config->texgen_count,
+                                           GL_FALSE, (GLfloat*)ctx->texcoord_mtx);
                     
 #                   elif PSPL_RUNTIME_PLATFORM_D3D11
                     
@@ -721,6 +723,7 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
 
         
 #       elif PMDL_GX
+            int k;
         
             // Set GX Attribute Table
             GX_ClearVtxDesc();
@@ -782,8 +785,17 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                 } else // TODO: ADD CACHING SPACE TO PMDL FOR SHADER!!!!
                     shader_obj = pspl_runtime_get_psplc_from_hash(pmdl_file->parent, &shader_hashes[mesh_head->shader_index], 0);
                 
-                if (shader_obj)
-                    pspl_runtime_bind_psplc(shader_obj);
+                if (shader_obj) {
+                    
+                    // Load remaining texture coordinate matrices here
+                    if (shader_obj->native_shader.config->texgen_count > gx_loaded_texcoord_mats)
+                        for (k=gx_loaded_texcoord_mats ; k<shader_obj->native_shader.config->texgen_count ; ++k)
+                            GX_LoadTexMtxImm(ctx->texcoord_mtx[k], GX_DTTMTX0 + (k*3), GX_TG_MTX2x4);
+                    
+                    // Execute shader Display List
+                    //pspl_runtime_bind_psplc(shader_obj);
+
+                }
                 
                 // Draw mesh
                 //printf("About to run:\n");
@@ -791,18 +803,20 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                 //print_bytes(buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);
                 //sleep(10);
                 
-                /*
+                GX_SetNumTexGens(1);
+                GX_SetTexCoordGen2(GX_TEXCOORD0, GX_TG_MTX3x4, GX_TG_NRM, GX_TEXMTX9, GX_TRUE, GX_DTTMTX0);
+                
                 GX_SetNumTevStages(1);
                 GXColor tev_color = {255, 255, 255, 255};
                 GX_SetTevKColor(GX_KCOLOR0, tev_color);
                 GX_SetTevKColorSel(GX_TEVSTAGE0, GX_TEV_KCSEL_K0);
                 GX_SetTevKAlphaSel(GX_TEVSTAGE0, GX_TEV_KASEL_1);
-                GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXMAP_NULL, GX_TEXCOORDNULL, GX_COLORNULL);
+                GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXMAP0, GX_TEXCOORD0, GX_COLORNULL);
                 GX_SetTevColorOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
                 GX_SetTevAlphaOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
-                GX_SetTevColorIn(GX_TEVSTAGE0, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO, GX_CC_KONST);
+                GX_SetTevColorIn(GX_TEVSTAGE0, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO, GX_CC_TEXC);
                 GX_SetTevAlphaIn(GX_TEVSTAGE0, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_KONST);
-                 */
+                
                 
                 /*
                 GX_Begin(GX_QUADS, 0, 4);
