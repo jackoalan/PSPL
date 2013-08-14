@@ -65,7 +65,7 @@ OPTIONS
   
 * `-T` _target-platform_...:
   Add a **target platform** for the PSPL package or object being output.
-  Currently, `GL2`,`GX`,`D3D11` are the options.
+  Currently, `GL2`/`GX`/`D3D11` are the options.
   
 * `-e` `LITTLE`,`BIG`,`BI`:
   Set **default endianness** for the PSPL package or object being output.

@@ -56,6 +56,7 @@
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
 		E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3A1740578E003B06BF /* ReferenceGatherer.c */; };
 		E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3D17411620003B06BF /* ObjectIndexer.c */; };
+		E4A1640A17BB00BA00AF995B /* gx_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */; };
 		E4AFAE96172D898B00F7A0BF /* Preprocessor.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE95172D898B00F7A0BF /* Preprocessor.c */; };
 		E4AFAE99172D899D00F7A0BF /* Compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE98172D899D00F7A0BF /* Compiler.c */; };
 		E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAEA117315D4000F7A0BF /* Buffer.c */; };
@@ -160,6 +161,7 @@
 		E4995F3C17411617003B06BF /* ObjectIndexer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjectIndexer.h; sourceTree = "<group>"; };
 		E4995F3D17411620003B06BF /* ObjectIndexer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = ObjectIndexer.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		E49E051C176A04AA002E1492 /* CalcChain.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = CalcChain.c; sourceTree = "<group>"; };
+		E4A1640B17BB143C00AF995B /* pspl.1.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = pspl.1.html; sourceTree = "<group>"; };
 		E4AF3F7717B9DE7100D21DC6 /* pspl.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = pspl.1; sourceTree = "<group>"; };
 		E4AFAE28171C92B900F7A0BF /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		E4AFAE29171C92BE00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
@@ -474,6 +476,7 @@
 			children = (
 				E4AFAE2A171C92D100F7A0BF /* README.md */,
 				E4360CB717B9C16D0016DCDD /* pspl.1.md */,
+				E4A1640B17BB143C00AF995B /* pspl.1.html */,
 				E4AF3F7717B9DE7100D21DC6 /* pspl.1 */,
 				E4AFAE8417259A1900F7A0BF /* CMakeLists.txt */,
 				E4AFAEA117315D4000F7A0BF /* Buffer.c */,
@@ -899,6 +902,7 @@
 				E43C50F617B49C5C00F25742 /* RuntimeWiiHeaps.c in Sources */,
 				E44577D91781DEB8003EE09C /* gl_runtime_ios.m in Sources */,
 				E44B680A17B1867D002257D2 /* PMDLRuntimeProcessing.c in Sources */,
+				E4A1640A17BB00BA00AF995B /* gx_runtime.c in Sources */,
 				E44577DB1781DEB8003EE09C /* gl_runtime.c in Sources */,
 				E44577DD1781DEB8003EE09C /* TMRuntime.c in Sources */,
 				E44577DE1781DEB8003EE09C /* RuntimeThreads.c in Sources */,

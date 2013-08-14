@@ -9,7 +9,7 @@ Additional information can be found in the
 PSPL Shader Language
 ====================
 
-The **Photon Shader Preprocess Language (PSPL)** aims to simplify the task 
+The **Photon (Static|Shader) Preprocess Language (PSPL)** aims to simplify the task 
 of designing and authoring 
 [*shader programs*](http://en.wikipedia.org/wiki/Shader) and 
 *pipeline configurations* for a wide variety of 
@@ -81,22 +81,32 @@ Art Pipeline Toolchain
         * Importers
         * Exporters
         * Preview Generation
+    * **C Developer API** for extending PSPL-lexer functionality
 * File Formats
-    * Markdown-extended source text `.pspl`
-    * Intermediate PSPL package `.pspld` (directory structure)
-        * May contain multiple PSPL sources
-        * May contain intermediately-compressed (.PSD, .PNG, .TIF) textures
-    * Compiled PSPL package `.psplp`
+    * Markdown-extended source text (`.pspl`)
+    * Asset-referencing system to trigger auto conversion and bundling of 
+      certain external files
+        * Use the command syntax itself to reference file paths relative 
+          to the PSPL source file
+        * Convert data to target one or many platforms in produced packages
+    * Compiled PSPL object (`.psplc`)
+        * Compiled intermediate binary format expressing indexing and data 
+          of a single PSPL source
+    * Compiled PSPL package (`.psplp`)
+        * Links together multiple PSPL object files
         * Platform-specific targeting
             * May be a "fat-package" containing multiple platforms
             * Bi-endian design
-        * Textures are in platform-native format(s)
+        * Textures/Models/Shaders are contained in platform-native format(s)
 * Runtime
     * Simple file or membuf `.psplp` loader
     * Heading-context hook installation/configuration
     * Command hook installation/configuration
     * Common uniform-variable interface
     * Common vertex format definition interface
+    * **C Developer API** for pairing extension-tagged objects with 
+      runtime processing code. Additional Target Graphics Platforms 
+      may be added via the API
 ```
 
 

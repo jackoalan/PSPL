@@ -98,7 +98,7 @@ void _pspl_wii_mem_init() {
         indexing_set = 1;
     }
     
-    // Make Heap (minimum PowerPC 8-byte paging for *all 32-bit* indexing)
+    // Make Heap (minimum PowerPC 8-byte paging for (all 32-bit) pspl indexing)
     __lwp_heap_init(&indexing_heap, new_hi1, INDEXING_HEAP_SIZE, 8);
     
     

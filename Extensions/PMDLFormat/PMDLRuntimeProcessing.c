@@ -790,6 +790,8 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                 //sleep(2);
                 //print_bytes(buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);
                 //sleep(10);
+                
+                /*
                 GX_SetNumTevStages(1);
                 GXColor tev_color = {255, 255, 255, 255};
                 GX_SetTevKColor(GX_KCOLOR0, tev_color);
@@ -800,6 +802,8 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                 GX_SetTevAlphaOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
                 GX_SetTevColorIn(GX_TEVSTAGE0, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO, GX_CC_KONST);
                 GX_SetTevAlphaIn(GX_TEVSTAGE0, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_KONST);
+                 */
+                
                 /*
                 GX_Begin(GX_QUADS, 0, 4);
                 GX_Position3f32(-1, 2, 0);
@@ -807,11 +811,11 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                 GX_Position3f32(1, -2, 0);
                 GX_Position3f32(1, 2, 0);
                 GX_End();
+                 
                  */
                 //printf("Running %p : %d\n", buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);
                 //sleep(5);
                 GX_CallDispList(buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);
-                GX_Flush();
                 
                 index_buf += sizeof(pmdl_gx_mesh);
                 
