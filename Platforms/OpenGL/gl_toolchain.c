@@ -24,7 +24,7 @@ static const char SHADER_HEAD[] =
 
 static void copyright_hook() {
     
-    pspl_toolchain_provide_copyright("OpenGL[ES] 2.0 Platform (GLSL Generator and Runtime Loader)",
+    pspl_toolchain_provide_copyright("OpenGL[ES] 2.0 PSPL Platform (GLSL Generator and Runtime Loader)",
                                      "Copyright (c) 2013 Jack Andersen <jackoalan@gmail.com>",
                                      "[See licence for \"PSPL\" above]");
     

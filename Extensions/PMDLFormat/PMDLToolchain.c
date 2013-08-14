@@ -48,6 +48,16 @@ static void copyright_hook() {
                                      "Copyright (c) 2013 Jack Andersen <jackoalan@gmail.com>",
                                      "[See licence for \"PSPL\" above]");
     
+    pspl_toolchain_provide_copyright("io_pmdl_export (Exporter Addon for Blender)",
+                                     "Copyright (c) 2013 Jack Andersen <jackoalan@gmail.com>",
+                                     "[See licence for \"PSPL\" above]");
+    
+    pspl_toolchain_provide_copyright("libogc (GU Matrix Math C-reference-implementations)",
+                                     "Copyright (C) 2004 - 2009\n"
+                                     "    Michael Wiedenbauer (shagkur)\n"
+                                     "    Dave Murphy (WinterMute)",
+                                     "[See licence for \"libogc\" in \"GX Platform\"]");
+    
 }
 
 static void subext_hook() {

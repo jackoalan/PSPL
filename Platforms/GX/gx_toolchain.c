@@ -11,9 +11,32 @@
 
 static void copyright_hook() {
     
-    pspl_toolchain_provide_copyright("GX Platform (Offline GX Stream Generator and Runtime Loader)",
+    pspl_toolchain_provide_copyright("GX PSPL Platform (Offline GX Stream Generator and Runtime Loader)",
                                      "Copyright (c) 2013 Jack Andersen <jackoalan@gmail.com>",
                                      "[See licence for \"PSPL\" above]");
+    
+    pspl_toolchain_provide_copyright("libogc (GX API)",
+                                     "Copyright (C) 2004 - 2009\n"
+                                     "    Michael Wiedenbauer (shagkur)\n"
+                                     "    Dave Murphy (WinterMute)",
+                                     
+                                     "This software is provided 'as-is', without any express or implied\n"
+                                     "warranty.  In no event will the authors be held liable for any\n"
+                                     "damages arising from the use of this software.\n"
+                                     "\n"
+                                     "Permission is granted to anyone to use this software for any\n"
+                                     "purpose, including commercial applications, and to alter it and\n"
+                                     "redistribute it freely, subject to the following restrictions:\n"
+                                     "\n"
+                                     "1. The origin of this software must not be misrepresented; you\n"
+                                     "   must not claim that you wrote the original software. If you use\n"
+                                     "   this software in a product, an acknowledgment in the product\n"
+                                     "   documentation would be appreciated but is not required.\n"
+                                     "2. Altered source versions must be plainly marked as such, and\n"
+                                     "   must not be misrepresented as being the original software.\n"
+                                     "3. This notice may not be removed or altered from any source\n"
+                                     "   distribution.\n"
+                                     "");
     
 }
 

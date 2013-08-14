@@ -230,10 +230,6 @@ void pspl_toolchain_provide_copyright(const char* component_name,
 static void print_copyrights() {
 
     // PSPL Core copyrights
-    if (xterm_colour)
-        fprintf(stderr, BOLD MAGENTA"*** PSPL Core ***\n\n\n"SGR0);
-    else
-        fprintf(stderr, "*** PSPL Core ***\n\n\n");
     
     // First, PSPL's copyright
     pspl_toolchain_provide_copyright("PSPL (Toolchain and Runtime)", "Copyright (c) 2013 Jack Andersen <jackoalan@gmail.com>",
@@ -245,11 +241,6 @@ static void print_copyrights() {
 #   ifdef _WIN32
     
     // PSPL Windows Core copyrights
-    if (xterm_colour)
-        fprintf(stderr, BOLD MAGENTA"*** PSPL Windows Core ***\n\n\n"SGR0);
-    else
-        fprintf(stderr, "*** PSPL Windows Core ***\n\n\n");
-    
     // MinGW
     pspl_toolchain_provide_copyright("MinGW (WIN32 API)", "Copyright (c) 2012 MinGW.org project",
                            PSPL_MIT_LICENCE);
@@ -272,11 +263,6 @@ static void print_copyrights() {
     
     
     // Platforms
-    if (xterm_colour)
-        fprintf(stderr, BOLD MAGENTA"*** PSPL Platforms ***\n\n\n"SGR0);
-    else
-        fprintf(stderr, "*** PSPL Platforms ***\n\n\n");
-    
     pspl_platform_t** plat = &pspl_available_platforms[0];
     while (plat[0]) {
         if (plat[0]->toolchain_platform && plat[0]->toolchain_platform->copyright_hook) {
@@ -294,12 +280,6 @@ static void print_copyrights() {
 
     
     // Extensions
-    if (xterm_colour)
-        fprintf(stderr, BOLD MAGENTA"*** PSPL Extensions ***\n\n\n"SGR0);
-    else
-        fprintf(stderr, "*** PSPL Extensions ***\n\n\n");
-    
-    
     pspl_extension_t** ext = &pspl_available_extensions[0];
     while (ext[0]) {
         if (ext[0]->toolchain_extension && ext[0]->toolchain_extension->copyright_hook) {
