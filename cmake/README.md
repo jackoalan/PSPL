@@ -18,11 +18,29 @@ single CMake project. **By default, the toolchain and runtime are built
 to target the machine architecture being compiled on.** CMake's
 default C compiler for the platform in question is used. 
 
-**Please Note** - Only *OS X 10.8* with *Xcode command-line tools* has been tested as a build platform
+### Requirements
+
+**Please Note** - Only *OS X 10.8* with [*Xcode command-line tools*](https://developer.apple.com/downloads) 
+has been tested as a build platform.
+
+Building PSPL requires a *C-compilation toolchain*, [*Git*](http://git-scm.com), and [*CMake*](http://cmake.org)
+
+### Building and Installing
 
 In most cases, a default `cmake <PSPL_SOURCE>` invocation followed by a run 
 of `make` will build a complete PSPL toolchain/runtime pair for the host 
 build machine. 
+
+In practice, this looks like the following:
+```sh
+>$ git clone https://github.com/jackoalan/PSPL.git
+>$ cd PSPL
+>$ mkdir build
+>$ cd build
+>$ cmake ..
+>$ make
+># make install
+```
 
 
 ### Cross Compiling To Other Targets
