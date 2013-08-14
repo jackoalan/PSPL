@@ -429,6 +429,6 @@ Flexible Integrability
 
 PSPL is designed to be adaptable beyond what it brings built-in.
 *Markdown primary-level headings* serve as *extension routers*
-where the underlying lines are dispatched to individual toolchain-extenion 
-codebases. A **C API** is available to *hook* into these PSPL 
+where the underlying lines are dispatched to individual toolchain-extension 
+codebases. A **C Developer API** is available to *hook* into these PSPL 
 invocations, effectively extending the language (using its constructs).
