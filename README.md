@@ -428,4 +428,7 @@ Flexible Integrability
 *Read More:* [*CMake usage*](https://github.com/jackoalan/PSPL/tree/master/cmake/#readme)
 
 PSPL is designed to be adaptable beyond what it brings built-in.
-Headings serve as 
+*Markdown primary-level headings* serve as *extension routers*
+where the underlying lines are dispatched to individual toolchain-extenion 
+codebases. A **C API** is available to *hook* into these PSPL 
+invocations, effectively extending the language (using its constructs).
