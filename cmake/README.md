@@ -39,7 +39,14 @@ Making a *symlink* within Blender's installation is a quick way to "install" the
 
 *OS X* users may run the following:
 ```sh
-ln -s /<PATH_TO_PSPL_SOURCE>/Extensions/PMDLFormat/Blender/io_pmdl_export /Applications/blender.app/Contents/MacOS/2.68/scripts/addons/
+# Absolute path to cloned PSPL source
+PSPL_SOURCE=<PATH_TO_PSPL_SOURCE>
+
+# Version number of downloaded Blender ("2.68")
+BLENDER_VERSION=<BLENDER_VERSION_NUMBER>
+
+ln -s $PSPL_SOURCE/Extensions/PMDLFormat/Blender/io_pmdl_export \
+/Applications/blender.app/Contents/MacOS/$BLENDER_VERSION/scripts/addons/
 ```
 
 Once the symlink is in place, launch Blender, open *User Preferences* from the *File menu*,
