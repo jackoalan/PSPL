@@ -285,13 +285,6 @@ endif()
 
 
 
-#########
-# Tests #
-#########
-
-add_subdirectory(Test)
-
-
 ##########
 # Export #
 ##########
@@ -302,14 +295,32 @@ export(TARGETS pspl-rt
        pspl_common 
        FILE pspl-rt-targets.cmake)
 get_filename_component(PSPL_RT_TARGET_FILE ${PSPL_BINARY_DIR}/pspl-rt-targets.cmake ABSOLUTE)
-get_target_property(PSPL_BINARY_LOC pspl LOCATION)
-configure_file(${PSPL_SOURCE_DIR}/cmake/PSPLConfig.cmake.in
-               PSPLConfig.cmake)
-if(PSPL_WII)
-  export(PACKAGE PSPL-WII)
-elseif(PSPL_WIN32 OR PSPL_WIN64)
-  export(PACKAGE PSPL-WIN)
-else()
+if(NOT PSPL_WII)
+  get_target_property(PSPL_BINARY_LOC pspl LOCATION)
+  configure_file(${PSPL_SOURCE_DIR}/cmake/PSPLConfig.cmake.in
+                 PSPLConfig.cmake)
   export(PACKAGE PSPL)
 endif()
+
+if(PSPL_WII)
+  configure_file(${PSPL_SOURCE_DIR}/cmake/PSPL-RTConfig.cmake.in
+                 PSPL-WiiConfig.cmake)
+  export(PACKAGE PSPL-Wii)
+elseif(PSPL_WIN32 OR PSPL_WIN64)
+  configure_file(${PSPL_SOURCE_DIR}/cmake/PSPL-RTConfig.cmake.in
+                 PSPL-WinConfig.cmake)
+  export(PACKAGE PSPL-Win)
+else()
+  configure_file(${PSPL_SOURCE_DIR}/cmake/PSPL-RTConfig.cmake.in
+                 PSPL-NativeConfig.cmake)
+  export(PACKAGE PSPL-Native)
+endif()
+
+
+
+#########
+# Tests #
+#########
+
+add_subdirectory(Test)
 

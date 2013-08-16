@@ -150,7 +150,7 @@ int main(int argc, char* argv[]) {
     const pspl_platform_t* plat;
     pspl_runtime_init(&plat);
     const pspl_runtime_package_t* package = NULL;
-    pspl_runtime_load_package_file("sd:/rtest.psplp", &package);
+    pspl_runtime_load_package_file("sd:/monkey.psplp", &package);
     pspl_runtime_enumerate_psplcs(package, enumerate_psplc_hook);
     
     printf("PSPL package read\n");
@@ -185,9 +185,9 @@ int main(int argc, char* argv[]) {
     pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_ALL);
     
     // Load monkey
-    const pspl_runtime_psplc_t* rtest = pspl_runtime_get_psplc_from_key(package, "rtest", 1);
-    monkey_ctx.default_shader = rtest;
-    monkey_model = pmdl_lookup(rtest, "monkey");
+    const pspl_runtime_psplc_t* monkey_obj = pspl_runtime_get_psplc_from_key(package, "monkey", 1);
+    monkey_ctx.default_shader = monkey_obj;
+    monkey_model = pmdl_lookup(monkey_obj, "monkey");
     
     printf("Monkey loaded\n");
 

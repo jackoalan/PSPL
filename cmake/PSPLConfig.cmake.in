@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
 
-# Include the runtime target
-include("@PSPL_RT_TARGET_FILE@")
-
 # PSPL executable's location
 set(PSPL_BINARY_LOC "@PSPL_BINARY_LOC@")
 

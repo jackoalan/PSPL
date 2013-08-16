@@ -2435,8 +2435,9 @@ void pspl_indexer_write_psplc(pspl_indexer_context_t* ctx,
         if (ent->stub_source_path_ext) {
             SET_BI_U32(stub_record, file_path_ext_off, stub_string_table_off);
             stub_string_table_off += strlen(ent->stub_source_path_ext) + 1;
-        } else
+        } else {
             SET_BI_U32(stub_record, file_path_ext_off, 0);
+        }
         
         // Write data hash
         fwrite(&ent->object_hash, 1, sizeof(pspl_hash), psplc_file_out);

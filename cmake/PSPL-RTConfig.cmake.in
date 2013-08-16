@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 2.8)
+
+# Find toolchain package too
+find_package(PSPL REQUIRED)
+
+# Include the runtime target
+include("@PSPL_RT_TARGET_FILE@")

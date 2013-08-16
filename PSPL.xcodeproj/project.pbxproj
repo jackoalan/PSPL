@@ -159,6 +159,11 @@
 		E4995F3C17411617003B06BF /* ObjectIndexer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjectIndexer.h; sourceTree = "<group>"; };
 		E4995F3D17411620003B06BF /* ObjectIndexer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = ObjectIndexer.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		E49E051C176A04AA002E1492 /* CalcChain.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = CalcChain.c; sourceTree = "<group>"; };
+		E49E63BA17BEA92A002550A7 /* monkey.pspl */ = {isa = PBXFileReference; lastKnownFileType = text; path = monkey.pspl; sourceTree = "<group>"; };
+		E49E63BB17BEA978002550A7 /* monkey.blend */ = {isa = PBXFileReference; lastKnownFileType = file; path = monkey.blend; sourceTree = "<group>"; };
+		E49E63BC17BEA98F002550A7 /* MonkeyMaterial.pxm */ = {isa = PBXFileReference; lastKnownFileType = file; path = MonkeyMaterial.pxm; sourceTree = "<group>"; };
+		E49E63BD17BEA995002550A7 /* MonkeyMaterial.psd */ = {isa = PBXFileReference; lastKnownFileType = file; path = MonkeyMaterial.psd; sourceTree = "<group>"; };
+		E49E63BE17BEAD8F002550A7 /* PSPL-RTConfig.cmake.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = "PSPL-RTConfig.cmake.in"; sourceTree = "<group>"; };
 		E4A1640B17BB143C00AF995B /* pspl.1.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = pspl.1.html; sourceTree = "<group>"; };
 		E4AF3F7717B9DE7100D21DC6 /* pspl.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = pspl.1; sourceTree = "<group>"; };
 		E4AFAE28171C92B900F7A0BF /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
@@ -307,6 +312,10 @@
 				E45034B9175811FB0079B62D /* test_mac.c */,
 				E45034BB175812050079B62D /* test_wii.c */,
 				E45034BD175812110079B62D /* test_win.c */,
+				E49E63BA17BEA92A002550A7 /* monkey.pspl */,
+				E49E63BB17BEA978002550A7 /* monkey.blend */,
+				E49E63BC17BEA98F002550A7 /* MonkeyMaterial.pxm */,
+				E49E63BD17BEA995002550A7 /* MonkeyMaterial.psd */,
 			);
 			path = Test;
 			sourceTree = "<group>";
@@ -625,6 +634,7 @@
 				E48CCCBC1747D4D500DDDD63 /* ToolchainCrossWindows.cmake */,
 				E4AFAE7C17218D8300F7A0BF /* Templates */,
 				E4AFAE74171EF74600F7A0BF /* PSPLConfig.cmake.in */,
+				E49E63BE17BEAD8F002550A7 /* PSPL-RTConfig.cmake.in */,
 				E4AFAE76171EF78600F7A0BF /* PSPLExtensionMacros.cmake */,
 				E4AFAE75171EF76100F7A0BF /* PSPLArtPipelineMacros.cmake */,
 				E4C527131778AE5300D1D822 /* FindMacSDK.cmake */,
