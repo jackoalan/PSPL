@@ -45,7 +45,7 @@ ln -s /<PATH_TO_PSPL_SOURCE>/Extensions/PMDLFormat/Blender/io_pmdl_export /Appli
 Once the symlink is in place, launch Blender, open *User Preferences* from the *File menu*,
 switch to the *Addons tab*, use the *search box* to search for "PMDL", and check the box
 for *Import-Export: PMDL Model Exporter*.
-**Important: ** Once the box is checked, press *Save User Settings* at the bottom of the User Preferences window.
+**Important!!** Once the box is checked, press *Save User Settings* at the bottom of the User Preferences window.
 Blender may be quit after these steps.
 
 
