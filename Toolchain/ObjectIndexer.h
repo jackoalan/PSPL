@@ -41,6 +41,7 @@ typedef struct {
     
     // Platform availability bitfield
     uint32_t platform_availability_bits;
+    uint32_t build_platform_availability_bits;
     
     // Embedded object length and buffer
     // (unused for file stubs)

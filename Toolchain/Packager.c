@@ -12,6 +12,7 @@
 #include <PSPLInternal.h>
 #include <PSPL/PSPLHash.h>
 #include <errno.h>
+#include <dirent.h>
 
 #include "Packager.h"
 #include "ObjectIndexer.h"
@@ -139,18 +140,36 @@ static void prepare_staged_file(pspl_indexer_entry_t* ent) {
     char path_hash_str[PSPL_HASH_STRING_LEN];
     pspl_hash_fmt(path_hash_str, path_hash);
     
-    // Now concatenate staged path
-    path[0] = '\0';
-    strlcat(path, driver_state.staging_path, MAXPATHLEN);
-    strlcat(path, path_hash_str, MAXPATHLEN);
-    strlcat(path, "_", MAXPATHLEN);
-    char bitfield_str[32];
-    snprintf(bitfield_str, 32, "%x", ent->platform_availability_bits);
-    strlcat(path, bitfield_str, MAXPATHLEN);
-    strlcat(path, "_", MAXPATHLEN);
+    // Object hash
     char object_hash_str[PSPL_HASH_STRING_LEN];
     pspl_hash_fmt(object_hash_str, &ent->object_hash);
-    strlcat(path, object_hash_str, MAXPATHLEN);
+    
+    // Use dirent to scan PSPLFiles for bitwise-matching file
+    DIR* staging_dir = opendir(driver_state.staging_path);
+    if (!staging_dir)
+        pspl_error(-1, "Unable to open Staging Directory", "`%s` inaccessible", driver_state.staging_path);
+    struct dirent* dent = NULL;
+    while ((dent = readdir(staging_dir))) {
+        if (memcmp(dent->d_name, path_hash_str, 40))
+            continue;
+        const char* file_obj_hash = strrchr(dent->d_name, '_') + 1;
+        if (memcmp(file_obj_hash, object_hash_str, 40))
+            continue;
+        
+        const char* file_plat_bits_str = strchr(dent->d_name, '_') + 1;
+        long file_plat_bits = strtol(file_plat_bits_str, NULL, 16);
+        if (file_plat_bits & ent->build_platform_availability_bits)
+            break;
+    }
+    if (!dent)
+        pspl_error(-1, "Staged file unavailable",
+                   "there should be a file with path hash '%s' and data hash '%s'",
+                   path_hash_str, object_hash_str);
+    
+    // Now copy staged path
+    path[0] = '\0';
+    strlcpy(path, driver_state.staging_path, MAXPATHLEN);
+    strlcat(path, dent->d_name, MAXPATHLEN);
     
     // Open file, make sure it still exists
     FILE* file = fopen(path, "r");

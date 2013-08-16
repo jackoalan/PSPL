@@ -23,7 +23,31 @@ default C compiler for the platform in question is used.
 **Please Note** - Only *OS X 10.8* with [*Xcode command-line tools*](https://developer.apple.com/downloads) 
 has been tested as a build platform.
 
-Building PSPL requires a *C-compilation toolchain*, [*Git*](http://git-scm.com), and [*CMake*](http://cmake.org)
+**Building PSPL requires** a *C-compilation toolchain*, [*Git*](http://git-scm.com), and [*CMake*](http://cmake.org)
+
+The codebase includes a **Test application** featuring
+[Suzanne](http://en.wikipedia.org/wiki/Blender_%28software%29#Suzanne).
+In order to compile the test data, [Blender](http://blender.org) *must*
+be installed on the build machine. For *OS X*, place `blender.app` in `/Applications`.
+PSPL will look there by default. Other platforms may run `export BLENDER_BIN=<PATH_TO_BLENDER_EXECUTABLE>`
+to override the default `$PATH` search.
+
+Once Blender is installed, it needs the **PMDL export addon** installed and activated. 
+The addon is located in the PSPL codebase at
+[`Extensions/PMDLFormat/Blender/io_pmdl_export`](https://github.com/jackoalan/PSPL/tree/master/Extensions/PMDLFormat/Blender/io_pmdl_export).
+Making a *symlink* within Blender's installation is a quick way to "install" the addon.
+
+*OS X* users may run the following:
+```sh
+ln -s /<PATH_TO_PSPL_SOURCE>/Extensions/PMDLFormat/Blender/io_pmdl_export /Applications/blender.app/Contents/MacOS/2.68/scripts/addons/
+```
+
+Once the symlink is in place, launch Blender, open *User Preferences* from the *File menu*,
+switch to the *Addons tab*, use the *search box* to search for "PMDL", and check the box
+for *Import-Export: PMDL Model Exporter*.
+**Important: ** Once the box is checked, press *Save User Settings* at the bottom of the User Preferences window.
+Blender may be quit after these steps.
+
 
 ### Building and Installing
 
