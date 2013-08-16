@@ -52,9 +52,9 @@ static void instruction_hook(const pspl_toolchain_context_t* driver_context,
         
         // Config struct
         gx_config_t gx_config = {
-            .texgen_count = ir_state->vertex.tc_count
+            .texgen_count = ir_state->vertex.tc_count,
+            .using_texcoord_normal = 0
         };
-        pspl_embed_platform_integer_keyed_object(GX_SHADER_CONFIG, &gx_config, &gx_config, sizeof(gx_config_t));
         
         // Begin GX transaction
         pspl_gx_offline_begin_transaction();
@@ -74,11 +74,16 @@ static void instruction_hook(const pspl_toolchain_context_t* driver_context,
                 GX_SetTexCoordGen(GX_TEXCOORD0 + j, GX_TG_MTX3x4,
                                   GX_TG_POS,
                                   GX_TEXMTX0 + (j*3));
-            else if (ir_state->vertex.tc_array[j].tc_source == TEXCOORD_NORM)
-                GX_SetTexCoordGen(GX_TEXCOORD0 + j, GX_TG_MTX3x4,
-                                  GX_TG_NRM,
-                                  GX_TEXMTX0 + (j*3));
+            else if (ir_state->vertex.tc_array[j].tc_source == TEXCOORD_NORM) {
+                gx_config.using_texcoord_normal = 1;
+                GX_SetTexCoordGen2(GX_TEXCOORD0 + j, GX_TG_MTX3x4,
+                                   GX_TG_NRM,
+                                   GX_TEXMTX9,
+                                   GX_TRUE,
+                                   GX_DTTMTX0 + (j*3));
+            }
         }
+        GX_SetNumTexGens(ir_state->vertex.tc_count);
         
         
         // Depth mode
@@ -219,6 +224,8 @@ static void instruction_hook(const pspl_toolchain_context_t* driver_context,
         } else
             GX_SetBlendMode(GX_BM_NONE, GX_BL_ZERO, GX_BL_ZERO, 0);
         
+        // Write config struct
+        pspl_embed_platform_integer_keyed_object(GX_SHADER_CONFIG, &gx_config, &gx_config, sizeof(gx_config_t));
         
         // End GX Transaction
         GX_Flush();

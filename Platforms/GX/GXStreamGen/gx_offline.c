@@ -719,6 +719,92 @@ void GX_SetTexCoordGen2(u16 texcoord,u32 tgen_typ,u32 tgen_src,u32 mtxsrc,u32 no
     __gx->dirtyState |= (0x04000000|(0x00010000<<texcoord));
 }
 
+static inline void pspl_gx_offline_add_mtx(Mtx mt) {
+    int i,j;
+    for (i=0 ; i<3 ; ++i)
+        for (j=0 ; j<4 ; ++j)
+            pspl_gx_offline_add_float(mt[i][j]);
+}
+
+static inline void pspl_gx_offline_add_24mtx_from_mtx(Mtx mt) {
+    int i,j;
+    for (i=0 ; i<2 ; ++i)
+        for (j=0 ; j<4 ; ++j)
+            pspl_gx_offline_add_float(mt[i][j]);
+}
+
+static inline void pspl_gx_offline_add_33mtx_from_mtx(Mtx mt) {
+    int i,j;
+    for (i=0 ; i<3 ; ++i)
+        for (j=0 ; j<3 ; ++j)
+            pspl_gx_offline_add_float(mt[i][j]);
+}
+
+static inline void pspl_gx_offline_add_33mtx(Mtx33 mt) {
+    int i,j;
+    for (i=0 ; i<3 ; ++i)
+        for (j=0 ; j<3 ; ++j)
+            pspl_gx_offline_add_float(mt[i][j]);
+}
+
+void GX_LoadPosMtxImm(Mtx mt,u32 pnidx)
+{
+	GX_LOAD_XF_REGS((0x0000|(_SHIFTL(pnidx,2,8))),12);
+    pspl_gx_offline_add_mtx(mt);
+}
+
+void GX_LoadPosMtxIdx(u16 mtxidx,u32 pnidx)
+{
+    pspl_gx_offline_add_u8(0x20);
+	pspl_gx_offline_add_u32((_SHIFTL(mtxidx,16,16))|0xb000|(_SHIFTL(pnidx,2,8)));
+}
+
+void GX_LoadNrmMtxImm(Mtx mt,u32 pnidx)
+{
+	GX_LOAD_XF_REGS((0x0400|(pnidx*3)),9);
+	pspl_gx_offline_add_33mtx_from_mtx(mt);
+}
+
+void GX_LoadNrmMtxImm3x3(Mtx33 mt,u32 pnidx)
+{
+	GX_LOAD_XF_REGS((0x0400|(pnidx*3)),9);
+	pspl_gx_offline_add_33mtx(mt);
+}
+
+void GX_LoadNrmMtxIdx3x3(u16 mtxidx,u32 pnidx)
+{
+	pspl_gx_offline_add_u8(0x28);
+	pspl_gx_offline_add_u32((_SHIFTL(mtxidx,16,16))|0x8000|(0x0400|(pnidx*3)));
+}
+
+void GX_LoadTexMtxImm(Mtx mt,u32 texidx,u8 type)
+{
+	u32 addr = 0;
+	u32 rows = (type==GX_MTX2x4)?2:3;
+    
+	if(texidx<GX_DTTMTX0) addr = (_SHIFTL(texidx,2,8));
+	else {
+		texidx -= GX_DTTMTX0;
+		addr = 0x0500 + (_SHIFTL(texidx,2,8));
+	}
+    
+	GX_LOAD_XF_REGS(addr,(rows*4));
+	if(type==GX_MTX2x4)
+		pspl_gx_offline_add_24mtx_from_mtx(mt);
+	else
+		pspl_gx_offline_add_mtx(mt);
+}
+
+void GX_LoadTexMtxIdx(u16 mtxidx,u32 texidx,u8 type)
+{
+	u32 addr,size = (type==GX_MTX2x4)?7:11;
+    
+	if(texidx<GX_DTTMTX0) addr = 0x0000|(_SHIFTL(texidx,2,8));
+	else addr = 0x0500|(_SHIFTL((texidx-GX_DTTMTX0),2,8));
+    
+	pspl_gx_offline_add_u8(0x30);
+	pspl_gx_offline_add_u32((_SHIFTL(mtxidx,16,16))|(_SHIFTL(size,12,4))|addr);
+}
 
 void GX_SetCurrentMtx(u32 mtx)
 {

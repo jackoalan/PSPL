@@ -655,6 +655,16 @@ typedef struct {
 #define GX_DTTIDENTITY		125
 /*! @} */
 
+/*! \addtogroup mtxtype Matrix type
+ * @{
+ */
+#define GX_MTX2x4			0
+#define GX_MTX3x4			1
+/*! @} */
+
+typedef float Mtx[3][4];
+typedef float Mtx33[3][3];
+
 
 void GX_Flush();
 
@@ -669,6 +679,19 @@ void GX_SetTexCoordGen(u16 texcoord,u32 tgen_typ,u32 tgen_src,u32 mtxsrc);
 
 void GX_SetTexCoordGen2(u16 texcoord,u32 tgen_typ,u32 tgen_src,u32 mtxsrc,u32 normalize,u32 postmtx);
 
+void GX_LoadPosMtxImm(Mtx mt,u32 pnidx);
+
+void GX_LoadPosMtxIdx(u16 mtxidx,u32 pnidx);
+
+void GX_LoadNrmMtxImm(Mtx mt,u32 pnidx);
+
+void GX_LoadNrmMtxImm3x3(Mtx33 mt,u32 pnidx);
+
+void GX_LoadNrmMtxIdx3x3(u16 mtxidx,u32 pnidx);
+
+void GX_LoadTexMtxImm(Mtx mt,u32 texidx,u8 type);
+
+void GX_LoadTexMtxIdx(u16 mtxidx,u32 texidx,u8 type);
 
 void GX_SetCurrentMtx(u32 mtx);
 

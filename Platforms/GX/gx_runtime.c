@@ -25,24 +25,6 @@ static void load_object(pspl_runtime_psplc_t* object) {
     
 }
 
-static void print_bytes(void* ptr, size_t size) {
-    
-    int i;
-    
-    for (i=0 ; i<size ; ++i) {
-        
-        if (!(i%32))
-            
-            printf("\n");
-        
-        printf("%02X", *(uint8_t*)(ptr+i));
-        
-    }
-    
-    printf("\n\n");
-    
-}
-
 static void bind_object(pspl_runtime_psplc_t* object) {
     
     // This will asynchronously instruct the GPU to run the list

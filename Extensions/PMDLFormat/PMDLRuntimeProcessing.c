@@ -362,15 +362,6 @@ void pmdl_destroy(const pspl_runtime_arc_file_t* pmdl_file) {
 
 #pragma mark Context Representation and Frustum Testing
 
-void print_matrix(pspl_matrix34_t mtx) {
-    printf("%f | %f | %f | %f\n"
-           "%f | %f | %f | %f\n"
-           "%f | %f | %f | %f\n",
-           mtx[0][0], mtx[0][1], mtx[0][2], mtx[0][3],
-           mtx[1][0], mtx[1][1], mtx[1][2], mtx[1][3],
-           mtx[2][0], mtx[2][1], mtx[2][2], mtx[2][3]);
-}
-
 /* Invalidate context transformation cache (if values updated) */
 void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv_bits) {
     int i;
@@ -380,35 +371,14 @@ void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv
     
     if (inv_bits & PMDL_INVALIDATE_VIEW) {
         pmdl_matrix_lookat(ctx->cached_view_mtx, ctx->camera_view);
-//#       ifdef GEKKO
-//        DCStoreRange(ctx->cached_view_mtx, sizeof(pspl_matrix34_t));
-//#       endif
     }
     
     if (inv_bits & (PMDL_INVALIDATE_MODEL | PMDL_INVALIDATE_VIEW)) {
-        /*
-        printf("Model:\n");
-        print_matrix(ctx->model_mtx);
-        
-        printf("\nView:\n");
-        print_matrix(ctx->cached_view_mtx);
-         */
         
         pmdl_matrix34_mul(ctx->model_mtx, ctx->cached_view_mtx, ctx->cached_modelview_mtx);
         for (i=0 ; i<3 ; ++i)
             ctx->cached_modelview_mtx[3][i] = 0;
         ctx->cached_modelview_mtx[3][3] = 1;
-        
-        /*
-        printf("ModelView:\n");
-        print_matrix(ctx->cached_modelview_mtx);
-        sleep(5);
-        */
-        
-
-//#       ifdef GEKKO
-//        DCStoreRange(ctx->cached_modelview_mtx, sizeof(pspl_matrix34_t));
-//#       endif
         
 
         pmdl_matrix34_invxpose(ctx->cached_modelview_mtx, ctx->cached_modelview_invxpose_mtx);
@@ -595,24 +565,6 @@ static inline void null_shader() {
 }
 #endif
 
-static void print_bytes(void* ptr, size_t size) {
-    
-    int i;
-    
-    for (i=0 ; i<size ; ++i) {
-        
-        if (!(i%32))
-            
-            printf("\n");
-        
-        printf("%02X", *(uint8_t*)(ptr+i));
-        
-    }
-    
-    printf("\n\n");
-    
-}
-
 /* This routine will draw PAR0 PMDLs */
 static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file) {
     pmdl_header* header = pmdl_file->file_data;
@@ -641,7 +593,7 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
     void* collection_buf = pmdl_file->file_data + header->collection_offset;
     pmdl_col_header* collection_header = collection_buf;
 #   if PMDL_GENERAL
-    int k,p;
+    int k;
 #   endif
     for (i=0 ; i<header->collection_count; ++i) {
         
@@ -728,10 +680,6 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
             // Set GX Attribute Table
             GX_ClearVtxDesc();
             
-            //GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
-            //GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
-        
-            
             GX_SetVtxDesc(GX_VA_POS, GX_INDEX16);
             GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
         
@@ -789,46 +737,22 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                     
                     // Load remaining texture coordinate matrices here
                     if (shader_obj->native_shader.config->texgen_count > gx_loaded_texcoord_mats)
-                        for (k=gx_loaded_texcoord_mats ; k<shader_obj->native_shader.config->texgen_count ; ++k)
-                            GX_LoadTexMtxImm(ctx->texcoord_mtx[k], GX_DTTMTX0 + (k*3), GX_TG_MTX2x4);
+                        for (k=gx_loaded_texcoord_mats ; k<shader_obj->native_shader.config->texgen_count ; ++k) {
+                            GX_LoadTexMtxImm(ctx->texcoord_mtx[k], GX_TEXMTX0 + (k*3), GX_MTX2x4);
+                            if (shader_obj->native_shader.config->using_texcoord_normal)
+                                GX_LoadTexMtxImm(ctx->texcoord_mtx[k], GX_DTTMTX0 + (k*3), GX_MTX3x4);
+                        }
+                    
+                    if (shader_obj->native_shader.config->using_texcoord_normal)
+                        GX_LoadTexMtxImm(ctx->cached_modelview_invxpose_mtx, GX_TEXMTX9, GX_MTX3x4);
+
                     
                     // Execute shader Display List
-                    //pspl_runtime_bind_psplc(shader_obj);
+                    pspl_runtime_bind_psplc(shader_obj);
 
                 }
                 
-                // Draw mesh
-                //printf("About to run:\n");
-                //sleep(2);
-                //print_bytes(buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);
-                //sleep(10);
-                
-                GX_SetNumTexGens(1);
-                GX_SetTexCoordGen2(GX_TEXCOORD0, GX_TG_MTX3x4, GX_TG_NRM, GX_TEXMTX9, GX_TRUE, GX_DTTMTX0);
-                
-                GX_SetNumTevStages(1);
-                GXColor tev_color = {255, 255, 255, 255};
-                GX_SetTevKColor(GX_KCOLOR0, tev_color);
-                GX_SetTevKColorSel(GX_TEVSTAGE0, GX_TEV_KCSEL_K0);
-                GX_SetTevKAlphaSel(GX_TEVSTAGE0, GX_TEV_KASEL_1);
-                GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXMAP0, GX_TEXCOORD0, GX_COLORNULL);
-                GX_SetTevColorOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
-                GX_SetTevAlphaOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
-                GX_SetTevColorIn(GX_TEVSTAGE0, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO, GX_CC_TEXC);
-                GX_SetTevAlphaIn(GX_TEVSTAGE0, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_KONST);
-                
-                
-                /*
-                GX_Begin(GX_QUADS, 0, 4);
-                GX_Position3f32(-1, 2, 0);
-                GX_Position3f32(-1, -2, 0);
-                GX_Position3f32(1, -2, 0);
-                GX_Position3f32(1, 2, 0);
-                GX_End();
-                 
-                 */
-                //printf("Running %p : %d\n", buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);
-                //sleep(5);
+                // Draw Mesh
                 GX_CallDispList(buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);
                 
                 index_buf += sizeof(pmdl_gx_mesh);

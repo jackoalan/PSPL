@@ -15,7 +15,7 @@ enum gl_object {
 };
 
 typedef struct __attribute__ ((__packed__)) {
-    uint8_t texgen_count;
+    uint8_t texgen_count, using_texcoord_normal;
 } gx_config_t;
 
 #endif
