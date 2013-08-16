@@ -28,7 +28,7 @@
 
 
 static pmdl_draw_context_t monkey_ctx;
-static const pspl_runtime_arc_file_t* monkey_model;
+static const pspl_runtime_arc_file_t* monkey_model = NULL;
 
 /* GX external framebuffer */
 static void* xfb = NULL;
@@ -71,7 +71,6 @@ static void renderfunc() {
     GX_CopyDisp(xfb, GX_TRUE);
     
     //printf("Console active\n");
-
     
 }
 
@@ -190,7 +189,6 @@ int main(int argc, char* argv[]) {
     monkey_model = pmdl_lookup(monkey_obj, "monkey");
     
     printf("Monkey loaded\n");
-
     
     // Start rendering
     VIDEO_SetPostRetraceCallback(post_retrace_cb);

@@ -796,6 +796,7 @@ void pmdl_draw(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_fil
         pmdl_draw_par1(ctx, pmdl_file);
     else if (header->sub_type_num == '2')
         pmdl_draw_par2(ctx, pmdl_file);
+    
         
 }
 

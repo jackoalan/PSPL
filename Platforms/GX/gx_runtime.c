@@ -19,6 +19,7 @@ static void load_object(pspl_runtime_psplc_t* object) {
     
     pspl_data_object_t datao;
     pspl_runtime_get_embedded_data_object_from_integer(object, GX_SHADER_DL, &datao);
+
     object->native_shader.disp_list = datao.object_data;
     object->native_shader.disp_list_len = (u32)datao.object_len;
     DCStoreRange(object->native_shader.disp_list, (u32)datao.object_len);
