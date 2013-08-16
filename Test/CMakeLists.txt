@@ -1,3 +1,4 @@
+set(PSPL_BINARY_LOC ${PSPL_BINARY_DIR}/Toolchain/pspl)
 include(${PSPL_SOURCE_DIR}/cmake/PSPLArtPipelineMacros.cmake)
 
 # Compile test program
@@ -17,3 +18,10 @@ endif()
 
 
 # Run Art Pipeline
+if (PSPL_WII)
+  set_pspl_platforms(GX)
+else ()
+  set_pspl_platforms(GL2)
+endif ()
+
+add_pspl_package(monkey monkey.pspl)
