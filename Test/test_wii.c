@@ -60,7 +60,13 @@ static void renderfunc() {
     monkey_ctx.camera_view.pos[0] = sinf(time) * 5;
     monkey_ctx.camera_view.pos[2] = cosf(time) * 5;
     pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_VIEW);
-        
+    
+    // Update Texcoord 1
+    monkey_ctx.texcoord_mtx[1][0][0] = 0.5;
+    monkey_ctx.texcoord_mtx[1][1][1] = 1.0;
+    monkey_ctx.texcoord_mtx[1][0][3] = fmod(-time, 1.0);
+    monkey_ctx.texcoord_mtx[1][1][3] = 1.0;
+    
     // Draw monkey
     GX_SetCullMode(GX_CULL_NONE);
     GX_SetZMode(GX_TRUE, GX_LESS, GX_TRUE);

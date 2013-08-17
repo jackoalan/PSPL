@@ -278,6 +278,10 @@ static void command_call_hook(const pspl_toolchain_context_t* driver_context,
         uint8_t added_gx = 0;
         pmdl_ref_entry* entry = NULL;
         pspl_hash* pmdl_hash = NULL;
+        if (!driver_context->target_runtime_platforms_c)
+            pspl_error(-1, "No Target Platform(s) Specified",
+                       "Blender needs to know which platform to generate PMDL meshes for");
+        uint8_t did_something = 0;
         for (i=0 ; i<driver_context->target_runtime_platforms_c ; ++i) {
             if ((driver_context->target_runtime_platforms[i] == &GL2_platform ||
                  driver_context->target_runtime_platforms[i] == &D3D11_platform) &&
@@ -287,6 +291,7 @@ static void command_call_hook(const pspl_toolchain_context_t* driver_context,
                                           blender_convert, 1, general_plats, &pmdl_hash);
                 entry = pspl_malloc_malloc(&gen_refs, sizeof(pmdl_ref_entry));
                 added_general = 1;
+                did_something = 1;
                 
             } else if (driver_context->target_runtime_platforms[i] == &GX_platform && !added_gx) {
                 
@@ -294,9 +299,15 @@ static void command_call_hook(const pspl_toolchain_context_t* driver_context,
                                           blender_convert, 1, gx_plats, &pmdl_hash);
                 entry = pspl_malloc_malloc(&gx_refs, sizeof(pmdl_ref_entry));
                 added_gx = 1;
+                did_something = 1;
                 
             }
+                
         }
+        if (!did_something)
+            pspl_error(-1, "No *Supported* Target Platform(s) Specified",
+                       "of the %d platforms provided, none are compatible with PMDL. Choose from [GL2,GX,D3D11]",
+                       driver_context->target_runtime_platforms_c);
         
         // Hashes
         entry->pmdl_file_hash = *pmdl_hash;

@@ -44,6 +44,12 @@ static void renderfunc() {
     monkey_ctx.camera_view.pos[2] = cos(time) * 5;
     pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_VIEW);
     
+    // Update Texcoord 1
+    monkey_ctx.texcoord_mtx[1][0][0] = 0.5;
+    monkey_ctx.texcoord_mtx[1][1][1] = 1.0;
+    monkey_ctx.texcoord_mtx[1][0][3] = fmod(-time, 1.0);
+    monkey_ctx.texcoord_mtx[1][1][3] = 1.0;
+    
     // Draw monkey
     glDisable(GL_CULL_FACE);
     pmdl_draw(&monkey_ctx, monkey_model);
@@ -104,7 +110,7 @@ int main(int argc, char* argv[]) {
     
     // Setup GLUT
     glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+    glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
 	glutInitWindowPosition(100,100);
 	glutInitWindowSize(800,600);
 	glutCreateWindow("PSPL Test");
@@ -122,7 +128,7 @@ int main(int argc, char* argv[]) {
     // Setup monkey rendering context
     memset(monkey_ctx.texcoord_mtx, 0, 8*sizeof(pspl_matrix34_t));
     monkey_ctx.texcoord_mtx[0][0][0] = 0.5;
-    monkey_ctx.texcoord_mtx[0][1][1] = 0.5;
+    monkey_ctx.texcoord_mtx[0][1][1] = -0.5;
     monkey_ctx.texcoord_mtx[0][0][3] = 0.5;
     monkey_ctx.texcoord_mtx[0][1][3] = 0.5;
     

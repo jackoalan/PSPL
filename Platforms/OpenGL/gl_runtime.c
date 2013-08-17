@@ -125,7 +125,7 @@ static void load_object(pspl_runtime_psplc_t* object) {
     object->native_shader.tc_genmtx_arr = glGetUniformLocation(object->native_shader.program, "tc_generator_mats");
     
     // Texture map uniforms
-    GLint texs_uniform = glGetUniformLocation(object->native_shader.program, "texs");
+    GLint texs_uniform = glGetUniformLocation(object->native_shader.program, "tex_map");
     if (texs_uniform >= 0) {
         GLsizei map_count = (object->native_shader.config->texmap_count>16)?
                             16:object->native_shader.config->texmap_count;

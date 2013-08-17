@@ -622,7 +622,8 @@ static void __pspl_indexer_stub_file_post_augment(pspl_indexer_context_t* ctx,
     
     // Ensure object doesn't already exist
     for (i=0 ; i<ctx->stubs_count ; ++i)
-        if (!strcmp(ctx->stubs_array[i]->stub_source_path, path_in))
+        if (!strcmp(ctx->stubs_array[i]->stub_source_path, path_in) &&
+            !strcmp(ctx->stubs_array[i]->stub_source_path_ext, path_ext_in))
             return;
     
     // Allocate and add
@@ -1555,7 +1556,8 @@ void pspl_indexer_stub_membuf_augment(pspl_indexer_context_t* ctx,
     
     // Ensure object doesn't already exist
     for (i=0 ; i<ctx->stubs_count ; ++i)
-        if (!strcmp(ctx->stubs_array[i]->stub_source_path, path_in))
+        if (!strcmp(ctx->stubs_array[i]->stub_source_path, path_in) &&
+            !strcmp(ctx->stubs_array[i]->stub_source_path_ext, path_ext_in))
             return;
     
     // Allocate and add

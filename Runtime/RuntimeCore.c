@@ -1810,6 +1810,8 @@ const pspl_runtime_arc_file_t* pspl_runtime_get_archived_file_from_hash(const ps
     const _pspl_runtime_arc_file_t* file = NULL;
     for (i=0 ; i<package->file_count ; ++i) {
         file = &package->file_array[i];
+        char hash_str[PSPL_HASH_STRING_LEN];
+        pspl_hash_fmt(hash_str, &file->public.hash);
         for (j=0 ; j<(sizeof(pspl_hash)/4) ; ++j) {
             if (hash->w[j] != file->public.hash.w[j]) {
                 file = NULL;
