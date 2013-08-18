@@ -85,8 +85,8 @@ static inline int is_position(const char* str) {return (*str == 'p' ||
 static inline int is_normal(const char* str) {return (*str == 'n' ||
                                                       *str == 'N');}
 
-static inline int is_texcoord(const char* str) {return (*str == 't' ||
-                                                        *str == 'T');}
+static inline int is_texcoord(const char* str) {return (*str == 'u' ||
+                                                        *str == 'U');}
 
 static inline int is_bonecount(const char* str) {return (*str == 'b' ||
                                                          *str == 'B');}
@@ -181,10 +181,10 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                 char* nametest = (char*)command_argv[0];
                 long name_idx = strtol(command_argv[0], &nametest, 10);
                 if ((unsigned)name_idx >= 10)
-                    pspl_error(-1, "Invalid TEXGEN usage", "texcoord generator index must be in range [0,9]");
+                    pspl_error(-1, "Invalid UV_GEN usage", "texcoord generator index must be in range [0,9]");
                 
                 if (nametest == command_argv[0])
-                    pspl_error(-1, "Invalid TEXGEN usage", "first argument must be texcoord generator index");
+                    pspl_error(-1, "Invalid UV_GEN usage", "first argument must be texcoord generator index");
                 
                 char* numtest = (char*)command_argv[1];
                 long idx = strtol(command_argv[1], &numtest, 10);
@@ -209,10 +209,10 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                     ++pspl_ir_state.vertex.tc_count;
                     
                 } else
-                    pspl_error(-1, "Invalid TEXGEN usage", "there must be *three* arguments with the UV generator index and a numeric index [0-7] indicating which UV layer should be used as coordinate source. Alternatively, the keyword `POSITION` or `NORMAL` may be used for dynamic coordinate source");
+                    pspl_error(-1, "Invalid UV_GEN usage", "there must be *two* arguments with the UV generator index and a numeric index [0-7] indicating which UV layer should be used as coordinate source. Alternatively, the keyword `POSITION` or `NORMAL` may be used for dynamic coordinate source");
                 
             } else
-                pspl_error(-1, "Invalid TEXGEN usage", "there must be *two* arguments: TEXGEN(<NAME>, <UV SOURCE>)");
+                pspl_error(-1, "Invalid UV_GEN usage", "there must be *two* arguments: UV_GEN(<GEN_IDX>, <UV SOURCE>)");
             
         } else if (!strcasecmp(current_heading->heading_name, "SHADER")) {
             
@@ -243,7 +243,7 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
             
         } else
             pspl_error(-1, "Invalid VERTEX heading usage",
-                       "under VERTEX heading, a command must be specified (BONE_COUNT or TEX_COORD)");
+                       "under VERTEX heading, a command must be specified (BONE_COUNT or UV_GEN)");
         
     } else if (!strcasecmp(current_heading->heading_name, "DEPTH")) {
         

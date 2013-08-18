@@ -214,6 +214,12 @@ class pmdl:
         collection_element_buffers = []
         collection_index_buffers = []
         
+        # Calculate size of header and padding bits
+        mesh_count_pad = 0
+        if (psize-4):
+            mesh_count_pad = (psize-4)%psize
+        shader_pointer_space = psize + ((28+psize)%psize)
+        
         # Begin generating individual collection buffers
         for i in range(len(self.draw_gen.collections)):
             header = bytearray()
@@ -227,18 +233,40 @@ class pmdl:
             collection_element_buffers.append(element_bytes)
             
             idx_buf = bytearray()
-            idx_buf += struct.pack(endian_char + 'I', len(primitive_meshes))
+            
+            # Collect mesh headers
+            mesh_headers = bytearray()
             for mesh_primitives in primitive_meshes:
+                
+                # Individual mesh bounding box
                 for comp in mesh_primitives['mesh'].bound_box[0]:
-                    idx_buf += struct.pack(endian_char + 'f', comp)
+                    mesh_headers += struct.pack(endian_char + 'f', comp)
                 for comp in mesh_primitives['mesh'].bound_box[6]:
-                    idx_buf += struct.pack(endian_char + 'f', comp)
+                    mesh_headers += struct.pack(endian_char + 'f', comp)
+                
+                # Individual mesh shader index
                 if len(mesh_primitives['mesh'].data.materials):
                     shader_idx = self.get_shader_index(mesh_primitives['mesh'].data.materials[0].name)
                 else:
                     shader_idx = -1
-                idx_buf += struct.pack(endian_char + 'i', shader_idx)
+                mesh_headers += struct.pack(endian_char + 'i', shader_idx)
+                    
+                # Individual mesh shader pointer space
+                for i in range(shader_pointer_space):
+                    mesh_headers.append(0)
+
+            # Insert padding before index buffers
+            mesh_headers_len = len(mesh_headers) + 8
+            mesh_headers_len_round = ROUND_UP_32(mesh_headers_len)
+            mesh_headers_len_pad = mesh_headers_len_round - mesh_headers_len
+            for i in range(mesh_headers_len_pad):
+                mesh_headers.append(0)
             
+            # Count of meshes and offset to index buffers (after this value)
+            idx_buf += struct.pack(endian_char + 'I', len(primitive_meshes))
+            idx_buf += struct.pack(endian_char + 'I', len(mesh_headers) + 8)
+            idx_buf += mesh_headers
+
             # Generate platform-specific portion of index buffer
             idx_buf += self.draw_gen.generate_index_buffer(primitive_meshes, endian_char, psize)
             

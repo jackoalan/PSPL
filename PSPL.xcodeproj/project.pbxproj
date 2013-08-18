@@ -54,6 +54,8 @@
 		E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3A1740578E003B06BF /* ReferenceGatherer.c */; };
 		E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3D17411620003B06BF /* ObjectIndexer.c */; };
 		E4A1640A17BB00BA00AF995B /* gx_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */; };
+		E4A6251917C184E80021764B /* TMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E5175CDA560079B62D /* TMRuntime.c */; };
+		E4A6251A17C18C810021764B /* PMDLRuntimeProcessing.c in Sources */ = {isa = PBXBuildFile; fileRef = E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */; };
 		E4AFAE96172D898B00F7A0BF /* Preprocessor.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE95172D898B00F7A0BF /* Preprocessor.c */; };
 		E4AFAE99172D899D00F7A0BF /* Compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE98172D899D00F7A0BF /* Compiler.c */; };
 		E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAEA117315D4000F7A0BF /* Buffer.c */; };
@@ -63,7 +65,6 @@
 		E4CD266B179F376300172F31 /* PMDLRuntimeLinAlgebraRef.c in Sources */ = {isa = PBXBuildFile; fileRef = E4CD266A179F374400172F31 /* PMDLRuntimeLinAlgebraRef.c */; };
 		E4CD266E179F39B800172F31 /* PMDLRuntimeLinAlgebraSSE.s in Sources */ = {isa = PBXBuildFile; fileRef = E4CD266D179F396E00172F31 /* PMDLRuntimeLinAlgebraSSE.s */; };
 		E4CE71F41785043D009F5932 /* RuntimeCore.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4916C175105FF006FCA59 /* RuntimeCore.c */; };
-		E4DC173B17BC29EE00679AE7 /* TMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E5175CDA560079B62D /* TMRuntime.c */; };
 		E4E4916F17510685006FCA59 /* PSPLCommon.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4916E17510684006FCA59 /* PSPLCommon.c */; };
 		E4E491731751094E006FCA59 /* gl_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E491721751094E006FCA59 /* gl_toolchain.c */; };
 		E4E4918517510B4D006FCA59 /* gl_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4917417510956006FCA59 /* gl_runtime.c */; };
@@ -71,7 +72,6 @@
 		E4E4918E1753FAD3006FCA59 /* pspl_available_runtime_extensions.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4918C1753FACF006FCA59 /* pspl_available_runtime_extensions.c */; };
 		E4E4918F1753FAD6006FCA59 /* pspl_available_toolchain_extensions.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4918D1753FACF006FCA59 /* pspl_available_toolchain_extensions.c */; };
 		E4FBB40817BE691B0026EA74 /* PMDLRuntimeProcessing.c in Sources */ = {isa = PBXBuildFile; fileRef = E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */; };
-		E4FBB40917BE69930026EA74 /* PMDLRuntimeProcessing.c in Sources */ = {isa = PBXBuildFile; fileRef = E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -134,7 +134,6 @@
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
 		E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PMDLRuntimeProcessing.c; sourceTree = "<group>"; };
 		E462EEA81778FC0200211193 /* gl_runtime_ios.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = gl_runtime_ios.m; sourceTree = "<group>"; };
-		E4874077178BA834009EAD1A /* DataGeneration.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = DataGeneration.md; sourceTree = "<group>"; };
 		E4874079178C62E8009EAD1A /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		E487407A178C63A6009EAD1A /* pmdl.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pmdl.py; sourceTree = "<group>"; };
 		E487407B178C63EE009EAD1A /* pmdl_par1_rigging.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pmdl_par1_rigging.py; sourceTree = "<group>"; };
@@ -144,7 +143,6 @@
 		E487407F178C6556009EAD1A /* pmdl_draw_collision.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pmdl_draw_collision.py; sourceTree = "<group>"; };
 		E48CCCBC1747D4D500DDDD63 /* ToolchainCrossWindows.cmake */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ToolchainCrossWindows.cmake; sourceTree = "<group>"; };
 		E48DD1FA1789D8D200D5FF05 /* Specification.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = Specification.md; sourceTree = "<group>"; };
-		E48DD1FB178A2B4E00D5FF05 /* VertexShaderRigging.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = VertexShaderRigging.md; sourceTree = "<group>"; };
 		E48FF55E1764CE15000231AA /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E48FF55F1764CF29000231AA /* IRToolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = IRToolchain.c; sourceTree = "<group>"; };
 		E48FF5611764CF31000231AA /* IRRuntime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = IRRuntime.c; sourceTree = "<group>"; };
@@ -660,8 +658,6 @@
 				E4AFAE881726DEC800F7A0BF /* README.md */,
 				E44577F01781FA10003EE09C /* Blender */,
 				E48DD1FA1789D8D200D5FF05 /* Specification.md */,
-				E48DD1FB178A2B4E00D5FF05 /* VertexShaderRigging.md */,
-				E4874077178BA834009EAD1A /* DataGeneration.md */,
 				E44577BD1781DBA4003EE09C /* CMakeLists.txt */,
 				E4CE71F5178509D2009F5932 /* PMDLCommon.h */,
 				E44577BE1781DC4F003EE09C /* PMDLToolchain.c */,
@@ -969,8 +965,8 @@
 				E464158117AAF3EF00CC1CC2 /* RuntimeThreads.c in Sources */,
 				E44577C11781DDAE003EE09C /* PMDLRuntime.c in Sources */,
 				E4461F7E17B31EFD0039B479 /* hash_builtin.c in Sources */,
-				E4DC173B17BC29EE00679AE7 /* TMRuntime.c in Sources */,
-				E4FBB40917BE69930026EA74 /* PMDLRuntimeProcessing.c in Sources */,
+				E4A6251917C184E80021764B /* TMRuntime.c in Sources */,
+				E4A6251A17C18C810021764B /* PMDLRuntimeProcessing.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
 				E4CD266E179F39B800172F31 /* PMDLRuntimeLinAlgebraSSE.s in Sources */,
 				E4CD266B179F376300172F31 /* PMDLRuntimeLinAlgebraRef.c in Sources */,

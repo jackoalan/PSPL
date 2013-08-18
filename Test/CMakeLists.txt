@@ -18,6 +18,7 @@ else ()
 find_package(PSPL-Native REQUIRED)
 set_pspl_platforms(GL2)
 
+
 pspl_add_executable(pspl-test test_mac.c)
 find_library(GL_LIB OpenGL)
 find_library(GLUT_LIB glut)

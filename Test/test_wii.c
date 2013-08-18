@@ -64,7 +64,7 @@ static void renderfunc() {
     // Update Texcoord 1
     monkey_ctx.texcoord_mtx[1][0][0] = 0.5;
     monkey_ctx.texcoord_mtx[1][1][1] = 1.0;
-    monkey_ctx.texcoord_mtx[1][0][3] = fmod(-time, 1.0);
+    monkey_ctx.texcoord_mtx[1][0][3] = fmodf(-time, 1.0);
     monkey_ctx.texcoord_mtx[1][1][3] = 1.0;
     
     // Draw monkey
@@ -163,7 +163,7 @@ int main(int argc, char* argv[]) {
     // Setup monkey rendering context
     memset(monkey_ctx.texcoord_mtx, 0, 8*sizeof(pspl_matrix34_t));
     monkey_ctx.texcoord_mtx[0][0][0] = 1.0;
-    monkey_ctx.texcoord_mtx[0][1][1] = 1.0;
+    monkey_ctx.texcoord_mtx[0][1][1] = -1.0;
     monkey_ctx.texcoord_mtx[0][0][3] = 1.0;
     monkey_ctx.texcoord_mtx[0][1][3] = 1.0;
     

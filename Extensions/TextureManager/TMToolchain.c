@@ -267,7 +267,7 @@ static void sample_direc(const pspl_toolchain_context_t* driver_context,
     if (!argc)
         pspl_error(-1, "Incomplete use of [SAMPLE] directive",
                    "must follow `SAMPLE <tex_file> [LAYER <layer_name>] "
-                   "[MIPMAP] UV <uv_key>` syntax");
+                   "[MIPMAP] UV <texcoord_index>` syntax");
     
     int i;
     
@@ -319,7 +319,7 @@ static void sample_direc(const pspl_toolchain_context_t* driver_context,
     if (!uv)
         pspl_error(-1, "Incomplete use of [SAMPLE] directive",
                    "missing required 'UV' argument in `SAMPLE <tex_file> "
-                   "[LAYER <layer_name>] [MIPMAP] UV <TEXGEN_IDX>` syntax");
+                   "[LAYER <layer_name>] [MIPMAP] UV <texcoord_index>` syntax");
     
     // Determine if file was already cached for this PSPLC (allows shared bindings)
     size_t name_len = strlen(convert_state.name);

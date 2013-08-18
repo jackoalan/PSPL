@@ -42,7 +42,7 @@ macro(add_pspl_package target_name)
         endif()
         add_custom_command(OUTPUT ${base}.psplc COMMAND ${PSPL_BINARY_LOC} ARGS 
                            -c -o ${base}.psplc -G ${base}.psplg -S ${CMAKE_BINARY_DIR} ${PSPL_TARGET_PLATFORMS} ${path}
-                           DEPENDS ${PSPL_REFLIST})
+                           DEPENDS ${PSPL_REFLIST} ${source})
         list(APPEND objects ${base}.psplc)
       else()
         message(WARNING "Unable to add ${source} to PSPL target ${target_name}; file extension must be `.pspl`")

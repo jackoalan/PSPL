@@ -114,6 +114,7 @@ typedef struct {
     
     float mesh_aabb[2][3];
     int32_t shader_index;
+    const pspl_runtime_psplc_t* shader_pointer;
     
 } pmdl_mesh_header;
 
@@ -146,114 +147,123 @@ typedef struct {
 
 #pragma mark PMDL Loading / Unloading
 
-#if PMDL_GENERAL
-    /* This routine will load collection data for GENERAL draw format */
-    static int pmdl_init_collections_general(void* file_data) {
-        pmdl_header* header = file_data;
+/* This routine will load collection data for GENERAL draw format */
+static int pmdl_init_collections(const pspl_runtime_arc_file_t* pmdl_file) {
+    void* file_data = pmdl_file->file_data;
+    pmdl_header* header = file_data;
+    
+    // Shader hash array
+    pspl_hash* shader_hashes = file_data + header->shader_table_offset + sizeof(uint32_t);
+    
+    // Init collections
+    void* collection_buf = file_data + header->collection_offset;
+    pmdl_col_header* collection_header = collection_buf;
+    unsigned i;
+    for (i=0 ; i<header->collection_count; ++i) {
+        void* index_buf = collection_buf + collection_header->draw_idx_off;
         
-        // Init collections
-        void* collection_buf = file_data + header->collection_offset;
-        pmdl_col_header* collection_header = collection_buf;
-        int i;
-        for (i=0 ; i<header->collection_count; ++i) {
-            void* index_buf = collection_buf + collection_header->draw_idx_off;
-            
-            // Mesh count
-            uint32_t mesh_count = *(uint32_t*)index_buf;
-            index_buf += sizeof(uint32_t);
-            
-            // Mesh head array
-            index_buf += sizeof(pmdl_mesh_header) * mesh_count;
-            
-#           if PSPL_RUNTIME_PLATFORM_GL2
-                // VAO
-                GLuint* vao = (GLuint*)index_buf;
-                GLVAO(glGenVertexArrays)(1, vao);
-                GLVAO(glBindVertexArray)(*vao);
-                
-                // VBOs
-                struct {
-                    GLuint vert_buf, elem_buf;
-                } gl_bufs;
-                glGenBuffers(2, (GLuint*)&gl_bufs);
-                glBindBuffer(GL_ARRAY_BUFFER, gl_bufs.vert_buf);
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_bufs.elem_buf);
-                glBufferData(GL_ARRAY_BUFFER, collection_header->vert_buf_len,
-                             collection_buf + collection_header->vert_buf_off, GL_STATIC_DRAW);
-                glBufferData(GL_ELEMENT_ARRAY_BUFFER, collection_header->elem_buf_len,
-                             collection_buf + collection_header->elem_buf_off, GL_STATIC_DRAW);
-                
-                // Attributes
-                GLsizei buf_stride = 24 + collection_header->uv_count*8 + collection_header->bone_count*4;
-                
-                glEnableVertexAttribArray(0); // Position
-                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, buf_stride, 0);
-            glVertexPointer(3, GL_FLOAT, buf_stride, 0);
-                
-                glEnableVertexAttribArray(1); // Normal
-                glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, buf_stride, (GLvoid*)12);
-            glNormalPointer(GL_FLOAT, buf_stride, (GLvoid*)12);
-                
-                unsigned j;
-                GLuint idx = 2;
-                for (j=0 ; j<collection_header->uv_count ; ++j) { // UVs
-                    glEnableVertexAttribArray(idx);
-                    glVertexAttribPointer(idx, 2, GL_FLOAT, GL_FALSE, buf_stride, (GLvoid*)(GLsizeiptr)(24+8*j));
-                    ++idx;
-                }
-                
-                GLsizeiptr weight_offset = 24 + collection_header->uv_count*8;
-                for (j=0 ; j<collection_header->bone_count ; ++j) { // Bone Weight Coefficients
-                    glEnableVertexAttribArray(idx);
-                    glVertexAttribPointer(idx, 2, GL_FLOAT, GL_FALSE, buf_stride, (GLvoid*)(weight_offset+4*j));
-                    ++idx;
-                }
-            
-#           elif PSPL_RUNTIME_PLATFORM_D3D11
-            
-#           endif
-            
-            // ADVANCE!!
-            collection_header += sizeof(pmdl_col_header);
+        // Mesh count
+        uint32_t mesh_count = *(uint32_t*)index_buf;
+        uint32_t index_buf_offset = *(uint32_t*)(index_buf+4);
+        
+        // Mesh head array; lookup shader objects and cache pointers
+        pmdl_mesh_header* mesh_heads = index_buf+8;
+        unsigned j;
+        for (j=0 ; j<mesh_count ; ++j) {
+            pmdl_mesh_header* mesh_head = &mesh_heads[j];
+            if (mesh_head->shader_index < 0)
+                mesh_head->shader_pointer = NULL;
+            else
+                mesh_head->shader_pointer =
+                pspl_runtime_get_psplc_from_hash(pmdl_file->parent, &shader_hashes[mesh_head->shader_index], 0);
         }
+        index_buf += index_buf_offset;
         
-        return 0;
+#       if PSPL_RUNTIME_PLATFORM_GL2
+            // VAO
+            GLuint* vao = (GLuint*)index_buf;
+            GLVAO(glGenVertexArrays)(1, vao);
+            GLVAO(glBindVertexArray)(*vao);
+            
+            // VBOs
+            struct {
+                GLuint vert_buf, elem_buf;
+            } gl_bufs;
+            glGenBuffers(2, (GLuint*)&gl_bufs);
+            glBindBuffer(GL_ARRAY_BUFFER, gl_bufs.vert_buf);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_bufs.elem_buf);
+            glBufferData(GL_ARRAY_BUFFER, collection_header->vert_buf_len,
+                         collection_buf + collection_header->vert_buf_off, GL_STATIC_DRAW);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, collection_header->elem_buf_len,
+                         collection_buf + collection_header->elem_buf_off, GL_STATIC_DRAW);
+            
+            // Attributes
+            GLsizei buf_stride = 24 + collection_header->uv_count*8 + collection_header->bone_count*4;
+            
+            glEnableVertexAttribArray(0); // Position
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, buf_stride, 0);
         
+            glEnableVertexAttribArray(1); // Normal
+            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, buf_stride, (GLvoid*)12);
+        
+            GLuint idx = 2;
+            for (j=0 ; j<collection_header->uv_count ; ++j) { // UVs
+                glEnableVertexAttribArray(idx);
+                glVertexAttribPointer(idx, 2, GL_FLOAT, GL_FALSE, buf_stride, (GLvoid*)(GLsizeiptr)(24+8*j));
+                ++idx;
+            }
+            
+            GLsizeiptr weight_offset = 24 + collection_header->uv_count*8;
+            for (j=0 ; j<collection_header->bone_count ; ++j) { // Bone Weight Coefficients
+                glEnableVertexAttribArray(idx);
+                glVertexAttribPointer(idx, 2, GL_FLOAT, GL_FALSE, buf_stride, (GLvoid*)(weight_offset+4*j));
+                ++idx;
+            }
+        
+#       elif PSPL_RUNTIME_PLATFORM_D3D11
+        
+#       endif
+        
+        // ADVANCE!!
+        collection_header += sizeof(pmdl_col_header);
     }
+    
+    return 0;
+    
+}
 
-    /* This routine will unload collection data for GENERAL draw format */
-    static void pmdl_destroy_collections_general(void* file_data) {
-        pmdl_header* header = file_data;
+/* This routine will unload collection data for GENERAL draw format */
+static void pmdl_destroy_collections(void* file_data) {
+    pmdl_header* header = file_data;
 
-        // Init collections
-        void* collection_buf = file_data + header->collection_offset;
-        pmdl_col_header* collection_header = collection_buf;
-        int i;
-        for (i=0 ; i<header->collection_count; ++i) {
-            void* index_buf = collection_buf + collection_header->draw_idx_off;
+    // Init collections
+    void* collection_buf = file_data + header->collection_offset;
+    pmdl_col_header* collection_header = collection_buf;
+    int i;
+    for (i=0 ; i<header->collection_count; ++i) {
+        void* index_buf = collection_buf + collection_header->draw_idx_off;
+        
+#       if PSPL_RUNTIME_PLATFORM_GL2
+            GLuint* vao = (GLuint*)index_buf;
+            GLVAO(glBindVertexArray)(*vao);
             
-#           if PSPL_RUNTIME_PLATFORM_GL2
-                GLuint* vao = (GLuint*)index_buf;
-                GLVAO(glBindVertexArray)(*vao);
-                
-                struct {
-                    GLuint vert_buf, elem_buf;
-                } gl_bufs;
-                glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*)&gl_bufs.vert_buf);
-                glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, (GLint*)&gl_bufs.elem_buf);
-                glDeleteBuffers(2, (GLuint*)&gl_bufs);
-                GLVAO(glDeleteVertexArrays)(1, vao);
-            
-#           elif PSPL_RUNTIME_PLATFORM_D3D11
-            
-#           endif
-            
-            // ADVANCE!!
-            collection_header += sizeof(pmdl_col_header);
-        }
-            
+            struct {
+                GLuint vert_buf, elem_buf;
+            } gl_bufs;
+            glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*)&gl_bufs.vert_buf);
+            glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, (GLint*)&gl_bufs.elem_buf);
+            glDeleteBuffers(2, (GLuint*)&gl_bufs);
+            GLVAO(glDeleteVertexArrays)(1, vao);
+        
+#       elif PSPL_RUNTIME_PLATFORM_D3D11
+        
+#       endif
+        
+        // ADVANCE!!
+        collection_header += sizeof(pmdl_col_header);
     }
-#endif
+        
+}
 
 /* This routine will validate and load PMDL data into GPU */
 int pmdl_init(const pspl_runtime_arc_file_t* pmdl_file) {
@@ -282,9 +292,9 @@ int pmdl_init(const pspl_runtime_arc_file_t* pmdl_file) {
     }
     
     // Pointer size
-    if (header->pointer_size < sizeof(void*)) {
+    if (header->pointer_size != sizeof(void*)) {
         pspl_hash_fmt(hash, &pmdl_file->hash);
-        pspl_warn("Unable to init PMDL", "file `%s` pointer size too small (%d < %lu); skipping",
+        pspl_warn("Unable to init PMDL", "file `%s` pointer size doesn't match (%d != %lu); skipping",
                   hash, header->pointer_size, (unsigned long)sizeof(void*));
         return -1;
     }
@@ -325,16 +335,12 @@ int pmdl_init(const pspl_runtime_arc_file_t* pmdl_file) {
         pspl_runtime_get_psplc_from_hash(pmdl_file->parent, &shader_array[i], 1);
     
     // Load collections into GPU
-#   if PMDL_GENERAL
-        return pmdl_init_collections_general(pmdl_file->file_data);
-#   elif PMDL_GX
+    pmdl_init_collections(pmdl_file);
+#   if PMDL_GX
         DCStoreRange(pmdl_file->file_data, pmdl_file->file_len);
-        return 0;
-#   else
-        return 0;
 #   endif
     
-    
+    return 0;
 
 }
 
@@ -354,7 +360,7 @@ void pmdl_destroy(const pspl_runtime_arc_file_t* pmdl_file) {
     
     // Unload collections from GPU
 #   if PMDL_GENERAL
-        pmdl_destroy_collections_general(pmdl_file->file_data);
+        pmdl_destroy_collections(pmdl_file->file_data);
 #   endif
     
 }
@@ -569,43 +575,40 @@ static inline void null_shader() {
 static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file) {
     pmdl_header* header = pmdl_file->file_data;
 
-    int i,j;
+    int i,j,k;
 
     
     // Shader hash array
     pspl_hash* shader_hashes = pmdl_file->file_data + header->shader_table_offset + sizeof(uint32_t);
     
 #   if PMDL_GX
-    // Load in GX transformation context here
-    GX_LoadPosMtxImm(ctx->cached_modelview_mtx, GX_PNMTX0);
-    GX_LoadNrmMtxImm(ctx->cached_modelview_invxpose_mtx, GX_PNMTX0);
-    GX_LoadTexMtxImm(ctx->cached_modelview_invxpose_mtx, GX_TEXMTX9, GX_MTX3x4);
-    
-    unsigned gx_loaded_texcoord_mats = 0;
-    
-    GX_LoadProjectionMtx(ctx->cached_projection_mtx,
-                         (ctx->projection_type == PMDL_PERSPECTIVE)?
-                         GX_PERSPECTIVE:GX_ORTHOGRAPHIC);
+        // Load in GX transformation context here
+        GX_LoadPosMtxImm(ctx->cached_modelview_mtx, GX_PNMTX0);
+        GX_LoadNrmMtxImm(ctx->cached_modelview_invxpose_mtx, GX_PNMTX0);
+        GX_LoadTexMtxImm(ctx->cached_modelview_invxpose_mtx, GX_TEXMTX9, GX_MTX3x4);
+        
+        unsigned gx_loaded_texcoord_mats = 0;
+        
+        GX_LoadProjectionMtx(ctx->cached_projection_mtx,
+                             (ctx->projection_type == PMDL_PERSPECTIVE)?
+                             GX_PERSPECTIVE:GX_ORTHOGRAPHIC);
     
 #   endif
     
     
     void* collection_buf = pmdl_file->file_data + header->collection_offset;
     pmdl_col_header* collection_header = collection_buf;
-#   if PMDL_GENERAL
-    int k;
-#   endif
     for (i=0 ; i<header->collection_count; ++i) {
         
         void* index_buf = collection_buf + collection_header->draw_idx_off;
         
-        // Mesh count
+        // Mesh count and index buf offset
         uint32_t mesh_count = *(uint32_t*)index_buf;
-        index_buf += sizeof(uint32_t);
+        uint32_t index_buf_offset = *(uint32_t*)(index_buf+4);
         
         // Mesh head array
-        pmdl_mesh_header* mesh_heads = index_buf;
-        index_buf += sizeof(pmdl_mesh_header) * mesh_count;
+        pmdl_mesh_header* mesh_heads = index_buf+8;
+        index_buf += index_buf_offset;
         
 #       if PMDL_GENERAL
         
@@ -638,8 +641,8 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                         shader_obj = ctx->default_shader;
                     else
                         null_shader(ctx);
-                } else // TODO: ADD CACHING SPACE TO PMDL FOR SHADER!!!!
-                    shader_obj = pspl_runtime_get_psplc_from_hash(pmdl_file->parent, &shader_hashes[mesh_head->shader_index], 0);
+                } else
+                    shader_obj = mesh_head->shader_pointer;
                 
                 if (shader_obj) {
                     pspl_runtime_bind_psplc(shader_obj);
@@ -675,7 +678,6 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
 
         
 #       elif PMDL_GX
-            int k;
         
             // Set GX Attribute Table
             GX_ClearVtxDesc();
@@ -730,18 +732,20 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                         shader_obj = ctx->default_shader;
                     else
                         null_shader(ctx);
-                } else // TODO: ADD CACHING SPACE TO PMDL FOR SHADER!!!!
-                    shader_obj = pspl_runtime_get_psplc_from_hash(pmdl_file->parent, &shader_hashes[mesh_head->shader_index], 0);
+                } else
+                    shader_obj = mesh_head->shader_pointer;
                 
                 if (shader_obj) {
                     
                     // Load remaining texture coordinate matrices here
-                    if (shader_obj->native_shader.config->texgen_count > gx_loaded_texcoord_mats)
+                    if (shader_obj->native_shader.config->texgen_count > gx_loaded_texcoord_mats) {
                         for (k=gx_loaded_texcoord_mats ; k<shader_obj->native_shader.config->texgen_count ; ++k) {
                             GX_LoadTexMtxImm(ctx->texcoord_mtx[k], GX_TEXMTX0 + (k*3), GX_MTX2x4);
                             if (shader_obj->native_shader.config->using_texcoord_normal)
                                 GX_LoadTexMtxImm(ctx->texcoord_mtx[k], GX_DTTMTX0 + (k*3), GX_MTX3x4);
                         }
+                        gx_loaded_texcoord_mats = shader_obj->native_shader.config->texgen_count;
+                    }
                     
                     if (shader_obj->native_shader.config->using_texcoord_normal)
                         GX_LoadTexMtxImm(ctx->cached_modelview_invxpose_mtx, GX_TEXMTX9, GX_MTX3x4);
@@ -751,6 +755,23 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                     pspl_runtime_bind_psplc(shader_obj);
 
                 }
+                
+                GX_SetTexCoordGen2(GX_TEXCOORD0, GX_TG_MTX3x4, GX_TG_NRM, GX_TEXMTX9, GX_TRUE, GX_DTTMTX0);
+                GX_SetNumTexGens(1);
+                
+                GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLORNULL);
+                GX_SetTevColorOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+                GX_SetTevColorIn(GX_TEVSTAGE0, GX_CC_TEXC, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO);
+                GX_SetTevAlphaOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+                GX_SetTevAlphaIn(GX_TEVSTAGE0, GX_CA_TEXA, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO);
+                
+                GX_SetTevOrder(GX_TEVSTAGE1, GX_TEXCOORD0, GX_TEXMAP1, GX_COLORNULL);
+                GX_SetTevColorOp(GX_TEVSTAGE1, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+                GX_SetTevColorIn(GX_TEVSTAGE1, GX_CC_TEXC, GX_CC_ZERO, GX_CC_ZERO, GX_CC_CPREV);
+                GX_SetTevAlphaOp(GX_TEVSTAGE1, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+                GX_SetTevAlphaIn(GX_TEVSTAGE1, GX_CA_TEXA, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
+                
+                GX_SetNumTevStages(2);
                 
                 // Draw Mesh
                 GX_CallDispList(buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);

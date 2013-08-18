@@ -500,7 +500,7 @@ static void bind_object(pspl_runtime_psplc_t* object) {
                     
 #                   elif PSPL_RUNTIME_PLATFORM_GX
                         GX_LoadTexObj(&ent->texture_arr[j], GX_TEXMAP0+j);
-                    
+
 #                   endif
                 }
 #           endif
