@@ -15,8 +15,8 @@
 
 #ifndef _WIN32
 #include <sys/ioctl.h>
-#include <sys/param.h>
 #endif
+#include <sys/param.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -854,7 +854,8 @@ static int load_psplp(pspl_runtime_package_t* package) {
         // Populate extension set
         unsigned int psplc_extension_count = off_header->extension_name_table_c;
         const char* psplc_extension_name = (char*)strings_data;
-        package->ext_array = calloc(psplc_extension_count+1, sizeof(pspl_extension_t*));
+        package->ext_array =
+        pspl_allocate_indexing_block((psplc_extension_count+1) * sizeof(pspl_extension_t*));
         for (j=0 ; j<psplc_extension_count ; ++j) {
             
             // Lookup
@@ -932,8 +933,8 @@ static int load_psplp(pspl_runtime_package_t* package) {
         const void* i1_table_cur = i1_table;
         
         // Allocate main table
-        _pspl_runtime_psplc_t* dest_table = calloc(psplp_header->psplc_count,
-                                                   sizeof(_pspl_runtime_psplc_t));
+        _pspl_runtime_psplc_t* dest_table = pspl_allocate_indexing_block(psplp_header->psplc_count *
+                                                                         sizeof(_pspl_runtime_psplc_t));
         
         // Read in each PSPLC record
         for (j=0 ; j<psplp_header->psplc_count ; ++j) {
@@ -971,8 +972,8 @@ static int load_psplp(pspl_runtime_package_t* package) {
             off_tables_cur += sizeof(pspl_psplc_header_t);
                         
             // Extension heads
-            _pspl_object_index_t* ext_index_arr = calloc(psplc_head->extension_count,
-                                                         sizeof(_pspl_object_index_t));
+            _pspl_object_index_t* ext_index_arr = pspl_allocate_indexing_block(psplc_head->extension_count *
+                                                                               sizeof(_pspl_object_index_t));
             for (k=0 ; k<psplc_head->extension_count ; ++k) {
                 const pspl_object_array_extension_t* ext = off_tables_cur;
                 if (IS_PSPLP_BI) {
@@ -983,10 +984,10 @@ static int load_psplp(pspl_runtime_package_t* package) {
                 off_tables_cur += sizeof(pspl_object_array_extension_t);
                 
                 // Allocate arrays
-                _pspl_object_hash_record_t* hash_dest_table = calloc(ext->ext_hash_indexed_object_count,
-                                                                     sizeof(_pspl_object_hash_record_t));
-                pspl_object_int_record_t* int_dest_table = calloc(ext->ext_int_indexed_object_count,
-                                                                  sizeof(pspl_object_int_record_t));
+                _pspl_object_hash_record_t* hash_dest_table = pspl_allocate_indexing_block(ext->ext_hash_indexed_object_count *
+                                                                                           sizeof(_pspl_object_hash_record_t));
+                pspl_object_int_record_t* int_dest_table = pspl_allocate_indexing_block(ext->ext_int_indexed_object_count *
+                                                                                        sizeof(pspl_object_int_record_t));
                 
                 // Hashed indexing read-in
                 unsigned int h_arr_c = 0;
@@ -1046,7 +1047,7 @@ static int load_psplp(pspl_runtime_package_t* package) {
             }
             
             // Platform heads
-            _pspl_object_index_t* plat_index_arr = calloc(1, sizeof(_pspl_object_index_t));
+            _pspl_object_index_t* plat_index_arr = pspl_allocate_indexing_block(sizeof(_pspl_object_index_t));
             unsigned loaded_plat_count = 0;
             for (k=0 ; k<psplc_head->platform_count ; ++k) {
                 const pspl_object_array_extension_t* ext = off_tables_cur;
@@ -1062,10 +1063,10 @@ static int load_psplp(pspl_runtime_package_t* package) {
                     continue;
                 
                 // Allocate arrays
-                _pspl_object_hash_record_t* hash_dest_table = calloc(ext->ext_hash_indexed_object_count,
-                                                                     sizeof(_pspl_object_hash_record_t));
-                pspl_object_int_record_t* int_dest_table = calloc(ext->ext_int_indexed_object_count,
-                                                                  sizeof(pspl_object_int_record_t));
+                _pspl_object_hash_record_t* hash_dest_table = pspl_allocate_indexing_block(ext->ext_hash_indexed_object_count *
+                                                                                           sizeof(_pspl_object_hash_record_t));
+                pspl_object_int_record_t* int_dest_table = pspl_allocate_indexing_block(ext->ext_int_indexed_object_count *
+                                                                                        sizeof(pspl_object_int_record_t));
                 
                 // Hashed indexing read-in
                 unsigned int h_arr_c = 0;
@@ -1178,8 +1179,8 @@ static int load_psplp(pspl_runtime_package_t* package) {
         const void* ft_table_cur = ft_table;
         
         // Allocate main table
-        _pspl_runtime_arc_file_t* dest_table = calloc(off_header->file_table_c,
-                                                      sizeof(_pspl_runtime_arc_file_t));
+        _pspl_runtime_arc_file_t* dest_table = pspl_allocate_indexing_block(off_header->file_table_c *
+                                                                            sizeof(_pspl_runtime_arc_file_t));
         
         // Read in each file record
         unsigned int file_count = 0;
@@ -1484,23 +1485,23 @@ void pspl_runtime_unload_package(const pspl_runtime_package_t* package) {
         _pspl_runtime_release_psplc((pspl_runtime_psplc_t*)obj, 1);
         for (j=0 ; j<obj->ext_arr_c ; ++j) {
             const _pspl_object_index_t* idx = &obj->ext_arr[j];
-            free((void*)idx->h_arr);
-            free((void*)idx->i_arr);
+            pspl_free_indexing_block((void*)idx->h_arr);
+            pspl_free_indexing_block((void*)idx->i_arr);
         }
-        free((void*)obj->ext_arr);
+        pspl_free_indexing_block((void*)obj->ext_arr);
         for (j=0 ; j<obj->plat_arr_c ; ++j) {
             const _pspl_object_index_t* idx = &obj->plat_arr[j];
-            free((void*)idx->h_arr);
-            free((void*)idx->i_arr);
+            pspl_free_indexing_block((void*)idx->h_arr);
+            pspl_free_indexing_block((void*)idx->i_arr);
         }
-        free((void*)obj->plat_arr);
+        pspl_free_indexing_block((void*)obj->plat_arr);
     }
-    free((void*)package->psplc_array);
+    pspl_free_indexing_block((void*)package->psplc_array);
     for (i=0 ; i<package->file_count ; ++i) {
         const _pspl_runtime_arc_file_t* obj = &package->file_array[i];
         _pspl_runtime_release_archived_file((pspl_runtime_arc_file_t*)obj, 1);
     }
-    free((void*)package->file_array);
+    pspl_free_indexing_block((void*)package->file_array);
     package->provider_hooks->close(PACKAGE_PROVIDER(package));
     pspl_malloc_free(&package_mem_ctx, (void*)package);
 }
@@ -1718,14 +1719,19 @@ void pspl_runtime_release_psplc(const pspl_runtime_psplc_t* psplc) {
     _pspl_runtime_release_psplc((pspl_runtime_psplc_t*)psplc, 0);
 }
 
+/* Currently-bound PSPLC */
+static const pspl_runtime_psplc_t* BOUND_PSPLC = NULL;
+
 /**
- * Bind PSPLC representation to GPU (implicitly retains if unloaded)
+ * Bind PSPLC representation to GPU (implicitly retains if unloaded).
+ * Will return early if the requested PSPLC is already bound
  *
  * @param psplc PSPLC representation
  */
 void pspl_runtime_bind_psplc(const pspl_runtime_psplc_t* psplc) {
-    if (!psplc)
+    if (!psplc || psplc == BOUND_PSPLC)
         return;
+    BOUND_PSPLC = psplc;
     
     _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)psplc;
     if (!obj->ref_count)

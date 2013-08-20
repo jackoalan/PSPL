@@ -505,6 +505,9 @@ static void bind_object(pspl_runtime_psplc_t* object) {
                 }
 #           endif
             
+#           if PSPL_RUNTIME_PLATFORM_GX
+                GX_InvalidateTexAll();
+#           endif
             
             break;
         }

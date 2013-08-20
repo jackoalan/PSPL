@@ -10,7 +10,7 @@
 #define PSPL_D3D11_PSPLTypes_h
 
 #include <d3d11.h>
-#include "d3d_common.h"
+#include "d3d11_common.h"
 
 
 /* Direct3D-specific type for shader object */

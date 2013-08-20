@@ -43,7 +43,7 @@ endmacro(pspl_add_platform)
 
 
 # Add toolchain sources to a PSPL Platform
-if(NOT PSPL_WII)
+if(NOT (PSPL_CROSS_WII OR PSPL_CROSS_WIN32 OR PSPL_CROSS_WIN64))
 macro(pspl_add_platform_toolchain platform_name)
 
   list(FIND pspl_platform_list ${platform_name} plat_exist)
@@ -121,7 +121,7 @@ elseif(PSPL_TOOLCHAIN_HASHING STREQUAL WINDOWS)
 endif()
 
 # Add a PSPL Toolchain extension to an extension
-if(NOT PSPL_WII)
+if(NOT (PSPL_CROSS_WII OR PSPL_CROSS_WIN32 OR PSPL_CROSS_WIN64))
 macro(pspl_add_extension_toolchain extension_name)
 
   list(FIND pspl_extension_list ${extension_name} ext_exist)

@@ -11,29 +11,23 @@
 		E43C50F617B49C5C00F25742 /* RuntimeWiiHeaps.c in Sources */ = {isa = PBXBuildFile; fileRef = E4D6302417B47C6D001D1E0E /* RuntimeWiiHeaps.c */; };
 		E44577C01781DD57003EE09C /* PMDLToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E44577BE1781DC4F003EE09C /* PMDLToolchain.c */; };
 		E44577C11781DDAE003EE09C /* PMDLRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E44577BF1781DC5B003EE09C /* PMDLRuntime.c */; };
-		E44577C21781DDDA003EE09C /* d3d_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E49178175109D4006FCA59 /* d3d_toolchain.c */; };
+		E44577C21781DDDA003EE09C /* d3d11_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E49178175109D4006FCA59 /* d3d11_toolchain.c */; };
 		E44577C51781DE8A003EE09C /* gl_runtime_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = E462EEA81778FC0200211193 /* gl_runtime_ios.m */; };
 		E44577C71781DE8A003EE09C /* gl_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4917417510956006FCA59 /* gl_runtime.c */; };
 		E44577CA1781DE8A003EE09C /* RuntimeThreads.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C527141778B71900D1D822 /* RuntimeThreads.c */; };
 		E44577CB1781DE8A003EE09C /* PSPLCommon.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4916E17510684006FCA59 /* PSPLCommon.c */; };
-		E44577CC1781DE8A003EE09C /* CalcChain.c in Sources */ = {isa = PBXBuildFile; fileRef = E49E051C176A04AA002E1492 /* CalcChain.c */; };
 		E44577CD1781DE8A003EE09C /* pspl_available_runtime_extensions.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4918C1753FACF006FCA59 /* pspl_available_runtime_extensions.c */; };
 		E44577CE1781DE8A003EE09C /* SMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C5270E1778A32D00D1D822 /* SMRuntime.c */; };
-		E44577CF1781DE8A003EE09C /* IRRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E48FF5611764CF31000231AA /* IRRuntime.c */; };
 		E44577D21781DE8A003EE09C /* PSPLRuntimeThreads.h in Headers */ = {isa = PBXBuildFile; fileRef = E4C527101778A4FF00D1D822 /* PSPLRuntimeThreads.h */; };
 		E44577D91781DEB8003EE09C /* gl_runtime_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = E462EEA81778FC0200211193 /* gl_runtime_ios.m */; };
 		E44577DB1781DEB8003EE09C /* gl_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4917417510956006FCA59 /* gl_runtime.c */; };
 		E44577DD1781DEB8003EE09C /* TMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E5175CDA560079B62D /* TMRuntime.c */; };
 		E44577DE1781DEB8003EE09C /* RuntimeThreads.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C527141778B71900D1D822 /* RuntimeThreads.c */; };
 		E44577DF1781DEB8003EE09C /* PSPLCommon.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4916E17510684006FCA59 /* PSPLCommon.c */; };
-		E44577E01781DEB8003EE09C /* CalcChain.c in Sources */ = {isa = PBXBuildFile; fileRef = E49E051C176A04AA002E1492 /* CalcChain.c */; };
 		E44577E11781DEB8003EE09C /* pspl_available_runtime_extensions.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4918C1753FACF006FCA59 /* pspl_available_runtime_extensions.c */; };
 		E44577E21781DEB8003EE09C /* SMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C5270E1778A32D00D1D822 /* SMRuntime.c */; };
-		E44577E31781DEB8003EE09C /* IRRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E48FF5611764CF31000231AA /* IRRuntime.c */; };
 		E44577E61781DEB8003EE09C /* PSPLRuntimeThreads.h in Headers */ = {isa = PBXBuildFile; fileRef = E4C527101778A4FF00D1D822 /* PSPLRuntimeThreads.h */; };
 		E4461F7E17B31EFD0039B479 /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
-		E447F7FA17749CB90081E1DF /* CalcChain.c in Sources */ = {isa = PBXBuildFile; fileRef = E49E051C176A04AA002E1492 /* CalcChain.c */; };
-		E447F7FC1774A6780081E1DF /* CalcChain.c in Sources */ = {isa = PBXBuildFile; fileRef = E49E051C176A04AA002E1492 /* CalcChain.c */; };
 		E45034CE175813440079B62D /* libTEST-RUNTIME.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E4E4918017510B35006FCA59 /* libTEST-RUNTIME.a */; };
 		E45034CF175813490079B62D /* test_mac.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034B9175811FB0079B62D /* test_mac.c */; };
 		E45034D11758153E0079B62D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45034D01758153E0079B62D /* OpenGL.framework */; };
@@ -49,13 +43,15 @@
 		E464158117AAF3EF00CC1CC2 /* RuntimeThreads.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C527141778B71900D1D822 /* RuntimeThreads.c */; };
 		E4669F4417B1B1F3005B7BB5 /* test_wii.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034BB175812050079B62D /* test_wii.c */; };
 		E48FF5601764CF29000231AA /* IRToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E48FF55F1764CF29000231AA /* IRToolchain.c */; };
-		E48FF5631764D91C000231AA /* IRRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E48FF5611764CF31000231AA /* IRRuntime.c */; };
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
 		E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3A1740578E003B06BF /* ReferenceGatherer.c */; };
 		E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3D17411620003B06BF /* ObjectIndexer.c */; };
 		E4A1640A17BB00BA00AF995B /* gx_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */; };
-		E4A6251917C184E80021764B /* TMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E5175CDA560079B62D /* TMRuntime.c */; };
 		E4A6251A17C18C810021764B /* PMDLRuntimeProcessing.c in Sources */ = {isa = PBXBuildFile; fileRef = E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */; };
+		E4A6251B17C3AD6D0021764B /* TMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E5175CDA560079B62D /* TMRuntime.c */; };
+		E4A6251F17C3CC600021764B /* d3d11_runtime_interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4C5E8BA177E826B00D73E7D /* d3d11_runtime_interface.cpp */; };
+		E4A6252017C3CCB00021764B /* d3d11_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4917A175109DD006FCA59 /* d3d11_runtime.c */; };
+		E4A6252217C3D61F0021764B /* test_win.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E45034BD175812110079B62D /* test_win.cpp */; };
 		E4AFAE96172D898B00F7A0BF /* Preprocessor.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE95172D898B00F7A0BF /* Preprocessor.c */; };
 		E4AFAE99172D899D00F7A0BF /* Compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE98172D899D00F7A0BF /* Compiler.c */; };
 		E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAEA117315D4000F7A0BF /* Buffer.c */; };
@@ -111,7 +107,7 @@
 		E45034B8175811860079B62D /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; lineEnding = 0; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E45034B9175811FB0079B62D /* test_mac.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = test_mac.c; sourceTree = "<group>"; };
 		E45034BB175812050079B62D /* test_wii.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = test_wii.c; sourceTree = "<group>"; };
-		E45034BD175812110079B62D /* test_win.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = test_win.c; sourceTree = "<group>"; };
+		E45034BD175812110079B62D /* test_win.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = test_win.cpp; sourceTree = "<group>"; };
 		E45034C31758131E0079B62D /* TEST-APP */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "TEST-APP"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E45034D01758153E0079B62D /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/System/Library/Frameworks/OpenGL.framework; sourceTree = DEVELOPER_DIR; };
 		E45034D2175815420079B62D /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk/System/Library/Frameworks/GLUT.framework; sourceTree = DEVELOPER_DIR; };
@@ -163,6 +159,7 @@
 		E49E63BD17BEA995002550A7 /* MonkeyMaterial.psd */ = {isa = PBXFileReference; lastKnownFileType = file; path = MonkeyMaterial.psd; sourceTree = "<group>"; };
 		E49E63BE17BEAD8F002550A7 /* PSPL-RTConfig.cmake.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = "PSPL-RTConfig.cmake.in"; sourceTree = "<group>"; };
 		E4A1640B17BB143C00AF995B /* pspl.1.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = pspl.1.html; sourceTree = "<group>"; };
+		E4A6251D17C3CC100021764B /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E4AF3F7717B9DE7100D21DC6 /* pspl.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = pspl.1; sourceTree = "<group>"; };
 		E4AFAE28171C92B900F7A0BF /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		E4AFAE29171C92BE00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
@@ -223,7 +220,7 @@
 		E4C527141778B71900D1D822 /* RuntimeThreads.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = RuntimeThreads.c; sourceTree = "<group>"; };
 		E4C5E8B3177E04A600D73E7D /* TMRuntime_d3d11.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TMRuntime_d3d11.cpp; sourceTree = "<group>"; };
 		E4C5E8B4177E04A600D73E7D /* TMRuntime_d3d11.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMRuntime_d3d11.h; sourceTree = "<group>"; };
-		E4C5E8B9177E813B00D73E7D /* d3d_common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = d3d_common.h; sourceTree = "<group>"; };
+		E4C5E8B9177E813B00D73E7D /* d3d11_common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = d3d11_common.h; sourceTree = "<group>"; };
 		E4C5E8BA177E826B00D73E7D /* d3d11_runtime_interface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = d3d11_runtime_interface.cpp; sourceTree = "<group>"; };
 		E4C5E8BB177E826C00D73E7D /* d3d11_runtime_interface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = d3d11_runtime_interface.h; sourceTree = "<group>"; };
 		E4CD266A179F374400172F31 /* PMDLRuntimeLinAlgebraRef.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PMDLRuntimeLinAlgebraRef.c; sourceTree = "<group>"; };
@@ -241,8 +238,8 @@
 		E4E4917417510956006FCA59 /* gl_runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gl_runtime.c; sourceTree = "<group>"; };
 		E4E49176175109A3006FCA59 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E4E49177175109B7006FCA59 /* D3D11_PSPLTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = D3D11_PSPLTypes.h; sourceTree = "<group>"; };
-		E4E49178175109D4006FCA59 /* d3d_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = d3d_toolchain.c; sourceTree = "<group>"; };
-		E4E4917A175109DD006FCA59 /* d3d_runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = d3d_runtime.c; sourceTree = "<group>"; };
+		E4E49178175109D4006FCA59 /* d3d11_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = d3d11_toolchain.c; sourceTree = "<group>"; };
+		E4E4917A175109DD006FCA59 /* d3d11_runtime.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = d3d11_runtime.c; sourceTree = "<group>"; };
 		E4E4918017510B35006FCA59 /* libTEST-RUNTIME.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libTEST-RUNTIME.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E4E4918C1753FACF006FCA59 /* pspl_available_runtime_extensions.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = pspl_available_runtime_extensions.c; path = build/pspl_available_runtime_extensions.c; sourceTree = "<group>"; };
 		E4E4918D1753FACF006FCA59 /* pspl_available_toolchain_extensions.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = pspl_available_toolchain_extensions.c; path = build/pspl_available_toolchain_extensions.c; sourceTree = "<group>"; };
@@ -309,7 +306,7 @@
 				E45034D01758153E0079B62D /* OpenGL.framework */,
 				E45034B9175811FB0079B62D /* test_mac.c */,
 				E45034BB175812050079B62D /* test_wii.c */,
-				E45034BD175812110079B62D /* test_win.c */,
+				E45034BD175812110079B62D /* test_win.cpp */,
 				E49E63BA17BEA92A002550A7 /* monkey.pspl */,
 				E49E63BB17BEA978002550A7 /* monkey.blend */,
 				E49E63BC17BEA98F002550A7 /* MonkeyMaterial.pxm */,
@@ -442,6 +439,20 @@
 			path = Hash;
 			sourceTree = "<group>";
 		};
+		E4A6251C17C3CBD10021764B /* 11 */ = {
+			isa = PBXGroup;
+			children = (
+				E4E49176175109A3006FCA59 /* CMakeLists.txt */,
+				E4E49177175109B7006FCA59 /* D3D11_PSPLTypes.h */,
+				E4C5E8B9177E813B00D73E7D /* d3d11_common.h */,
+				E4E49178175109D4006FCA59 /* d3d11_toolchain.c */,
+				E4E4917A175109DD006FCA59 /* d3d11_runtime.c */,
+				E4C5E8BB177E826C00D73E7D /* d3d11_runtime_interface.h */,
+				E4C5E8BA177E826B00D73E7D /* d3d11_runtime_interface.cpp */,
+			);
+			path = 11;
+			sourceTree = "<group>";
+		};
 		E4AFAE1E171C8F8E00F7A0BF = {
 			isa = PBXGroup;
 			children = (
@@ -566,13 +577,8 @@
 			isa = PBXGroup;
 			children = (
 				E4AFAE3F171C9E2C00F7A0BF /* README.md */,
-				E4E49176175109A3006FCA59 /* CMakeLists.txt */,
-				E4E49177175109B7006FCA59 /* D3D11_PSPLTypes.h */,
-				E4C5E8B9177E813B00D73E7D /* d3d_common.h */,
-				E4E49178175109D4006FCA59 /* d3d_toolchain.c */,
-				E4E4917A175109DD006FCA59 /* d3d_runtime.c */,
-				E4C5E8BB177E826C00D73E7D /* d3d11_runtime_interface.h */,
-				E4C5E8BA177E826B00D73E7D /* d3d11_runtime_interface.cpp */,
+				E4A6251D17C3CC100021764B /* CMakeLists.txt */,
+				E4A6251C17C3CBD10021764B /* 11 */,
 			);
 			path = Direct3D;
 			sourceTree = "<group>";
@@ -891,11 +897,12 @@
 				E44577C51781DE8A003EE09C /* gl_runtime_ios.m in Sources */,
 				E44577C71781DE8A003EE09C /* gl_runtime.c in Sources */,
 				E44577CA1781DE8A003EE09C /* RuntimeThreads.c in Sources */,
+				E4A6252217C3D61F0021764B /* test_win.cpp in Sources */,
 				E44577CB1781DE8A003EE09C /* PSPLCommon.c in Sources */,
-				E44577CC1781DE8A003EE09C /* CalcChain.c in Sources */,
+				E4A6251F17C3CC600021764B /* d3d11_runtime_interface.cpp in Sources */,
+				E4A6252017C3CCB00021764B /* d3d11_runtime.c in Sources */,
 				E44577CD1781DE8A003EE09C /* pspl_available_runtime_extensions.c in Sources */,
 				E44577CE1781DE8A003EE09C /* SMRuntime.c in Sources */,
-				E44577CF1781DE8A003EE09C /* IRRuntime.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -911,10 +918,8 @@
 				E44577DE1781DEB8003EE09C /* RuntimeThreads.c in Sources */,
 				E44577DF1781DEB8003EE09C /* PSPLCommon.c in Sources */,
 				E4FBB40817BE691B0026EA74 /* PMDLRuntimeProcessing.c in Sources */,
-				E44577E01781DEB8003EE09C /* CalcChain.c in Sources */,
 				E44577E11781DEB8003EE09C /* pspl_available_runtime_extensions.c in Sources */,
 				E44577E21781DEB8003EE09C /* SMRuntime.c in Sources */,
-				E44577E31781DEB8003EE09C /* IRRuntime.c in Sources */,
 				E4669F4417B1B1F3005B7BB5 /* test_wii.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -940,7 +945,7 @@
 				E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */,
 				E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */,
 				E44577C01781DD57003EE09C /* PMDLToolchain.c in Sources */,
-				E44577C21781DDDA003EE09C /* d3d_toolchain.c in Sources */,
+				E44577C21781DDDA003EE09C /* d3d11_toolchain.c in Sources */,
 				E45591D6174ADA8F00CE0A08 /* Packager.c in Sources */,
 				E45591D8174D60C100CE0A08 /* gx_toolchain.c in Sources */,
 				E43B8EBB174DC28900F8C5FB /* BuiltinsToolchain.c in Sources */,
@@ -952,7 +957,6 @@
 				E45034F3175D80FA0079B62D /* pspl_tm_config.c in Sources */,
 				E45034F51760DC220079B62D /* rgba_enc.c in Sources */,
 				E48FF5601764CF29000231AA /* IRToolchain.c in Sources */,
-				E447F7FA17749CB90081E1DF /* CalcChain.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -965,16 +969,14 @@
 				E464158117AAF3EF00CC1CC2 /* RuntimeThreads.c in Sources */,
 				E44577C11781DDAE003EE09C /* PMDLRuntime.c in Sources */,
 				E4461F7E17B31EFD0039B479 /* hash_builtin.c in Sources */,
-				E4A6251917C184E80021764B /* TMRuntime.c in Sources */,
+				E4A6251B17C3AD6D0021764B /* TMRuntime.c in Sources */,
 				E4A6251A17C18C810021764B /* PMDLRuntimeProcessing.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
 				E4CD266E179F39B800172F31 /* PMDLRuntimeLinAlgebraSSE.s in Sources */,
 				E4CD266B179F376300172F31 /* PMDLRuntimeLinAlgebraRef.c in Sources */,
-				E447F7FC1774A6780081E1DF /* CalcChain.c in Sources */,
 				E4CE71F41785043D009F5932 /* RuntimeCore.c in Sources */,
 				E4E4918E1753FAD3006FCA59 /* pspl_available_runtime_extensions.c in Sources */,
 				E4C5270F1778A36300D1D822 /* SMRuntime.c in Sources */,
-				E48FF5631764D91C000231AA /* IRRuntime.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

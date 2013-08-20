@@ -1,5 +1,5 @@
 //
-//  d3d_runtime.c
+//  d3d11_runtime.c
 //  PSPL
 //
 //  Created by Jack Andersen on 5/25/13.
@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <d3d11.h>
 #include <PSPLExtension.h>
-#include "d3d_common.h"
+#include "d3d11_common.h"
 #include "d3d11_runtime_interface.h"
 
 /* Runtime method to set the Direct3D device being accessed by all
@@ -40,7 +40,7 @@ static void load_object(pspl_runtime_psplc_t* object) {
     pspl_d3d11_create_constant_buffer(sizeof(pspl_matrix34_t)*(2+object->native_shader.config->uv_attr_count));
     
     
-    // Vertex
+    // Vertex Shader
     ID3DBlob* compiled_blob = NULL;
     pspl_data_object_t vert_shader_data;
     if (pspl_runtime_get_embedded_data_object_from_integer(object, D3D11_VERTEX_BINARY, &vert_shader_data) < 0) {
@@ -65,9 +65,9 @@ static void load_object(pspl_runtime_psplc_t* object) {
     // Pixel
     compiled_blob = NULL;
     pspl_data_object_t pix_shader_data;
-    if (pspl_runtime_get_embedded_data_object_from_integer(object, D3D11_VERTEX_BINARY, &pix_shader_data) < 0) {
+    if (pspl_runtime_get_embedded_data_object_from_integer(object, D3D11_PIXEL_BINARY, &pix_shader_data) < 0) {
         pspl_data_object_t pix_shader_source;
-        pspl_runtime_get_embedded_data_object_from_integer(object, D3D11_VERTEX_SOURCE, &pix_shader_source);
+        pspl_runtime_get_embedded_data_object_from_integer(object, D3D11_PIXEL_SOURCE, &pix_shader_source);
         void* data_out = NULL;
         size_t out_len = 0;
         if (pspl_d3d11_compile_pixel_shader(pix_shader_source.object_data, pix_shader_source.object_len,

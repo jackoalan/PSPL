@@ -336,6 +336,12 @@ int pspl_runtime_access_archived_file(const pspl_runtime_arc_file_t* file,
  */
 #define pspl_runtime_unaccess_archived_file(provider_hooks, provider_handle) (provider_hooks)->destroy_duplicate_handle(provider_handle)
 
+/* Direct3D stuff */
+#if _WIN32
+void pspl_d3d11_set_device(ID3D11Device* device);
+void pspl_d3d11_set_device_context(ID3D11DeviceContext* context);
+#endif
+
 /* Heap Stuff */
 #ifdef HW_RVL
 extern void* pspl_wii_allocate_media_block(size_t size);

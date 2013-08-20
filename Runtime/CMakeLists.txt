@@ -8,7 +8,7 @@ configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_runtime_platform_typefile
 
 # If targeting Wii, ensure WiiHeaps is included
 unset(WII_HEAPS_SRC)
-if(PSPL_WII)
+if(PSPL_CROSS_WII)
   set(WII_HEAPS_SRC RuntimeWiiHeaps.c)
 endif()
 

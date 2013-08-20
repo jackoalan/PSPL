@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
 
 # Determine which primary platform to build
-option(PSPL_WIN32 "Build with 32-bit Windows support using mingw32-gcc (both Toolchain and Runtime)" OFF)
-option(PSPL_WIN64 "Build with 64-bit Windows support using mingw32-gcc (both Toolchain and Runtime)" OFF)
-option(PSPL_WII "Build with Wii support using WiiStep's llvm macros (Runtime only)" OFF)
-if(PSPL_WIN32 OR PSPL_WIN64)
+option(PSPL_CROSS_WIN32 "Build with 32-bit Windows support using mingw32-gcc (both Toolchain and Runtime)" OFF)
+option(PSPL_CROSS_WIN64 "Build with 64-bit Windows support using mingw32-gcc (both Toolchain and Runtime)" OFF)
+option(PSPL_CROSS_WII "Build with Wii support using WiiStep's llvm macros (Runtime only)" OFF)
+if(PSPL_CROSS_WIN32 OR PSPL_CROSS_WIN64)
   set(CMAKE_TOOLCHAIN_FILE cmake/ToolchainCrossWindows.cmake)
   set(PSPL_TOOLCHAIN_TARGET_SYSTEM WINDOWS CACHE STRING
       "Select which platform to (cross) compile PSPL Toolchain for [NATIVE, WII, WINDOWS] (default WINDOWS)")
@@ -19,7 +19,7 @@ if(PSPL_WIN32 OR PSPL_WIN64)
   macro(pspl_target_link_libraries name)
     target_link_libraries(${name} ${ARGN})
   endmacro(pspl_target_link_libraries)
-elseif(PSPL_WII)
+elseif(PSPL_CROSS_WII)
   find_package(WiiStep REQUIRED)
   set(PSPL_TOOLCHAIN_TARGET_SYSTEM WII CACHE STRING
       "Select which platform to (cross) compile PSPL Toolchain for [NATIVE, WII, WINDOWS] (default WII)")
@@ -102,7 +102,7 @@ endif()
 # Runtime Threading API
 unset(RUN_THREAD_LIB)
 unset(RUN_THREAD_DEF)
-if(PSPL_WII)
+if(PSPL_CROSS_WII)
   set(RUN_THREAD_DEF PSPL_THREADING_OGC)
 elseif(GCD_FOUND)
   include_directories(${GCD_INCLUDE_DIR})
@@ -127,7 +127,7 @@ pspl_add_library(pspl_common STATIC PSPLCommon.c)
 ############################
 
 # Runtime platform options
-if(PSPL_WII)
+if(PSPL_CROSS_WII)
   set(PSPL_RUNTIME_PLATFORM GX CACHE STRING 
       "Select which platform to build runtime for [${pspl_platform_list}] (GX selected by default)")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL Darwin)
@@ -272,7 +272,7 @@ configure_file(${PSPL_SOURCE_DIR}/cmake/Templates/pspl_available_extensions.c.in
 ################
 
 # Target subdirectories
-if(NOT PSPL_WII)
+if(NOT (PSPL_CROSS_WII OR PSPL_CROSS_WIN32 OR PSPL_CROSS_WIN64))
   add_subdirectory(Toolchain)
 endif()
 
@@ -295,18 +295,18 @@ export(TARGETS pspl-rt
        pspl_common 
        FILE pspl-rt-targets.cmake)
 get_filename_component(PSPL_RT_TARGET_FILE ${PSPL_BINARY_DIR}/pspl-rt-targets.cmake ABSOLUTE)
-if(NOT PSPL_WII)
+if(NOT (PSPL_CROSS_WII OR PSPL_CROSS_WIN32 OR PSPL_CROSS_WIN64))
   get_target_property(PSPL_BINARY_LOC pspl LOCATION)
   configure_file(${PSPL_SOURCE_DIR}/cmake/PSPLConfig.cmake.in
                  PSPLConfig.cmake)
   export(PACKAGE PSPL)
 endif()
 
-if(PSPL_WII)
+if(PSPL_CROSS_WII)
   configure_file(${PSPL_SOURCE_DIR}/cmake/PSPL-RTConfig.cmake.in
                  PSPL-WiiConfig.cmake)
   export(PACKAGE PSPL-Wii)
-elseif(PSPL_WIN32 OR PSPL_WIN64)
+elseif(PSPL_CROSS_WIN32 OR PSPL_CROSS_WIN64)
   configure_file(${PSPL_SOURCE_DIR}/cmake/PSPL-RTConfig.cmake.in
                  PSPL-WinConfig.cmake)
   export(PACKAGE PSPL-Win)

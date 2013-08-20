@@ -89,7 +89,7 @@ So far, PSPL includes two pre-configured *cross-compiled platforms*:
 
 PSPL may be built for *Windows 7 and 8* against the *Direct3D 11 API* for runtime graphics.
 
-A **Windows Cross Compile** involves invoking `cmake -DPSPL_WIN64=1 <PSPL_SOURCE>` to make
+A **Windows Cross Compile** involves invoking `cmake -DPSPL_CROSS_WIN64=1 <PSPL_SOURCE>` to make
 a 64-bit build of *both* the PSPL Toolchain and Runtime.
 
 This process *requires* [MinGW-w64](http://mingw-w64.sourceforge.net) installed as a *compiler toolchain*. 
@@ -105,7 +105,7 @@ In the interest of demonstrating PSPL's flexibility, the PowerPC-driven, embedde
 known as [Wii](http://en.wikipedia.org/wiki/Wii) is also an included cross-compile. The 
 GameCube/Wii *GX API* provides runtime graphics.
 
-A **Wii Cross Compile** involves invoking `cmake -DPSPL_WII=1 <PSPL_SOURCE>`.
+A **Wii Cross Compile** involves invoking `cmake -DPSPL_CROSS_WII=1 <PSPL_SOURCE>`.
 Note that *only the runtime* is built when targeting Wii.
 
 This process *requires* cloning and building my other project, [WiiStep](https://github.com/jackoalan/WiiStep).

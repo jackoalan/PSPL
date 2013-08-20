@@ -104,25 +104,6 @@ void pspl_d3d11_use_pixel_shader(ID3D11PixelShader* shader) {
 }
 
 
-/* PSPL-IR routines - CALL THESE IN TOP-TO-BOTTOM ORDER!! */
-static int cur_mtx = 0;
-static D3D11_MAPPED_SUBRESOURCE rsrc;
-void pspl_ir_load_pos_mtx(pspl_matrix34_t* mtx) {
-    pspl_d3d11_device_context->Map(cur_const_buffer, 0, D3D11_MAP_WRITE, 0, &rsrc);
-    memcpy(rsrc.pData, mtx, sizeof(pspl_matrix34_t));
-}
-void pspl_ir_load_norm_mtx(pspl_matrix34_t* mtx) {
-    memcpy((uint8_t*)rsrc.pData + sizeof(pspl_matrix34_t), mtx, sizeof(pspl_matrix34_t));
-}
-void pspl_ir_load_uv_mtx(pspl_matrix34_t* mtx) {
-    memcpy((uint8_t*)rsrc.pData + (sizeof(pspl_matrix34_t)*(2+cur_mtx)), mtx, sizeof(pspl_matrix34_t));
-    ++cur_mtx;
-}
-void pspl_ir_load_finish() {
-    cur_mtx = 0;
-    pspl_d3d11_device_context->Unmap(cur_const_buffer, 0);
-    pspl_d3d11_device_context->VSSetConstantBuffers(0, 1, &cur_const_buffer);
-}
 
 
 void pspl_d3d11_destroy_something(IUnknown* something) {

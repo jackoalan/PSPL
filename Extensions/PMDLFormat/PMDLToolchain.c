@@ -17,6 +17,7 @@
 #define BLENDER_DEFAULT "/Applications/blender.app/Contents/MacOS/blender"
 #define BLENDER_BOOT_SCRIPT "/tmp/pmdl_blender_boot.py"
 #elif _WIN32
+#include <process.h>
 #define BLENDER_DEFAULT "C:/Program Files/Blender Foundation/Blender/blender.exe"
 #define BLENDER_BOOT_SCRIPT "C:/Windows/Temp/pmdl_blender_boot.py"
 #else
@@ -160,25 +161,40 @@ static int blender_convert(char* path_out, const char* path_in, const char* path
     else
         psize = "64-BIT";
     
+#   ifdef _WIN32
     
-    // Perform conversion
-    pid_t blender_pid;
-    if ((blender_pid = fork()) < 0)
-        pspl_error(-1, "Unable to Fork to Blender", "errno %d - %s", errno, strerror(errno));
+        // Perform conversion
+        int blender_return =
+        spawnlp(P_WAIT, blender_path, blender_path, "--background", path_in,
+                "-P", BLENDER_BOOT_SCRIPT, "--", suggested_path,
+                path_ext_in, target_draw_fmt, endianness, psize, NULL);
     
-    if (!blender_pid) { // Child process
-        execlp(blender_path, blender_path, "--background", path_in,
-               "-P", BLENDER_BOOT_SCRIPT, "--", suggested_path,
-               path_ext_in, target_draw_fmt, endianness, psize, NULL);
-        exit(0);
-    }
+        if (blender_return)
+            pspl_error(-1, "Blender did not complete PMDL conversion",
+                       "error code %d from Blender", blender_return);
     
-    // Parent process
-    int blender_return = 0;
-    waitpid(blender_pid, &blender_return, 0);
-    if (!WIFEXITED(blender_return) || WEXITSTATUS(blender_return))
-        pspl_error(-1, "Blender did not complete PMDL conversion",
-                   "error code %d from Blender", WEXITSTATUS(blender_return));
+#   else
+    
+        // Perform conversion
+        pid_t blender_pid;
+        if ((blender_pid = fork()) < 0)
+            pspl_error(-1, "Unable to Fork to Blender", "errno %d - %s", errno, strerror(errno));
+        
+        if (!blender_pid) { // Child process
+            execlp(blender_path, blender_path, "--background", path_in,
+                   "-P", BLENDER_BOOT_SCRIPT, "--", suggested_path,
+                   path_ext_in, target_draw_fmt, endianness, psize, NULL);
+            exit(0);
+        }
+        
+        // Parent process
+        int blender_return = 0;
+        waitpid(blender_pid, &blender_return, 0);
+        if (!WIFEXITED(blender_return) || WEXITSTATUS(blender_return))
+            pspl_error(-1, "Blender did not complete PMDL conversion",
+                       "error code %d from Blender", WEXITSTATUS(blender_return));
+    
+#   endif
     
     return 0;
     
