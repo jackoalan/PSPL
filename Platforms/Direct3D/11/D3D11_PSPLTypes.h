@@ -9,7 +9,7 @@
 #ifndef PSPL_D3D11_PSPLTypes_h
 #define PSPL_D3D11_PSPLTypes_h
 
-#include <d3d11.h>
+#include <PSPL/PSPLMinGWD3D11Support.h>
 #include "d3d11_common.h"
 
 

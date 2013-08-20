@@ -46,14 +46,24 @@ else()
   endmacro(pspl_target_link_libraries)
 endif()
 
-# Select Mac SDK
-set(OSX_SDK macosx10.9 CACHE STRING "Selected Mac OS X SDK")
 
 project(PSPL)
 
+# Build-platform specifics
+if(APPLE)
+  set(OSX_SDK macosx10.9 CACHE STRING "Selected Mac OS X SDK")
+  include(cmake/FindMacSDK.cmake)
+  include(cmake/FindGCD.cmake)
+  
+elseif(WIN32)
+  include(cmake/FindDirectX11.cmake)
+  include_directories(${DirectX11_INCLUDE_DIR})
+  add_definitions(-D __LITTLE_ENDIAN__=1)
+  
+endif()
+
 # Determine if GCD is available
-include(cmake/FindMacSDK.cmake)
-include(cmake/FindGCD.cmake)
+
 
 # Codebase `include` directory
 include_directories(include)
