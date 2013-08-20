@@ -162,6 +162,7 @@
 		E4A6251D17C3CC100021764B /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E4A6252317C414140021764B /* FindDirectX11.cmake */ = {isa = PBXFileReference; lastKnownFileType = text; path = FindDirectX11.cmake; sourceTree = "<group>"; };
 		E4A6252417C414140021764B /* FindPkgMacros.cmake */ = {isa = PBXFileReference; lastKnownFileType = text; path = FindPkgMacros.cmake; sourceTree = "<group>"; };
+		E4A6252517C41B330021764B /* PSPLMinGWD3D11Support.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PSPLMinGWD3D11Support.h; sourceTree = "<group>"; };
 		E4AF3F7717B9DE7100D21DC6 /* pspl.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = pspl.1; sourceTree = "<group>"; };
 		E4AFAE28171C92B900F7A0BF /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		E4AFAE29171C92BE00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
@@ -538,6 +539,7 @@
 				E4AFAE56171CA74A00F7A0BF /* PSPLRuntimeExtension.h */,
 				E44E3FE9176E3A9C00665937 /* PSPL_IR.h */,
 				E4C527101778A4FF00D1D822 /* PSPLRuntimeThreads.h */,
+				E4A6252517C41B330021764B /* PSPLMinGWD3D11Support.h */,
 			);
 			path = PSPL;
 			sourceTree = "<group>";
@@ -637,10 +639,10 @@
 			isa = PBXGroup;
 			children = (
 				E4AFAE77171EFF7900F7A0BF /* README.md */,
+				E4AFAE7C17218D8300F7A0BF /* Templates */,
 				E4A6252317C414140021764B /* FindDirectX11.cmake */,
 				E4A6252417C414140021764B /* FindPkgMacros.cmake */,
 				E48CCCBC1747D4D500DDDD63 /* ToolchainCrossWindows.cmake */,
-				E4AFAE7C17218D8300F7A0BF /* Templates */,
 				E4AFAE74171EF74600F7A0BF /* PSPLConfig.cmake.in */,
 				E49E63BE17BEAD8F002550A7 /* PSPL-RTConfig.cmake.in */,
 				E4AFAE76171EF78600F7A0BF /* PSPLExtensionMacros.cmake */,

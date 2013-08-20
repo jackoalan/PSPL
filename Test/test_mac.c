@@ -51,10 +51,10 @@ static void renderfunc() {
     monkey_ctx.texcoord_mtx[1][1][3] = 1.0;
     
     // Draw monkey
-    glDisable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     pmdl_draw(&monkey_ctx, monkey_model);
-    glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
-    glUseProgram(0);
+    //glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
+    //glUseProgram(0);
     
     if (!((frame_count)%10)) {
         double diff = time - last_render_time;
@@ -68,7 +68,7 @@ static void renderfunc() {
     snprintf(fps_str, 128, "FPS: %.f", fps);
     size_t fps_str_len = strlen(fps_str);
     
-    glDisable(GL_DEPTH_TEST);
+    //glDisable(GL_DEPTH_TEST);
     
     // Render
     /*

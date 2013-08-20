@@ -9,6 +9,7 @@ coefficients per-vertex for vertex-shader-driven skeletal evaluation.
 
 import struct
 import bpy
+import mathutils
 
 from . import pmdl_loop_vert
 
@@ -78,7 +79,6 @@ def _find_polygon_opposite_lvs(mesh, original_triangle, lv_a, lv_b):
             return triangle
 
     return None
-
 
 
 class pmdl_draw_general:
@@ -159,7 +159,8 @@ class pmdl_draw_general:
             # As long as there is a connected polygon to visit
             while temp_poly:
                 if 0 == len(tri_strip): # First triangle in strip
-                
+                    
+                    
                     # Add three loop-vert vertices to tri-strip
                     for poly_loop_idx in temp_poly.loop_indices:
                         poly_loop = mesh.loops[poly_loop_idx]
@@ -316,6 +317,13 @@ class pmdl_draw_general:
                 element_bytes += estruct.pack(last_elem)
                 element_bytes += estruct.pack(strip['strip'][0])
             
+                # If current element count is odd, add additional degenerate strip to make it even
+                # This ensures that the sub-strip has proper winding-order for backface culling
+                if (strip_len & 1):
+                    strip_len += 1
+                    element_bytes += estruct.pack(strip['strip'][0])
+
+
             # Primitive tri-strip byte array
             for idx in strip['strip']:
                 #print(idx)

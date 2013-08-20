@@ -6,6 +6,8 @@
 //
 //
 
+#include <stdio.h>
+
 #include <PSPLExtension.h>
 #include "d3d11_common.h"
 

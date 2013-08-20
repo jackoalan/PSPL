@@ -1719,19 +1719,15 @@ void pspl_runtime_release_psplc(const pspl_runtime_psplc_t* psplc) {
     _pspl_runtime_release_psplc((pspl_runtime_psplc_t*)psplc, 0);
 }
 
-/* Currently-bound PSPLC */
-static const pspl_runtime_psplc_t* BOUND_PSPLC = NULL;
 
 /**
  * Bind PSPLC representation to GPU (implicitly retains if unloaded).
- * Will return early if the requested PSPLC is already bound
  *
  * @param psplc PSPLC representation
  */
 void pspl_runtime_bind_psplc(const pspl_runtime_psplc_t* psplc) {
-    if (!psplc || psplc == BOUND_PSPLC)
+    if (!psplc)
         return;
-    BOUND_PSPLC = psplc;
     
     _pspl_runtime_psplc_t* obj = (_pspl_runtime_psplc_t*)psplc;
     if (!obj->ref_count)
