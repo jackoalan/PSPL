@@ -14,7 +14,14 @@ set_pspl_platforms(D3D11)
 pspl_add_executable(pspl-test test_win.cpp)
 pspl_target_link_libraries(pspl-test pspl-rt)
 
-else ()
+elseif (WIN32)
+
+find_package(PSPL-Native REQUIRED)
+set_pspl_platforms(D3D11)
+pspl_add_executable(pspl-test test_win.cpp)
+pspl_target_link_libraries(pspl-test pspl-rt)
+
+else()
 
 find_package(PSPL-Native REQUIRED)
 set_pspl_platforms(GL2)

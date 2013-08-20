@@ -160,6 +160,8 @@
 		E49E63BE17BEAD8F002550A7 /* PSPL-RTConfig.cmake.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = "PSPL-RTConfig.cmake.in"; sourceTree = "<group>"; };
 		E4A1640B17BB143C00AF995B /* pspl.1.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = pspl.1.html; sourceTree = "<group>"; };
 		E4A6251D17C3CC100021764B /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		E4A6252317C414140021764B /* FindDirectX11.cmake */ = {isa = PBXFileReference; lastKnownFileType = text; path = FindDirectX11.cmake; sourceTree = "<group>"; };
+		E4A6252417C414140021764B /* FindPkgMacros.cmake */ = {isa = PBXFileReference; lastKnownFileType = text; path = FindPkgMacros.cmake; sourceTree = "<group>"; };
 		E4AF3F7717B9DE7100D21DC6 /* pspl.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = pspl.1; sourceTree = "<group>"; };
 		E4AFAE28171C92B900F7A0BF /* COPYING */ = {isa = PBXFileReference; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		E4AFAE29171C92BE00F7A0BF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
@@ -635,6 +637,8 @@
 			isa = PBXGroup;
 			children = (
 				E4AFAE77171EFF7900F7A0BF /* README.md */,
+				E4A6252317C414140021764B /* FindDirectX11.cmake */,
+				E4A6252417C414140021764B /* FindPkgMacros.cmake */,
 				E48CCCBC1747D4D500DDDD63 /* ToolchainCrossWindows.cmake */,
 				E4AFAE7C17218D8300F7A0BF /* Templates */,
 				E4AFAE74171EF74600F7A0BF /* PSPLConfig.cmake.in */,
