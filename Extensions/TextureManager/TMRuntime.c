@@ -387,8 +387,8 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
                       tex_head->size.native.width, tex_head->size.native.height,
                       recurse_info.sub_fmt, GX_REPEAT, GX_REPEAT, (tex_head->num_mips > 1)?GX_TRUE:GX_FALSE);
         GX_InitTexObjUserData(&fill_struct->texture_arr[key], tex_data);
-        GX_LoadTexObj(&fill_struct->texture_arr[key], GX_TEXMAP0);
-        GX_InvalidateTexAll();
+        //GX_LoadTexObj(&fill_struct->texture_arr[key], GX_TEXMAP0);
+        //GX_InvalidateTexAll();
     
 #   elif PSPL_RUNTIME_PLATFORM_D3D11
         BYTE* tex_buf = malloc(image_size);

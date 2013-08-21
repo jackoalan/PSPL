@@ -668,6 +668,8 @@ typedef float Mtx33[3][3];
 
 void GX_Flush();
 
+void GX_Init();
+
 
 void GX_SetChanCtrl(s32 channel,u8 enable,u8 ambsrc,u8 matsrc,u8 litmask,u8 diff_fn,u8 attn_fn);
 

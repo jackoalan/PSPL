@@ -46,6 +46,8 @@
 #include <PSPL/PSPLCommon.h>
 #include "gx_offline.h"
 
+#define HW_RVL
+
 // Offline GX register state for building transaction
 static struct __gx_regdef gx_o;
 static struct __gx_regdef *__gx = &gx_o;
@@ -188,25 +190,103 @@ static u8 _gxtevcolid[9] = {0,1,0,1,0,1,7,5,6};
 static s32 __gx_onreset(s32 final);
 
 
-
 static void __GX_InitRevBits()
 {
-    s32 i;
+	s32 i;
+    
+	i=0;
+	while(i<8) {
+		__gx->VAT0reg[i] = 0x40000000;
+		__gx->VAT1reg[i] = 0x80000000;
+		GX_LOAD_CP_REG((0x0080|i),__gx->VAT1reg[i]);
+		i++;
+	}
+    
+	GX_LOAD_XF_REG(0x1000,0x3f);
+	GX_LOAD_XF_REG(0x1012,0x01);
+    
+	GX_LOAD_BP_REG(0x5800000f);
+    
+}
 
-    i=0;
-    while(i<8) {
-        __gx->VAT0reg[i] = 0x40000000;
-        __gx->VAT1reg[i] = 0x80000000;
-        GX_LOAD_CP_REG((0x0080|i),__gx->VAT1reg[i]);
-        i++;
-    }
+void GX_Init()
+{
+	s32 i,re0,re1;
 
-    GX_LOAD_XF_REG(0x1000,0x3f);
-    GX_LOAD_XF_REG(0x1012,0x01);
 
-    GX_LOAD_BP_REG(0x5800000f);
+     
+	__gx->gxFifoInited = 1;
+    
+	__gx->tevIndMask = 0xff;
+	__gx->tevIndMask = (__gx->tevIndMask&~0xff000000)|(_SHIFTL(0x0f,24,8));
+    
+	i=0;
+	re0 = 0xc0;
+	re1 = 0xc1;
+	while(i<16) {
+		__gx->tevColorEnv[i] = (__gx->tevColorEnv[i]&~0xff000000)|(_SHIFTL(re0,24,8));
+		__gx->tevAlphaEnv[i] = (__gx->tevAlphaEnv[i]&~0xff000000)|(_SHIFTL(re1,24,8));
+		re0 += 2; re1 += 2; i++;
+	}
+    
+	__gx->texCoordManually = 0;
+	__gx->dirtyState = 0;
+    
+	__gx->saveDLctx = 1;
+	__gx->gxFifoUnlinked = 0;
+    
+	__gx->sciTLcorner = (__gx->sciTLcorner&~0xff000000)|(_SHIFTL(0x20,24,8));
+	__gx->sciBRcorner = (__gx->sciBRcorner&~0xff000000)|(_SHIFTL(0x21,24,8));
+	__gx->lpWidth = (__gx->lpWidth&~0xff000000)|(_SHIFTL(0x22,24,8));
+	__gx->genMode = (__gx->genMode&~0xff000000)|(_SHIFTL(0x00,24,8));
+    
+	i=0;
+	re0 = 0x30;
+	re1 = 0x31;
+	while(i<8) {
+		__gx->suSsize[i] = (__gx->suSsize[i]&~0xff000000)|(_SHIFTL(re0,24,8));
+		__gx->suTsize[i] = (__gx->suTsize[i]&~0xff000000)|(_SHIFTL(re1,24,8));
+		re0 += 2; re1 += 2; i++;
+	}
+    
+	__gx->peZMode = (__gx->peZMode&~0xff000000)|(_SHIFTL(0x40,24,8));
+	__gx->peCMode0 = (__gx->peCMode0&~0xff000000)|(_SHIFTL(0x41,24,8));
+	__gx->peCMode1 = (__gx->peCMode1&~0xff000000)|(_SHIFTL(0x42,24,8));
+	__gx->peCntrl = (__gx->peCntrl&~0xff000000)|(_SHIFTL(0x43,24,8));
+    
+	i=0;
+	re0 = 0x25;
+	while(i<11) {
+		__gx->tevRasOrder[i] = (__gx->tevRasOrder[i]&~0xff000000)|(_SHIFTL(re0,24,8));
+		re0++; i++;
+	}
+
+    
+	i=0;
+	re0 = 0xf6;
+	while(i<8) {
+		__gx->tevSwapModeTable[i] = (__gx->tevSwapModeTable[i]&~0xff000000)|(_SHIFTL(re0,24,8));
+		re0++; i++;
+	}
+    
+	__gx->tevTexCoordEnable = 0;
+	__gx->perf0Mode = 35;
+	__gx->perf1Mode = 22;
+	__gx->cpPerfMode = 0;
+    
+	__GX_InitRevBits();
+    
+	i=0;
+	while(i<16) {
+		__gx->tevTexMap[i] = 0xff;
+		i++;
+	}
+    
 
 }
+
+
+
 
 static void __GX_FlushTextureState()
 {

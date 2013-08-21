@@ -59,6 +59,10 @@ static void instruction_hook(const pspl_toolchain_context_t* driver_context,
         // Begin GX transaction
         pspl_gx_offline_begin_transaction();
         
+        // Initialise state
+        GX_Init();
+        GX_SetCurrentMtx(GX_PNMTX0);
+        
         
         // Vertex state
         for (j=0 ; j<ir_state->vertex.tc_count ; ++j) {
@@ -154,36 +158,36 @@ static void instruction_hook(const pspl_toolchain_context_t* driver_context,
                 
                 GX_SetTevColorOp(tev_stage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
                 GX_SetTevColorIn(tev_stage, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO, stagesourcesc[0]);
-                GX_SetTevAlphaOp(tev_stage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
-                GX_SetTevAlphaIn(tev_stage, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, stagesourcesa[0]);
+                //GX_SetTevAlphaOp(tev_stage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+                //GX_SetTevAlphaIn(tev_stage, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, stagesourcesa[0]);
                 
             } else if (stage->stage_op == OP_MUL) {
                 
                 GX_SetTevColorOp(tev_stage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
                 GX_SetTevColorIn(tev_stage, GX_CC_ZERO, stagesourcesc[1], stagesourcesc[0], GX_CC_ZERO);
-                GX_SetTevAlphaOp(tev_stage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
-                GX_SetTevAlphaIn(tev_stage, GX_CA_ZERO, stagesourcesa[1], stagesourcesa[0], GX_CA_ZERO);
+                //GX_SetTevAlphaOp(tev_stage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+                //GX_SetTevAlphaIn(tev_stage, GX_CA_ZERO, stagesourcesa[1], stagesourcesa[0], GX_CA_ZERO);
                 
             } else if (stage->stage_op == OP_ADD) {
                 
                 GX_SetTevColorOp(tev_stage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
                 GX_SetTevColorIn(tev_stage, stagesourcesc[1], GX_CC_ZERO, GX_CC_ZERO, stagesourcesc[0]);
-                GX_SetTevAlphaOp(tev_stage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
-                GX_SetTevAlphaIn(tev_stage, stagesourcesa[1], GX_CA_ZERO, GX_CA_ZERO, stagesourcesa[0]);
+                //GX_SetTevAlphaOp(tev_stage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+                //GX_SetTevAlphaIn(tev_stage, stagesourcesa[1], GX_CA_ZERO, GX_CA_ZERO, stagesourcesa[0]);
                 
             } else if (stage->stage_op == OP_SUB) {
                 
                 GX_SetTevColorOp(tev_stage, GX_TEV_SUB, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
                 GX_SetTevColorIn(tev_stage, stagesourcesc[1], GX_CC_ZERO, GX_CC_ZERO, stagesourcesc[0]);
-                GX_SetTevAlphaOp(tev_stage, GX_TEV_SUB, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
-                GX_SetTevAlphaIn(tev_stage, stagesourcesa[1], GX_CA_ZERO, GX_CA_ZERO, stagesourcesa[0]);
+                //GX_SetTevAlphaOp(tev_stage, GX_TEV_SUB, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+                //GX_SetTevAlphaIn(tev_stage, stagesourcesa[1], GX_CA_ZERO, GX_CA_ZERO, stagesourcesa[0]);
                 
             } else if (stage->stage_op == OP_BLEND) {
                 
                 GX_SetTevColorOp(tev_stage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
                 GX_SetTevColorIn(tev_stage, stagesourcesc[0], stagesourcesc[2], stagesourcesc[1], GX_CC_ZERO);
-                GX_SetTevAlphaOp(tev_stage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
-                GX_SetTevAlphaIn(tev_stage, stagesourcesa[0], stagesourcesa[2], stagesourcesa[1], GX_CA_ZERO);
+                //GX_SetTevAlphaOp(tev_stage, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+                //GX_SetTevAlphaIn(tev_stage, stagesourcesa[0], stagesourcesa[2], stagesourcesa[1], GX_CA_ZERO);
                 
             }
             

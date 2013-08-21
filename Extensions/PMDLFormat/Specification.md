@@ -34,7 +34,7 @@ All PMDL sub-types have the following general data layout:
           This value marks the length of these regions (generally 4 or 8 bytes).
           This value is validated early on at load time. For instance,
           a 64-bit build of the PMDL runtime *rejects* PMDLs that hold pointers 
-          less than 8-bytes in size.
+          *not* 8-bytes in size.
     * Sub-type ([`PAR0`](#non-partitioned-models), [`PAR1`](#rigged-models), [`PAR2`](#partitioned-models))
     * Draw-buffer format ([`_GEN`](#general-draw-format), [`__GX`](#gx-draw-format), [`_COL`](#collision-draw-format))
     * Master [AABB](http://en.wikipedia.org/wiki/Bounding_volume) (2x points; 6x 32-bit floats; (XYZ mins, XYZ maxes))
@@ -158,8 +158,7 @@ Partitioned Models
 Finally, for efficient, **hierarchically-frustum-culled** *static-environment* rendering, 
 there is the **`PAR2`** format. This format allows a large, volumnous model to be 
 sub-divided using an [octree](http://en.wikipedia.org/wiki/Octree). The PMDL runtime employs recursive 
-[view-frustum culling](http://en.wikipedia.org/wiki/Hidden_surface_determination#Viewing_frustum_culling) via 
-[3D-planar geometry](http://en.wikipedia.org/wiki/Plane_%28geometry%29#Planes_embedded_in_3-dimensional_Euclidean_space) 
+[view-frustum culling](http://en.wikipedia.org/wiki/Hidden_surface_determination#Viewing_frustum_culling)
 against octree nodes when the model's draw routine is called. The octree subdivides the master 
 AABB in a uniform manner across three dimensions.
 
@@ -203,7 +202,10 @@ The General format is designed to operate *natively* with
     
 ### General Drawing Index Buffer Format ###
 
-* Pre-allocated space to store OpenGL *VAO* or Direct3D *DeviceContext*
+* 3xPointer-space structure to hold the following members
+    * OpenGL *VAO* or Direct3D *InputLayout*
+    * OpenGL *VBO* or Direct3D *Buffer* for Vertex attributes
+    * OpenGL *VBO* or Direct3D *Buffer* for Element indices
 * Mesh array (each variable length)
     * Primitive count (32-bit word)
     * Primitive array
