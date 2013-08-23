@@ -9,6 +9,10 @@
 #ifndef PSPL_PMDLRuntime_h
 #define PSPL_PMDLRuntime_h
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <PSPL/PSPLCommon.h>
 #include <PSPLRuntime.h>
 
@@ -187,6 +191,8 @@ void pmdl_vector3_matrix_mul(REGISTER_KEY pspl_matrix34_t mtx, REGISTER_KEY pspl
 #define pmdl_matrix_orthographic(m, ortho) _pmdl_matrix_orthographic((m), (ortho).top, (ortho).bottom, (ortho).left, (ortho).right, (ortho).near, (ortho).far)
 #define pmdl_matrix_perspective(m, persp) _pmdl_matrix_perspective((m), (persp).fov, (persp).aspect, (persp).near, (persp).far)
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif

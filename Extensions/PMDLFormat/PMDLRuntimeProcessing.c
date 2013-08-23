@@ -97,6 +97,7 @@ enum pmdl_par {
 };
 
 /* PMDL Collection Header */
+#pragma pack(1)
 typedef struct __attribute__ ((__packed__)) {
     
     uint16_t uv_count;
@@ -108,6 +109,8 @@ typedef struct __attribute__ ((__packed__)) {
     uint32_t draw_idx_off;
     
 } pmdl_col_header;
+#pragma pack()
+
 
 /* PMDL Mesh header */
 typedef struct {

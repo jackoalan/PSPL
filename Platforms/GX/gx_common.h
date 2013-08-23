@@ -14,8 +14,10 @@ enum gl_object {
     GX_SHADER_DL     = 2
 };
 
+#pragma pack(1)
 typedef struct __attribute__ ((__packed__)) {
     uint8_t texgen_count, using_texcoord_normal;
 } gx_config_t;
+#pragma pack()
 
 #endif

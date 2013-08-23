@@ -24,6 +24,7 @@ enum PSD_COLOUR_MODE {
 };
 
 /* PSD Header Type */
+#pragma pack(1)
 typedef struct __attribute__ ((__packed__)) {
     uint8_t signature[4];
     uint16_t version;
@@ -34,6 +35,7 @@ typedef struct __attribute__ ((__packed__)) {
     uint16_t depth;
     uint16_t colour_mode;
 } PSD_head_t;
+#pragma pack()
 
 /* Rectangle type */
 typedef struct {
@@ -41,10 +43,12 @@ typedef struct {
 } PSD_rect_t;
 
 /* Layer-Channel type */
+#pragma pack(1)
 typedef struct __attribute__ ((__packed__)) {
     int16_t chan_id;
     uint32_t chan_len;
 } PSD_layer_channel;
+#pragma pack()
 
 /* Pascal string advance utility */
 static void advance_past_pascal_string(void** ptr) {

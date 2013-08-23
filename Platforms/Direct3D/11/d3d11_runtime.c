@@ -7,10 +7,11 @@
 //
 
 #include <stdio.h>
-#include <d3d11.h>
 #include <PSPLExtension.h>
 #include "d3d11_common.h"
 #include "d3d11_runtime_interface.h"
+
+
 
 /* Runtime method to set the Direct3D device being accessed by all
  * runtime extensions */

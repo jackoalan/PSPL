@@ -19,6 +19,7 @@ elseif (WIN32)
 find_package(PSPL-Native REQUIRED)
 set_pspl_platforms(D3D11)
 pspl_add_executable(pspl-test test_win.cpp)
+message("D3D ${DirectX11_D3DCOMPILER_LIBRARY}")
 pspl_target_link_libraries(pspl-test pspl-rt)
 
 else()
@@ -33,5 +34,5 @@ pspl_target_link_libraries(pspl-test pspl-rt ${GL_LIB} ${GLUT_LIB})
 endif()
 
 
-add_pspl_package(monkey monkey.pspl)
+#add_pspl_package(monkey monkey.pspl)
 

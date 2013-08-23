@@ -19,6 +19,39 @@ if(PSPL_CROSS_WIN32 OR PSPL_CROSS_WIN64)
   macro(pspl_target_link_libraries name)
     target_link_libraries(${name} ${ARGN})
   endmacro(pspl_target_link_libraries)
+  
+elseif(${CMAKE_GENERATOR} STREQUAL "MSYS Makefiles")
+  set(PSPL_TOOLCHAIN_TARGET_SYSTEM WINDOWS CACHE STRING
+      "Select which platform to (cross) compile PSPL Toolchain for [NATIVE, WII, WINDOWS] (default WINDOWS)")
+  set(PSPL_RUNTIME_TARGET_SYSTEM WINDOWS CACHE STRING
+      "Select which platform to (cross) compile PSPL Runtime for [NATIVE, WII, WINDOWS] (default WINDOWS)")
+  macro(pspl_add_library name)
+    add_library(${name} ${ARGN})
+  endmacro(pspl_add_library)
+  macro(pspl_add_executable name)
+    add_executable(${name} ${ARGN})
+  endmacro(pspl_add_executable)
+  macro(pspl_target_link_libraries name)
+    get_target_property(new_link_flags ${name} LINK_FLAGS)
+    if(${new_link_flags} STREQUAL new_link_flags-NOTFOUND)
+      unset(new_link_flags)
+    endif()
+    foreach(lib ${ARGN})
+      get_target_property(lib_type ${lib} TYPE)
+      if(lib_type STREQUAL STATIC_LIBRARY)
+        get_target_property(lib_dir ${lib} LOCATION)
+        get_filename_component(lib_dir ${lib_dir} PATH)
+        set(new_link_flags "${new_link_flags} -L${lib_dir}")
+        set(new_link_flags "${new_link_flags} -l${lib}")
+      elseif(lib_type STREQUAL lib_type-NOTFOUND)
+        set(new_link_flags "${new_link_flags} \"${lib}\"")
+        message("ADDED ${new_link_flags}")
+      endif()
+    endforeach(lib)
+    set_target_properties(${name} PROPERTIES LINK_FLAGS "${new_link_flags}")
+    target_link_libraries(${name} ${ARGN})
+  endmacro(pspl_target_link_libraries)
+
 elseif(PSPL_CROSS_WII)
   find_package(WiiStep REQUIRED)
   set(PSPL_TOOLCHAIN_TARGET_SYSTEM WII CACHE STRING
@@ -34,6 +67,7 @@ elseif(PSPL_CROSS_WII)
   macro(pspl_target_link_libraries name)
     target_link_wii_llvm_libraries(${name} ${ARGN})
   endmacro(pspl_target_link_libraries)
+
 else()
   macro(pspl_add_library name)
     add_library(${name} ${ARGN})
@@ -44,6 +78,7 @@ else()
   macro(pspl_target_link_libraries name)
     target_link_libraries(${name} ${ARGN})
   endmacro(pspl_target_link_libraries)
+
 endif()
 
 
@@ -55,14 +90,20 @@ if(APPLE)
   include(cmake/FindMacSDK.cmake)
   include(cmake/FindGCD.cmake)
   
-elseif(WIN32)
+elseif(${CMAKE_GENERATOR} STREQUAL "MSYS Makefiles")
   include(cmake/FindDirectX11.cmake)
   include_directories(${DirectX11_INCLUDE_DIR})
   add_definitions(-D __LITTLE_ENDIAN__=1)
+  #list(APPEND CMAKE_C_FLAGS "-mno-ms-bitfields")
+  SET(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> crs <TARGET> <LINK_FLAGS> <OBJECTS>")
+  SET(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> crs <TARGET> <LINK_FLAGS> <OBJECTS>")
+  SET(CMAKE_C_LINK_EXECUTABLE
+      "<CMAKE_C_COMPILER> <FLAGS> <OBJECTS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS>  -o <TARGET> -Wl,--out-implib,<TARGET_IMPLIB> ${CMAKE_GNULD_IMAGE_VERSION} <LINK_LIBRARIES>")
+  SET(CMAKE_CXX_LINK_EXECUTABLE
+      "<CMAKE_CXX_COMPILER> <FLAGS> <OBJECTS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS>  -o <TARGET> -Wl,--out-implib,<TARGET_IMPLIB> ${CMAKE_GNULD_IMAGE_VERSION} <LINK_LIBRARIES>")
   
 endif()
 
-# Determine if GCD is available
 
 
 # Codebase `include` directory
@@ -118,6 +159,8 @@ elseif(GCD_FOUND)
   include_directories(${GCD_INCLUDE_DIR})
   set(RUN_THREAD_LIB ${GCD_LINK_LIBRARIES})
   set(RUN_THREAD_DEF PSPL_THREADING_GCD)
+elseif(${CMAKE_GENERATOR} STREQUAL "MSYS Makefiles")
+  set(RUN_THREAD_DEF PSPL_THREADING_WINDOWS)
 else()
   find_package(Threads)
   set(RUN_THREAD_LIB ${CMAKE_THREAD_LIBS_INIT})

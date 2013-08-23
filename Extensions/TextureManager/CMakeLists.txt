@@ -91,6 +91,7 @@ pspl_add_extension(TextureManager "Platform-independent texture conversion and i
 pspl_add_extension_toolchain(TextureManager TMToolchain.c ${PSPL_TM_CODER_SRCS} pspl_tm_config.c)
 if(PSPL_RUNTIME_PLATFORM MATCHES D3D11)
   pspl_add_extension_runtime(TextureManager TMRuntime.c TMRuntime_d3d11.cpp)
+  pspl_target_link_libraries(TextureManager_runext ${DirectX11_LIBRARY} ${DirectX11_D3DCOMPILER_LIBRARY})
 else()
   pspl_add_extension_runtime(TextureManager TMRuntime.c)
 endif()

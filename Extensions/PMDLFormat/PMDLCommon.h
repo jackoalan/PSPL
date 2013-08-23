@@ -28,6 +28,7 @@ typedef struct {
 } pmdl_ref_entry;
 
 /* PMDL Header */
+#pragma pack(1)
 typedef struct __attribute__ ((__packed__)) {
     
     char magic[4];
@@ -46,5 +47,6 @@ typedef struct __attribute__ ((__packed__)) {
     uint32_t padding;
     
 } pmdl_header;
+#pragma pack()
 
 #endif

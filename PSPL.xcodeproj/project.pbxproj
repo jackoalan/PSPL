@@ -639,16 +639,16 @@
 			isa = PBXGroup;
 			children = (
 				E4AFAE77171EFF7900F7A0BF /* README.md */,
-				E4AFAE7C17218D8300F7A0BF /* Templates */,
+				E4C527131778AE5300D1D822 /* FindMacSDK.cmake */,
+				E4C527111778A8A200D1D822 /* FindGCD.cmake */,
 				E4A6252317C414140021764B /* FindDirectX11.cmake */,
 				E4A6252417C414140021764B /* FindPkgMacros.cmake */,
 				E48CCCBC1747D4D500DDDD63 /* ToolchainCrossWindows.cmake */,
+				E4AFAE7C17218D8300F7A0BF /* Templates */,
 				E4AFAE74171EF74600F7A0BF /* PSPLConfig.cmake.in */,
 				E49E63BE17BEAD8F002550A7 /* PSPL-RTConfig.cmake.in */,
 				E4AFAE76171EF78600F7A0BF /* PSPLExtensionMacros.cmake */,
 				E4AFAE75171EF76100F7A0BF /* PSPLArtPipelineMacros.cmake */,
-				E4C527131778AE5300D1D822 /* FindMacSDK.cmake */,
-				E4C527111778A8A200D1D822 /* FindGCD.cmake */,
 			);
 			path = cmake;
 			sourceTree = "<group>";

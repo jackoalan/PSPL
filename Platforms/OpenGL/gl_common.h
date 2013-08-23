@@ -19,11 +19,13 @@ enum gl_object {
     GL_FRAGMENT_SOURCE = 3
 };
 
+#pragma pack(1)
 typedef struct __attribute__ ((__packed__)) {
     uint8_t uv_attr_count, texmap_count, texgen_count;
     uint8_t depth_write, depth_test;
     uint8_t blending, source_factor, dest_factor;
 } gl_config_t;
 //typedef DEF_BI_OBJ_TYPE(gl_config_t) gl_config_bi_t;
+#pragma pack()
 
 #endif

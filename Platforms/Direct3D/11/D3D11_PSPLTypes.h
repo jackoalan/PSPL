@@ -12,6 +12,9 @@
 #include <PSPL/PSPLMinGWD3D11Support.h>
 #include "d3d11_common.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Direct3D-specific type for shader object */
 typedef struct {
@@ -37,5 +40,9 @@ void pspl_d3d11_set_device(ID3D11Device* device);
 
 extern ID3D11DeviceContext* pspl_d3d11_device_context;
 void pspl_d3d11_set_device_context(ID3D11DeviceContext* context);
+    
+#ifdef __cplusplus
+}
+#endif
 
 #endif

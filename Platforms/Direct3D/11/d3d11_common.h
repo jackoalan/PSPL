@@ -21,10 +21,12 @@ enum d3d11_object {
     D3D11_PIXEL_BINARY    = 5
 };
 
+#pragma pack(1)
 typedef struct __attribute__ ((__packed__)) {
     uint8_t uv_attr_count, texmap_count, texgen_count;
     uint8_t depth_write, depth_test;
     uint8_t blending, source_factor, dest_factor;
 } d3d11_config_t;
+#pragma pack()
 
 #endif

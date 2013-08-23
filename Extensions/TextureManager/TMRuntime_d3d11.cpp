@@ -8,7 +8,7 @@
 
 #include "TMRuntime_d3d11.h"
 #include <PSPLExtension.h>
-    
+
 #define MAX_MIPS 13
 
 ID3D11ShaderResourceView* pspl_d3d11_create_texture(D3D11_TEXTURE2D_DESC* desc, BYTE* data_buf) {

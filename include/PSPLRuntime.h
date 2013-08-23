@@ -9,6 +9,10 @@
 #ifndef PSPL_PSPLRuntime_h
 #define PSPL_PSPLRuntime_h
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @file PSPLRuntime.h
  * @brief Runtime Public API
@@ -360,5 +364,9 @@ extern void pspl_wii_free_indexing_block(void* ptr);
 #endif
 
 /** @} */
+    
+#ifdef __cplusplus
+}
+#endif
 
 #endif

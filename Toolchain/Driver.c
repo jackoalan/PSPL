@@ -1266,7 +1266,11 @@ int main(int argc, char** argv) {
             
             // Make path absolute (if it's not already)
             const char* abs_path = source->file_path;
+#           ifdef _WIN32
+            if (abs_path[1] != ':') {
+#           else
             if (abs_path[0] != '/') {
+#           endif
                 abs_path = malloc(MAXPATHLEN);
                 sprintf((char*)abs_path, "%s/%s", cwd, source->file_path);
             }
