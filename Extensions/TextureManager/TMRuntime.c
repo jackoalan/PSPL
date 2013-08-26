@@ -471,7 +471,7 @@ static void unload_object(pspl_runtime_psplc_t* object) {
                     pspl_free_media_block(tex_data);
                 
 #               elif PSPL_RUNTIME_PLATFORM_D3D11
-                    pspl_d3d_destroy_texture(ent->texture_arr[j]);
+                    pspl_d3d11_destroy_texture(ent->texture_arr[j]);
                 
 #               endif
             }
@@ -489,7 +489,7 @@ static void bind_object(pspl_runtime_psplc_t* object) {
         if (ent->owner == object) {
             // Bind platform objects
 #           if PSPL_RUNTIME_PLATFORM_D3D11
-                pspl_d3d_bind_texture_array(ent->texture_arr, ent->texture_count);
+                pspl_d3d11_bind_texture_array(ent->texture_arr, ent->texture_count);
 #           else
                 for (j=0 ; j<ent->texture_count ; ++j) {
 #                   if PSPL_RUNTIME_PLATFORM_GL2

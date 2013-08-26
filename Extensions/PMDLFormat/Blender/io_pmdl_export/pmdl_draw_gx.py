@@ -123,7 +123,7 @@ class pmdl_draw_gx:
 
 
     # Augments draw generator with a single blender MESH data object
-    def add_mesh(self, pmdl, obj):
+    def add_mesh(self, pmdl, obj, rigger):
         mesh = obj.data
         print("Optimising mesh:", obj.name)
         opt_gpu_vert_count = 0
@@ -248,12 +248,6 @@ class pmdl_draw_gx:
         print("Mesh contains", len(mesh.polygons), "triangles\n")
         self.meshes.append(mesh)
         
-
-
-    # Augments draw generator with a single blender MESH data object and
-    # associated par1_rigging object
-    def add_rigged_mesh(self, mesh, rigger):
-        pass
     
 
     # Generate binary vertex buffer of collection index
@@ -416,7 +410,7 @@ class pmdl_draw_gx:
 
 
     # Generate binary draw-index buffer of collection index
-    def generate_index_buffer(self, collection_primitives, endian_char, psize):
+    def generate_index_buffer(self, collection_primitives, endian_char, psize, rigger):
 
         # Bytearray to fill
         index_bytes = bytearray()

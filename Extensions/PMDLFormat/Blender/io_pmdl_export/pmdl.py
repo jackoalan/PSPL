@@ -55,7 +55,7 @@ class pmdl:
 
     
     # Recursive routine to add all MESH objects as individual PMDL collections
-    def _recursive_add_mesh(self, draw_gen, object, root_rel_loc):
+    def _recursive_add_mesh(self, draw_gen, object, root_rel_loc, rigger):
         
         # Start with root object (make sure it's a MESH)
         if object.type == 'MESH':
@@ -72,6 +72,10 @@ class pmdl:
                 copy_obj.location = root_rel_loc # This is set to be root-object-relative
                 bpy.context.scene.objects.link(copy_obj)
                 
+                # If rigging, set original mesh's vertex groups as context
+                if rigger:
+                    rigger.mesh_vertex_groups = object.vertex_groups
+                
                 # Triangulate mesh
                 bpy.context.scene.objects.active = copy_obj
                 bpy.ops.object.mode_set(mode='EDIT')
@@ -85,7 +89,7 @@ class pmdl:
                         vert.co[i] += root_rel_loc[i]
     
                 # Add mesh to draw generator
-                draw_gen.add_mesh(self, copy_obj)
+                draw_gen.add_mesh(self, copy_obj, rigger)
 
                 # Delete copied mesh from scene (and add to set to be deleted later)
                 bpy.context.scene.objects.unlink(copy_obj)
@@ -100,7 +104,7 @@ class pmdl:
         # Recursively incorporate child meshes
         for child in object.children:
             if child.type == 'MESH':
-                self._recursive_add_mesh(draw_gen, child, add_vec3(root_rel_loc, child.location))
+                self._recursive_add_mesh(draw_gen, child, add_vec3(root_rel_loc, child.location), rigger)
 
     
     # PMDL Constructor, given a blender object for initialisation
@@ -125,15 +129,16 @@ class pmdl:
         self.bound_box_max = [0,0,0]
         
         self.sub_type = 'PAR0'
+        self.rigging = None
         if object.type == 'ARMATURE':
             # Create a PAR1 file if given an ARMATURE
             self.sub_type = 'PAR1'
-            self.rigging = pmdl_par1_rigging.pmdl_par1_rigging(self)
+            self.rigging = pmdl_par1_rigging.pmdl_par1_rigging(8, object)
         
         
         # Break down blender object into collections
         self.collections = set()
-        self._recursive_add_mesh(draw_gen, object, (0,0,0))
+        self._recursive_add_mesh(draw_gen, object, (0,0,0), self.rigging)
 
 
     # Get shader index
@@ -155,23 +160,38 @@ class pmdl:
 
 
     # Get bone offset
-    def get_bone_offset(self, new_name):
+    def get_bone_offset(self, new_name, psize):
         offset = 0
         for bone_name in self.bone_names:
             if bone_name == new_name:
                 return offset
-            offset += len(bone_name) + 1
+            offset += psize + len(bone_name) + 1
+            pad = (len(bone_name)+1)%psize
+            if pad:
+                pad = psize - pad
+            offset += pad
         self.bone_names.append(new_name)
         return offset
 
 
     # Generate bone string table
-    def gen_bone_table(self, endian_char):
+    def gen_bone_table(self, endian_char, psize):
         table = bytearray()
         table += struct.pack(endian_char + 'I', len(self.bone_names))
-        for bone in self.bone_names:
-            table += bone
+        for i in range(psize-4):
             table.append(0)
+        
+        for bone in self.bone_names:
+            for i in range(psize):
+                table.append(0)
+            bone_str = bone.encode('utf-8')
+            table += bone_str
+            table.append(0)
+            pad = (len(bone_str)+1)%psize
+            if pad:
+                pad = psize - pad
+            for i in range(pad):
+                table.append(0)
         return table
 
 
@@ -215,9 +235,6 @@ class pmdl:
         collection_index_buffers = []
         
         # Calculate size of header and padding bits
-        mesh_count_pad = 0
-        if (psize-4):
-            mesh_count_pad = (psize-4)%psize
         shader_pointer_space = psize + ((28+psize)%psize)
         
         # Begin generating individual collection buffers
@@ -268,7 +285,7 @@ class pmdl:
             idx_buf += mesh_headers
 
             # Generate platform-specific portion of index buffer
-            idx_buf += self.draw_gen.generate_index_buffer(primitive_meshes, endian_char, psize)
+            idx_buf += self.draw_gen.generate_index_buffer(primitive_meshes, endian_char, psize, self.rigging)
             
             collection_index_buffers.append(idx_buf)
             
@@ -348,17 +365,29 @@ class pmdl:
 
         # First, calculate various offsets into PMDL file
         header_size = 64
+        
+        collection_buffer = self.generate_collection_buffer(endianness, psize)
+
+        skeleton_info_buffer = bytes()
         rigging_info_buffer = bytes()
         octree_buffer = bytes()
         
-        collection_offset = header_size + len(rigging_info_buffer) + len(octree_buffer)
-        collection_buffer = self.generate_collection_buffer(endianness, psize)
+        if self.rigging:
+            skeleton_info_buffer = self.rigging.generate_skeleton_info(self, endian_char, psize)
+            rigging_info_buffer = self.rigging.generate_rigging_info(self, endian_char, psize)
+        
+        collection_offset = header_size + len(skeleton_info_buffer) + len(rigging_info_buffer) + len(octree_buffer)
+        collection_pre_pad = ROUND_UP_32(collection_offset) - collection_offset
+        collection_offset += collection_pre_pad
         
         shader_refs_offset = collection_offset + len(collection_buffer)
         shader_refs_buffer = self.gen_shader_refs(endian_char)
         
-        bone_names_offset = shader_refs_offset + len(shader_refs_buffer)
-        bone_names_buffer = self.gen_bone_table(endian_char)
+        shader_refs_end = shader_refs_offset + len(shader_refs_buffer)
+        shader_refs_padding = ROUND_UP_32(shader_refs_end) - shader_refs_end
+        
+        bone_names_offset = shader_refs_end + shader_refs_padding
+        bone_names_buffer = self.gen_bone_table(endian_char, psize)
         
         total_size = bone_names_offset + len(bone_names_buffer)
         total_size_round = ROUND_UP_32(total_size)
@@ -403,10 +432,15 @@ class pmdl:
 
 
         # Now write sub-buffers
+        pmdl_file.write(skeleton_info_buffer)
         pmdl_file.write(rigging_info_buffer)
         pmdl_file.write(octree_buffer)
+        for i in range(collection_pre_pad):
+            pmdl_file.write(b'\x00')
         pmdl_file.write(collection_buffer)
         pmdl_file.write(shader_refs_buffer)
+        for i in range(shader_refs_padding):
+            pmdl_file.write(b'\x00')
         pmdl_file.write(bone_names_buffer)
         for i in range(total_size_pad):
             pmdl_file.write(b'\xff')

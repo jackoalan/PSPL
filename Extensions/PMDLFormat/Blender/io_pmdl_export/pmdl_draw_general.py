@@ -9,7 +9,6 @@ coefficients per-vertex for vertex-shader-driven skeletal evaluation.
 
 import struct
 import bpy
-import mathutils
 
 from . import pmdl_loop_vert
 
@@ -17,6 +16,13 @@ from . import pmdl_loop_vert
 def ROUND_UP_32(num):
     if num%32:
         return ((num>>5)<<5)+32
+    else:
+        return num
+
+# Round up to nearest 4 multiple
+def ROUND_UP_4(num):
+    if num%4:
+        return ((num>>2)<<2)+4
     else:
         return num
 
@@ -97,9 +103,12 @@ class pmdl_draw_general:
     
     # If vertex index space is exceeded for a single additional vertex,
     # a new collection is created and returned by this routine
-    def _check_collection_overflow(self, mesh, collection):
+    def _check_collection_overflow(self, mesh, collection, rigger):
+        max_bone_count = 0;
+        if rigger:
+            max_bone_count = rigger.max_bone_count
         if not collection or len(collection['vertices']) >= 65535:
-            new_collection = {'uv_count':len(mesh.uv_layers), 'max_bone_count':0, 'vertices':[], 'tri_strips':[]}
+            new_collection = {'uv_count':len(mesh.uv_layers), 'max_bone_count':max_bone_count, 'vertices':[], 'vert_weights':[], 'tri_strips':[]}
             self.collections.append(new_collection)
             return new_collection, True
         else:
@@ -107,7 +116,11 @@ class pmdl_draw_general:
 
 
     # Augments draw generator with a single blender MESH data object
-    def add_mesh(self, pmdl, obj):
+    def add_mesh(self, pmdl, obj, rigger):
+        max_bone_count = 0;
+        if rigger:
+            max_bone_count = rigger.max_bone_count
+        
         mesh = obj.data
         print("Optimising mesh:", obj.name)
         opt_gpu_vert_count = 0
@@ -126,15 +139,18 @@ class pmdl_draw_general:
         best_collection = None
         for collection in self.collections:
             if (collection['uv_count'] == len(mesh.uv_layers) and
-                collection['max_bone_count'] == 0 and
+                collection['max_bone_count'] == max_bone_count and
                 len(collection['vertices']) < 65000):
                 best_collection = collection
                 break
         if not best_collection:
             # Create a new one if no good one found
-            best_collection, is_new_collection = self._check_collection_overflow(mesh, None)
-        
-        
+            best_collection, is_new_collection = self._check_collection_overflow(mesh, None, rigger)
+    
+        # If rigging, start an array of bone names to be bound to contiguous tri-strips
+        tri_strip_bones = []
+        tri_strip_bones_overflow = False
+    
         # Now begin generating draw primitives
         visited_polys = set()
         for poly in mesh.polygons:
@@ -156,6 +172,8 @@ class pmdl_draw_general:
             # resulting in the immediate splitting of a tri-strip
             is_new_collection = False
             
+
+            
             # As long as there is a connected polygon to visit
             while temp_poly:
                 if 0 == len(tri_strip): # First triangle in strip
@@ -165,11 +183,21 @@ class pmdl_draw_general:
                     for poly_loop_idx in temp_poly.loop_indices:
                         poly_loop = mesh.loops[poly_loop_idx]
                         loop_vert = _get_loop_set(loop_vert_array[poly_loop.vertex_index], mesh, poly_loop)
+                        
+                        # If rigging, ensure that necessary bones are available and get weights
+                        weights = None
+                        if rigger:
+                            weights = rigger.augment_bone_array_with_lv(obj, tri_strip_bones, loop_vert)
+                            if not weights:
+                                tri_strip_bones_overflow = True
+                                break
+                        
                         if loop_vert not in best_collection['vertices']:
-                            best_collection, is_new_collection = self._check_collection_overflow(mesh, best_collection)
+                            best_collection, is_new_collection = self._check_collection_overflow(mesh, best_collection, rigger)
                             if is_new_collection:
                                 break
                             best_collection['vertices'].append(loop_vert)
+                            best_collection['vert_weights'].append(weights)
                         tri_strip.append(best_collection['vertices'].index(loop_vert))
                         last_loop_vert_b = last_loop_vert_a
                         last_loop_vert_a = loop_vert
@@ -200,14 +228,24 @@ class pmdl_draw_general:
                     # Ensure there are two existing matches to continue tri-strip
                     if loop_vert_match_count != 2 or not odd_loop_vert_out:
                         break
-                            
+                    
+                    
+                    # If rigging, ensure that necessary bones are available and get weights
+                    weights = None
+                    if rigger:
+                        weights = rigger.augment_bone_array_with_lv(obj, tri_strip_bones, odd_loop_vert_out)
+                        if not weights:
+                            tri_strip_bones_overflow = True
+                            break
+                    
                     
                     # Add to tri-strip
                     if odd_loop_vert_out not in best_collection['vertices']:
-                        best_collection, is_new_collection = self._check_collection_overflow(mesh, best_collection)
+                        best_collection, is_new_collection = self._check_collection_overflow(mesh, best_collection, rigger)
                         if is_new_collection:
                             break
                         best_collection['vertices'].append(odd_loop_vert_out)
+                        best_collection['vert_weights'].append(weights)
                     tri_strip.append(best_collection['vertices'].index(odd_loop_vert_out))
                     last_loop_vert_b = last_loop_vert_a
                     last_loop_vert_a = odd_loop_vert_out
@@ -227,17 +265,14 @@ class pmdl_draw_general:
 
 
             # Add tri-strip to element array
-            best_collection['tri_strips'].append({'mesh':obj, 'strip':tri_strip})
+            best_collection['tri_strips'].append({'mesh':obj, 'strip':tri_strip, 'strip_bones':tri_strip_bones})
+            if tri_strip_bones_overflow:
+                tri_strip_bones = []
+                tri_strip_bones_overflow = False
             
         print("GPU will receive", opt_gpu_vert_count, "unified tri-strip vertices out of", len(mesh.loops), "original vertices")
         print("Mesh contains", len(mesh.polygons), "triangles\n")
         
-
-
-    # Augments draw generator with a single blender MESH data object and
-    # associated par1_rigging object
-    def add_rigged_mesh(self, mesh, rigger):
-        pass
     
 
     # Generate binary vertex buffer of collection index
@@ -249,9 +284,20 @@ class pmdl_draw_general:
         # Generate vert buffer struct
         vstruct = struct.Struct(endian_char + 'f')
         
+        # If rigging, determine maximum number of bones in this collection
+        max_bones = 0
+        for i in range(len(collection['vertices'])):
+            weight_count = 0
+            if collection['vert_weights'][i]:
+                weight_count = len(collection['vert_weights'][i])
+            if weight_count > max_bones:
+                max_bones = weight_count
+        max_bones = ROUND_UP_4(max_bones)
+        
         # Build byte array
         vert_bytes = bytearray()
-        for loop_vert in collection['vertices']:
+        for i in range(len(collection['vertices'])):
+            loop_vert = collection['vertices'][i]
             bloop = loop_vert[0]
             mesh = bloop.mesh
             bvert = mesh.vertices[bloop.loop.vertex_index]
@@ -269,8 +315,16 @@ class pmdl_draw_general:
             for uv_idx in range(collection['uv_count']):
                 for comp in mesh.uv_layers[uv_idx].data[loop_vert.loop.index].uv:
                     vert_bytes += vstruct.pack(comp)
-                
-        return collection['uv_count'], collection['max_bone_count'], vert_bytes
+
+            # Weights
+            weights = collection['vert_weights'][i]
+            for j in range(max_bones):
+                if j < len(weights):
+                    vert_bytes += vstruct.pack(weights[j])
+                else:
+                    vert_bytes += vstruct.pack(0.0)
+
+        return collection['uv_count'], max_bones, vert_bytes
         
         
     # Generate binary element buffer of collection index
@@ -294,15 +348,18 @@ class pmdl_draw_general:
         # Last element index entry and strip length for forming degenerate strip
         last_elem = None
         strip_len = 0
+        
+        # Last strip bone array (for rigging)
+        last_strip_bones = collection['tri_strips'][0]['strip_bones']
 
         # Build single degenerate tri-strip
         for strip in collection['tri_strips']:
             #print('new strip', collection['tri_strips'].index(strip))
             
-            if last_mesh != strip['mesh']:
+            if last_mesh != strip['mesh'] or last_strip_bones != strip['strip_bones']:
                 #print('splitting primitive')
                 # New mesh; force new strip
-                mesh_primitives['primitives'].append({'offset':cur_offset, 'length':strip_len})
+                mesh_primitives['primitives'].append({'offset':cur_offset, 'length':strip_len, 'bones':last_strip_bones})
                 cur_offset += strip_len
                 last_elem = None
                 strip_len = 0
@@ -332,20 +389,20 @@ class pmdl_draw_general:
                 last_elem = idx
     
         # Final mesh entry
-        mesh_primitives['primitives'].append({'offset':cur_offset, 'length':strip_len})
+        mesh_primitives['primitives'].append({'offset':cur_offset, 'length':strip_len, 'bones':last_strip_bones})
         cur_offset += strip_len
             
         return collection_primitives, element_bytes
 
 
     # Generate binary draw-index buffer of collection index
-    def generate_index_buffer(self, collection_primitives, endian_char, psize):
+    def generate_index_buffer(self, collection_primitives, endian_char, psize, rigger):
 
         # Bytearray to fill
         index_bytes = bytearray()
 
         # Pointer space to hold collection's graphics API drawing context
-        for i in range(psize):
+        for i in range(psize*3):
             index_bytes.append(0)
 
         # And array
@@ -356,6 +413,12 @@ class pmdl_draw_general:
 
             # Primitive array
             for prim in mesh['primitives']:
+                
+                # If rigging, append skin index
+                if rigger:
+                    skin_index = rigger.augment_skin(prim['bones'])
+                    index_bytes += struct.pack(endian_char + 'I', skin_index)
+                
                 index_bytes += struct.pack(endian_char + 'I', 3)
                 index_bytes += struct.pack(endian_char + 'I', prim['offset'])
                 index_bytes += struct.pack(endian_char + 'I', prim['length'])

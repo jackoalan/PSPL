@@ -579,10 +579,6 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
     pmdl_header* header = pmdl_file->file_data;
 
     int i,j,k;
-
-    
-    // Shader hash array
-    pspl_hash* shader_hashes = pmdl_file->file_data + header->shader_table_offset + sizeof(uint32_t);
     
 #   if PMDL_GX
         // Load in GX transformation context here
@@ -796,7 +792,219 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
 
 /* This routine will draw PAR1 PMDLs */
 static void pmdl_draw_par1(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file) {
+    pmdl_header* header = pmdl_file->file_data;
+
+    int i,j,k;
     
+    
+#   if PMDL_GX
+        // Load in GX transformation context here
+        GX_LoadPosMtxImm(ctx->cached_modelview_mtx, GX_PNMTX0);
+        GX_LoadNrmMtxImm(ctx->cached_modelview_invxpose_mtx, GX_PNMTX0);
+        GX_LoadTexMtxImm(ctx->cached_modelview_invxpose_mtx, GX_TEXMTX9, GX_MTX3x4);
+        
+        unsigned gx_loaded_texcoord_mats = 0;
+        
+        GX_LoadProjectionMtx(ctx->cached_projection_mtx,
+                             (ctx->projection_type == PMDL_PERSPECTIVE)?
+                             GX_PERSPECTIVE:GX_ORTHOGRAPHIC);
+    
+#   endif
+    
+    
+    void* collection_buf = pmdl_file->file_data + header->collection_offset;
+    pmdl_col_header* collection_header = collection_buf;
+    for (i=0 ; i<header->collection_count; ++i) {
+        
+        void* index_buf = collection_buf + collection_header->draw_idx_off;
+        
+        // Mesh count and index buf offset
+        uint32_t mesh_count = *(uint32_t*)index_buf;
+        uint32_t index_buf_offset = *(uint32_t*)(index_buf+4);
+        
+        // Mesh head array
+        pmdl_mesh_header* mesh_heads = index_buf+8;
+        index_buf += index_buf_offset;
+        
+#       if PMDL_GENERAL
+        
+            // Platform specific index buffer array
+#           if PSPL_RUNTIME_PLATFORM_GL2
+                GLVAO(glBindVertexArray)(*(GLuint*)index_buf);
+#           elif PSPL_RUNTIME_PLATFORM_D3D11
+            
+#           endif
+            index_buf += header->pointer_size;
+
+            
+            for (j=0 ; j<mesh_count ; ++j) {
+                pmdl_mesh_header* mesh_head = &mesh_heads[j];
+                
+                // Primitive count
+                uint32_t prim_count = *(uint32_t*)index_buf;
+                index_buf += sizeof(uint32_t);
+                
+                // Frustum test
+                if (!pmdl_aabb_frustum_test(ctx, mesh_head->mesh_aabb)) {
+                    index_buf += sizeof(pmdl_general_prim) * prim_count;
+                    continue;
+                }
+                
+                // Apply mesh context
+                const pspl_runtime_psplc_t* shader_obj = NULL;
+                if (mesh_head->shader_index < 0) {
+                    if (ctx->default_shader)
+                        shader_obj = ctx->default_shader;
+                    else
+                        null_shader(ctx);
+                } else
+                    shader_obj = mesh_head->shader_pointer;
+                
+                if (shader_obj) {
+                    pspl_runtime_bind_psplc(shader_obj);
+                    
+#                   if PSPL_RUNTIME_PLATFORM_GL2
+                        glUniformMatrix4fv(shader_obj->native_shader.mv_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_mtx);
+                        glUniformMatrix4fv(shader_obj->native_shader.mv_invxpose_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_invxpose_mtx);
+                        glUniformMatrix4fv(shader_obj->native_shader.proj_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_projection_mtx);
+                        glUniformMatrix4fv(shader_obj->native_shader.tc_genmtx_arr,
+                                           shader_obj->native_shader.config->texgen_count,
+                                           GL_FALSE, (GLfloat*)ctx->texcoord_mtx);
+                    
+#                   elif PSPL_RUNTIME_PLATFORM_D3D11
+                    
+#                   endif
+                }
+                
+                // Iterate primitives
+                for (k=0 ; k<prim_count ; ++k) {
+                    pmdl_general_prim* prim = index_buf;
+                    index_buf += sizeof(pmdl_general_prim);
+#                   if PSPL_RUNTIME_PLATFORM_GL2
+                        glDrawElements(resolve_prim(prim->prim_type), prim->prim_count, GL_UNSIGNED_SHORT,
+                                       (GLvoid*)(GLsizeiptr)(prim->prim_start_idx*2));
+#                   elif PSPL_RUNTIME_PLATFORM_D3D11
+                    
+#                   endif
+                    
+                }
+                
+            }
+            
+
+        
+#       elif PMDL_GX
+        
+            // Set GX Attribute Table
+            GX_ClearVtxDesc();
+            
+            GX_SetVtxDesc(GX_VA_POS, GX_INDEX16);
+            GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+        
+            GX_SetVtxDesc(GX_VA_NRM, GX_INDEX16);
+            GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
+
+            for (j=0 ; j<collection_header->uv_count ; ++j) {
+                GX_SetVtxDesc(GX_VA_TEX0+j, GX_INDEX16);
+                GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0+j, GX_TEX_ST, GX_F32, 0);
+            }
+            
+            
+            // Load in GX buffer context here
+            void* vert_buf = collection_buf + collection_header->vert_buf_off;
+            uint32_t vert_count = *(uint32_t*)vert_buf;
+            uint32_t loop_vert_count = *(uint32_t*)(vert_buf+4);
+            vert_buf += 32;
+            GX_SetArray(GX_VA_POS, vert_buf, 12);
+            vert_buf += vert_count * 12;
+            GX_SetArray(GX_VA_NRM, vert_buf, 12);
+            vert_buf += vert_count * 12;
+        
+            for (j=0 ; j<collection_header->uv_count ; ++j) {
+                GX_SetArray(GX_VA_TEX0+j, vert_buf, 8);
+                vert_buf += loop_vert_count * 8;
+            }
+        
+            GX_InvVtxCache();
+        
+            // Offset anchor for display list buffers
+            void* buf_anchor = index_buf;
+        
+            // Iterate each mesh
+            for (j=0 ; j<mesh_count ; ++j) {
+                pmdl_mesh_header* mesh_head = &mesh_heads[j];
+                pmdl_gx_mesh* gx_mesh = index_buf;
+                
+                // Frustum test
+                if (!pmdl_aabb_frustum_test(ctx, mesh_head->mesh_aabb)) {
+                    index_buf += sizeof(pmdl_gx_mesh);
+                    continue;
+                }
+                
+                // Apply mesh context
+                const pspl_runtime_psplc_t* shader_obj = NULL;
+                if (mesh_head->shader_index < 0) {
+                    if (ctx->default_shader)
+                        shader_obj = ctx->default_shader;
+                    else
+                        null_shader(ctx);
+                } else
+                    shader_obj = mesh_head->shader_pointer;
+                
+                if (shader_obj) {
+                    
+                    // Load remaining texture coordinate matrices here
+                    if (shader_obj->native_shader.config->texgen_count > gx_loaded_texcoord_mats) {
+                        for (k=gx_loaded_texcoord_mats ; k<shader_obj->native_shader.config->texgen_count ; ++k) {
+                            GX_LoadTexMtxImm(ctx->texcoord_mtx[k], GX_TEXMTX0 + (k*3), GX_MTX2x4);
+                            if (shader_obj->native_shader.config->using_texcoord_normal)
+                                GX_LoadTexMtxImm(ctx->texcoord_mtx[k], GX_DTTMTX0 + (k*3), GX_MTX3x4);
+                        }
+                        gx_loaded_texcoord_mats = shader_obj->native_shader.config->texgen_count;
+                    }
+                    
+                    if (shader_obj->native_shader.config->using_texcoord_normal)
+                        GX_LoadTexMtxImm(ctx->cached_modelview_invxpose_mtx, GX_TEXMTX9, GX_MTX3x4);
+
+                    
+                    // Execute shader Display List
+                    pspl_runtime_bind_psplc(shader_obj);
+
+                }
+                
+                //GX_SetTexCoordGen2(GX_TEXCOORD0, GX_TG_MTX3x4, GX_TG_NRM, GX_TEXMTX9, GX_TRUE, GX_DTTMTX0);
+                //GX_SetNumTexGens(1);
+                
+                /*
+                GX_SetTevOrder(GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLORNULL);
+                GX_SetTevColorOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+                GX_SetTevColorIn(GX_TEVSTAGE0, GX_CC_TEXC, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO);
+                //GX_SetTevAlphaOp(GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+                //GX_SetTevAlphaIn(GX_TEVSTAGE0, GX_CA_TEXA, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO);
+                
+                GX_SetTevOrder(GX_TEVSTAGE1, GX_TEXCOORD0, GX_TEXMAP1, GX_COLORNULL);
+                GX_SetTevColorOp(GX_TEVSTAGE1, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+                GX_SetTevColorIn(GX_TEVSTAGE1, GX_CC_TEXC, GX_CC_ZERO, GX_CC_ZERO, GX_CC_CPREV);
+                //GX_SetTevAlphaOp(GX_TEVSTAGE1, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_TRUE, GX_TEVPREV);
+                //GX_SetTevAlphaIn(GX_TEVSTAGE1, GX_CA_TEXA, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
+                */
+                 
+                //GX_SetNumTevStages(2);
+                
+                
+                // Draw Mesh
+                GX_CallDispList(buf_anchor + gx_mesh->dl_offset, gx_mesh->dl_length);
+                
+                index_buf += sizeof(pmdl_gx_mesh);
+                
+            }
+        
+#       endif
+        
+        // ADVANCE!!
+        collection_header += sizeof(pmdl_col_header);
+        
+    }
 }
 
 /* This routine will draw PAR2 PMDLs */

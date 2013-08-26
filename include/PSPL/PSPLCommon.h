@@ -9,6 +9,10 @@
 #ifndef PSPL_PSPL_h
 #define PSPL_PSPL_h
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <string.h>
 
 /* PSPL's method of defining numeric values in a bi-endian manner */
@@ -293,6 +297,10 @@ char* strtok_r(char *str,
 #endif
 
 /** @} */
+    
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif

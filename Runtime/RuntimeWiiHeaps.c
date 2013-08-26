@@ -15,9 +15,11 @@
  * memory-allocation heaps for two key systems of PSPL on the
  * Wii platform.
  * 
- * The Wii has two distinct, physical memory banks:
+ * The Wii has two distinct, physical memory banks 
+ * (both physically present on "Hollywood" MCM):
  * * MEM1 - 0x00000000 - 24 MiB - 1T-SRAM (a bit faster)
  * * MEM2 - 0x10000000 - 64 MiB - GDDR3-SDRAM
+ * * Total Size: 88 MiB ;)
  * 
  * The two banks are accessible system-wide and both benefit from the 
  * PowerPC's caching system. 

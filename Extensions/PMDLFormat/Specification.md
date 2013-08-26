@@ -43,7 +43,9 @@ All PMDL sub-types have the following general data layout:
     * Shader-object reference absolute offset (32-bit word)
     * Bone string-table absolute offset (32-bit word)
     * 32-byte alignment padding (4 bytes)
+* [Rigged Skeleton Info Section](#rigged-skeleton-info-section) (`PAR1` only)
 * [Rigged Skinning Info Section](#rigged-skinning-info-section) (`PAR1` only)
+* [Rigged Animation Section](#rigged-animation-section) (`PAR1` only)
 * [Partitioned Octree Section](#octree-section) (`PAR2` only)
 * [Draw-buffer-collection array](#draw-buffer-collections)
     * Header data (one for each collection)
@@ -80,9 +82,13 @@ All PMDL sub-types have the following general data layout:
     * Reference count (32-bit word)
     * Reference array (array of 20-byte SHA1 hashes)
         * These hashes correspond to PSPL objects defining shader-configurations
-* String table (`PAR1` only)
-    * String Count (32-bit word)
-    * Null-terminated strings for bone names
+* Bone String table (`PAR1` only)
+    * Bone Count (32-bit word)
+    * Bone array
+        * Bone object pointer (pointer space)
+            * Allows the application to persistently-reference internal bone 
+              object after performing string lookup.
+        * Null-terminated string for bone name
 * 32-byte-rounded `0xff` padding
 
 
@@ -135,10 +141,25 @@ The main file header and drawing sub-sections include extra data indicating
 how the PMDL runtime will transform data for skeletally-rigged models.
 
 
+### Rigged Skeleton Info Section ###
+
+# Section length (32-bit word)
+* Bone structure count (32-bit word)
+* Bone structure offset array
+    * Relative offsets into array marking individual entries (32-bit word)
+* Bone structure array (each of variable length)
+    * Bone name absolute offset (32-bit word)
+        * References into string table at end of file
+    * Armature-relative bone-tail coordinates (3x float)
+    * Parent bone index (or -1 if no parent) (signed 32-bit word)
+    * Child count (32-bit word)
+    * Child index array
+        * Bone indices of each child bone (32-bit word)
+
+
 ### Rigged Skinning Info Section ###
 
-This data is shared across entire PMDL file
-
+# Section length (32-bit word)
 * Skin structure count (32-bit word)
 * Skin structure offset array (32-bit words)
     * Relative offsets into array marking individual entries
@@ -147,9 +168,34 @@ This data is shared across entire PMDL file
     * Bone structure
         * Bone name absolute offset (32-bit word)
             * References into string table at end of file
-        * Bone object pointer (pointer space)
-            * Allows the application to persistently-reference internal bone 
-              object after performing string lookup.
+
+            
+### Rigged Animation Section ###
+
+`PAR1` files are also able to embed pre-recorded **animation actions**.
+The animated data includes *bone rotation* (expressed as quaternion), 
+*bone scale*, and/or *bone position*. Each keyframe is a 2D 
+[cubic bézier](http://en.wikipedia.org/wiki/Bézier_curve) handle,
+permitting smoothly curved animation playback. Actions consisting of *one* keyframe
+are be used to express static poses.
+
+* Action structure count (32-bit word)
+* String table offset (32-bit word)
+* Action structure offset array (32-bit words)
+    * Relative offsets into array marking individual entries
+* Action structure array (each of variable length)
+    * Keyframe-count and property bitfield (32-bit word)
+        * Upper 3 bits are used to express which properties are contained in data (scale, rotation, position)
+        * Lower 29 bits are used to count keyframes
+    * Keyframe arrays (interleaved stream of coordinates for each property)
+        * Left control point coordinates (x,y)
+        * Main control point coordinates (x,y)
+        * Right control point coordinates (x,y)
+* Action strings offset array (32-bit words)
+    * Relative offsets into string table marking individual entries
+* Action string table
+    * Null-terminated strings naming actions
+
 
 
 Partitioned Models
@@ -202,7 +248,7 @@ The General format is designed to operate *natively* with
     
 ### General Drawing Index Buffer Format ###
 
-* 3xPointer-space structure to hold the following members
+* 3x Pointer-space structure to hold the following members
     * OpenGL *VAO* or Direct3D *InputLayout*
     * OpenGL *VBO* or Direct3D *Buffer* for Vertex attributes
     * OpenGL *VBO* or Direct3D *Buffer* for Element indices

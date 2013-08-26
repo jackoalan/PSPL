@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E42D4EE517CBFAF900F81458 /* PMDLRuntimeRigging.c in Sources */ = {isa = PBXBuildFile; fileRef = E42D4EE317CBF8CE00F81458 /* PMDLRuntimeRigging.c */; };
 		E43B8EBB174DC28900F8C5FB /* BuiltinsToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DB173462A800B8CDD1 /* BuiltinsToolchain.c */; };
 		E43C50F617B49C5C00F25742 /* RuntimeWiiHeaps.c in Sources */ = {isa = PBXBuildFile; fileRef = E4D6302417B47C6D001D1E0E /* RuntimeWiiHeaps.c */; };
 		E44577C01781DD57003EE09C /* PMDLToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E44577BE1781DC4F003EE09C /* PMDLToolchain.c */; };
@@ -97,6 +98,8 @@
 		E40231C017543F2100DE076A /* api.docurium */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = api.docurium; sourceTree = "<group>"; };
 		E403AB971797094900D6B203 /* pmdl_loop_vert.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pmdl_loop_vert.py; sourceTree = "<group>"; };
 		E4069D26179EF34B00FB4D73 /* PMDLRuntime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PMDLRuntime.h; sourceTree = "<group>"; };
+		E42D4EE217CBF8C500F81458 /* PMDLRuntimeRigging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PMDLRuntimeRigging.h; sourceTree = "<group>"; };
+		E42D4EE317CBF8CE00F81458 /* PMDLRuntimeRigging.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = PMDLRuntimeRigging.c; sourceTree = "<group>"; };
 		E4360CB717B9C16D0016DCDD /* pspl.1.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = pspl.1.md; sourceTree = "<group>"; };
 		E44577BD1781DBA4003EE09C /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E44577BE1781DC4F003EE09C /* PMDLToolchain.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PMDLToolchain.c; sourceTree = "<group>"; };
@@ -679,6 +682,8 @@
 				E4CD266D179F396E00172F31 /* PMDLRuntimeLinAlgebraSSE.s */,
 				E401AD2117A96BDC00409F7D /* PMDLRuntimeProcessing.h */,
 				E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */,
+				E42D4EE217CBF8C500F81458 /* PMDLRuntimeRigging.h */,
+				E42D4EE317CBF8CE00F81458 /* PMDLRuntimeRigging.c */,
 			);
 			path = PMDLFormat;
 			sourceTree = "<group>";
@@ -977,6 +982,7 @@
 				E4461F7E17B31EFD0039B479 /* hash_builtin.c in Sources */,
 				E4A6251B17C3AD6D0021764B /* TMRuntime.c in Sources */,
 				E4A6251A17C18C810021764B /* PMDLRuntimeProcessing.c in Sources */,
+				E42D4EE517CBFAF900F81458 /* PMDLRuntimeRigging.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
 				E4CD266E179F39B800172F31 /* PMDLRuntimeLinAlgebraSSE.s in Sources */,
 				E4CD266B179F376300172F31 /* PMDLRuntimeLinAlgebraRef.c in Sources */,
