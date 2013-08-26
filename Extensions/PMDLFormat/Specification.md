@@ -143,7 +143,7 @@ how the PMDL runtime will transform data for skeletally-rigged models.
 
 ### Rigged Skeleton Info Section ###
 
-# Section length (32-bit word)
+* Section length (32-bit word)
 * Bone structure count (32-bit word)
 * Bone structure offset array
     * Relative offsets into array marking individual entries (32-bit word)
@@ -159,7 +159,7 @@ how the PMDL runtime will transform data for skeletally-rigged models.
 
 ### Rigged Skinning Info Section ###
 
-# Section length (32-bit word)
+* Section length (32-bit word)
 * Skin structure count (32-bit word)
 * Skin structure offset array (32-bit words)
     * Relative offsets into array marking individual entries
