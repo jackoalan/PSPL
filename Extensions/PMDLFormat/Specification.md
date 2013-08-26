@@ -187,7 +187,7 @@ are used to express static poses.
     * Keyframe-count and property bitfield (32-bit word)
         * Upper 3 bits are used to express which properties are contained in data (scale, rotation, position)
         * Lower 29 bits are used to count keyframes
-    * Keyframe arrays (interleaved stream of coordinates for each property)
+    * Keyframe arrays (interleaved stream of coordinates for each property/bone)
         * Left control point coordinates (x,y)
         * Main control point coordinates (x,y)
         * Right control point coordinates (x,y)
