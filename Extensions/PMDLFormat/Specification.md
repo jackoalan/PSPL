@@ -177,7 +177,7 @@ The animated data includes *bone rotation* (expressed as quaternion),
 *bone scale*, and/or *bone position*. Each keyframe is a 2D 
 [cubic bézier](http://en.wikipedia.org/wiki/Bézier_curve) handle,
 permitting smoothly curved animation playback. Actions consisting of *one* keyframe
-are be used to express static poses.
+are used to express static poses.
 
 * Action structure count (32-bit word)
 * String table offset (32-bit word)
