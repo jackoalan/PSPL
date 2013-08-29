@@ -15,6 +15,7 @@ extern "C" {
 
 #include <PSPL/PSPLCommon.h>
 #include <PSPLRuntime.h>
+#include <PMDLRuntimeRigging.h>
 
 /* NOTE - This entire API is NOT THREAD SAFE!!! */
 
@@ -97,6 +98,10 @@ const pspl_runtime_arc_file_t* pmdl_lookup(const pspl_runtime_psplc_t* pspl_obje
 
 /* Master draw routine */
 void pmdl_draw(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file);
+
+/* Rigged master draw routine */
+void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file,
+                      pmdl_animation_ctx* anim_ctx);
 
 
 

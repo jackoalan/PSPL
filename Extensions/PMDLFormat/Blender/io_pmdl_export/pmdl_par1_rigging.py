@@ -9,6 +9,37 @@ or have a new one established.
 '''
 
 import struct
+import re
+import bpy
+
+# Round up to nearest 32 multiple
+def ROUND_UP_32(num):
+    if num%32:
+        return ((num>>5)<<5)+32
+    else:
+        return num
+
+# Regex RNA path matchers
+scale_matcher = re.compile(r'pose.bones\["(\S+)"\].scale')
+rotation_matcher = re.compile(r'pose.bones\["(\S+)"\].rotation_quaternion')
+location_matcher = re.compile(r'pose.bones\["(\S+)"\].location')
+
+# Appends an array of fcurve keyframes to byte stream
+def add_fcurve_to_bytestream(bytes, endian_char, fcurve):
+    scene_fps = bpy.context.scene.render.fps
+    count = 0
+    if fcurve:
+        count = len(fcurve.keyframe_points)
+    bytes += struct.pack(endian_char + 'I', count)
+    if fcurve:
+        for keyframe in fcurve.keyframe_points:
+            bytes += struct.pack(endian_char + 'ffffff',
+                                 (keyframe.handle_left[0]/scene_fps),
+                                 keyframe.handle_left[1],
+                                 (keyframe.co[0]/scene_fps),
+                                 keyframe.co[1],
+                                 (keyframe.handle_right[0]/scene_fps),
+                                 keyframe.handle_right[1])
 
 class pmdl_par1_rigging:
 
@@ -119,8 +150,8 @@ class pmdl_par1_rigging:
             skin_bytes = bytearray()
             skin_bytes += struct.pack(endian_char + 'I', len(bone_array))
             for bone in bone_array:
-                bone_off = pmdl.get_bone_offset(bone, psize)
-                skin_bytes += struct.pack(endian_char + 'I', bone_off)
+                bone_idx = self.armature.data.bones.find(bone)
+                skin_bytes += struct.pack(endian_char + 'I', bone_idx)
             skin_entries.append(skin_bytes)
         
         info_bytes += struct.pack(endian_char + 'I', len(skin_entries))
@@ -134,5 +165,164 @@ class pmdl_par1_rigging:
             info_bytes += entry
 
         return info_bytes
+
+
+    # Generate animation info
+    def generate_animation_info(self, pmdl, endian_char, psize):
+        info_bytes = bytearray()
+        anim_data = self.armature.animation_data
+
+        # Build set of all actions contained within armature
+        added_actions = set()
+        
+        if anim_data.action:
+            added_actions.add(anim_data.action)
+        
+        for nla_track in anim_data.nla_tracks:
+            for nla_strip in nla_track.strips:
+                action = nla_strip.action
+                added_actions.add(action)
+    
+        # Build animation data set
+        action_bytes = []
+        for action in added_actions:
+        
+            # Set of unique bone names
+            bone_set = set()
+            
+            # Scan through all fcurves to build animated bone set
+            for fcurve in action.fcurves:
+                data_path = fcurve.data_path
+                scale_match = scale_matcher.match(data_path)
+                rotation_match = rotation_matcher.match(data_path)
+                location_match = location_matcher.match(data_path)
+
+                if scale_match:
+                    bone_set.add(scale_match.group(1))
+                elif rotation_match:
+                    bone_set.add(rotation_match.group(1))
+                elif location_match:
+                    bone_set.add(location_match.group(1))
+
+
+            # Relate fcurves per-bone and assemble data
+            keyframe_stream = bytearray()
+            keyframe_stream += struct.pack(endian_char + 'I', len(bone_set))
+            duration = action.frame_range[1] / bpy.context.scene.render.fps
+            keyframe_stream += struct.pack(endian_char + 'f', duration)
+            for bone in bone_set:
+                
+                property_bits = 0
+                
+                # Scale curves
+                x_scale_curve = None
+                y_scale_curve = None
+                z_scale_curve = None
+                for fcurve in action.fcurves:
+                    if fcurve.data_path == 'pose.bones["'+bone+'"].scale':
+                        property_bits |= 1
+                        if fcurve.array_index == 0:
+                            x_scale_curve = fcurve
+                        elif fcurve.array_index == 1:
+                            y_scale_curve = fcurve
+                        elif fcurve.array_index == 2:
+                            z_scale_curve = fcurve
+
+
+                # Rotation curves
+                w_rot_curve = None
+                x_rot_curve = None
+                y_rot_curve = None
+                z_rot_curve = None
+                for fcurve in action.fcurves:
+                    if fcurve.data_path == 'pose.bones["'+bone+'"].rotation_quaternion':
+                        property_bits |= 2
+                        if fcurve.array_index == 0:
+                            w_rot_curve = fcurve
+                        elif fcurve.array_index == 1:
+                            x_rot_curve = fcurve
+                        elif fcurve.array_index == 2:
+                            y_rot_curve = fcurve
+                        elif fcurve.array_index == 3:
+                            z_rot_curve = fcurve
+
+
+                # Location curves
+                x_loc_curve = None
+                y_loc_curve = None
+                z_loc_curve = None
+                for fcurve in action.fcurves:
+                    if fcurve.data_path == 'pose.bones["'+bone+'"].location':
+                        property_bits |= 4
+                        if fcurve.array_index == 0:
+                            x_loc_curve = fcurve
+                        elif fcurve.array_index == 1:
+                            y_loc_curve = fcurve
+                        elif fcurve.array_index == 2:
+                            z_loc_curve = fcurve
+
+
+                # Assemble curves into data stream
+                bone_idx = self.armature.data.bones.find(bone)
+                bone_idx |= (property_bits << 29)
+                keyframe_stream += struct.pack(endian_char + 'I', bone_idx)
+
+                # Scale keyframes
+                if property_bits & 1:
+                    add_fcurve_to_bytestream(keyframe_stream, endian_char, x_scale_curve)
+                    add_fcurve_to_bytestream(keyframe_stream, endian_char, y_scale_curve)
+                    add_fcurve_to_bytestream(keyframe_stream, endian_char, z_scale_curve)
+
+                # Rotation keyframes
+                if property_bits & 2:
+                    add_fcurve_to_bytestream(keyframe_stream, endian_char, w_rot_curve)
+                    add_fcurve_to_bytestream(keyframe_stream, endian_char, x_rot_curve)
+                    add_fcurve_to_bytestream(keyframe_stream, endian_char, y_rot_curve)
+                    add_fcurve_to_bytestream(keyframe_stream, endian_char, z_rot_curve)
+
+                # Location keyframes
+                if property_bits & 4:
+                    add_fcurve_to_bytestream(keyframe_stream, endian_char, x_loc_curve)
+                    add_fcurve_to_bytestream(keyframe_stream, endian_char, y_loc_curve)
+                    add_fcurve_to_bytestream(keyframe_stream, endian_char, z_loc_curve)
+
+
+            # Save keyframe stream
+            action_bytes.append(keyframe_stream)
+
+        all_action_bytes = bytearray()
+        for action in action_bytes:
+            all_action_bytes += action
+
+        # Generate action offset table
+        action_idx = 0
+        action_off = 0
+        action_table = bytearray()
+        for action in added_actions:
+            action_data = action_bytes[action_idx]
+            action_table += struct.pack(endian_char + 'I', action_off)
+            action_off += len(action_data)
+            action_idx += 1
+
+
+        # Generate action string table
+        string_table_offsets = bytearray()
+        string_table = bytearray()
+        for action in added_actions:
+            string_table_offsets += struct.pack(endian_char + 'I', len(string_table))
+            string_table += action.name.encode('utf-8')
+            string_table.append(0)
+
+
+        # Generate final bytes
+        info_bytes += struct.pack(endian_char + 'I', len(added_actions))
+        info_bytes += struct.pack(endian_char + 'I', 8 + len(action_table) + len(all_action_bytes))
+        info_bytes += action_table
+        info_bytes += all_action_bytes
+        info_bytes += string_table_offsets
+        info_bytes += string_table
+
+        return info_bytes
+
 
 

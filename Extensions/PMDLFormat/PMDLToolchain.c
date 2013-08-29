@@ -248,6 +248,7 @@ static void command_call_hook(const pspl_toolchain_context_t* driver_context,
             // Package PMDL
             pspl_package_file_augment(general_plats, command_argv[1], NULL, NULL, 0, NULL, &pmdl_hash);
             entry = pspl_malloc_malloc(&gen_refs, sizeof(pmdl_ref_entry));
+            memset(entry, 0, sizeof(pmdl_ref_entry));
             
         } else if (!memcmp(&pmdl_header.draw_format, "__GX", 4)) {
             
@@ -262,6 +263,7 @@ static void command_call_hook(const pspl_toolchain_context_t* driver_context,
             // Package PMDL
             pspl_package_file_augment(gx_plats, command_argv[1], NULL, NULL, 0, NULL, &pmdl_hash);
             entry = pspl_malloc_malloc(&gx_refs, sizeof(pmdl_ref_entry));
+            memset(entry, 0, sizeof(pmdl_ref_entry));
             
         } else
             pspl_error(-1, "Unknown PMDL Sub-Type",
@@ -306,6 +308,7 @@ static void command_call_hook(const pspl_toolchain_context_t* driver_context,
                 pspl_package_file_augment(general_plats, command_argv[1], command_argv[2],
                                           blender_convert, 1, general_plats, &pmdl_hash);
                 entry = pspl_malloc_malloc(&gen_refs, sizeof(pmdl_ref_entry));
+                memset(entry, 0, sizeof(pmdl_ref_entry));
                 added_general = 1;
                 did_something = 1;
                 
@@ -314,6 +317,7 @@ static void command_call_hook(const pspl_toolchain_context_t* driver_context,
                 pspl_package_file_augment(gx_plats, command_argv[1], command_argv[2],
                                           blender_convert, 1, gx_plats, &pmdl_hash);
                 entry = pspl_malloc_malloc(&gx_refs, sizeof(pmdl_ref_entry));
+                memset(entry, 0, sizeof(pmdl_ref_entry));
                 added_gx = 1;
                 did_something = 1;
                 

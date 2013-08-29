@@ -150,7 +150,7 @@ typedef struct {
 
 #pragma mark PMDL Loading / Unloading
 
-/* This routine will load collection data for GENERAL draw format */
+/* This routine will load collection data */
 static int pmdl_init_collections(const pspl_runtime_arc_file_t* pmdl_file) {
     void* file_data = pmdl_file->file_data;
     pmdl_header* header = file_data;
@@ -235,7 +235,7 @@ static int pmdl_init_collections(const pspl_runtime_arc_file_t* pmdl_file) {
     
 }
 
-/* This routine will unload collection data for GENERAL draw format */
+/* This routine will unload collection data */
 static void pmdl_destroy_collections(void* file_data) {
     pmdl_header* header = file_data;
 
@@ -269,7 +269,7 @@ static void pmdl_destroy_collections(void* file_data) {
 }
 
 /* This routine will validate and load PMDL data into GPU */
-int pmdl_init(const pspl_runtime_arc_file_t* pmdl_file) {
+int pmdl_init(const pspl_runtime_arc_file_t* pmdl_file, pmdl_rigging_ctx** rigging_ptr) {
     char hash[PSPL_HASH_STRING_LEN];
     
     // First, validate header members
@@ -337,6 +337,11 @@ int pmdl_init(const pspl_runtime_arc_file_t* pmdl_file) {
     for (i=0 ; i<shader_count ; ++i)
         pspl_runtime_get_psplc_from_hash(pmdl_file->parent, &shader_array[i], 1);
     
+    // Init rigging context (if PAR1)
+    if (header->sub_type_num == '1')
+        pmdl_rigging_init(rigging_ptr, pmdl_file->file_data + sizeof(pmdl_header),
+                          pmdl_file->file_data + header->bone_table_offset);
+    
     // Load collections into GPU
     pmdl_init_collections(pmdl_file);
 #   if PMDL_GX
@@ -348,7 +353,7 @@ int pmdl_init(const pspl_runtime_arc_file_t* pmdl_file) {
 }
 
 /* This routine will unload data from GPU */
-void pmdl_destroy(const pspl_runtime_arc_file_t* pmdl_file) {
+void pmdl_destroy(const pspl_runtime_arc_file_t* pmdl_file, pmdl_rigging_ctx** rigging_ptr) {
     pmdl_header* header = pmdl_file->file_data;
 
     // Unload shaders from GPU
@@ -360,6 +365,10 @@ void pmdl_destroy(const pspl_runtime_arc_file_t* pmdl_file) {
         pspl_runtime_get_psplc_from_hash(pmdl_file->parent, &shader_array[i], 0);
         pspl_runtime_release_psplc(shader_obj);
     }
+    
+    // Destroy rigging context (if PAR1)
+    if (header->sub_type_num == '1')
+        pmdl_rigging_destroy(rigging_ptr);
     
     // Unload collections from GPU
 #   if PMDL_GENERAL
@@ -791,7 +800,8 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
 }
 
 /* This routine will draw PAR1 PMDLs */
-static void pmdl_draw_par1(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file) {
+void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file,
+                      pmdl_animation_ctx* anim_ctx) {
     pmdl_header* header = pmdl_file->file_data;
 
     int i,j,k;
@@ -1027,8 +1037,6 @@ void pmdl_draw(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_fil
     // Select draw routine based on sub-type
     if (header->sub_type_num == '0')
         pmdl_draw_par0(ctx, pmdl_file);
-    else if (header->sub_type_num == '1')
-        pmdl_draw_par1(ctx, pmdl_file);
     else if (header->sub_type_num == '2')
         pmdl_draw_par2(ctx, pmdl_file);
     

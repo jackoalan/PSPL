@@ -370,13 +370,15 @@ class pmdl:
 
         skeleton_info_buffer = bytes()
         rigging_info_buffer = bytes()
+        animation_info_buffer = bytes()
         octree_buffer = bytes()
         
         if self.rigging:
             skeleton_info_buffer = self.rigging.generate_skeleton_info(self, endian_char, psize)
             rigging_info_buffer = self.rigging.generate_rigging_info(self, endian_char, psize)
+            animation_info_buffer = self.rigging.generate_animation_info(self, endian_char, psize)
         
-        collection_offset = header_size + len(skeleton_info_buffer) + len(rigging_info_buffer) + len(octree_buffer)
+        collection_offset = header_size + len(skeleton_info_buffer) + len(rigging_info_buffer) + len(animation_info_buffer) + len(octree_buffer)
         collection_pre_pad = ROUND_UP_32(collection_offset) - collection_offset
         collection_offset += collection_pre_pad
         
@@ -434,6 +436,7 @@ class pmdl:
         # Now write sub-buffers
         pmdl_file.write(skeleton_info_buffer)
         pmdl_file.write(rigging_info_buffer)
+        pmdl_file.write(animation_info_buffer)
         pmdl_file.write(octree_buffer)
         for i in range(collection_pre_pad):
             pmdl_file.write(b'\x00')

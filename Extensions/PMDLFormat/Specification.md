@@ -150,7 +150,7 @@ how the PMDL runtime will transform data for skeletally-rigged models.
 * Bone structure array (each of variable length)
     * Bone name absolute offset (32-bit word)
         * References into string table at end of file
-    * Armature-relative bone-tail coordinates (3x float)
+    * Armature-relative bone-head coordinates (3x float)
     * Parent bone index (or -1 if no parent) (signed 32-bit word)
     * Child count (32-bit word)
     * Child index array
@@ -165,9 +165,8 @@ how the PMDL runtime will transform data for skeletally-rigged models.
     * Relative offsets into array marking individual entries
 * Skin structure array (each of variable length)
     * Bone count (32-bit word; up to 8)
-    * Bone structure
-        * Bone name absolute offset (32-bit word)
-            * References into string table at end of file
+    * Bone array
+        * Bone index (matches index in *skeleton info section*)
 
             
 ### Rigged Animation Section ###
@@ -184,13 +183,42 @@ are used to express static poses.
 * Action structure offset array (32-bit words)
     * Relative offsets into array marking individual entries
 * Action structure array (each of variable length)
-    * Keyframe-count and property bitfield (32-bit word)
-        * Upper 3 bits are used to express which properties are contained in data (scale, rotation, position)
-        * Lower 29 bits are used to count keyframes
-    * Keyframe arrays (interleaved stream of coordinates for each property/bone)
-        * Left control point coordinates (x,y)
-        * Main control point coordinates (x,y)
-        * Right control point coordinates (x,y)
+    * Bone Count
+    * Action duration (float)
+    * Bone array (read in linearly)
+        * Bone index (lower 29 bits; matches index in *skeleton info section*) and property bitfield (upper 3 bits)
+        * (Optional) Scale Array
+            * X Keyframe Count
+            * X Keyframe Array
+                * Left control point coordinates
+                * Main control point coordinates
+                * Right control point coordinates
+            * Y Keyframe Count
+            * Y Keyframe Array
+            * Z Keyframe Count
+            * Z Keyframe Array
+        * (Optional) Rotation Array (4-component quaternion values)
+            * W Keyframe Count
+            * W Keyframe Array
+                * Left control point coordinates
+                * Main control point coordinates
+                * Right control point coordinates
+            * X Keyframe Count
+            * X Keyframe Array
+            * Y Keyframe Count
+            * Y Keyframe Array
+            * Z Keyframe Count
+            * Z Keyframe Array
+        * (Optional) Position Array
+            * X Keyframe Count
+            * X Keyframe Array
+                * Left control point coordinates
+                * Main control point coordinates
+                * Right control point coordinates
+            * Y Keyframe Count
+            * Y Keyframe Array
+            * Z Keyframe Count
+            * Z Keyframe Array
 * Action strings offset array (32-bit words)
     * Relative offsets into string table marking individual entries
 * Action string table

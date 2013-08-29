@@ -357,6 +357,8 @@ extern void pspl_wii_free_media_block(void* ptr);
 extern void pspl_wii_free_indexing_block(void* ptr);
 #define pspl_free_indexing_block pspl_wii_free_indexing_block
 #else
+extern pspl_malloc_context_t media_heap;
+extern pspl_malloc_context_t indexing_heap;
 #define pspl_allocate_media_block(size) pspl_malloc_malloc(&media_heap, (size))
 #define pspl_allocate_indexing_block(size) pspl_malloc_malloc(&indexing_heap, (size))
 #define pspl_free_media_block(ptr) pspl_malloc_free(&media_heap, (ptr))

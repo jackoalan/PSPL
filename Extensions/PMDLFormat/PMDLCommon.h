@@ -14,7 +14,7 @@
 #define P_DECL(ptype, name) char name##_ptr_buf[8]
 #elif PSPL_RUNTIME
 #include "PMDLRuntimeRigging.h"
-#define P_DECL(ptype, name) union {const ptype* name; char name##_ptr_buf[8];}
+#define P_DECL(ptype, name) union {ptype* name; char name##_ptr_buf[8];}
 #endif
 
 /* Bi-uint32 type */
@@ -26,7 +26,7 @@ typedef DEF_BI_OBJ_TYPE(struct {
 typedef struct {
     pspl_hash name_hash, pmdl_file_hash;
     P_DECL(pspl_runtime_arc_file_t, file_ptr);
-    P_DECL(pmdl_rigging, rigging_ptr);
+    P_DECL(pmdl_rigging_ctx, rigging_ptr);
 } pmdl_ref_entry;
 
 /* PMDL Header */

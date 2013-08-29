@@ -98,7 +98,7 @@
 		E40231C017543F2100DE076A /* api.docurium */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = api.docurium; sourceTree = "<group>"; };
 		E403AB971797094900D6B203 /* pmdl_loop_vert.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pmdl_loop_vert.py; sourceTree = "<group>"; };
 		E4069D26179EF34B00FB4D73 /* PMDLRuntime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PMDLRuntime.h; sourceTree = "<group>"; };
-		E42D4EE217CBF8C500F81458 /* PMDLRuntimeRigging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PMDLRuntimeRigging.h; sourceTree = "<group>"; };
+		E40E323C17CEC00900F9C2A2 /* PMDLRuntimeRigging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PMDLRuntimeRigging.h; sourceTree = "<group>"; };
 		E42D4EE317CBF8CE00F81458 /* PMDLRuntimeRigging.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = PMDLRuntimeRigging.c; sourceTree = "<group>"; };
 		E4360CB717B9C16D0016DCDD /* pspl.1.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = pspl.1.md; sourceTree = "<group>"; };
 		E44577BD1781DBA4003EE09C /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -524,6 +524,7 @@
 			children = (
 				E4AFAE54171CA6D700F7A0BF /* PSPLExtension.h */,
 				E45034D4175819BC0079B62D /* PSPLRuntime.h */,
+				E40E323C17CEC00900F9C2A2 /* PMDLRuntimeRigging.h */,
 				E4069D26179EF34B00FB4D73 /* PMDLRuntime.h */,
 				E4AFAE32171C93C000F7A0BF /* PSPL */,
 			);
@@ -682,7 +683,6 @@
 				E4CD266D179F396E00172F31 /* PMDLRuntimeLinAlgebraSSE.s */,
 				E401AD2117A96BDC00409F7D /* PMDLRuntimeProcessing.h */,
 				E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */,
-				E42D4EE217CBF8C500F81458 /* PMDLRuntimeRigging.h */,
 				E42D4EE317CBF8CE00F81458 /* PMDLRuntimeRigging.c */,
 			);
 			path = PMDLFormat;

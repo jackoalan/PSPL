@@ -44,9 +44,9 @@ static void load_object_hook(pspl_runtime_psplc_t* object) {
     for (i=0 ; i<files->count.native.integer ; ++i) {
         char hash[PSPL_HASH_STRING_LEN];
         pspl_hash_fmt(hash, &files->files[i].pmdl_file_hash);
-        files->files[i].file_ptr =
+        files->files[i].file_ptr = (pspl_runtime_arc_file_t*)
         pspl_runtime_get_archived_file_from_hash(object->parent, &files->files[i].pmdl_file_hash, 1);
-        pmdl_init(files->files[i].file_ptr);
+        pmdl_init(files->files[i].file_ptr, &files->files[i].rigging_ptr);
     }
     
     // Set user data pointer appropriately
@@ -62,7 +62,7 @@ static void unload_object_hook(pspl_runtime_psplc_t* object) {
     // Release all referenced files
     int i;
     for (i=0 ; i<files->count.native.integer ; ++i) {
-        pmdl_destroy(files->files[i].file_ptr);
+        pmdl_destroy(files->files[i].file_ptr, &files->files[i].rigging_ptr);
         pspl_runtime_release_archived_file(files->files[i].file_ptr);
     }
     
