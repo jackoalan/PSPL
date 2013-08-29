@@ -11,6 +11,12 @@
 
 #include <PSPLRuntime.h>
 
+#if __has_extension(attribute_ext_vector_type)
+typedef float float2 __attribute__((ext_vector_type(2)));
+#else
+typedef float float2[2];
+#endif
+
 struct pmdl_rigging_ctx;
 struct pmdl_animation_ctx;
 
@@ -52,12 +58,9 @@ typedef struct {
 /* In-memory curve keyframe representation (matches file structure) */
 typedef struct {
     
-    float left_handle_time;
-    float left_handle_value;
-    float main_handle_time;
-    float main_handle_value;
-    float right_handle_time;
-    float right_handle_value;
+    float2 left_handle;
+    float2 main_handle;
+    float2 right_handle;
     
 } pmdl_curve_keyframe;
 
@@ -76,6 +79,8 @@ typedef struct {
     unsigned bone_index;
     
     // Property curves being animated (unavailable curves set to NULL)
+    unsigned property_count;
+    
     const pmdl_curve* scale_x;
     const pmdl_curve* scale_y;
     const pmdl_curve* scale_z;
@@ -134,10 +139,6 @@ typedef struct pmdl_rigging_ctx {
 } pmdl_rigging_ctx;
 
 
-/* Routine to look up bone structure */
-pmdl_bone* pmdl_lookup_bone(pmdl_rigging_ctx* rig_ctx);
-
-
 #pragma mark Animation API Context
 
 /* Curve context representation (for animating bézier curve instances) */
@@ -162,21 +163,22 @@ typedef void(*pmdl_animation_event)(struct pmdl_animation_ctx* animation_ctx);
  * Multiple contexts may be established for instanced playback */
 typedef struct pmdl_animation_ctx {
     
-    // Selected action to playback
+    // Selected action to playback (do not change!!!)
     const pmdl_action* action;
     
     
     // Playback-rate (original time units per second; negative to reverse)
-    float playback_rate;
+    double playback_rate;
     
     // Previous absolute time (to calculate advancement delta)
     int have_abs_time;
-    float previous_abs_time;
+    double previous_abs_time;
     
     // Current time value for animation (in original time units)
-    float current_time;
+    double current_time;
     
     // Curve playback instance array (indexing corresponds to active bone tracks in `pmdl_action`)
+    unsigned curve_instance_count;
     pmdl_curve_playback* curve_instance_array;
     
     
@@ -185,16 +187,22 @@ typedef struct pmdl_animation_ctx {
     
     
     // Event callbacks
-    pmdl_animation_event pre_loop_point_cb;
-    pmdl_animation_event post_loop_point_cb;
+    pmdl_animation_event anim_loop_point_cb;
+    pmdl_animation_event anim_end_cb;
     
 } pmdl_animation_ctx;
 
 /* Routine to init animation context */
-void pmdl_animation_init(pmdl_animation_ctx* ctx_ptr, const pmdl_action* action);
+pmdl_animation_ctx* pmdl_animation_init(const pmdl_action* action);
+
+/* Routine to destroy aimation context */
+void pmdl_animation_destroy(pmdl_animation_ctx* ctx_ptr);
 
 /* Routine to advance animation context */
-void pmdl_animation_advance(pmdl_animation_ctx* ctx_ptr);
+void pmdl_animation_advance(pmdl_animation_ctx* ctx_ptr, float abs_time);
+
+/* Routine to rewind animation context (call advance afterwards before drawing) */
+void pmdl_animation_rewind(pmdl_animation_ctx* ctx_ptr);
  
  
  #endif

@@ -7,6 +7,7 @@
 //
 
 #include <stdio.h>
+#include <math.h>
 #include <PMDLRuntimeRigging.h>
 #include "PMDLRuntimeProcessing.h"
 
@@ -221,8 +222,10 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
             action += sizeof(uint32_t);
             
             track->bone_index = ACTION_BONE_IDX(track_head);
+            track->property_count = 0;
             
             if (ACTION_SCALE(track_head)) {
+                track->property_count += 3;
                 track->scale_x = (const pmdl_curve*)&action;
                 action += sizeof(pmdl_curve_keyframe)*track->scale_x->keyframe_count + sizeof(uint32_t);
                 track->scale_y = (const pmdl_curve*)&action;
@@ -236,6 +239,7 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
             }
             
             if (ACTION_ROTATION(track_head)) {
+                track->property_count += 4;
                 track->rotation_w = (const pmdl_curve*)&action;
                 action += sizeof(pmdl_curve_keyframe)*track->rotation_w->keyframe_count + sizeof(uint32_t);
                 track->rotation_x = (const pmdl_curve*)&action;
@@ -252,6 +256,7 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
             }
             
             if (ACTION_LOCATION(track_head)) {
+                track->property_count += 3;
                 track->location_x = (const pmdl_curve*)&action;
                 action += sizeof(pmdl_curve_keyframe)*track->location_x->keyframe_count + sizeof(uint32_t);
                 track->location_y = (const pmdl_curve*)&action;
@@ -280,7 +285,245 @@ void pmdl_rigging_destroy(pmdl_rigging_ctx** rig_ctx) {
 }
 
 
-/* Routine to look up bone structure */
-pmdl_bone* pmdl_lookup_bone(pmdl_rigging_ctx* rig_ctx) {
+
+/* Routine to init animation context */
+pmdl_animation_ctx* pmdl_animation_init(const pmdl_action* action) {
+    int i,j;
+    if (!action)
+        return NULL;
+    
+    // Determine size of context block
+    size_t block_size = sizeof(pmdl_animation_ctx);
+    
+    unsigned curve_instance_count = 0;
+    for (i=0 ; i<action->bone_track_count; ++i) {
+        const pmdl_action_bone_track* bone_track = &action->bone_track_array[i];
+        curve_instance_count += bone_track->property_count;
+    }
+    
+    block_size += sizeof(pmdl_curve_playback)*curve_instance_count;
+    
+    // Allocate context block
+    void* context_block = pspl_allocate_media_block(block_size);
+    pmdl_animation_ctx* new_ctx = context_block;
+    new_ctx->action = action;
+    new_ctx->playback_rate = 1.0;
+    new_ctx->have_abs_time = 0;
+    new_ctx->current_time = 0.0;
+    new_ctx->curve_instance_count = curve_instance_count;
+    new_ctx->curve_instance_array = context_block + sizeof(pmdl_animation_ctx);
+    new_ctx->loop_flag = 0;
+    new_ctx->anim_loop_point_cb = NULL;
+    new_ctx->anim_end_cb = NULL;
+    
+    // Populate curve instance array
+    j=0;
+    for (i=0 ; i<action->bone_track_count; ++i) {
+        
+        const pmdl_action_bone_track* bone_track = &action->bone_track_array[i];
+        pmdl_curve_playback* target_track = NULL;
+        
+        if (bone_track->scale_x) {
+            target_track = &new_ctx->curve_instance_array[j++];
+            target_track->prev_kf_idx = -1;
+            target_track->curve = bone_track->scale_x;
+        }
+        if (bone_track->scale_y) {
+            target_track = &new_ctx->curve_instance_array[j++];
+            target_track->prev_kf_idx = -1;
+            target_track->curve = bone_track->scale_y;
+        }
+        if (bone_track->scale_z) {
+            target_track = &new_ctx->curve_instance_array[j++];
+            target_track->prev_kf_idx = -1;
+            target_track->curve = bone_track->scale_z;
+        }
+        
+        if (bone_track->rotation_w) {
+            target_track = &new_ctx->curve_instance_array[j++];
+            target_track->prev_kf_idx = -1;
+            target_track->curve = bone_track->rotation_w;
+        }
+        if (bone_track->rotation_x) {
+            target_track = &new_ctx->curve_instance_array[j++];
+            target_track->prev_kf_idx = -1;
+            target_track->curve = bone_track->rotation_x;
+        }
+        if (bone_track->rotation_y) {
+            target_track = &new_ctx->curve_instance_array[j++];
+            target_track->prev_kf_idx = -1;
+            target_track->curve = bone_track->rotation_y;
+        }
+        if (bone_track->rotation_z) {
+            target_track = &new_ctx->curve_instance_array[j++];
+            target_track->prev_kf_idx = -1;
+            target_track->curve = bone_track->rotation_z;
+        }
+        
+        if (bone_track->location_x) {
+            target_track = &new_ctx->curve_instance_array[j++];
+            target_track->prev_kf_idx = -1;
+            target_track->curve = bone_track->location_x;
+        }
+        if (bone_track->location_y) {
+            target_track = &new_ctx->curve_instance_array[j++];
+            target_track->prev_kf_idx = -1;
+            target_track->curve = bone_track->location_y;
+        }
+        if (bone_track->location_z) {
+            target_track = &new_ctx->curve_instance_array[j++];
+            target_track->prev_kf_idx = -1;
+            target_track->curve = bone_track->location_z;
+        }
+        
+    }
+    
+    return new_ctx;
     
 }
+
+/* Routine to destroy aimation context */
+void pmdl_animation_destroy(pmdl_animation_ctx* ctx_ptr) {
+    pspl_free_media_block(ctx_ptr);
+}
+
+/* Evaluate cubic bézier given T value */
+static inline float2 evaluate_bezier(double t,
+                                     const pmdl_curve_keyframe* left_kf,
+                                     const pmdl_curve_keyframe* right_kf) {
+    
+    double t1m = 1.0-t;
+    double t1m2 = t1m*t1m;
+    double tsq = t*t;
+    
+    double a = (t1m2*t1m);
+    double b = (3*t1m2*t);
+    double c = (3*t1m*tsq);
+    double d = (tsq*t);
+    
+#   if __has_extension(attribute_ext_vector_type)
+    return (a*left_kf->main_handle) + (b*left_kf->right_handle) +
+           (c*right_kf->left_handle) + (d*right_kf->main_handle);
+#   else
+    float2 result;
+    result[0] = (a*left_kf->main_handle[0]) + (b*left_kf->right_handle[0]) +
+                (c*right_kf->left_handle[0]) + (d*right_kf->main_handle[0]);
+    result[1] = (a*left_kf->main_handle[1]) + (b*left_kf->right_handle[1]) +
+                (c*right_kf->left_handle[1]) + (d*right_kf->main_handle[1]);
+    return result;
+#   endif
+    
+}
+
+/* Solve *fcurve* bézier Y (value) for X (time) via adaptive precision */
+#define SOLVE_ERROR 0.05
+static inline float solve_bezier(double time,
+                                 const pmdl_curve_keyframe* left_kf,
+                                 const pmdl_curve_keyframe* right_kf) {
+    
+    unsigned err = 1;
+    double epsilon = 0.5;
+    double t = 0.5;
+    float2 result;
+    while (1) {
+        result = evaluate_bezier(t, left_kf, right_kf);
+        err = fabs(result[0] - time);
+        if (err < SOLVE_ERROR)
+            break;
+        epsilon /=2;
+        if (result[0] > time)
+            t -= epsilon;
+        else
+            t += epsilon;
+    }
+    
+    return result[1];
+    
+}
+
+/* Routine to advance animation context */
+void pmdl_animation_advance(pmdl_animation_ctx* ctx_ptr, float abs_time) {
+    int i,j;
+    
+    // Calculate current time in animation
+    double current_time;
+    if (ctx_ptr->have_abs_time) {
+        current_time = ((abs_time - ctx_ptr->previous_abs_time) * ctx_ptr->playback_rate) + ctx_ptr->current_time;
+        ctx_ptr->previous_abs_time = abs_time;
+    } else {
+        ctx_ptr->have_abs_time = 1;
+        current_time = 0.0;
+        ctx_ptr->previous_abs_time = abs_time;
+    }
+    
+    // Determine if animation has ended
+    if (current_time > ctx_ptr->action->action_duration) {
+        if (ctx_ptr->loop_flag) {
+            if (ctx_ptr->anim_loop_point_cb)
+                ctx_ptr->anim_loop_point_cb(ctx_ptr);
+            current_time -= ctx_ptr->action->action_duration;
+        } else {
+            if (ctx_ptr->anim_end_cb)
+                ctx_ptr->anim_end_cb(ctx_ptr);
+            return;
+        }
+    }
+    ctx_ptr->current_time = current_time;
+    
+    // Iterate curve instances and cache current animation values
+    for (i=0 ; i<ctx_ptr->curve_instance_count ; ++i) {
+        pmdl_curve_playback* curve_inst = &ctx_ptr->curve_instance_array[i];
+        
+        // If one keyframe, static pose
+        if (curve_inst->curve->keyframe_count == 1) {
+            curve_inst->cached_value = curve_inst->curve->keyframe_array[0].main_handle[1];
+            continue;
+        }
+        
+        // Find surrounding keyframes
+        const pmdl_curve_keyframe* left_kf = NULL;
+        const pmdl_curve_keyframe* right_kf = NULL;
+
+        for (j=curve_inst->prev_kf_idx+1 ; j<curve_inst->curve->keyframe_count ; ++j) {
+            
+            right_kf = &curve_inst->curve->keyframe_array[j];
+            if (j)
+                left_kf = &curve_inst->curve->keyframe_array[j-1];
+            else
+                left_kf = right_kf;
+            
+            if (current_time >= right_kf->main_handle[0]) {
+                if (j == curve_inst->curve->keyframe_count-1) {
+                    left_kf = right_kf;
+                    break;
+                }
+                continue;
+            } else if (left_kf != right_kf && current_time < left_kf->main_handle[0]) {
+                j-=2;
+                continue;
+            }
+            curve_inst->prev_kf_idx = j-1;
+            break;
+            
+        }
+        
+        // If outside keyframe bounds, simply cache extrema value
+        if (left_kf == right_kf) {
+            curve_inst->cached_value = left_kf->main_handle[1];
+            continue;
+        }
+        
+        // Otherwise, compute cubic polynomial
+        curve_inst->cached_value = solve_bezier(current_time, left_kf, right_kf);
+        
+        
+    }
+    
+}
+
+/* Routine to rewind animation context (call advance afterwards before drawing) */
+void pmdl_animation_rewind(pmdl_animation_ctx* ctx_ptr) {
+    ctx_ptr->have_abs_time = 0;
+    ctx_ptr->current_time = 0.0;
+}
+
