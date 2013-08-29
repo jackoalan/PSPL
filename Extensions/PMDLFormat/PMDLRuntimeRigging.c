@@ -396,10 +396,10 @@ static inline float2 evaluate_bezier(double t,
     double t1m2 = t1m*t1m;
     double tsq = t*t;
     
-    double a = (t1m2*t1m);
-    double b = (3*t1m2*t);
-    double c = (3*t1m*tsq);
-    double d = (tsq*t);
+    float a = (float)(t1m2*t1m);
+    float b = (float)(3*t1m2*t);
+    float c = (float)(3*t1m*tsq);
+    float d = (float)(tsq*t);
     
 #   if __has_extension(attribute_ext_vector_type)
     return (a*left_kf->main_handle) + (b*left_kf->right_handle) +
