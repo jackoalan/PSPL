@@ -224,11 +224,11 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
             
             if (ACTION_SCALE(track_head)) {
                 track->scale_x = (const pmdl_curve*)&action;
-                action += sizeof(pmdl_curve_keyframe)*track->scale_x->keyframe_count;
+                action += sizeof(pmdl_curve_keyframe)*track->scale_x->keyframe_count + sizeof(uint32_t);
                 track->scale_y = (const pmdl_curve*)&action;
-                action += sizeof(pmdl_curve_keyframe)*track->scale_y->keyframe_count;
+                action += sizeof(pmdl_curve_keyframe)*track->scale_y->keyframe_count + sizeof(uint32_t);
                 track->scale_z = (const pmdl_curve*)&action;
-                action += sizeof(pmdl_curve_keyframe)*track->scale_z->keyframe_count;
+                action += sizeof(pmdl_curve_keyframe)*track->scale_z->keyframe_count + sizeof(uint32_t);
             } else {
                 track->scale_x = NULL;
                 track->scale_y = NULL;
@@ -237,13 +237,13 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
             
             if (ACTION_ROTATION(track_head)) {
                 track->rotation_w = (const pmdl_curve*)&action;
-                action += sizeof(pmdl_curve_keyframe)*track->rotation_w->keyframe_count;
+                action += sizeof(pmdl_curve_keyframe)*track->rotation_w->keyframe_count + sizeof(uint32_t);
                 track->rotation_x = (const pmdl_curve*)&action;
-                action += sizeof(pmdl_curve_keyframe)*track->rotation_x->keyframe_count;
+                action += sizeof(pmdl_curve_keyframe)*track->rotation_x->keyframe_count + sizeof(uint32_t);
                 track->rotation_y = (const pmdl_curve*)&action;
-                action += sizeof(pmdl_curve_keyframe)*track->rotation_y->keyframe_count;
+                action += sizeof(pmdl_curve_keyframe)*track->rotation_y->keyframe_count + sizeof(uint32_t);
                 track->rotation_z = (const pmdl_curve*)&action;
-                action += sizeof(pmdl_curve_keyframe)*track->rotation_z->keyframe_count;
+                action += sizeof(pmdl_curve_keyframe)*track->rotation_z->keyframe_count + sizeof(uint32_t);
             } else {
                 track->rotation_w = NULL;
                 track->rotation_x = NULL;
@@ -253,11 +253,11 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
             
             if (ACTION_LOCATION(track_head)) {
                 track->location_x = (const pmdl_curve*)&action;
-                action += sizeof(pmdl_curve_keyframe)*track->location_x->keyframe_count;
+                action += sizeof(pmdl_curve_keyframe)*track->location_x->keyframe_count + sizeof(uint32_t);
                 track->location_y = (const pmdl_curve*)&action;
-                action += sizeof(pmdl_curve_keyframe)*track->location_y->keyframe_count;
+                action += sizeof(pmdl_curve_keyframe)*track->location_y->keyframe_count + sizeof(uint32_t);
                 track->location_z = (const pmdl_curve*)&action;
-                action += sizeof(pmdl_curve_keyframe)*track->location_z->keyframe_count;
+                action += sizeof(pmdl_curve_keyframe)*track->location_z->keyframe_count + sizeof(uint32_t);
             } else {
                 track->location_x = NULL;
                 track->location_y = NULL;
