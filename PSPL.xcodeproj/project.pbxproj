@@ -48,7 +48,6 @@
 		E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3A1740578E003B06BF /* ReferenceGatherer.c */; };
 		E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3D17411620003B06BF /* ObjectIndexer.c */; };
 		E4A1640A17BB00BA00AF995B /* gx_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */; };
-		E4A6251A17C18C810021764B /* PMDLRuntimeProcessing.c in Sources */ = {isa = PBXBuildFile; fileRef = E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */; };
 		E4A6251B17C3AD6D0021764B /* TMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E5175CDA560079B62D /* TMRuntime.c */; };
 		E4A6251F17C3CC600021764B /* d3d11_runtime_interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4C5E8BA177E826B00D73E7D /* d3d11_runtime_interface.cpp */; };
 		E4A6252017C3CCB00021764B /* d3d11_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4917A175109DD006FCA59 /* d3d11_runtime.c */; };
@@ -58,6 +57,7 @@
 		E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAEA117315D4000F7A0BF /* Buffer.c */; };
 		E4AFAEA3173161B500F7A0BF /* Driver.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE46171CA34700F7A0BF /* Driver.c */; };
 		E4B7BCF0173C9DC0002A513E /* gx_offline.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6B171D825400F7A0BF /* gx_offline.c */; };
+		E4BF0DCD17D1849F00AF57AB /* PMDLRuntimeProcessing.c in Sources */ = {isa = PBXBuildFile; fileRef = E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */; };
 		E4C5270F1778A36300D1D822 /* SMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C5270E1778A32D00D1D822 /* SMRuntime.c */; };
 		E4CD266B179F376300172F31 /* PMDLRuntimeLinAlgebraRef.c in Sources */ = {isa = PBXBuildFile; fileRef = E4CD266A179F374400172F31 /* PMDLRuntimeLinAlgebraRef.c */; };
 		E4CD266E179F39B800172F31 /* PMDLRuntimeLinAlgebraSSE.s in Sources */ = {isa = PBXBuildFile; fileRef = E4CD266D179F396E00172F31 /* PMDLRuntimeLinAlgebraSSE.s */; };
@@ -981,9 +981,9 @@
 				E44577C11781DDAE003EE09C /* PMDLRuntime.c in Sources */,
 				E4461F7E17B31EFD0039B479 /* hash_builtin.c in Sources */,
 				E4A6251B17C3AD6D0021764B /* TMRuntime.c in Sources */,
-				E4A6251A17C18C810021764B /* PMDLRuntimeProcessing.c in Sources */,
 				E42D4EE517CBFAF900F81458 /* PMDLRuntimeRigging.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
+				E4BF0DCD17D1849F00AF57AB /* PMDLRuntimeProcessing.c in Sources */,
 				E4CD266E179F39B800172F31 /* PMDLRuntimeLinAlgebraSSE.s in Sources */,
 				E4CD266B179F376300172F31 /* PMDLRuntimeLinAlgebraRef.c in Sources */,
 				E4CE71F41785043D009F5932 /* RuntimeCore.c in Sources */,

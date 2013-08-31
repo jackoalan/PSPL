@@ -17,6 +17,8 @@
 #include "PMDLCommon.h"
 #include "PMDLRuntimeProcessing.h"
 
+/* Homogenous transformation matrix bottom row */
+static const pspl_vector4_t HOMOGENOUS_BOTTOM_VECTOR = {.f[0]=0, .f[1]=0, .f[2]=0, .f[3]=1};
 
 /* Logical XOR */
 #define LXOR(a,b) (((a) || (b)) && !((a) && (b)))
@@ -141,11 +143,25 @@ typedef struct {
         uint32_t skin_idx;
         pmdl_general_prim prim;
     } pmdl_general_prim_par1;
+
+    struct gl_bufs_t {
+        GLuint vao, vert_buf, elem_buf;
+    };
 #elif PMDL_GX
     typedef struct {
         uint32_t dl_offset, dl_length;
     } pmdl_gx_mesh;
 #endif
+
+
+#pragma mark Master Init
+
+pspl_matrix44_t IDENTITY_MATS[PMDL_MAX_BONES];
+void pmdl_master_init() {
+    int i;
+    for (i=0 ; i<PMDL_MAX_BONES ; ++i)
+        pmdl_matrix44_identity(&IDENTITY_MATS[i]);
+}
 
 
 #pragma mark PMDL Loading / Unloading
@@ -183,18 +199,16 @@ static int pmdl_init_collections(const pspl_runtime_arc_file_t* pmdl_file) {
         index_buf += index_buf_offset;
         
 #       if PSPL_RUNTIME_PLATFORM_GL2
+            struct gl_bufs_t* gl_bufs = index_buf;
+        
             // VAO
-            GLuint* vao = (GLuint*)index_buf;
-            GLVAO(glGenVertexArrays)(1, vao);
-            GLVAO(glBindVertexArray)(*vao);
+            GLVAO(glGenVertexArrays)(1, &gl_bufs->vao);
+            GLVAO(glBindVertexArray)(gl_bufs->vao);
             
             // VBOs
-            struct {
-                GLuint vert_buf, elem_buf;
-            } gl_bufs;
-            glGenBuffers(2, (GLuint*)&gl_bufs);
-            glBindBuffer(GL_ARRAY_BUFFER, gl_bufs.vert_buf);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_bufs.elem_buf);
+            glGenBuffers(2, (GLuint*)&gl_bufs->vert_buf);
+            glBindBuffer(GL_ARRAY_BUFFER, gl_bufs->vert_buf);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_bufs->elem_buf);
             glBufferData(GL_ARRAY_BUFFER, collection_header->vert_buf_len,
                          collection_buf + collection_header->vert_buf_off, GL_STATIC_DRAW);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, collection_header->elem_buf_len,
@@ -247,16 +261,13 @@ static void pmdl_destroy_collections(void* file_data) {
         void* index_buf = collection_buf + collection_header->draw_idx_off;
         
 #       if PSPL_RUNTIME_PLATFORM_GL2
-            GLuint* vao = (GLuint*)index_buf;
-            GLVAO(glBindVertexArray)(*vao);
-            
-            struct {
-                GLuint vert_buf, elem_buf;
-            } gl_bufs;
-            glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*)&gl_bufs.vert_buf);
-            glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, (GLint*)&gl_bufs.elem_buf);
-            glDeleteBuffers(2, (GLuint*)&gl_bufs);
-            GLVAO(glDeleteVertexArrays)(1, vao);
+            struct gl_bufs_t* gl_bufs = index_buf;
+            GLVAO(glBindVertexArray)(gl_bufs->vao);
+        
+            glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*)&gl_bufs->vert_buf);
+            glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, (GLint*)&gl_bufs->elem_buf);
+            glDeleteBuffers(2, (GLuint*)&gl_bufs->vert_buf);
+            GLVAO(glDeleteVertexArrays)(1, &gl_bufs->vao);
         
 #       elif PSPL_RUNTIME_PLATFORM_D3D11
         
@@ -269,15 +280,15 @@ static void pmdl_destroy_collections(void* file_data) {
 }
 
 /* This routine will validate and load PMDL data into GPU */
-int pmdl_init(const pspl_runtime_arc_file_t* pmdl_file, pmdl_rigging_ctx** rigging_ptr) {
+int pmdl_init(pmdl_t* pmdl) {
     char hash[PSPL_HASH_STRING_LEN];
     
     // First, validate header members
-    pmdl_header* header = pmdl_file->file_data;
+    pmdl_header* header = pmdl->file_ptr->file_data;
     
     // Magic
     if (memcmp(header->magic, "PMDL", 4)) {
-        pspl_hash_fmt(hash, &pmdl_file->hash);
+        pspl_hash_fmt(hash, &pmdl->file_ptr->hash);
         pspl_warn("Unable to init PMDL", "file `%s` has invalid magic; skipping", hash);
         return -1;
     }
@@ -289,14 +300,14 @@ int pmdl_init(const pspl_runtime_arc_file_t* pmdl_file, pmdl_rigging_ctx** riggi
         char* endian_str = "_BIG";
 #   endif
     if (memcmp(header->endianness, endian_str, 4)) {
-        pspl_hash_fmt(hash, &pmdl_file->hash);
+        pspl_hash_fmt(hash, &pmdl->file_ptr->hash);
         pspl_warn("Unable to init PMDL", "file `%s` has invalid endianness; skipping", hash);
         return -1;
     }
     
     // Pointer size
     if (header->pointer_size != sizeof(void*)) {
-        pspl_hash_fmt(hash, &pmdl_file->hash);
+        pspl_hash_fmt(hash, &pmdl->file_ptr->hash);
         pspl_warn("Unable to init PMDL", "file `%s` pointer size doesn't match (%d != %lu); skipping",
                   hash, header->pointer_size, (unsigned long)sizeof(void*));
         return -1;
@@ -304,7 +315,7 @@ int pmdl_init(const pspl_runtime_arc_file_t* pmdl_file, pmdl_rigging_ctx** riggi
     
     // Draw Format
     if (memcmp(header->draw_format, DRAW_FMT, 4)) {
-        pspl_hash_fmt(hash, &pmdl_file->hash);
+        pspl_hash_fmt(hash, &pmdl->file_ptr->hash);
         pspl_warn("Unable to init PMDL", "file `%s` has `%.4s` draw format, expected `%.4s` format; skipping",
                   hash, header->draw_format, DRAW_FMT);
         return -1;
@@ -313,7 +324,7 @@ int pmdl_init(const pspl_runtime_arc_file_t* pmdl_file, pmdl_rigging_ctx** riggi
     
     // Decode PAR sub-type
     if (memcmp(header->sub_type_prefix, "PAR", 3)) {
-        pspl_hash_fmt(hash, &pmdl_file->hash);
+        pspl_hash_fmt(hash, &pmdl->file_ptr->hash);
         pspl_warn("Unable to init PMDL", "invalid PAR type specified in `%s`; skipping", hash);
         return -1;
     }
@@ -325,27 +336,27 @@ int pmdl_init(const pspl_runtime_arc_file_t* pmdl_file, pmdl_rigging_ctx** riggi
     else if (header->sub_type_num == '2')
         sub_type = PMDL_PAR2;
     else {
-        pspl_hash_fmt(hash, &pmdl_file->hash);
+        pspl_hash_fmt(hash, &pmdl->file_ptr->hash);
         pspl_warn("Unable to init PMDL", "invalid PAR type specified in `%s`; skipping", hash);
         return -1;
     }
     
     // Load shaders into GPU
     int i;
-    uint32_t shader_count = *(uint32_t*)(pmdl_file->file_data + header->shader_table_offset);
-    pspl_hash* shader_array = pmdl_file->file_data + header->shader_table_offset + sizeof(uint32_t);
+    uint32_t shader_count = *(uint32_t*)(pmdl->file_ptr->file_data + header->shader_table_offset);
+    pspl_hash* shader_array = pmdl->file_ptr->file_data + header->shader_table_offset + sizeof(uint32_t);
     for (i=0 ; i<shader_count ; ++i)
-        pspl_runtime_get_psplc_from_hash(pmdl_file->parent, &shader_array[i], 1);
+        pspl_runtime_get_psplc_from_hash(pmdl->file_ptr->parent, &shader_array[i], 1);
     
     // Init rigging context (if PAR1)
     if (header->sub_type_num == '1')
-        pmdl_rigging_init(rigging_ptr, pmdl_file->file_data + sizeof(pmdl_header),
-                          pmdl_file->file_data + header->bone_table_offset);
+        pmdl_rigging_init(&pmdl->rigging_ptr, pmdl->file_ptr->file_data + sizeof(pmdl_header),
+                          pmdl->file_ptr->file_data + header->bone_table_offset);
     
     // Load collections into GPU
-    pmdl_init_collections(pmdl_file);
+    pmdl_init_collections(pmdl->file_ptr);
 #   if PMDL_GX
-        DCStoreRange(pmdl_file->file_data, pmdl_file->file_len);
+        DCStoreRange(pmdl->file_ptr->file_data, pmdl->file_ptr->file_len);
 #   endif
     
     return 0;
@@ -353,27 +364,44 @@ int pmdl_init(const pspl_runtime_arc_file_t* pmdl_file, pmdl_rigging_ctx** riggi
 }
 
 /* This routine will unload data from GPU */
-void pmdl_destroy(const pspl_runtime_arc_file_t* pmdl_file, pmdl_rigging_ctx** rigging_ptr) {
-    pmdl_header* header = pmdl_file->file_data;
+void pmdl_destroy(pmdl_t* pmdl) {
+    pmdl_header* header = pmdl->file_ptr->file_data;
 
     // Unload shaders from GPU
     int i;
-    uint32_t shader_count = *(uint32_t*)(pmdl_file->file_data + header->shader_table_offset);
-    pspl_hash* shader_array = pmdl_file->file_data + header->shader_table_offset + sizeof(uint32_t);
+    uint32_t shader_count = *(uint32_t*)(pmdl->file_ptr->file_data + header->shader_table_offset);
+    pspl_hash* shader_array = pmdl->file_ptr->file_data + header->shader_table_offset + sizeof(uint32_t);
     for (i=0 ; i<shader_count ; ++i) {
         const pspl_runtime_psplc_t* shader_obj =
-        pspl_runtime_get_psplc_from_hash(pmdl_file->parent, &shader_array[i], 0);
+        pspl_runtime_get_psplc_from_hash(pmdl->file_ptr->parent, &shader_array[i], 0);
         pspl_runtime_release_psplc(shader_obj);
     }
     
     // Destroy rigging context (if PAR1)
     if (header->sub_type_num == '1')
-        pmdl_rigging_destroy(rigging_ptr);
+        pmdl_rigging_destroy((pmdl_rigging_ctx**)&pmdl->rigging_ptr);
     
     // Unload collections from GPU
 #   if PMDL_GENERAL
-        pmdl_destroy_collections(pmdl_file->file_data);
+        pmdl_destroy_collections(pmdl->file_ptr->file_data);
 #   endif
+    
+}
+
+
+#pragma mark PMDL Action lookup
+
+/* Lookup PMDL rigging action */
+const pmdl_action* pmdl_action_lookup(const pmdl_t* pmdl, const char* action_name) {
+    int i;
+    
+    for (i=0 ; i<pmdl->rigging_ptr->action_count ; ++i) {
+        const pmdl_action* action = &pmdl->rigging_ptr->action_array[i];
+        if (!strcmp(action_name, action->action_name))
+            return action;
+    }
+    
+    return NULL;
     
 }
 
@@ -382,37 +410,31 @@ void pmdl_destroy(const pspl_runtime_arc_file_t* pmdl_file, pmdl_rigging_ctx** r
 
 /* Invalidate context transformation cache (if values updated) */
 void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv_bits) {
-    int i;
     
     if (!inv_bits)
         return;
     
     if (inv_bits & PMDL_INVALIDATE_VIEW) {
-        pmdl_matrix_lookat(ctx->cached_view_mtx, ctx->camera_view);
+        pmdl_matrix_lookat(&ctx->cached_view_mtx, ctx->camera_view);
     }
     
     if (inv_bits & (PMDL_INVALIDATE_MODEL | PMDL_INVALIDATE_VIEW)) {
         
-        pmdl_matrix34_mul(ctx->model_mtx, ctx->cached_view_mtx, ctx->cached_modelview_mtx);
-        for (i=0 ; i<3 ; ++i)
-            ctx->cached_modelview_mtx[3][i] = 0;
-        ctx->cached_modelview_mtx[3][3] = 1;
+        pmdl_matrix34_mul(&ctx->model_mtx, &ctx->cached_view_mtx, &ctx->cached_modelview_mtx.m34);
+        pmdl_vector4_cpy(HOMOGENOUS_BOTTOM_VECTOR, ctx->cached_modelview_mtx.v[3]);
         
+        pmdl_matrix34_invxpose(&ctx->cached_modelview_mtx.m34, &ctx->cached_modelview_invxpose_mtx.m34);
+        pmdl_vector4_cpy(HOMOGENOUS_BOTTOM_VECTOR, ctx->cached_modelview_invxpose_mtx.v[3]);
 
-        pmdl_matrix34_invxpose(ctx->cached_modelview_mtx, ctx->cached_modelview_invxpose_mtx);
-        for (i=0 ; i<3 ; ++i)
-            ctx->cached_modelview_invxpose_mtx[3][i] = 0;
-        ctx->cached_modelview_invxpose_mtx[3][3] = 1;
-        
     }
     
     if (inv_bits & PMDL_INVALIDATE_PROJECTION) {
         if (ctx->projection_type == PMDL_PERSPECTIVE) {
-            pmdl_matrix_perspective(ctx->cached_projection_mtx, ctx->projection.perspective);
+            pmdl_matrix_perspective(&ctx->cached_projection_mtx, ctx->projection.perspective);
             ctx->f_tanv = tanf(DegToRad(ctx->projection.perspective.fov));
             ctx->f_tanh = ctx->f_tanv * ctx->projection.perspective.aspect;
         } else if (ctx->projection_type == PMDL_ORTHOGRAPHIC) {
-            pmdl_matrix_orthographic(ctx->cached_projection_mtx, ctx->projection.orthographic);
+            pmdl_matrix_orthographic(&ctx->cached_projection_mtx, ctx->projection.orthographic);
         }
     }
     
@@ -436,37 +458,37 @@ static int pmdl_aabb_frustum_test(pmdl_draw_context_t* ctx, float aabb[2][3]) {
     for (i=0 ; i<8 ; ++i) {
         
         // Select point
-        pspl_vector3_t point = {aabb[i/4][0], aabb[(i/2)&1][1], aabb[i&1][2]};
+        pspl_vector3_t point = {.f[0]=aabb[i/4][0], .f[1]=aabb[(i/2)&1][1], .f[2]=aabb[i&1][2]};
         
         // Transform point into view->point vector
-        pmdl_vector3_matrix_mul(ctx->cached_modelview_mtx, point, point);
+        pmdl_vector3_matrix_mul(&ctx->cached_modelview_mtx.m34, &point, &point);
         
         // If orthographic, perform some simple tests
         if (ctx->projection_type == PMDL_ORTHOGRAPHIC) {
             
-            if (-point[2] > ctx->projection.orthographic.far) {
+            if (-point.f[2] > ctx->projection.orthographic.far) {
                 straddle |= TOO_FAR;
                 continue;
             }
-            if (-point[2] < ctx->projection.orthographic.near) {
+            if (-point.f[2] < ctx->projection.orthographic.near) {
                 straddle |= TOO_NEAR;
                 continue;
             }
             
-            if (point[0] > ctx->projection.orthographic.right) {
+            if (point.f[0] > ctx->projection.orthographic.right) {
                 straddle |= TOO_RIGHT;
                 continue;
             }
-            if (point[0] < ctx->projection.orthographic.left) {
+            if (point.f[0] < ctx->projection.orthographic.left) {
                 straddle |= TOO_LEFT;
                 continue;
             }
             
-            if (point[1] > ctx->projection.orthographic.top) {
+            if (point.f[1] > ctx->projection.orthographic.top) {
                 straddle |= TOO_UP;
                 continue;
             }
-            if (point[1] < ctx->projection.orthographic.bottom) {
+            if (point.f[1] < ctx->projection.orthographic.bottom) {
                 straddle |= TOO_DOWN;
                 continue;
             }
@@ -480,33 +502,33 @@ static int pmdl_aabb_frustum_test(pmdl_draw_context_t* ctx, float aabb[2][3]) {
         else if (ctx->projection_type == PMDL_PERSPECTIVE) {
             
             // See if vector exceeds far plane or comes too near
-            if (-point[2] > ctx->projection.perspective.far) {
+            if (-point.f[2] > ctx->projection.perspective.far) {
                 straddle |= TOO_FAR;
                 continue;
             }
-            if (-point[2] < ctx->projection.perspective.near) {
+            if (-point.f[2] < ctx->projection.perspective.near) {
                 straddle |= TOO_NEAR;
                 continue;
             }
             
             // Use radar-test to see if point's Y coordinate is within frustum
-            float y_threshold = ctx->f_tanv * (-point[2]);
-            if (point[1] > y_threshold) {
+            float y_threshold = ctx->f_tanv * (-point.f[2]);
+            if (point.f[1] > y_threshold) {
                 straddle |= TOO_UP;
                 continue;
             }
-            if (point[1] < -y_threshold) {
+            if (point.f[1] < -y_threshold) {
                 straddle |= TOO_DOWN;
                 continue;
             }
             
             // Same for X coordinate
-            float x_threshold = ctx->f_tanh * (-point[2]);
-            if (point[0] > x_threshold) {
+            float x_threshold = ctx->f_tanh * (-point.f[2]);
+            if (point.f[0] > x_threshold) {
                 straddle |= TOO_RIGHT;
                 continue;
             }
-            if (point[0] < -x_threshold) {
+            if (point.f[0] < -x_threshold) {
                 straddle |= TOO_LEFT;
                 continue;
             }
@@ -568,10 +590,6 @@ static inline int resolve_prim(uint32_t prim) {
 #if PSPL_RUNTIME_PLATFORM_GL2
 static inline void null_shader(pmdl_draw_context_t* ctx) {
     glUseProgram(0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf((GLfloat*)ctx->cached_modelview_mtx);
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf((GLfloat*)ctx->cached_projection_mtx);
 }
 #elif PSPL_RUNTIME_PLATFORM_GX
 static inline void null_shader(pmdl_draw_context_t* ctx) {
@@ -584,8 +602,8 @@ static inline void null_shader() {
 #endif
 
 /* This routine will draw PAR0 PMDLs */
-static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file) {
-    pmdl_header* header = pmdl_file->file_data;
+static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pmdl_t* pmdl) {
+    pmdl_header* header = pmdl->file_ptr->file_data;
 
     int i,j,k;
     
@@ -604,7 +622,7 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
 #   endif
     
     
-    void* collection_buf = pmdl_file->file_data + header->collection_offset;
+    void* collection_buf = pmdl->file_ptr->file_data + header->collection_offset;
     pmdl_col_header* collection_header = collection_buf;
     for (i=0 ; i<header->collection_count; ++i) {
         
@@ -622,11 +640,14 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
         
             // Platform specific index buffer array
 #           if PSPL_RUNTIME_PLATFORM_GL2
-                GLVAO(glBindVertexArray)(*(GLuint*)index_buf);
+                struct gl_bufs_t* gl_bufs = index_buf;
+                GLVAO(glBindVertexArray)(gl_bufs->vao);
+                glBindBuffer(GL_ARRAY_BUFFER, gl_bufs->vert_buf);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_bufs->elem_buf);
 #           elif PSPL_RUNTIME_PLATFORM_D3D11
             
 #           endif
-            index_buf += header->pointer_size;
+            index_buf += header->pointer_size*3;
 
             
             for (j=0 ; j<mesh_count ; ++j) {
@@ -656,9 +677,9 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
                     pspl_runtime_bind_psplc(shader_obj);
                     
 #                   if PSPL_RUNTIME_PLATFORM_GL2
-                        glUniformMatrix4fv(shader_obj->native_shader.mv_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_mtx);
-                        glUniformMatrix4fv(shader_obj->native_shader.mv_invxpose_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_invxpose_mtx);
-                        glUniformMatrix4fv(shader_obj->native_shader.proj_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_projection_mtx);
+                        glUniformMatrix4fv(shader_obj->native_shader.mv_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_mtx.m);
+                        glUniformMatrix4fv(shader_obj->native_shader.mv_invxpose_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_invxpose_mtx.m);
+                        glUniformMatrix4fv(shader_obj->native_shader.proj_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_projection_mtx.m);
                         glUniformMatrix4fv(shader_obj->native_shader.tc_genmtx_arr,
                                            shader_obj->native_shader.config->texgen_count,
                                            GL_FALSE, (GLfloat*)ctx->texcoord_mtx);
@@ -799,12 +820,14 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file
     }
 }
 
-/* This routine will draw PAR1 PMDLs */
-void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file,
-                      pmdl_animation_ctx* anim_ctx) {
-    pmdl_header* header = pmdl_file->file_data;
 
-    int i,j,k;
+
+/* This routine will draw PAR1 PMDLs */
+void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
+                      pmdl_animation_ctx* anim_ctx) {
+    pmdl_header* header = pmdl->file_ptr->file_data;
+
+    int i,j,k,l;
     
     
 #   if PMDL_GX
@@ -822,7 +845,7 @@ void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* p
 #   endif
     
     
-    void* collection_buf = pmdl_file->file_data + header->collection_offset;
+    void* collection_buf = pmdl->file_ptr->file_data + header->collection_offset;
     pmdl_col_header* collection_header = collection_buf;
     for (i=0 ; i<header->collection_count; ++i) {
         
@@ -844,7 +867,7 @@ void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* p
 #           elif PSPL_RUNTIME_PLATFORM_D3D11
             
 #           endif
-            index_buf += header->pointer_size;
+            index_buf += header->pointer_size*3;
 
             
             for (j=0 ; j<mesh_count ; ++j) {
@@ -856,7 +879,7 @@ void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* p
                 
                 // Frustum test
                 if (!pmdl_aabb_frustum_test(ctx, mesh_head->mesh_aabb)) {
-                    index_buf += sizeof(pmdl_general_prim) * prim_count;
+                    index_buf += sizeof(pmdl_general_prim_par1) * prim_count;
                     continue;
                 }
                 
@@ -874,9 +897,9 @@ void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* p
                     pspl_runtime_bind_psplc(shader_obj);
                     
 #                   if PSPL_RUNTIME_PLATFORM_GL2
-                        glUniformMatrix4fv(shader_obj->native_shader.mv_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_mtx);
-                        glUniformMatrix4fv(shader_obj->native_shader.mv_invxpose_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_invxpose_mtx);
-                        glUniformMatrix4fv(shader_obj->native_shader.proj_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_projection_mtx);
+                        glUniformMatrix4fv(shader_obj->native_shader.mv_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_mtx.m);
+                        glUniformMatrix4fv(shader_obj->native_shader.mv_invxpose_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_modelview_invxpose_mtx.m);
+                        glUniformMatrix4fv(shader_obj->native_shader.proj_mtx_uni, 1, GL_FALSE, (GLfloat*)ctx->cached_projection_mtx.m);
                         glUniformMatrix4fv(shader_obj->native_shader.tc_genmtx_arr,
                                            shader_obj->native_shader.config->texgen_count,
                                            GL_FALSE, (GLfloat*)ctx->texcoord_mtx);
@@ -887,12 +910,47 @@ void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* p
                 }
                 
                 // Iterate primitives
+                int32_t last_skin_index = -1;
                 for (k=0 ; k<prim_count ; ++k) {
-                    pmdl_general_prim* prim = index_buf;
-                    index_buf += sizeof(pmdl_general_prim);
+                    pmdl_general_prim_par1* prim = index_buf;
+                    index_buf += sizeof(pmdl_general_prim_par1);
+                    
+                    // Load evaluated bones from skinning entry into GPU
+                    if (last_skin_index != prim->skin_idx) {
+                        last_skin_index = prim->skin_idx;
+                        pspl_matrix44_t bone_mats[PMDL_MAX_BONES];
+                        pspl_vector4_t bone_bases[PMDL_MAX_BONES];
+                        if (anim_ctx) {
+                            const pmdl_skin_entry* skin_entry =
+                            &anim_ctx->action->parent_ctx->skin_entry_array[last_skin_index];
+                            for (l=0 ; l<skin_entry->bone_count ; ++l) {
+                                const pmdl_bone* bone = skin_entry->bone_array[l];
+                                const pmdl_fk_playback* bone_fk = &anim_ctx->fk_instance_array[bone->bone_index];
+                                pmdl_matrix34_cpy(bone_fk->bone_matrix.v, bone_mats[l].v);
+                                pmdl_vector4_cpy(HOMOGENOUS_BOTTOM_VECTOR, bone_mats[l].v[3]);
+                                pmdl_vector3_cpy(bone->base_vector->v, ((pspl_vector3_t*)&bone_bases[l])->v);
+                                bone_bases[l].f[3] = 0.0f;
+                            }
+#                           if PSPL_RUNTIME_PLATFORM_GL2
+                                glUniformMatrix4fv(shader_obj->native_shader.bone_mat_uni, skin_entry->bone_count, GL_FALSE, (GLfloat*)bone_mats);
+                                glUniform4fv(shader_obj->native_shader.bone_base_uni, skin_entry->bone_count, (GLfloat*)bone_bases);
+#                           elif PSPL_RUNTIME_PLATFORM_D3D11
+                            
+#                           endif
+                            
+                        } else {
+#                           if PSPL_RUNTIME_PLATFORM_GL2
+                                glUniformMatrix4fv(shader_obj->native_shader.bone_mat_uni, PMDL_MAX_BONES, GL_FALSE, (GLfloat*)IDENTITY_MATS);
+#                           elif PSPL_RUNTIME_PLATFORM_D3D11
+                            
+#                           endif
+                        }
+
+                    }
+                    
 #                   if PSPL_RUNTIME_PLATFORM_GL2
-                        glDrawElements(resolve_prim(prim->prim_type), prim->prim_count, GL_UNSIGNED_SHORT,
-                                       (GLvoid*)(GLsizeiptr)(prim->prim_start_idx*2));
+                        glDrawElements(resolve_prim(prim->prim.prim_type), prim->prim.prim_count, GL_UNSIGNED_SHORT,
+                                       (GLvoid*)(GLsizeiptr)(prim->prim.prim_start_idx*2));
 #                   elif PSPL_RUNTIME_PLATFORM_D3D11
                     
 #                   endif
@@ -1018,27 +1076,26 @@ void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* p
 }
 
 /* This routine will draw PAR2 PMDLs */
-static void pmdl_draw_par2(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file) {
+static void pmdl_draw_par2(pmdl_draw_context_t* ctx, const pmdl_t* pmdl) {
     
 }
 
 /* This is the main draw dispatch routine */
-void pmdl_draw(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file) {
-    pmdl_header* header = pmdl_file->file_data;
+void pmdl_draw(pmdl_draw_context_t* ctx, const pmdl_t* pmdl) {
+    pmdl_header* header = pmdl->file_ptr->file_data;
 
     // Master Frustum test
-    if (!pmdl_aabb_frustum_test(ctx, header->master_aabb)) {
-        //printf("Failed master\n");
+    if (!pmdl_aabb_frustum_test(ctx, header->master_aabb))
         return;
-    }
-    //printf("Passed master\n");
 
     
     // Select draw routine based on sub-type
     if (header->sub_type_num == '0')
-        pmdl_draw_par0(ctx, pmdl_file);
+        pmdl_draw_par0(ctx, pmdl);
+    if (header->sub_type_num == '1')
+        pmdl_draw_rigged(ctx, pmdl, NULL);
     else if (header->sub_type_num == '2')
-        pmdl_draw_par2(ctx, pmdl_file);
+        pmdl_draw_par2(ctx, pmdl);
     
         
 }

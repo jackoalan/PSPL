@@ -12,14 +12,26 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <PSPL/PSPLCommon.h>
+    
 #include <PSPLRuntime.h>
+#include <PSPL/PSPLCommon.h>
 #include <PMDLRuntimeRigging.h>
+    
+/* Pointer decl */
+#define P_DECL(ptype, name) union {ptype* name; char name##_ptr_buf[8];}
+
+/* Root PMDL object type */
+typedef struct {
+    P_DECL(pspl_runtime_arc_file_t, file_ptr);
+    P_DECL(pmdl_rigging_ctx, rigging_ptr);
+} pmdl_t;
+    
+
 
 /* NOTE - This entire API is NOT THREAD SAFE!!! */
 
 #define PMDL_MAX_TEXCOORD_MATS 8
+#define PMDL_MAX_BONES 8
 
 /* Projection type enumeration */
 enum pmdl_projection_type {
@@ -94,13 +106,16 @@ enum pmdl_invalidate_bits {
 void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv_bits);
 
 /* Lookup routine to get PMDL file reference from PSPLC */
-const pspl_runtime_arc_file_t* pmdl_lookup(const pspl_runtime_psplc_t* pspl_object, const char* pmdl_name);
+const pmdl_t* pmdl_lookup(const pspl_runtime_psplc_t* pspl_object, const char* pmdl_name);
+    
+/* Lookup PMDL rigging action */
+const pmdl_action* pmdl_action_lookup(const pmdl_t* pmdl, const char* action_name);
 
 /* Master draw routine */
-void pmdl_draw(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file);
+void pmdl_draw(pmdl_draw_context_t* ctx, const pmdl_t* pmdl_file);
 
 /* Rigged master draw routine */
-void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* pmdl_file,
+void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pmdl_t* pmdl_file,
                       pmdl_animation_ctx* anim_ctx);
 
 
@@ -134,6 +149,8 @@ void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pspl_runtime_arc_file_t* p
 #define pmdl_vector3_add(a,b,ab) guVecAdd((guVector*)(a),(guVector*)(b),(guVector*)(ab))
 #define pmdl_vector3_sub(a,b,ab) guVecSub((guVector*)(a),(guVector*)(b),(guVector*)(ab))
 #define pmdl_vector3_matrix_mul(m,s,d) guVecMultiply((m),(guVector*)(&s[0]),(guVector*)(&d[0]))
+#define pmdl_matrix34_quat(m,a) guMtxQuat(m,a)
+
 
 /* Extended libogc matrix routines */
 void pspl_matrix44_cpy(REGISTER_KEY pspl_matrix44_t src, REGISTER_KEY pspl_matrix44_t dst);
@@ -153,51 +170,64 @@ void pmdl_vector4_sub(REGISTER_KEY pspl_vector4_t a, REGISTER_KEY pspl_vector4_t
 #else
 
 
-void _pmdl_matrix_orthographic(pspl_matrix44_t mt, float t, float b, float l,
+void _pmdl_matrix_orthographic(pspl_matrix44_t* mt, float t, float b, float l,
                                float r, float n, float f);
 
-void _pmdl_matrix_perspective(pspl_matrix44_t mt, float fovy, float aspect, float n, float f);
-void _pmdl_matrix_lookat(pspl_matrix34_t mt, pspl_vector3_t pos, pspl_vector3_t up, pspl_vector3_t look);
+void _pmdl_matrix_perspective(pspl_matrix44_t* mt, float fovy, float aspect, float n, float f);
+void _pmdl_matrix_lookat(pspl_matrix34_t* mt, pspl_vector3_t* pos, pspl_vector3_t* up, pspl_vector3_t* look);
 
-void pmdl_matrix34_identity(REGISTER_KEY pspl_matrix34_t mt);
+void pmdl_matrix34_identity(REGISTER_KEY pspl_matrix34_t* mt);
+void pmdl_matrix44_identity(REGISTER_KEY pspl_matrix44_t* mt);
 
-void pspl_matrix34_cpy(REGISTER_KEY pspl_matrix34_t src, REGISTER_KEY pspl_matrix34_t dst);
-void pspl_matrix44_cpy(REGISTER_KEY pspl_matrix44_t src, REGISTER_KEY pspl_matrix44_t dst);
+//void pmdl_matrix34_cpy(const REGISTER_KEY pspl_matrix34_t src, REGISTER_KEY pspl_matrix34_t dst);
+//void pmdl_matrix44_cpy(REGISTER_KEY pspl_matrix44_t src, REGISTER_KEY pspl_matrix44_t dst);
+#define pmdl_matrix34_cpy(s,d) (d)[0] = (s)[0]; (d)[1] = (s)[1]; (d)[2] = (s)[2]
+#define pmdl_matrix44_cpy(s,d) (d)[0] = (s)[0]; (d)[1] = (s)[1]; (d)[2] = (s)[2]; (d)[3] = (s)[3]
 
-void pmdl_matrix34_mul(REGISTER_KEY pspl_matrix34_t a, REGISTER_KEY pspl_matrix34_t b, REGISTER_KEY pspl_matrix34_t ab);
-void pmdl_matrix44_mul(REGISTER_KEY pspl_matrix44_t a, REGISTER_KEY pspl_matrix44_t b, REGISTER_KEY pspl_matrix44_t ab);
-void pmdl_matrix3444_mul(REGISTER_KEY pspl_matrix34_t a, REGISTER_KEY pspl_matrix44_t b, REGISTER_KEY pspl_matrix44_t ab);
+void pmdl_matrix34_mul(REGISTER_KEY pspl_matrix34_t* a, REGISTER_KEY pspl_matrix34_t* b, REGISTER_KEY pspl_matrix34_t* ab);
+void pmdl_matrix44_mul(REGISTER_KEY pspl_matrix44_t* a, REGISTER_KEY pspl_matrix44_t* b, REGISTER_KEY pspl_matrix44_t* ab);
+void pmdl_matrix3444_mul(REGISTER_KEY pspl_matrix34_t* a, REGISTER_KEY pspl_matrix44_t* b, REGISTER_KEY pspl_matrix44_t* ab);
 
-void pmdl_matrix34_invxpose(REGISTER_KEY pspl_matrix34_t src, REGISTER_KEY pspl_matrix34_t xpose);
+void pmdl_matrix34_invxpose(REGISTER_KEY pspl_matrix34_t* src, REGISTER_KEY pspl_matrix34_t* xpose);
 
 /* Reference C implementations from libogc */
-float pmdl_vector3_dot(REGISTER_KEY pspl_vector3_t a, REGISTER_KEY pspl_vector3_t b);
-float pmdl_vector4_dot(REGISTER_KEY pspl_vector4_t a, REGISTER_KEY pspl_vector4_t b);
+#define pmdl_vector3_cpy(s,d) (d) = (s)
+#define pmdl_vector4_cpy(s,d) (d) = (s)
+    
+float pmdl_vector3_dot(REGISTER_KEY pspl_vector3_t* a, REGISTER_KEY pspl_vector3_t* b);
+float pmdl_vector4_dot(REGISTER_KEY pspl_vector4_t* a, REGISTER_KEY pspl_vector4_t* b);
 
-void pmdl_vector3_cross(REGISTER_KEY pspl_vector3_t a, REGISTER_KEY pspl_vector3_t b, REGISTER_KEY pspl_vector3_t axb);
+void pmdl_vector3_cross(REGISTER_KEY pspl_vector3_t* a, REGISTER_KEY pspl_vector3_t* b, REGISTER_KEY pspl_vector3_t* axb);
 
-void pmdl_vector3_normalise(REGISTER_KEY pspl_vector3_t v);
+void pmdl_vector3_normalise(REGISTER_KEY pspl_vector3_t* v);
 
-void pmdl_vector3_scale(REGISTER_KEY pspl_vector3_t src, REGISTER_KEY pspl_vector3_t dst, REGISTER_KEY float scale);
-void pmdl_vector4_scale(REGISTER_KEY pspl_vector4_t src, REGISTER_KEY pspl_vector4_t dst, REGISTER_KEY float scale);
+//void pmdl_vector3_scale(REGISTER_KEY pspl_vector3_t src, REGISTER_KEY pspl_vector3_t dst, REGISTER_KEY float scale);
+//void pmdl_vector4_scale(REGISTER_KEY pspl_vector4_t src, REGISTER_KEY pspl_vector4_t dst, REGISTER_KEY float scale);
+#define pmdl_vector3_scale(s,d,sc) (d) = (s)*(sc)
+#define pmdl_vector4_scale(s,d,sc) (d) = (s)*(sc)
 
-void pmdl_vector3_add(REGISTER_KEY pspl_vector3_t a, REGISTER_KEY pspl_vector3_t b, REGISTER_KEY pspl_vector3_t ab);
-void pmdl_vector4_add(REGISTER_KEY pspl_vector4_t a, REGISTER_KEY pspl_vector4_t b, REGISTER_KEY pspl_vector4_t ab);
+//void pmdl_vector3_add(REGISTER_KEY pspl_vector3_t a, REGISTER_KEY pspl_vector3_t b, REGISTER_KEY pspl_vector3_t ab);
+//void pmdl_vector4_add(REGISTER_KEY pspl_vector4_t a, REGISTER_KEY pspl_vector4_t b, REGISTER_KEY pspl_vector4_t ab);
+#define pmdl_vector3_add(a,b,ab) (ab) = (a)+(b)
+#define pmdl_vector4_add(a,b,ab) (ab) = (a)+(b)
 
-void pmdl_vector3_sub(REGISTER_KEY pspl_vector3_t a, REGISTER_KEY pspl_vector3_t b, REGISTER_KEY pspl_vector3_t ab);
-void pmdl_vector4_sub(REGISTER_KEY pspl_vector4_t a, REGISTER_KEY pspl_vector4_t b, REGISTER_KEY pspl_vector4_t ab);
+//void pmdl_vector3_sub(REGISTER_KEY pspl_vector3_t a, REGISTER_KEY pspl_vector3_t b, REGISTER_KEY pspl_vector3_t ab);
+//void pmdl_vector4_sub(REGISTER_KEY pspl_vector4_t a, REGISTER_KEY pspl_vector4_t b, REGISTER_KEY pspl_vector4_t ab);
+#define pmdl_vector3_sub(a,b,ab) (ab) = (a)-(b)
+#define pmdl_vector4_sub(a,b,ab) (ab) = (a)-(b)
 
-void pmdl_vector3_matrix_mul(REGISTER_KEY pspl_matrix34_t mtx, REGISTER_KEY pspl_vector3_t src, REGISTER_KEY pspl_vector3_t dst);
+void pmdl_vector3_matrix_mul(REGISTER_KEY pspl_matrix34_t* mtx, REGISTER_KEY pspl_vector3_t* src, REGISTER_KEY pspl_vector3_t* dst);
 
+void pmdl_matrix34_quat(REGISTER_KEY pspl_matrix34_t m, REGISTER_KEY pspl_vector4_t* a);
 
 #endif
 
-#define pmdl_matrix_lookat(m, view) _pmdl_matrix_lookat((m), (view).pos, (view).up, (view).look)
+#define pmdl_matrix_lookat(m, view) _pmdl_matrix_lookat((m), &(view).pos, &(view).up, &(view).look)
 #define pmdl_matrix_orthographic(m, ortho) _pmdl_matrix_orthographic((m), (ortho).top, (ortho).bottom, (ortho).left, (ortho).right, (ortho).near, (ortho).far)
 #define pmdl_matrix_perspective(m, persp) _pmdl_matrix_perspective((m), (persp).fov, (persp).aspect, (persp).near, (persp).far)
 
+    
 #ifdef __cplusplus
 }
 #endif
-
 #endif

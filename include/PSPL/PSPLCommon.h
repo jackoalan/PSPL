@@ -41,16 +41,47 @@ enum pspl_blend_factor {
 };
 
 /* Common 4-component vector representation */
+#if __has_extension(attribute_ext_vector_type)
+typedef float pspl_vector4_vec_t __attribute__((ext_vector_type(4)));
+typedef union {
+    pspl_vector4_vec_t v;
+    float f[4];
+} pspl_vector4_t;
+#else
 typedef float pspl_vector4_t[4];
+#endif
 
 /* Common 3-component vector representation */
+#if __has_extension(attribute_ext_vector_type)
+typedef float pspl_vector3_vec_t __attribute__((ext_vector_type(3)));
+typedef union {
+    pspl_vector3_vec_t v;
+    float f[3];
+} pspl_vector3_t;
+#else
 typedef float pspl_vector3_t[3];
+#endif
 
 /* Common 3x4 matrix (homogenous) representation; row major */
+#if __has_extension(attribute_ext_vector_type)
+typedef union {
+    pspl_vector4_t v[3];
+    float m[3][4];
+} pspl_matrix34_t;
+#else
 typedef float pspl_matrix34_t[3][4];
+#endif
 
 /* Common 4x4 matrix representation; row major */
+#if __has_extension(attribute_ext_vector_type)
+typedef union {
+    pspl_matrix34_t m34;
+    pspl_vector4_t v[4];
+    float m[4][4];
+} pspl_matrix44_t;
+#else
 typedef float pspl_matrix44_t[4][4];
+#endif
 
 /* Common perspective/orthographic transform representation */
 #undef near

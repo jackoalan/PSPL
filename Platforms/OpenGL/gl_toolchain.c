@@ -132,7 +132,7 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
         unsigned bone_idx = 0;
         for (j=0 ; j<ir_state->vertex.bone_count ; ++j) {
             char bone[256];
-            snprintf(bone, 256, "    gl_Position += (((pos - bone_base[%u]) * bone_mat[%u]) + bone_base[%u]) * bone_weights%u[%u];\n", j, j, j, bone_idx, j%4);
+            snprintf(bone, 256, "    gl_Position += ((pos - bone_base[%u]) * bone_mat[%u]) * bone_weights%u[%u];\n", j, j, bone_idx, j%4);
             pspl_buffer_addstr(vert, bone);
             snprintf(bone, 256, "    normal += (norm * bone_mat[%u]) * bone_weights%u[%u];\n", j, bone_idx, j%4);
             pspl_buffer_addstr(vert, bone);

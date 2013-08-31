@@ -119,6 +119,8 @@ static void load_object(pspl_runtime_psplc_t* object) {
     glUseProgram(object->native_shader.program);
     
     // Matrix uniforms
+    object->native_shader.bone_mat_uni = glGetUniformLocation(object->native_shader.program, "bone_mat");
+    object->native_shader.bone_base_uni = glGetUniformLocation(object->native_shader.program, "bone_base");
     object->native_shader.mv_mtx_uni = glGetUniformLocation(object->native_shader.program, "modelview_mat");
     object->native_shader.mv_invxpose_uni = glGetUniformLocation(object->native_shader.program, "modelview_invtrans_mat");
     object->native_shader.proj_mtx_uni = glGetUniformLocation(object->native_shader.program, "projection_mat");

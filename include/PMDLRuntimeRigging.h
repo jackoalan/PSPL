@@ -28,6 +28,9 @@ typedef struct pmdl_bone {
     // Name in PMDL string table
     const char* bone_name;
     
+    // Original bone index
+    unsigned bone_index;
+    
     // Parent bone
     const struct pmdl_bone* parent;
     
@@ -48,7 +51,7 @@ typedef struct {
     
     // Bone array (with indexing utilised by geometry data)
     unsigned bone_count;
-    const pmdl_bone* bone_array;
+    const pmdl_bone** bone_array;
     
 } pmdl_skin_entry;
 
@@ -144,6 +147,9 @@ typedef struct pmdl_rigging_ctx {
 /* Curve context representation (for animating bézier curve instances) */
 typedef struct {
     
+    // Index of the bone being animated
+    unsigned bone_index;
+    
     // Curve being animated
     const pmdl_curve* curve;
     
@@ -155,6 +161,29 @@ typedef struct {
     float cached_value;
     
 } pmdl_curve_playback;
+
+/* Forward kinematic representation (for converting evaluated curves to bone matrices) */
+typedef struct pmdl_fk_playback {
+    
+    // Original bone data
+    const pmdl_bone* bone;
+    
+    // Bone animation track from action data
+    const pmdl_action_bone_track* bone_anim_track;
+    
+    // First curve-playback instance for this bone within animation context
+    const pmdl_curve_playback* first_curve_instance;
+    
+    // Parent FK instance (or NULL if none)
+    struct pmdl_fk_playback* parent_fk;
+    
+    // Cumulative bone transformation matrix
+    pspl_matrix34_t bone_matrix;
+    
+    // Evaluation flip-bit (alternates 0/1 to synchronise with other FK instances)
+    char eval_flip_bit;
+    
+} pmdl_fk_playback;
 
 /* Action event function type */
 typedef void(*pmdl_animation_event)(struct pmdl_animation_ctx* animation_ctx);
@@ -181,6 +210,13 @@ typedef struct pmdl_animation_ctx {
     unsigned curve_instance_count;
     pmdl_curve_playback* curve_instance_array;
     
+    // Forward-kinematic rigging instance array (indexing corresponds to original bone indexing from file)
+    unsigned fk_instance_count;
+    pmdl_fk_playback* fk_instance_array;
+    
+    // Master FK flip-bit
+    char master_fk_flip_bit;
+    
     
     // Loop flag (set to automatically loop action)
     int loop_flag;
@@ -202,7 +238,7 @@ void pmdl_animation_destroy(pmdl_animation_ctx* ctx_ptr);
 void pmdl_animation_advance(pmdl_animation_ctx* ctx_ptr, float abs_time);
 
 /* Routine to rewind animation context (call advance afterwards before drawing) */
-void pmdl_animation_rewind(pmdl_animation_ctx* ctx_ptr);
+#define pmdl_animation_rewind(ctx_ptr) (ctx_ptr)->have_abs_time = 0
  
  
- #endif
+#endif

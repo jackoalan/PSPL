@@ -38,6 +38,7 @@ typedef struct {
     gl_config_t* config;
     
     // Uniforms
+    GLint bone_mat_uni, bone_base_uni;
     GLint mv_mtx_uni, mv_invxpose_uni;
     GLint proj_mtx_uni;
     GLint tc_genmtx_arr;

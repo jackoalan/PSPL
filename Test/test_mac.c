@@ -24,7 +24,8 @@ static double fps = 0;
 #define USEC_PER_SEC 1000000
 
 static pmdl_draw_context_t monkey_ctx;
-static const pspl_runtime_arc_file_t* monkey_model;
+static const pmdl_t* monkey_model;
+static pmdl_animation_ctx* anim_ctx;
 
 static void renderfunc() {
     
@@ -40,19 +41,23 @@ static void renderfunc() {
     double time = tv.tv_sec + ((double)tv.tv_usec / (double)USEC_PER_SEC);
 
     // Rotate camera around monkey
-    monkey_ctx.camera_view.pos[0] = sin(time) * 5;
-    monkey_ctx.camera_view.pos[2] = cos(time) * 5;
+    monkey_ctx.camera_view.pos.f[0] = sin(time) * 5;
+    monkey_ctx.camera_view.pos.f[2] = cos(time) * 5;
     pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_VIEW);
     
     // Update Texcoord 1
-    monkey_ctx.texcoord_mtx[1][0][0] = 0.5;
-    monkey_ctx.texcoord_mtx[1][1][1] = 1.0;
-    monkey_ctx.texcoord_mtx[1][0][3] = fmod(-time, 1.0);
-    monkey_ctx.texcoord_mtx[1][1][3] = 1.0;
+    monkey_ctx.texcoord_mtx[1].m[0][0] = 0.5;
+    monkey_ctx.texcoord_mtx[1].m[1][1] = 1.0;
+    monkey_ctx.texcoord_mtx[1].m[0][3] = fmod(-time, 1.0);
+    monkey_ctx.texcoord_mtx[1].m[1][3] = 1.0;
+    
+    // Update animation context
+    pmdl_animation_advance(anim_ctx, time);
     
     // Draw monkey
     glEnable(GL_CULL_FACE);
     pmdl_draw(&monkey_ctx, monkey_model);
+    pmdl_draw_rigged(&monkey_ctx, monkey_model, anim_ctx);
     //glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
     //glUseProgram(0);
     
@@ -66,7 +71,7 @@ static void renderfunc() {
     
     char fps_str[128];
     snprintf(fps_str, 128, "FPS: %.f", fps);
-    size_t fps_str_len = strlen(fps_str);
+    //size_t fps_str_len = strlen(fps_str);
     
     //glDisable(GL_DEPTH_TEST);
     
@@ -127,24 +132,24 @@ int main(int argc, char* argv[]) {
     
     // Setup monkey rendering context
     memset(monkey_ctx.texcoord_mtx, 0, 8*sizeof(pspl_matrix34_t));
-    monkey_ctx.texcoord_mtx[0][0][0] = 0.5;
-    monkey_ctx.texcoord_mtx[0][1][1] = -0.5;
-    monkey_ctx.texcoord_mtx[0][0][3] = 0.5;
-    monkey_ctx.texcoord_mtx[0][1][3] = 0.5;
+    monkey_ctx.texcoord_mtx[0].m[0][0] = 0.5;
+    monkey_ctx.texcoord_mtx[0].m[1][1] = -0.5;
+    monkey_ctx.texcoord_mtx[0].m[0][3] = 0.5;
+    monkey_ctx.texcoord_mtx[0].m[1][3] = 0.5;
     
-    memset(monkey_ctx.model_mtx, 0, sizeof(pspl_matrix34_t));
-    monkey_ctx.model_mtx[0][0] = 1;
-    monkey_ctx.model_mtx[1][1] = 1;
-    monkey_ctx.model_mtx[2][2] = 1;
-    monkey_ctx.camera_view.pos[0] = 0;
-    monkey_ctx.camera_view.pos[1] = 0;
-    monkey_ctx.camera_view.pos[2] = 5;
-    monkey_ctx.camera_view.look[0] = 0;
-    monkey_ctx.camera_view.look[1] = 0;
-    monkey_ctx.camera_view.look[2] = 0;
-    monkey_ctx.camera_view.up[0] = 0;
-    monkey_ctx.camera_view.up[1] = 1;
-    monkey_ctx.camera_view.up[2] = 0;
+    memset(monkey_ctx.model_mtx.m, 0, sizeof(pspl_matrix34_t));
+    monkey_ctx.model_mtx.m[0][0] = 1;
+    monkey_ctx.model_mtx.m[1][1] = 1;
+    monkey_ctx.model_mtx.m[2][2] = 1;
+    monkey_ctx.camera_view.pos.f[0] = 0;
+    monkey_ctx.camera_view.pos.f[1] = 0;
+    monkey_ctx.camera_view.pos.f[2] = 5;
+    monkey_ctx.camera_view.look.f[0] = 0;
+    monkey_ctx.camera_view.look.f[1] = 0;
+    monkey_ctx.camera_view.look.f[2] = 0;
+    monkey_ctx.camera_view.up.f[0] = 0;
+    monkey_ctx.camera_view.up.f[1] = 1;
+    monkey_ctx.camera_view.up.f[2] = 0;
     monkey_ctx.projection_type = PMDL_PERSPECTIVE;
     monkey_ctx.projection.perspective.fov = 55;
     monkey_ctx.projection.perspective.far = 5;
@@ -158,6 +163,11 @@ int main(int argc, char* argv[]) {
     const pspl_runtime_psplc_t* monkey_obj = pspl_runtime_get_psplc_from_key(package, "monkey", 1);
     monkey_ctx.default_shader = monkey_obj;
     monkey_model = pmdl_lookup(monkey_obj, "monkey");
+    
+    // Setup animation context
+    const pmdl_action* sway = pmdl_action_lookup(monkey_model, "sway");
+    anim_ctx = pmdl_animation_init(sway);
+    anim_ctx->loop_flag = 1;
     
     // Start rendering
     glutMainLoop();

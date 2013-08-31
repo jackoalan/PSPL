@@ -756,7 +756,7 @@ static void line_read(const pspl_toolchain_context_t* driver_context,
                     if (*line_text == '\0' || *line_text == '\n')
                         pspl_error(-1, "Insufficient matrix columns defined",
                                    "there needs to be 4 columns in each matrix row");
-                    pspl_ir_state.vertex.matrix[pspl_ir_state.vertex.matrix_row_count][i] =
+                    pspl_ir_state.vertex.matrix.m[pspl_ir_state.vertex.matrix_row_count][i] =
                     strtof(line_text, (char**)&line_text);
                 }
                 

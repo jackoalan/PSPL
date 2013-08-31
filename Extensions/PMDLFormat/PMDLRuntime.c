@@ -11,8 +11,8 @@
 #include <PSPLExtension.h>
 #include <PSPLRuntime.h>
 #include <PSPL/PSPLHash.h>
-#include "PMDLCommon.h"
 #include "PMDLRuntimeProcessing.h"
+#include "PMDLCommon.h"
 
 
 struct file_array {
@@ -44,9 +44,9 @@ static void load_object_hook(pspl_runtime_psplc_t* object) {
     for (i=0 ; i<files->count.native.integer ; ++i) {
         char hash[PSPL_HASH_STRING_LEN];
         pspl_hash_fmt(hash, &files->files[i].pmdl_file_hash);
-        files->files[i].file_ptr = (pspl_runtime_arc_file_t*)
+        files->files[i].pmdl.file_ptr = (pspl_runtime_arc_file_t*)
         pspl_runtime_get_archived_file_from_hash(object->parent, &files->files[i].pmdl_file_hash, 1);
-        pmdl_init(files->files[i].file_ptr, &files->files[i].rigging_ptr);
+        pmdl_init(&files->files[i].pmdl);
     }
     
     // Set user data pointer appropriately
@@ -62,8 +62,8 @@ static void unload_object_hook(pspl_runtime_psplc_t* object) {
     // Release all referenced files
     int i;
     for (i=0 ; i<files->count.native.integer ; ++i) {
-        pmdl_destroy(files->files[i].file_ptr, &files->files[i].rigging_ptr);
-        pspl_runtime_release_archived_file(files->files[i].file_ptr);
+        pmdl_destroy(&files->files[i].pmdl);
+        pspl_runtime_release_archived_file(files->files[i].pmdl.file_ptr);
     }
     
 }
@@ -71,7 +71,7 @@ static void unload_object_hook(pspl_runtime_psplc_t* object) {
 
 #pragma mark PMDL Lookup
 
-const pspl_runtime_arc_file_t* pmdl_lookup(const pspl_runtime_psplc_t* pspl_object, const char* pmdl_name) {
+const pmdl_t* pmdl_lookup(const pspl_runtime_psplc_t* pspl_object, const char* pmdl_name) {
     
     struct file_array* files = pspl_runtime_get_extension_user_data_pointer(&PMDL_extension, pspl_object);
 
@@ -86,15 +86,20 @@ const pspl_runtime_arc_file_t* pmdl_lookup(const pspl_runtime_psplc_t* pspl_obje
     int i;
     for (i=0 ; i<files->count.native.integer ; ++i) {
         if (!pspl_hash_cmp(name_hash, &files->files[i].name_hash))
-            return files->files[i].file_ptr;
+            return &files->files[i].pmdl;
     }
     
     return NULL;
     
 }
 
+static int init_hook(const pspl_extension_t* extension) {
+    pmdl_master_init();
+    return 0;
+}
 
 pspl_runtime_extension_t PMDL_runext = {
+    .init_hook = init_hook,
     .load_object_hook = load_object_hook,
     .unload_object_hook = unload_object_hook
 };

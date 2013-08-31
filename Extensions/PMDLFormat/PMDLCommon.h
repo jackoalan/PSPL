@@ -9,12 +9,17 @@
 #ifndef PSPL_PMDLCommon_h
 #define PSPL_PMDLCommon_h
 
+#ifndef PSPL_PMDLRuntime_h
+
 /* Pointer decl */
-#if PSPL_TOOLCHAIN
-#define P_DECL(ptype, name) char name##_ptr_buf[8]
-#elif PSPL_RUNTIME
-#include "PMDLRuntimeRigging.h"
-#define P_DECL(ptype, name) union {ptype* name; char name##_ptr_buf[8];}
+#define P_DECL(ptype, name) union {char name##_ptr_buf[8];}
+
+/* Root PMDL object type */
+typedef struct {
+    P_DECL(pspl_runtime_arc_file_t, file_ptr);
+    P_DECL(pmdl_rigging_ctx, rigging_ptr);
+} pmdl_t;
+
 #endif
 
 /* Bi-uint32 type */
@@ -25,8 +30,7 @@ typedef DEF_BI_OBJ_TYPE(struct {
 /* PMDL Reference Entry */
 typedef struct {
     pspl_hash name_hash, pmdl_file_hash;
-    P_DECL(pspl_runtime_arc_file_t, file_ptr);
-    P_DECL(pmdl_rigging_ctx, rigging_ptr);
+    pmdl_t pmdl;
 } pmdl_ref_entry;
 
 /* PMDL Header */
