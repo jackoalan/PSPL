@@ -5,12 +5,22 @@ PMDL 3D Model Format
 provides a common means to define hierarchical triangle meshes with
 appropriate shader and texture bindings. 
 
-It is designed to store model data in platform-native, *attribute-interleaved*
-or *attribute-discrete* structured vertex array buffers. Standard floating-point
-values may be expressed in a *bi-endian* manner. Attributed vertices are tied
-together into meshes using *hierarchical topology indexing*. The runtime portion of the PSPL
-extension uses this index to issue drawing commands using the host's native 3D
-graphics API. 
+It is designed to store model data in platform-native vertex buffers.
+Attributed vertices are indexed together into meshes using degenerate triangle-strips. 
+The runtime portion of the PMDL extension uses this index to issue drawing commands 
+using the host's native 3D graphics API. 
+
+[Read the PMDL Specification](https://github.com/jackoalan/PSPL/blob/master/Extensions/PMDLFormat/Specification.md) 
+for details. 
+
+
+Skeletal Rigging Support
+------------------------
+
+The PMDL format includes a sub-type for **skeletal rigging**. 
+
+The rigging data includes a *bone-tree*, vertex *skinning information* and
+an arbitrary number of *actions* (animated clips). 
 
 
 PSPL Integration
@@ -20,9 +30,8 @@ Playing on **PSPL's** modular nature, a PMDL is also *able to reference PSPL sha
 sources* associated with the model (or a hierarchical subdivision of the model). 
 PMDL also *augments the PSPL language* with a set of syntactic additions. 
 
-One PSPL shader may be referenced by many PMDL models, yet the precise behaviour 
-of the shader may be tweaked by the specific PMDL file. This is accomplished
-by including valued macro-tags within the PMDL file's *metadata*. 
+Any number of PMDL files may be referenced in a PSPL file. Each PMDL is identified
+using a *key string* incorporated into a hash table. 
 
 
 Blender Integration
