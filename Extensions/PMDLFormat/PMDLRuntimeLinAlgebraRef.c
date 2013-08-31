@@ -371,18 +371,18 @@ void _pmdl_matrix_lookat(pspl_matrix34_t* mt, pspl_vector3_t* pos, pspl_vector3_
 }
 
 
-void pmdl_matrix34_quat(pspl_matrix34_t m, pspl_vector4_t* a) {
-	m.m[0][0] = 1.0f - 2.0f*a->f[1]*a->f[1] - 2.0f*a->f[2]*a->f[2];
-	m.m[1][0] = 2.0f*a->f[0]*a->f[1] - 2.0f*a->f[2]*a->f[3];
-	m.m[2][0] = 2.0f*a->f[0]*a->f[2] + 2.0f*a->f[1]*a->f[3];
+void pmdl_matrix34_quat(pspl_matrix34_t* m, pspl_vector4_t* a) {
+	m->m[0][0] = 1.0f - 2.0f*a->f[1]*a->f[1] - 2.0f*a->f[2]*a->f[2];
+	m->m[1][0] = 2.0f*a->f[0]*a->f[1] - 2.0f*a->f[2]*a->f[3];
+	m->m[2][0] = 2.0f*a->f[0]*a->f[2] + 2.0f*a->f[1]*a->f[3];
     
-	m.m[0][1] = 2.0f*a->f[0]*a->f[1] + 2.0f*a->f[2]*a->f[3];
-	m.m[1][1] = 1.0f - 2.0f*a->f[0]*a->f[0] - 2.0f*a->f[2]*a->f[2];
-	m.m[2][1] = 2.0f*a->f[2]*a->f[1] - 2.0f*a->f[0]*a->f[3];
+	m->m[0][1] = 2.0f*a->f[0]*a->f[1] + 2.0f*a->f[2]*a->f[3];
+	m->m[1][1] = 1.0f - 2.0f*a->f[0]*a->f[0] - 2.0f*a->f[2]*a->f[2];
+	m->m[2][1] = 2.0f*a->f[2]*a->f[1] - 2.0f*a->f[0]*a->f[3];
     
-	m.m[0][2] = 2.0f*a->f[0]*a->f[2] - 2.0f*a->f[1]*a->f[3];
-	m.m[1][2] = 2.0f*a->f[2]*a->f[1] + 2.0f*a->f[0]*a->f[3];
-	m.m[2][2] = 1.0f - 2.0f*a->f[0]*a->f[0] - 2.0f*a->f[1]*a->f[1];
+	m->m[0][2] = 2.0f*a->f[0]*a->f[2] - 2.0f*a->f[1]*a->f[3];
+	m->m[1][2] = 2.0f*a->f[2]*a->f[1] + 2.0f*a->f[0]*a->f[3];
+	m->m[2][2] = 1.0f - 2.0f*a->f[0]*a->f[0] - 2.0f*a->f[1]*a->f[1];
 }
 
 #endif

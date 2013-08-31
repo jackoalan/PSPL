@@ -56,7 +56,7 @@ static void renderfunc() {
     
     // Draw monkey
     glEnable(GL_CULL_FACE);
-    pmdl_draw(&monkey_ctx, monkey_model);
+    //pmdl_draw(&monkey_ctx, monkey_model);
     pmdl_draw_rigged(&monkey_ctx, monkey_model, anim_ctx);
     //glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
     //glUseProgram(0);
@@ -165,7 +165,7 @@ int main(int argc, char* argv[]) {
     monkey_model = pmdl_lookup(monkey_obj, "monkey");
     
     // Setup animation context
-    const pmdl_action* sway = pmdl_action_lookup(monkey_model, "sway");
+    const pmdl_action* sway = pmdl_action_lookup(monkey_model, "Sway");
     anim_ctx = pmdl_animation_init(sway);
     anim_ctx->loop_flag = 1;
     

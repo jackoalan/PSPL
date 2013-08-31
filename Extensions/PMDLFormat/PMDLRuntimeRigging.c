@@ -15,7 +15,7 @@
 #pragma pack(1)
 struct file_bone {
     uint32_t string_off;
-    pspl_vector3_t bone_head;
+    pspl_vector4_t bone_head;
     int32_t parent_index;
     uint32_t child_count;
     uint32_t child_array[];
@@ -55,7 +55,7 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
     file_cur += sizeof(uint32_t);
     
     uint32_t* bone_offsets = (uint32_t*)(file_cur);
-    file_cur += sizeof(uint32_t);
+    file_cur += sizeof(uint32_t)*bone_count;
     
     const void* bone_arr = file_cur;
     
@@ -80,7 +80,7 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
     file_cur += sizeof(uint32_t);
     
     uint32_t* skin_offsets = (uint32_t*)(file_cur);
-    file_cur += sizeof(uint32_t);
+    file_cur += sizeof(uint32_t)*skin_count;
     
     const void* skin_arr = file_cur;
     
@@ -105,7 +105,7 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
     const void* action_strings = animation_section + action_strings_off + (sizeof(uint32_t)*action_count);
     
     uint32_t* action_offsets = (uint32_t*)(file_cur);
-    file_cur += sizeof(uint32_t);
+    file_cur += sizeof(uint32_t)*action_count;
     
     const void* action_arr = file_cur;
     
@@ -159,7 +159,7 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
             child_arr_writer[j] = (pmdl_bone*)&rigging_ctx->bone_array[bone->child_array[j]];
         context_cur += sizeof(pmdl_bone*)*bone->child_count;
 
-        target_bone->base_vector = &bone->bone_head;
+        target_bone->base_vector = bone->bone_head;
         
     }
     
@@ -228,11 +228,11 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
             
             if (ACTION_SCALE(track_head)) {
                 track->property_count += 3;
-                track->scale_x = (const pmdl_curve*)&action;
+                track->scale_x = (const pmdl_curve*)action;
                 action += sizeof(pmdl_curve_keyframe)*track->scale_x->keyframe_count + sizeof(uint32_t);
-                track->scale_y = (const pmdl_curve*)&action;
+                track->scale_y = (const pmdl_curve*)action;
                 action += sizeof(pmdl_curve_keyframe)*track->scale_y->keyframe_count + sizeof(uint32_t);
-                track->scale_z = (const pmdl_curve*)&action;
+                track->scale_z = (const pmdl_curve*)action;
                 action += sizeof(pmdl_curve_keyframe)*track->scale_z->keyframe_count + sizeof(uint32_t);
             } else {
                 track->scale_x = NULL;
@@ -242,13 +242,13 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
             
             if (ACTION_ROTATION(track_head)) {
                 track->property_count += 4;
-                track->rotation_w = (const pmdl_curve*)&action;
+                track->rotation_w = (const pmdl_curve*)action;
                 action += sizeof(pmdl_curve_keyframe)*track->rotation_w->keyframe_count + sizeof(uint32_t);
-                track->rotation_x = (const pmdl_curve*)&action;
+                track->rotation_x = (const pmdl_curve*)action;
                 action += sizeof(pmdl_curve_keyframe)*track->rotation_x->keyframe_count + sizeof(uint32_t);
-                track->rotation_y = (const pmdl_curve*)&action;
+                track->rotation_y = (const pmdl_curve*)action;
                 action += sizeof(pmdl_curve_keyframe)*track->rotation_y->keyframe_count + sizeof(uint32_t);
-                track->rotation_z = (const pmdl_curve*)&action;
+                track->rotation_z = (const pmdl_curve*)action;
                 action += sizeof(pmdl_curve_keyframe)*track->rotation_z->keyframe_count + sizeof(uint32_t);
             } else {
                 track->rotation_w = NULL;
@@ -259,11 +259,11 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
             
             if (ACTION_LOCATION(track_head)) {
                 track->property_count += 3;
-                track->location_x = (const pmdl_curve*)&action;
+                track->location_x = (const pmdl_curve*)action;
                 action += sizeof(pmdl_curve_keyframe)*track->location_x->keyframe_count + sizeof(uint32_t);
-                track->location_y = (const pmdl_curve*)&action;
+                track->location_y = (const pmdl_curve*)action;
                 action += sizeof(pmdl_curve_keyframe)*track->location_y->keyframe_count + sizeof(uint32_t);
-                track->location_z = (const pmdl_curve*)&action;
+                track->location_z = (const pmdl_curve*)action;
                 action += sizeof(pmdl_curve_keyframe)*track->location_z->keyframe_count + sizeof(uint32_t);
             } else {
                 track->location_x = NULL;
@@ -333,63 +333,53 @@ pmdl_animation_ctx* pmdl_animation_init(const pmdl_action* action) {
         if (bone_track->scale_x) {
             target_track = &new_ctx->curve_instance_array[j++];
             target_track->bone_index = bone_track->bone_index;
-            target_track->prev_kf_idx = -1;
             target_track->curve = bone_track->scale_x;
         }
         if (bone_track->scale_y) {
             target_track = &new_ctx->curve_instance_array[j++];
             target_track->bone_index = bone_track->bone_index;
-            target_track->prev_kf_idx = -1;
             target_track->curve = bone_track->scale_y;
         }
         if (bone_track->scale_z) {
             target_track = &new_ctx->curve_instance_array[j++];
             target_track->bone_index = bone_track->bone_index;
-            target_track->prev_kf_idx = -1;
             target_track->curve = bone_track->scale_z;
         }
         
         if (bone_track->rotation_w) {
             target_track = &new_ctx->curve_instance_array[j++];
             target_track->bone_index = bone_track->bone_index;
-            target_track->prev_kf_idx = -1;
             target_track->curve = bone_track->rotation_w;
         }
         if (bone_track->rotation_x) {
             target_track = &new_ctx->curve_instance_array[j++];
             target_track->bone_index = bone_track->bone_index;
-            target_track->prev_kf_idx = -1;
             target_track->curve = bone_track->rotation_x;
         }
         if (bone_track->rotation_y) {
             target_track = &new_ctx->curve_instance_array[j++];
             target_track->bone_index = bone_track->bone_index;
-            target_track->prev_kf_idx = -1;
             target_track->curve = bone_track->rotation_y;
         }
         if (bone_track->rotation_z) {
             target_track = &new_ctx->curve_instance_array[j++];
             target_track->bone_index = bone_track->bone_index;
-            target_track->prev_kf_idx = -1;
             target_track->curve = bone_track->rotation_z;
         }
         
         if (bone_track->location_x) {
             target_track = &new_ctx->curve_instance_array[j++];
             target_track->bone_index = bone_track->bone_index;
-            target_track->prev_kf_idx = -1;
             target_track->curve = bone_track->location_x;
         }
         if (bone_track->location_y) {
             target_track = &new_ctx->curve_instance_array[j++];
             target_track->bone_index = bone_track->bone_index;
-            target_track->prev_kf_idx = -1;
             target_track->curve = bone_track->location_y;
         }
         if (bone_track->location_z) {
             target_track = &new_ctx->curve_instance_array[j++];
             target_track->bone_index = bone_track->bone_index;
-            target_track->prev_kf_idx = -1;
             target_track->curve = bone_track->location_z;
         }
         
@@ -426,9 +416,9 @@ pmdl_animation_ctx* pmdl_animation_init(const pmdl_action* action) {
             target_fk->parent_fk = NULL;
         
         pmdl_matrix34_identity(&target_fk->bone_matrix);
-        target_fk->bone_matrix.m[0][3] = (*bone->base_vector).f[0];
-        target_fk->bone_matrix.m[1][3] = (*bone->base_vector).f[1];
-        target_fk->bone_matrix.m[2][3] = (*bone->base_vector).f[2];
+        target_fk->bone_matrix.m[0][3] = (bone->base_vector).f[0];
+        target_fk->bone_matrix.m[1][3] = (bone->base_vector).f[1];
+        target_fk->bone_matrix.m[2][3] = (bone->base_vector).f[2];
         
         target_fk->eval_flip_bit = 0;
         
@@ -444,9 +434,10 @@ void pmdl_animation_destroy(pmdl_animation_ctx* ctx_ptr) {
 }
 
 /* Evaluate cubic bézier given T value */
-static inline float2 evaluate_bezier(double t,
-                                     const pmdl_curve_keyframe* left_kf,
-                                     const pmdl_curve_keyframe* right_kf) {
+static inline void evaluate_bezier(float2 result,
+                                   double t,
+                                   const pmdl_curve_keyframe* left_kf,
+                                   const pmdl_curve_keyframe* right_kf) {
     
     double t1m = 1.0-t;
     double t1msq = t1m*t1m;
@@ -457,17 +448,11 @@ static inline float2 evaluate_bezier(double t,
     float c = (float)(3*t1m*tsq);
     float d = (float)(tsq*t);
     
-#   if __has_extension(attribute_ext_vector_type)
-    return (a*left_kf->main_handle) + (b*left_kf->right_handle) +
-           (c*right_kf->left_handle) + (d*right_kf->main_handle);
-#   else
-    float2 result;
+
     result[0] = (a*left_kf->main_handle[0]) + (b*left_kf->right_handle[0]) +
                 (c*right_kf->left_handle[0]) + (d*right_kf->main_handle[0]);
     result[1] = (a*left_kf->main_handle[1]) + (b*left_kf->right_handle[1]) +
                 (c*right_kf->left_handle[1]) + (d*right_kf->main_handle[1]);
-    return result;
-#   endif
     
 }
 
@@ -483,7 +468,7 @@ static inline float solve_bezier(double time,
     double t = 0.5;
     float2 result;
     for (;;) {
-        result = evaluate_bezier(t, left_kf, right_kf);
+        evaluate_bezier(result, t, left_kf, right_kf);
         err = fabs(result[0] - time);
         if (err < LIMIT_ERROR)
             break;
@@ -533,12 +518,13 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, char flip_bit) {
                 rotation_quat.f[1] = fk->first_curve_instance[i++].cached_value;
             if (fk->bone_anim_track->rotation_z)
                 rotation_quat.f[2] = fk->first_curve_instance[i++].cached_value;
-            pmdl_matrix34_quat(rotation_location_matrix, &rotation_quat);
+            pmdl_matrix34_quat(&rotation_location_matrix, &rotation_quat);
             
             // Location transform
-            pspl_vector3_t parent_base_vector;
-            pmdl_vector3_sub(fk->bone->base_vector->v, fk->parent_fk->bone->base_vector->v, parent_base_vector.v);
-            pmdl_vector3_matrix_mul(&fk->parent_fk->bone_matrix, &parent_base_vector, &parent_base_vector);
+            pspl_vector4_t parent_base_vector;
+            pmdl_vector4_sub(fk->bone->base_vector.v, fk->parent_fk->bone->base_vector.v, parent_base_vector.v);
+            pmdl_vector3_matrix_mul(&fk->parent_fk->bone_matrix,
+                                    (pspl_vector3_t*)&parent_base_vector, (pspl_vector3_t*)&parent_base_vector);
             rotation_location_matrix.m[0][3] = parent_base_vector.f[0];
             rotation_location_matrix.m[1][3] = parent_base_vector.f[1];
             rotation_location_matrix.m[2][3] = parent_base_vector.f[2];
@@ -577,12 +563,12 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, char flip_bit) {
                 rotation_quat.f[1] = fk->first_curve_instance[i++].cached_value;
             if (fk->bone_anim_track->rotation_z)
                 rotation_quat.f[2] = fk->first_curve_instance[i++].cached_value;
-            pmdl_matrix34_quat(rotation_location_matrix, &rotation_quat);
+            pmdl_matrix34_quat(&rotation_location_matrix, &rotation_quat);
 
             // Location transform
-            rotation_location_matrix.m[0][3] = (*fk->bone->base_vector).f[0];
-            rotation_location_matrix.m[1][3] = (*fk->bone->base_vector).f[1];
-            rotation_location_matrix.m[2][3] = (*fk->bone->base_vector).f[2];
+            rotation_location_matrix.m[0][3] = (fk->bone->base_vector).f[0];
+            rotation_location_matrix.m[1][3] = (fk->bone->base_vector).f[1];
+            rotation_location_matrix.m[2][3] = (fk->bone->base_vector).f[2];
             if (fk->bone_anim_track->location_x)
                 rotation_location_matrix.m[0][3] += fk->first_curve_instance[i++].cached_value;
             if (fk->bone_anim_track->location_y)
@@ -598,9 +584,10 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, char flip_bit) {
             // Non-animated child bone
             
             pmdl_matrix34_cpy(fk->parent_fk->bone_matrix.v, fk->bone_matrix.v);
-            pspl_vector3_t parent_base_vector;
-            pmdl_vector3_sub(fk->bone->base_vector->v, fk->parent_fk->bone->base_vector->v, parent_base_vector.v);
-            pmdl_vector3_matrix_mul(&fk->parent_fk->bone_matrix, &parent_base_vector, &parent_base_vector);
+            pspl_vector4_t parent_base_vector;
+            pmdl_vector4_sub(fk->bone->base_vector.v, fk->parent_fk->bone->base_vector.v, parent_base_vector.v);
+            pmdl_vector3_matrix_mul(&fk->parent_fk->bone_matrix,
+                                    (pspl_vector3_t*)&parent_base_vector, (pspl_vector3_t*)&parent_base_vector);
             fk->bone_matrix.m[0][3] = parent_base_vector.f[0];
             fk->bone_matrix.m[1][3] = parent_base_vector.f[1];
             fk->bone_matrix.m[2][3] = parent_base_vector.f[2];
@@ -610,9 +597,9 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, char flip_bit) {
             // Non-animated root bone
             
             pmdl_matrix34_identity(&fk->bone_matrix);
-            fk->bone_matrix.m[0][3] = (*fk->bone->base_vector).f[0];
-            fk->bone_matrix.m[1][3] = (*fk->bone->base_vector).f[1];
-            fk->bone_matrix.m[2][3] = (*fk->bone->base_vector).f[2];
+            fk->bone_matrix.m[0][3] = (fk->bone->base_vector).f[0];
+            fk->bone_matrix.m[1][3] = (fk->bone->base_vector).f[1];
+            fk->bone_matrix.m[2][3] = (fk->bone->base_vector).f[2];
             
             
         }
@@ -621,7 +608,7 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, char flip_bit) {
 }
 
 /* Routine to advance animation context */
-void pmdl_animation_advance(pmdl_animation_ctx* ctx_ptr, float abs_time) {
+void pmdl_animation_advance(pmdl_animation_ctx* ctx_ptr, double abs_time) {
     int i,j;
     
     // Calculate current time in animation
@@ -663,28 +650,21 @@ void pmdl_animation_advance(pmdl_animation_ctx* ctx_ptr, float abs_time) {
         const pmdl_curve_keyframe* left_kf = NULL;
         const pmdl_curve_keyframe* right_kf = NULL;
 
-        for (j=curve_inst->prev_kf_idx+1 ; j<curve_inst->curve->keyframe_count ; ++j) {
+        for (j=0 ; j<curve_inst->curve->keyframe_count ; ++j) {
+            const pmdl_curve_keyframe* kf = &curve_inst->curve->keyframe_array[j];
             
-            right_kf = &curve_inst->curve->keyframe_array[j];
-            if (j)
-                left_kf = &curve_inst->curve->keyframe_array[j-1];
-            else
-                left_kf = right_kf;
-            
-            if (current_time >= right_kf->main_handle[0]) {
-                if (j == curve_inst->curve->keyframe_count-1) {
-                    left_kf = right_kf;
-                    break;
-                }
-                continue;
-            } else if (left_kf != right_kf && current_time < left_kf->main_handle[0]) {
-                j-=2;
-                continue;
+            if (current_time > kf->main_handle[0])
+                left_kf = kf;
+            else {
+                right_kf = kf;
+                break;
             }
-            curve_inst->prev_kf_idx = j-1;
-            break;
             
         }
+        if (!right_kf)
+            right_kf = &curve_inst->curve->keyframe_array[curve_inst->curve->keyframe_count - 1];
+        if (!left_kf)
+            left_kf = right_kf;
         
         // If outside keyframe bounds, simply cache extrema value
         if (left_kf == right_kf) {
@@ -694,7 +674,6 @@ void pmdl_animation_advance(pmdl_animation_ctx* ctx_ptr, float abs_time) {
         
         // Otherwise, solve cubic polynomial
         curve_inst->cached_value = solve_bezier(current_time, left_kf, right_kf);
-        
         
     }
     

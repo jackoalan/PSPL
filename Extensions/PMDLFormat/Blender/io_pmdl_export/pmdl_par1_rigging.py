@@ -103,8 +103,9 @@ class pmdl_par1_rigging:
             bone_off = pmdl.get_bone_offset(bone.name, psize)
             bone_bytes += struct.pack(endian_char + 'I', bone_off)
             
-            for comp in bone.tail_local:
+            for comp in bone.head_local:
                 bone_bytes += struct.pack(endian_char + 'f', comp)
+            bone_bytes += struct.pack(endian_char + 'f', 0.0)
 
             parent_idx = -1
             if bone.parent:
@@ -163,8 +164,9 @@ class pmdl_par1_rigging:
 
         for entry in skin_entries:
             info_bytes += entry
-
-        return info_bytes
+    
+        section_length = len(info_bytes) + 4
+        return (struct.pack(endian_char + 'I', section_length) + info_bytes)
 
 
     # Generate animation info

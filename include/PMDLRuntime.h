@@ -218,7 +218,7 @@ void pmdl_vector3_normalise(REGISTER_KEY pspl_vector3_t* v);
 
 void pmdl_vector3_matrix_mul(REGISTER_KEY pspl_matrix34_t* mtx, REGISTER_KEY pspl_vector3_t* src, REGISTER_KEY pspl_vector3_t* dst);
 
-void pmdl_matrix34_quat(REGISTER_KEY pspl_matrix34_t m, REGISTER_KEY pspl_vector4_t* a);
+void pmdl_matrix34_quat(REGISTER_KEY pspl_matrix34_t* m, REGISTER_KEY pspl_vector4_t* a);
 
 #endif
 

@@ -83,11 +83,7 @@ All PMDL sub-types have the following general data layout:
     * Reference array (array of 20-byte SHA1 hashes)
         * These hashes correspond to PSPL objects defining shader-configurations
 * Bone String table (`PAR1` only)
-    * Bone Count (32-bit word)
     * Bone array
-        * Bone object pointer (pointer space)
-            * Allows the application to persistently-reference internal bone 
-              object after performing string lookup.
         * Null-terminated string for bone name
 * 32-byte-rounded `0xff` padding
 
@@ -150,7 +146,7 @@ how the PMDL runtime will transform data for skeletally-rigged models.
 * Bone structure array (each of variable length)
     * Bone name absolute offset (32-bit word)
         * References into string table at end of file
-    * Armature-relative bone-head coordinates (3x float)
+    * Armature-relative bone-head coordinates (3x float + 1 padding float)
     * Parent bone index (or -1 if no parent) (signed 32-bit word)
     * Child count (32-bit word)
     * Child index array

@@ -11,11 +11,7 @@
 
 #include <PSPLRuntime.h>
 
-#if __has_extension(attribute_ext_vector_type)
-typedef float float2 __attribute__((ext_vector_type(2)));
-#else
 typedef float float2[2];
-#endif
 
 struct pmdl_rigging_ctx;
 struct pmdl_animation_ctx;
@@ -38,8 +34,8 @@ typedef struct pmdl_bone {
     unsigned child_count;
     const struct pmdl_bone** child_arr;
     
-    // Base vector
-    const pspl_vector3_t* base_vector;
+    // Base vector (Copied from file for alignment purposes)
+    pspl_vector4_t base_vector;
     
 } pmdl_bone;
 
@@ -153,10 +149,6 @@ typedef struct {
     // Curve being animated
     const pmdl_curve* curve;
     
-    // Last-processed keyframe index to left of playback position
-    // Set to -1 by default or if no keyframe to left
-    int prev_kf_idx;
-    
     // Cached value computed with bézier function at last advance
     float cached_value;
     
@@ -235,7 +227,7 @@ pmdl_animation_ctx* pmdl_animation_init(const pmdl_action* action);
 void pmdl_animation_destroy(pmdl_animation_ctx* ctx_ptr);
 
 /* Routine to advance animation context */
-void pmdl_animation_advance(pmdl_animation_ctx* ctx_ptr, float abs_time);
+void pmdl_animation_advance(pmdl_animation_ctx* ctx_ptr, double abs_time);
 
 /* Routine to rewind animation context (call advance afterwards before drawing) */
 #define pmdl_animation_rewind(ctx_ptr) (ctx_ptr)->have_abs_time = 0

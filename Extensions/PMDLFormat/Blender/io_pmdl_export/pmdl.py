@@ -165,11 +165,7 @@ class pmdl:
         for bone_name in self.bone_names:
             if bone_name == new_name:
                 return offset
-            offset += psize + len(bone_name) + 1
-            pad = (len(bone_name)+1)%psize
-            if pad:
-                pad = psize - pad
-            offset += pad
+            offset += len(bone_name) + 1
         self.bone_names.append(new_name)
         return offset
 
@@ -177,21 +173,11 @@ class pmdl:
     # Generate bone string table
     def gen_bone_table(self, endian_char, psize):
         table = bytearray()
-        table += struct.pack(endian_char + 'I', len(self.bone_names))
-        for i in range(psize-4):
-            table.append(0)
         
         for bone in self.bone_names:
-            for i in range(psize):
-                table.append(0)
             bone_str = bone.encode('utf-8')
             table += bone_str
             table.append(0)
-            pad = (len(bone_str)+1)%psize
-            if pad:
-                pad = psize - pad
-            for i in range(pad):
-                table.append(0)
         return table
 
 
