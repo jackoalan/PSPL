@@ -379,7 +379,7 @@ void pmdl_destroy(pmdl_t* pmdl) {
     
     // Destroy rigging context (if PAR1)
     if (header->sub_type_num == '1')
-        pmdl_rigging_destroy((pmdl_rigging_ctx**)&pmdl->rigging_ptr);
+        pmdl_rigging_destroy(pmdl->rigging_ptr);
     
     // Unload collections from GPU
 #   if PMDL_GENERAL
@@ -926,9 +926,9 @@ void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
                             for (l=0 ; l<skin_entry->bone_count ; ++l) {
                                 const pmdl_bone* bone = skin_entry->bone_array[l];
                                 const pmdl_fk_playback* bone_fk = &anim_ctx->fk_instance_array[bone->bone_index];
-                                pmdl_matrix34_cpy(bone_fk->bone_matrix.v, bone_mats[l].v);
+                                pmdl_matrix34_cpy(bone_fk->bone_matrix->v, bone_mats[l].v);
                                 pmdl_vector4_cpy(HOMOGENOUS_BOTTOM_VECTOR, bone_mats[l].v[3]);
-                                pmdl_vector4_cpy(bone->base_vector.v, bone_bases[l].v);
+                                pmdl_vector4_cpy(bone->base_vector->v, bone_bases[l].v);
                                 bone_bases[l].f[3] = 0.0f;
                             }
 #                           if PSPL_RUNTIME_PLATFORM_GL2

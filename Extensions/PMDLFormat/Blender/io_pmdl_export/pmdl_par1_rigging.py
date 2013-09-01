@@ -105,7 +105,6 @@ class pmdl_par1_rigging:
             
             for comp in bone.head_local:
                 bone_bytes += struct.pack(endian_char + 'f', comp)
-            bone_bytes += struct.pack(endian_char + 'f', 0.0)
 
             parent_idx = -1
             if bone.parent:

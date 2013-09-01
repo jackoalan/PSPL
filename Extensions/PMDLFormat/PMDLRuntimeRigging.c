@@ -15,7 +15,7 @@
 #pragma pack(1)
 struct file_bone {
     uint32_t string_off;
-    pspl_vector4_t bone_head;
+    float bone_head[3];
     int32_t parent_index;
     uint32_t child_count;
     uint32_t child_array[];
@@ -139,6 +139,11 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
     rigging_ctx->bone_array = context_cur;
     context_cur += sizeof(pmdl_bone)*bone_count;
     
+    // Allocate bone base vector block
+    // (Separated for SIMD vector alignment reasons)
+    pspl_vector4_t* base_vector_block =
+    pspl_allocate_media_block(bone_count*sizeof(pspl_vector4_t));
+    
     for (i=0 ; i<bone_count ; ++i) {
         
         struct file_bone* bone = (struct file_bone*)(bone_arr + bone_offsets[i]);
@@ -159,7 +164,11 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
             child_arr_writer[j] = (pmdl_bone*)&rigging_ctx->bone_array[bone->child_array[j]];
         context_cur += sizeof(pmdl_bone*)*bone->child_count;
 
-        target_bone->base_vector = bone->bone_head;
+        pspl_vector4_t* base_vector = &base_vector_block[i];
+        base_vector->f[0] = bone->bone_head[0];
+        base_vector->f[1] = bone->bone_head[1];
+        base_vector->f[2] = bone->bone_head[2];
+        target_bone->base_vector = base_vector;
         
     }
     
@@ -282,8 +291,9 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
 }
 
 /* Routine to destroy rigging context */
-void pmdl_rigging_destroy(pmdl_rigging_ctx** rig_ctx) {
-    pspl_free_media_block(*rig_ctx);
+void pmdl_rigging_destroy(pmdl_rigging_ctx* rig_ctx) {
+    pspl_free_media_block((void*)rig_ctx->bone_array[0].base_vector);
+    pspl_free_media_block(rig_ctx);
 }
 
 
@@ -385,6 +395,11 @@ pmdl_animation_ctx* pmdl_animation_init(const pmdl_action* action) {
         
     }
     
+    // Allocate bone matrix array
+    // (separate block on heap due to SIMD vector alignment requirements)
+    pspl_matrix34_t* matrix_array_block =
+    pspl_allocate_media_block(action->parent_ctx->bone_count*sizeof(pspl_matrix34_t));
+    
     // Populate FK instance array
     for (i=0 ; i<action->parent_ctx->bone_count ; ++i) {
         
@@ -415,10 +430,11 @@ pmdl_animation_ctx* pmdl_animation_init(const pmdl_action* action) {
         else
             target_fk->parent_fk = NULL;
         
-        pmdl_matrix34_identity(&target_fk->bone_matrix);
-        target_fk->bone_matrix.m[0][3] = (bone->base_vector).f[0];
-        target_fk->bone_matrix.m[1][3] = (bone->base_vector).f[1];
-        target_fk->bone_matrix.m[2][3] = (bone->base_vector).f[2];
+        target_fk->bone_matrix = &matrix_array_block[i];
+        pmdl_matrix34_identity(target_fk->bone_matrix);
+        target_fk->bone_matrix->m[0][3] = (bone->base_vector)->f[0];
+        target_fk->bone_matrix->m[1][3] = (bone->base_vector)->f[1];
+        target_fk->bone_matrix->m[2][3] = (bone->base_vector)->f[2];
         
         target_fk->eval_flip_bit = 0;
         
@@ -430,6 +446,7 @@ pmdl_animation_ctx* pmdl_animation_init(const pmdl_action* action) {
 
 /* Routine to destroy aimation context */
 void pmdl_animation_destroy(pmdl_animation_ctx* ctx_ptr) {
+    pspl_free_media_block(ctx_ptr->fk_instance_array[0].bone_matrix);
     pspl_free_media_block(ctx_ptr);
 }
 
@@ -496,7 +513,7 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, char flip_bit) {
             
             // Scale transform
             pspl_matrix34_t scale_matrix;
-            pmdl_matrix34_cpy(fk->parent_fk->bone_matrix.v, scale_matrix.v);
+            pmdl_matrix34_cpy(fk->parent_fk->bone_matrix->v, scale_matrix.v);
             if (fk->bone_anim_track->scale_x)
                 scale_matrix.m[0][0] *= fk->first_curve_instance[i++].cached_value;
             if (fk->bone_anim_track->scale_y)
@@ -522,8 +539,8 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, char flip_bit) {
             
             // Location transform
             pspl_vector4_t parent_base_vector;
-            pmdl_vector4_sub(fk->bone->base_vector.v, fk->parent_fk->bone->base_vector.v, parent_base_vector.v);
-            pmdl_vector3_matrix_mul(&fk->parent_fk->bone_matrix,
+            pmdl_vector4_sub(fk->bone->base_vector->v, fk->parent_fk->bone->base_vector->v, parent_base_vector.v);
+            pmdl_vector3_matrix_mul(fk->parent_fk->bone_matrix,
                                     (pspl_vector3_t*)&parent_base_vector, (pspl_vector3_t*)&parent_base_vector);
             rotation_location_matrix.m[0][3] = parent_base_vector.f[0];
             rotation_location_matrix.m[1][3] = parent_base_vector.f[1];
@@ -536,7 +553,7 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, char flip_bit) {
                 rotation_location_matrix.m[2][3] += fk->first_curve_instance[i++].cached_value;
             
             // Concatenate transforms
-            pmdl_matrix34_mul(&scale_matrix, &rotation_location_matrix, &fk->bone_matrix);
+            pmdl_matrix34_mul(&scale_matrix, &rotation_location_matrix, fk->bone_matrix);
             
             
         } else if (fk->bone_anim_track) {
@@ -566,9 +583,9 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, char flip_bit) {
             pmdl_matrix34_quat(&rotation_location_matrix, &rotation_quat);
 
             // Location transform
-            rotation_location_matrix.m[0][3] = (fk->bone->base_vector).f[0];
-            rotation_location_matrix.m[1][3] = (fk->bone->base_vector).f[1];
-            rotation_location_matrix.m[2][3] = (fk->bone->base_vector).f[2];
+            rotation_location_matrix.m[0][3] = (fk->bone->base_vector)->f[0];
+            rotation_location_matrix.m[1][3] = (fk->bone->base_vector)->f[1];
+            rotation_location_matrix.m[2][3] = (fk->bone->base_vector)->f[2];
             if (fk->bone_anim_track->location_x)
                 rotation_location_matrix.m[0][3] += fk->first_curve_instance[i++].cached_value;
             if (fk->bone_anim_track->location_y)
@@ -577,29 +594,29 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, char flip_bit) {
                 rotation_location_matrix.m[2][3] += fk->first_curve_instance[i++].cached_value;
 
             // Concatenate transforms
-            pmdl_matrix34_mul(&scale_matrix, &rotation_location_matrix, &fk->bone_matrix);
+            pmdl_matrix34_mul(&scale_matrix, &rotation_location_matrix, fk->bone_matrix);
             
             
         } else if (fk->parent_fk) {
             // Non-animated child bone
             
-            pmdl_matrix34_cpy(fk->parent_fk->bone_matrix.v, fk->bone_matrix.v);
+            pmdl_matrix34_cpy(fk->parent_fk->bone_matrix->v, fk->bone_matrix->v);
             pspl_vector4_t parent_base_vector;
-            pmdl_vector4_sub(fk->bone->base_vector.v, fk->parent_fk->bone->base_vector.v, parent_base_vector.v);
-            pmdl_vector3_matrix_mul(&fk->parent_fk->bone_matrix,
+            pmdl_vector4_sub(fk->bone->base_vector->v, fk->parent_fk->bone->base_vector->v, parent_base_vector.v);
+            pmdl_vector3_matrix_mul(fk->parent_fk->bone_matrix,
                                     (pspl_vector3_t*)&parent_base_vector, (pspl_vector3_t*)&parent_base_vector);
-            fk->bone_matrix.m[0][3] = parent_base_vector.f[0];
-            fk->bone_matrix.m[1][3] = parent_base_vector.f[1];
-            fk->bone_matrix.m[2][3] = parent_base_vector.f[2];
+            fk->bone_matrix->m[0][3] = parent_base_vector.f[0];
+            fk->bone_matrix->m[1][3] = parent_base_vector.f[1];
+            fk->bone_matrix->m[2][3] = parent_base_vector.f[2];
             
             
         } else {
             // Non-animated root bone
             
-            pmdl_matrix34_identity(&fk->bone_matrix);
-            fk->bone_matrix.m[0][3] = (fk->bone->base_vector).f[0];
-            fk->bone_matrix.m[1][3] = (fk->bone->base_vector).f[1];
-            fk->bone_matrix.m[2][3] = (fk->bone->base_vector).f[2];
+            pmdl_matrix34_identity(fk->bone_matrix);
+            fk->bone_matrix->m[0][3] = (fk->bone->base_vector)->f[0];
+            fk->bone_matrix->m[1][3] = (fk->bone->base_vector)->f[1];
+            fk->bone_matrix->m[2][3] = (fk->bone->base_vector)->f[2];
             
             
         }

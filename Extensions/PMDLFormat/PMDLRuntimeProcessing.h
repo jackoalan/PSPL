@@ -21,6 +21,6 @@ void pmdl_destroy(pmdl_t* pmdl);
 
 /* Rigging context */
 void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const char* bone_string_table);
-void pmdl_rigging_destroy(pmdl_rigging_ctx** rig_ctx);
+void pmdl_rigging_destroy(pmdl_rigging_ctx* rig_ctx);
 
 #endif

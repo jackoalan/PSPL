@@ -35,7 +35,7 @@ typedef struct pmdl_bone {
     const struct pmdl_bone** child_arr;
     
     // Base vector (Copied from file for alignment purposes)
-    pspl_vector4_t base_vector;
+    const pspl_vector4_t* base_vector;
     
 } pmdl_bone;
 
@@ -170,7 +170,7 @@ typedef struct pmdl_fk_playback {
     struct pmdl_fk_playback* parent_fk;
     
     // Cumulative bone transformation matrix
-    pspl_matrix34_t bone_matrix;
+    pspl_matrix34_t* bone_matrix;
     
     // Evaluation flip-bit (alternates 0/1 to synchronise with other FK instances)
     char eval_flip_bit;
