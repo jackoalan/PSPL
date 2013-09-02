@@ -48,7 +48,7 @@ static void renderfunc() {
     // Update Texcoord 1
     monkey_ctx.texcoord_mtx[1].m[0][0] = 0.5;
     monkey_ctx.texcoord_mtx[1].m[1][1] = 1.0;
-    monkey_ctx.texcoord_mtx[1].m[0][3] = fmod(-time, 1.0);
+    monkey_ctx.texcoord_mtx[1].m[0][3] = fmod(time, 1.41);
     monkey_ctx.texcoord_mtx[1].m[1][3] = 1.0;
     
     // Update animation context
@@ -165,7 +165,7 @@ int main(int argc, char* argv[]) {
     monkey_model = pmdl_lookup(monkey_obj, "monkey");
     
     // Setup animation context
-    const pmdl_action* sway = pmdl_action_lookup(monkey_model, "Sway");
+    const pmdl_action* sway = pmdl_action_lookup(monkey_model, "haha");
     anim_ctx = pmdl_animation_init(sway);
     anim_ctx->loop_flag = 1;
     

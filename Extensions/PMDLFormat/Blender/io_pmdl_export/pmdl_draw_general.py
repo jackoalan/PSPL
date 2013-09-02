@@ -188,7 +188,7 @@ class pmdl_draw_general:
                         weights = None
                         if rigger:
                             weights = rigger.augment_bone_array_with_lv(obj, tri_strip_bones, loop_vert)
-                            if not weights:
+                            if weights is None:
                                 tri_strip_bones_overflow = True
                                 break
                         
@@ -234,7 +234,7 @@ class pmdl_draw_general:
                     weights = None
                     if rigger:
                         weights = rigger.augment_bone_array_with_lv(obj, tri_strip_bones, odd_loop_vert_out)
-                        if not weights:
+                        if weights is None:
                             tri_strip_bones_overflow = True
                             break
                     

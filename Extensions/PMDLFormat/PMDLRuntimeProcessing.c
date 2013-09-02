@@ -89,6 +89,18 @@ static const pspl_vector4_t HOMOGENOUS_BOTTOM_VECTOR = {.f[0]=0, .f[1]=0, .f[2]=
     static const char* DRAW_FMT = "__GX";
 #endif
 
+/* Static identity matrix */
+static pspl_matrix44_t IDENTITY_MATRIX = {
+    .m[0][0] = 1, .m[0][1] = 0, .m[0][2] = 0, .m[0][3] = 0,
+    .m[1][0] = 0, .m[1][1] = 1, .m[1][2] = 0, .m[1][3] = 0,
+    .m[2][0] = 0, .m[2][1] = 0, .m[2][2] = 1, .m[2][3] = 0,
+    .m[3][0] = 0, .m[3][1] = 0, .m[3][2] = 0, .m[3][3] = 1
+};
+
+/* Static zero vector */
+static pspl_vector4_t ZERO_VECTOR = {
+    .f[0] = 0, .f[1] = 0, .f[2] = 0, .f[3] = 0
+};
 
 
 /* PAR Enum */
@@ -925,11 +937,16 @@ void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
                             &anim_ctx->action->parent_ctx->skin_entry_array[last_skin_index];
                             for (l=0 ; l<skin_entry->bone_count ; ++l) {
                                 const pmdl_bone* bone = skin_entry->bone_array[l];
-                                const pmdl_fk_playback* bone_fk = &anim_ctx->fk_instance_array[bone->bone_index];
-                                pmdl_matrix34_cpy(bone_fk->bone_matrix->v, bone_mats[l].v);
-                                pmdl_vector4_cpy(HOMOGENOUS_BOTTOM_VECTOR, bone_mats[l].v[3]);
-                                pmdl_vector4_cpy(bone->base_vector->v, bone_bases[l].v);
-                                bone_bases[l].f[3] = 0.0f;
+                                if (!bone) {
+                                    pmdl_matrix44_cpy(IDENTITY_MATRIX.v, bone_mats[l].v);
+                                    pmdl_vector4_cpy(ZERO_VECTOR.v, bone_bases[l].v);
+                                } else {
+                                    const pmdl_fk_playback* bone_fk = &anim_ctx->fk_instance_array[bone->bone_index];
+                                    pmdl_matrix34_cpy(bone_fk->bone_matrix->v, bone_mats[l].v);
+                                    pmdl_vector4_cpy(HOMOGENOUS_BOTTOM_VECTOR, bone_mats[l].v[3]);
+                                    pmdl_vector4_cpy(bone->base_vector->v, bone_bases[l].v);
+                                    bone_bases[l].f[3] = 0.0f;
+                                }
                             }
 #                           if PSPL_RUNTIME_PLATFORM_GL2
                                 glUniformMatrix4fv(shader_obj->native_shader.bone_mat_uni, skin_entry->bone_count, GL_FALSE, (GLfloat*)bone_mats);

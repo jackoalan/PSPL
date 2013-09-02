@@ -65,6 +65,28 @@ class pmdl_par1_rigging:
         # Tentative bone additions
         new_bones = []
         
+        # If vertex doesn't belong to a group,
+        # insert 'PMDL_IDENTITY_BONE' and apply full weight
+        if len(vertex.groups) == 0:
+            
+            if 'PMDL_IDENTITY_BONE' not in bone_array:
+                
+                # Detect bone overflow
+                if len(bone_array) + len(new_bones) >= self.max_bone_count:
+                    return None
+                
+                # Add to array otherwise
+                new_bones.append('PMDL_IDENTITY_BONE')
+                
+                # Record bone weight
+                weight_array.append(1.0)
+
+            else:
+    
+                # Record bone weight
+                weight_array[bone_array.index('PMDL_IDENTITY_BONE')] = 1.0
+
+
         # Determine which bones (vertex groups) belong to loop_vert
         for group_elem in vertex.groups:
             vertex_group = self.mesh_vertex_groups[group_elem.group]
@@ -150,8 +172,11 @@ class pmdl_par1_rigging:
             skin_bytes = bytearray()
             skin_bytes += struct.pack(endian_char + 'I', len(bone_array))
             for bone in bone_array:
-                bone_idx = self.armature.data.bones.find(bone)
-                skin_bytes += struct.pack(endian_char + 'I', bone_idx)
+                if bone == 'PMDL_IDENTITY_BONE':
+                    bone_idx = -1
+                else:
+                    bone_idx = self.armature.data.bones.find(bone)
+                skin_bytes += struct.pack(endian_char + 'i', bone_idx)
             skin_entries.append(skin_bytes)
         
         info_bytes += struct.pack(endian_char + 'I', len(skin_entries))
