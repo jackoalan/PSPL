@@ -91,7 +91,7 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
     }
     
     // Bone weight attributes
-    unsigned bones_round4 = ROUND_UP_4(ir_state->vertex.bone_count) / 4;
+    unsigned bones_round4 = ROUND_UP_4(ir_state->vertex.bone_count+1) / 4;
     for (j=0 ; j<bones_round4 ; ++j) {
         char bone[64];
         snprintf(bone, 64, "attribute vec4 bone_weights%u;\n", j);
@@ -128,13 +128,16 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
     } else { // Bones
         pspl_buffer_addstr(vert, "    // Rigged position and normal\n");
         pspl_buffer_addstr(vert, "    gl_Position = vec4(0.0,0.0,0.0,0.0);\n");
-        pspl_buffer_addstr(vert, "    normal = vec4(0.0,0.0,0.0,0.0);\n");
+        pspl_buffer_addstr(vert, "    normal = vec4(0.0,0.0,0.0,0.0);\n\n");
+        pspl_buffer_addstr(vert, "    // First bone weight is the identity blend value (weight remainder)\n");
+        pspl_buffer_addstr(vert, "    gl_Position += pos * bone_weights0[0];\n");
+        pspl_buffer_addstr(vert, "    normal += norm * bone_weights0[0];\n    \n");
         unsigned bone_idx = 0;
-        for (j=0 ; j<ir_state->vertex.bone_count ; ++j) {
+        for (j=1 ; j<=ir_state->vertex.bone_count ; ++j) {
             char bone[256];
-            snprintf(bone, 256, "    gl_Position += ((pos - bone_base[%u]) * bone_mat[%u]) * bone_weights%u[%u];\n", j, j, bone_idx, j%4);
+            snprintf(bone, 256, "    gl_Position += ((pos - bone_base[%u]) * bone_mat[%u]) * bone_weights%u[%u];\n", j-1, j-1, bone_idx, j%4);
             pspl_buffer_addstr(vert, bone);
-            snprintf(bone, 256, "    normal += (norm * bone_mat[%u]) * bone_weights%u[%u];\n", j, bone_idx, j%4);
+            snprintf(bone, 256, "    normal += (norm * bone_mat[%u]) * bone_weights%u[%u];\n", j-1, bone_idx, j%4);
             pspl_buffer_addstr(vert, bone);
             if (j && !(j%4)) {++bone_idx;}
         }

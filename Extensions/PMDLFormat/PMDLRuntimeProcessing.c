@@ -243,10 +243,12 @@ static int pmdl_init_collections(const pspl_runtime_arc_file_t* pmdl_file) {
             }
             
             GLsizeiptr weight_offset = 24 + collection_header->uv_count*8;
-            for (j=0 ; j<collection_header->bone_count ; ++j) { // Bone Weight Coefficients
-                glEnableVertexAttribArray(idx);
-                glVertexAttribPointer(idx, 2, GL_FLOAT, GL_FALSE, buf_stride, (GLvoid*)(weight_offset+4*j));
-                ++idx;
+            if (collection_header->bone_count) {
+                for (j=0 ; j<(collection_header->bone_count/4) ; ++j) { // Bone Weight Coefficients
+                    glEnableVertexAttribArray(idx);
+                    glVertexAttribPointer(idx, 2, GL_FLOAT, GL_FALSE, buf_stride, (GLvoid*)(weight_offset+4*j));
+                    ++idx;
+                }
             }
         
 #       elif PSPL_RUNTIME_PLATFORM_D3D11
@@ -937,27 +939,24 @@ void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
                             &anim_ctx->action->parent_ctx->skin_entry_array[last_skin_index];
                             for (l=0 ; l<skin_entry->bone_count ; ++l) {
                                 const pmdl_bone* bone = skin_entry->bone_array[l];
-                                if (!bone) {
-                                    pmdl_matrix44_cpy(IDENTITY_MATRIX.v, bone_mats[l].v);
-                                    pmdl_vector4_cpy(ZERO_VECTOR.v, bone_bases[l].v);
-                                } else {
-                                    const pmdl_fk_playback* bone_fk = &anim_ctx->fk_instance_array[bone->bone_index];
-                                    pmdl_matrix34_cpy(bone_fk->bone_matrix->v, bone_mats[l].v);
-                                    pmdl_vector4_cpy(HOMOGENOUS_BOTTOM_VECTOR, bone_mats[l].v[3]);
-                                    pmdl_vector4_cpy(bone->base_vector->v, bone_bases[l].v);
-                                    bone_bases[l].f[3] = 0.0f;
-                                }
+                                const pmdl_fk_playback* bone_fk = &anim_ctx->fk_instance_array[bone->bone_index];
+                                pmdl_matrix34_cpy(bone_fk->bone_matrix->v, bone_mats[l].v);
+                                pmdl_vector4_cpy(HOMOGENOUS_BOTTOM_VECTOR, bone_mats[l].v[3]);
+                                pmdl_vector4_cpy(bone->base_vector->v, bone_bases[l].v);
                             }
 #                           if PSPL_RUNTIME_PLATFORM_GL2
-                                glUniformMatrix4fv(shader_obj->native_shader.bone_mat_uni, skin_entry->bone_count, GL_FALSE, (GLfloat*)bone_mats);
-                                glUniform4fv(shader_obj->native_shader.bone_base_uni, skin_entry->bone_count, (GLfloat*)bone_bases);
+                                glUniformMatrix4fv(shader_obj->native_shader.bone_mat_uni,
+                                                   skin_entry->bone_count, GL_FALSE, (GLfloat*)bone_mats);
+                                glUniform4fv(shader_obj->native_shader.bone_base_uni, skin_entry->bone_count,
+                                             (GLfloat*)bone_bases);
 #                           elif PSPL_RUNTIME_PLATFORM_D3D11
                             
 #                           endif
                             
                         } else {
 #                           if PSPL_RUNTIME_PLATFORM_GL2
-                                glUniformMatrix4fv(shader_obj->native_shader.bone_mat_uni, PMDL_MAX_BONES, GL_FALSE, (GLfloat*)IDENTITY_MATS);
+                                glUniformMatrix4fv(shader_obj->native_shader.bone_mat_uni, PMDL_MAX_BONES,
+                                                   GL_FALSE, (GLfloat*)IDENTITY_MATS);
 #                           elif PSPL_RUNTIME_PLATFORM_D3D11
                             
 #                           endif

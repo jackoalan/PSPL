@@ -197,12 +197,8 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
         target_skin->bone_count = skin->bone_count;
         target_skin->bone_array = context_cur;
         pmdl_bone** bone_arr_writer = context_cur;
-        for (j=0 ; j<skin->bone_count ; ++j) {
-            if (skin->bone_indices[j] == -1)
-                bone_arr_writer[j] = NULL;
-            else
-                bone_arr_writer[j] = (pmdl_bone*)&rigging_ctx->bone_array[skin->bone_indices[j]];
-        }
+        for (j=0 ; j<skin->bone_count ; ++j)
+            bone_arr_writer[j] = (pmdl_bone*)&rigging_ctx->bone_array[skin->bone_indices[j]];
         context_cur += sizeof(pmdl_bone*)*skin->bone_count;
         
     }
@@ -410,43 +406,36 @@ pmdl_animation_ctx* pmdl_animation_init(const pmdl_action* action) {
         const pmdl_bone* bone = &action->parent_ctx->bone_array[i];
         pmdl_fk_playback* target_fk = &new_ctx->fk_instance_array[i];
         
-        if (bone) {
+        target_fk->bone = bone;
         
-            target_fk->bone = bone;
-            
-            target_fk->bone_anim_track = NULL;
-            target_fk->first_curve_instance = NULL;
-            for (j=0 ; j<action->bone_track_count ; ++j) {
-                const pmdl_action_bone_track* bone_track = &action->bone_track_array[j];
-                if (bone_track->bone_index == i) {
-                    target_fk->bone_anim_track = bone_track;
-                    for (k=0 ; k<curve_instance_count ; ++k) {
-                        pmdl_curve_playback* curve_pb = &new_ctx->curve_instance_array[k];
-                        if (curve_pb->bone_index == i) {
-                            target_fk->first_curve_instance = curve_pb;
-                            break;
-                        }
+        target_fk->bone_anim_track = NULL;
+        target_fk->first_curve_instance = NULL;
+        for (j=0 ; j<action->bone_track_count ; ++j) {
+            const pmdl_action_bone_track* bone_track = &action->bone_track_array[j];
+            if (bone_track->bone_index == i) {
+                target_fk->bone_anim_track = bone_track;
+                for (k=0 ; k<curve_instance_count ; ++k) {
+                    pmdl_curve_playback* curve_pb = &new_ctx->curve_instance_array[k];
+                    if (curve_pb->bone_index == i) {
+                        target_fk->first_curve_instance = curve_pb;
+                        break;
                     }
-                    break;
                 }
+                break;
             }
-            
-            if (bone->parent)
-                target_fk->parent_fk = &new_ctx->fk_instance_array[bone->parent->bone_index];
-            else
-                target_fk->parent_fk = NULL;
-            
-        } else {
-            target_fk->bone = NULL;
         }
+        
+        if (bone->parent)
+            target_fk->parent_fk = &new_ctx->fk_instance_array[bone->parent->bone_index];
+        else
+            target_fk->parent_fk = NULL;
+        
         
         target_fk->bone_matrix = &matrix_array_block[i];
         pmdl_matrix34_identity(target_fk->bone_matrix);
-        if (bone) {
-            target_fk->bone_matrix->m[0][3] = (bone->base_vector)->f[0];
-            target_fk->bone_matrix->m[1][3] = (bone->base_vector)->f[1];
-            target_fk->bone_matrix->m[2][3] = (bone->base_vector)->f[2];
-        }
+        target_fk->bone_matrix->m[0][3] = (bone->base_vector)->f[0];
+        target_fk->bone_matrix->m[1][3] = (bone->base_vector)->f[1];
+        target_fk->bone_matrix->m[2][3] = (bone->base_vector)->f[2];
         
         target_fk->eval_flip_bit = 0;
         

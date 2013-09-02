@@ -57,6 +57,9 @@ class pmdl_par1_rigging:
     def augment_bone_array_with_lv(self, mesh_obj, bone_array, loop_vert):
         vertex = mesh_obj.data.vertices[loop_vert[0].loop.vertex_index]
         
+        # Identity blend value (remainder blend factor)
+        identity_blend = 1.0
+        
         # Loop-vert weight array
         weight_array = []
         for i in range(len(bone_array)):
@@ -65,27 +68,6 @@ class pmdl_par1_rigging:
         # Tentative bone additions
         new_bones = []
         
-        # If vertex doesn't belong to a group,
-        # insert 'PMDL_IDENTITY_BONE' and apply full weight
-        if len(vertex.groups) == 0:
-            
-            if 'PMDL_IDENTITY_BONE' not in bone_array:
-                
-                # Detect bone overflow
-                if len(bone_array) + len(new_bones) >= self.max_bone_count:
-                    return None
-                
-                # Add to array otherwise
-                new_bones.append('PMDL_IDENTITY_BONE')
-                
-                # Record bone weight
-                weight_array.append(1.0)
-
-            else:
-    
-                # Record bone weight
-                weight_array[bone_array.index('PMDL_IDENTITY_BONE')] = 1.0
-
 
         # Determine which bones (vertex groups) belong to loop_vert
         for group_elem in vertex.groups:
@@ -102,16 +84,20 @@ class pmdl_par1_rigging:
         
                 # Record bone weight
                 weight_array.append(group_elem.weight)
+                identity_blend -= group_elem.weight
         
             else:
 
                 # Record bone weight
                 weight_array[bone_array.index(vertex_group.name)] = group_elem.weight
+                identity_blend -= group_elem.weight
             
 
         # If we get here, no overflows; augment bone array and return weight array
         bone_array.extend(new_bones)
-        return weight_array
+        return_weights = [identity_blend]
+        return_weights.extend(weight_array)
+        return return_weights
 
 
     # Generate Skeleton Info structure
@@ -172,10 +158,7 @@ class pmdl_par1_rigging:
             skin_bytes = bytearray()
             skin_bytes += struct.pack(endian_char + 'I', len(bone_array))
             for bone in bone_array:
-                if bone == 'PMDL_IDENTITY_BONE':
-                    bone_idx = -1
-                else:
-                    bone_idx = self.armature.data.bones.find(bone)
+                bone_idx = self.armature.data.bones.find(bone)
                 skin_bytes += struct.pack(endian_char + 'i', bone_idx)
             skin_entries.append(skin_bytes)
         
