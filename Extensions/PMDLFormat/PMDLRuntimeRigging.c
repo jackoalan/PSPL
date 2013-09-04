@@ -7,6 +7,8 @@
 //
 
 #include <stdio.h>
+#include <stdarg.h>
+#include <alloca.h>
 #include <math.h>
 #include <PMDLRuntime.h>
 #include <PMDLRuntimeRigging.h>
@@ -298,14 +300,14 @@ void pmdl_rigging_destroy(pmdl_rigging_ctx* rig_ctx) {
 
 
 
-/* Routine to init animation context */
-pmdl_animation_ctx* pmdl_animation_init(const pmdl_action* action) {
-    int i,j,k;
+/* Routine to init action context */
+pmdl_action_ctx* pmdl_action_init(const pmdl_action* action) {
+    int i,j;
     if (!action)
         return NULL;
     
     // Determine size of context block
-    size_t block_size = sizeof(pmdl_animation_ctx);
+    size_t block_size = sizeof(pmdl_action_ctx);
     
     unsigned curve_instance_count = 0;
     for (i=0 ; i<action->bone_track_count; ++i) {
@@ -314,21 +316,14 @@ pmdl_animation_ctx* pmdl_animation_init(const pmdl_action* action) {
     }
     
     block_size += sizeof(pmdl_curve_playback)*curve_instance_count;
-    block_size += sizeof(pmdl_fk_playback)*action->parent_ctx->bone_count;
     
     // Allocate context block
     void* context_block = pspl_allocate_media_block(block_size);
-    pmdl_animation_ctx* new_ctx = context_block;
+    pmdl_action_ctx* new_ctx = context_block;
     new_ctx->action = action;
-    new_ctx->playback_rate = 1.0;
-    new_ctx->have_abs_time = 0;
     new_ctx->current_time = 0.0;
     new_ctx->curve_instance_count = curve_instance_count;
-    new_ctx->curve_instance_array = context_block + sizeof(pmdl_animation_ctx);
-    new_ctx->fk_instance_count = action->parent_ctx->bone_count;
-    new_ctx->fk_instance_array = context_block + sizeof(pmdl_animation_ctx) +
-    (sizeof(pmdl_curve_playback)*curve_instance_count);
-    new_ctx->master_fk_flip_bit = 0;
+    new_ctx->curve_instance_array = context_block + sizeof(pmdl_action_ctx);
     new_ctx->loop_flag = 0;
     new_ctx->anim_loop_point_cb = NULL;
     new_ctx->anim_end_cb = NULL;
@@ -395,59 +390,13 @@ pmdl_animation_ctx* pmdl_animation_init(const pmdl_action* action) {
         
     }
     
-    // Allocate bone matrix array
-    // (separate block on heap due to SIMD vector alignment requirements)
-    pspl_matrix34_t* matrix_array_block =
-    pspl_allocate_media_block(action->parent_ctx->bone_count*sizeof(pspl_matrix34_t));
-    
-    // Populate FK instance array
-    for (i=0 ; i<action->parent_ctx->bone_count ; ++i) {
-        
-        const pmdl_bone* bone = &action->parent_ctx->bone_array[i];
-        pmdl_fk_playback* target_fk = &new_ctx->fk_instance_array[i];
-        
-        target_fk->bone = bone;
-        
-        target_fk->bone_anim_track = NULL;
-        target_fk->first_curve_instance = NULL;
-        for (j=0 ; j<action->bone_track_count ; ++j) {
-            const pmdl_action_bone_track* bone_track = &action->bone_track_array[j];
-            if (bone_track->bone_index == i) {
-                target_fk->bone_anim_track = bone_track;
-                for (k=0 ; k<curve_instance_count ; ++k) {
-                    pmdl_curve_playback* curve_pb = &new_ctx->curve_instance_array[k];
-                    if (curve_pb->bone_index == i) {
-                        target_fk->first_curve_instance = curve_pb;
-                        break;
-                    }
-                }
-                break;
-            }
-        }
-        
-        if (bone->parent)
-            target_fk->parent_fk = &new_ctx->fk_instance_array[bone->parent->bone_index];
-        else
-            target_fk->parent_fk = NULL;
-        
-        
-        target_fk->bone_matrix = &matrix_array_block[i];
-        pmdl_matrix34_identity(target_fk->bone_matrix);
-        target_fk->bone_matrix->m[0][3] = (bone->base_vector)->f[0];
-        target_fk->bone_matrix->m[1][3] = (bone->base_vector)->f[1];
-        target_fk->bone_matrix->m[2][3] = (bone->base_vector)->f[2];
-        
-        target_fk->eval_flip_bit = 0;
-        
-    }
     
     return new_ctx;
     
 }
 
-/* Routine to destroy aimation context */
-void pmdl_animation_destroy(pmdl_animation_ctx* ctx_ptr) {
-    pspl_free_media_block(ctx_ptr->fk_instance_array[0].bone_matrix);
+/* Routine to destroy action context */
+void pmdl_action_destroy(pmdl_action_ctx* ctx_ptr) {
     pspl_free_media_block(ctx_ptr);
 }
 
@@ -502,40 +451,95 @@ static inline float solve_bezier(double time,
 }
 
 /* Routine to recursively evaluate FK sub-chain */
-static void recursive_fk_evaluate(pmdl_fk_playback* fk, char flip_bit) {
+static void recursive_fk_evaluate(pmdl_fk_playback* fk, unsigned action_count, char flip_bit) {
     int i = 0;
+    int j;
     
     if (fk->eval_flip_bit != flip_bit) {
+        fk->eval_flip_bit = flip_bit;
         if (fk->parent_fk)
-            recursive_fk_evaluate(fk->parent_fk, flip_bit);
+            recursive_fk_evaluate(fk->parent_fk, action_count, flip_bit);
         
-        if (fk->bone_anim_track && fk->parent_fk) {
+        
+        // Clear blended values
+        fk->is_animated = 0;
+        
+        fk->scale_blend.f[0] = 1.0;
+        fk->scale_blend.f[1] = 1.0;
+        fk->scale_blend.f[2] = 1.0;
+    
+        fk->rotation_blend.f[3] = 1.0;
+        fk->rotation_blend.f[0] = 0.0;
+        fk->rotation_blend.f[1] = 0.0;
+        fk->rotation_blend.f[2] = 0.0;
+    
+        fk->location_blend.f[0] = 0.0;
+        fk->location_blend.f[1] = 0.0;
+        fk->location_blend.f[2] = 0.0;
+        
+        
+        // Blend values together for animation composition
+        for (j=0 ; j<action_count ; ++j) {
+            const pmdl_fk_action_playback* action_playback = &fk->action_playback_array[j];
+            
+            if (action_playback->bone_anim_track) {
+                fk->is_animated = 1;
+                
+                // Scale blend
+                if (action_playback->bone_anim_track->scale_x)
+                    fk->scale_blend.f[0] *= action_playback->first_curve_instance[i++].cached_value;
+                if (action_playback->bone_anim_track->scale_y)
+                    fk->scale_blend.f[1] *= action_playback->first_curve_instance[i++].cached_value;
+                if (action_playback->bone_anim_track->scale_z)
+                    fk->scale_blend.f[2] *= action_playback->first_curve_instance[i++].cached_value;
+                
+                // Rotation blend
+                pspl_vector4_t rotation_quat = {.f[0]=0, .f[1]=0, .f[2]=0, .f[3]=1};
+                if (action_playback->bone_anim_track->rotation_w)
+                    rotation_quat.f[3] = action_playback->first_curve_instance[i++].cached_value;
+                if (action_playback->bone_anim_track->rotation_x)
+                    rotation_quat.f[0] = action_playback->first_curve_instance[i++].cached_value;
+                if (action_playback->bone_anim_track->rotation_y)
+                    rotation_quat.f[1] = action_playback->first_curve_instance[i++].cached_value;
+                if (action_playback->bone_anim_track->rotation_z)
+                    rotation_quat.f[2] = action_playback->first_curve_instance[i++].cached_value;
+                pmdl_quat_mul(&fk->rotation_blend, &rotation_quat, &fk->rotation_blend);
+                
+                // Location blend
+                if (action_playback->bone_anim_track->location_x)
+                    fk->location_blend.f[0] += action_playback->first_curve_instance[i++].cached_value;
+                if (action_playback->bone_anim_track->location_y)
+                    fk->location_blend.f[1] += action_playback->first_curve_instance[i++].cached_value;
+                if (action_playback->bone_anim_track->location_z)
+                    fk->location_blend.f[2] += action_playback->first_curve_instance[i++].cached_value;
+
+                
+                
+            }
+            
+        }
+        
+        // Convert blended values to transformation matrices
+        if (fk->is_animated && fk->parent_fk) {
             // Animated child bone
             
             // Scale transform
             pspl_matrix34_t scale_matrix;
             pmdl_matrix34_cpy(fk->parent_fk->bone_matrix->v, scale_matrix.v);
-            if (fk->bone_anim_track->scale_x)
-                scale_matrix.m[0][0] *= fk->first_curve_instance[i++].cached_value;
-            if (fk->bone_anim_track->scale_y)
-                scale_matrix.m[1][1] *= fk->first_curve_instance[i++].cached_value;
-            if (fk->bone_anim_track->scale_z)
-                scale_matrix.m[2][2] *= fk->first_curve_instance[i++].cached_value;
+            scale_matrix.m[0][0] *= fk->scale_blend.f[0];
+            scale_matrix.m[1][1] *= fk->scale_blend.f[1];
+            scale_matrix.m[2][2] *= fk->scale_blend.f[2];
             scale_matrix.m[0][3] = 0.0f;
             scale_matrix.m[1][3] = 0.0f;
             scale_matrix.m[2][3] = 0.0f;
-
+            
             // Rotation transform
             pspl_matrix34_t rotation_location_matrix;
-            pspl_vector4_t rotation_quat = {.f[0]=0, .f[1]=0, .f[2]=0, .f[3]=1};
-            if (fk->bone_anim_track->rotation_w)
-                rotation_quat.f[3] = fk->first_curve_instance[i++].cached_value;
-            if (fk->bone_anim_track->rotation_x)
-                rotation_quat.f[0] = fk->first_curve_instance[i++].cached_value;
-            if (fk->bone_anim_track->rotation_y)
-                rotation_quat.f[1] = fk->first_curve_instance[i++].cached_value;
-            if (fk->bone_anim_track->rotation_z)
-                rotation_quat.f[2] = fk->first_curve_instance[i++].cached_value;
+            pspl_vector4_t rotation_quat;
+            rotation_quat.f[3] = fk->rotation_blend.f[3];
+            rotation_quat.f[0] = fk->rotation_blend.f[0];
+            rotation_quat.f[2] = fk->rotation_blend.f[1];
+            rotation_quat.f[1] = -fk->rotation_blend.f[2];
             pmdl_matrix34_quat(&rotation_location_matrix, &rotation_quat);
             
             // Location transform
@@ -546,54 +550,41 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, char flip_bit) {
             rotation_location_matrix.m[0][3] = parent_base_vector.f[0];
             rotation_location_matrix.m[1][3] = parent_base_vector.f[1];
             rotation_location_matrix.m[2][3] = parent_base_vector.f[2];
-            if (fk->bone_anim_track->location_x)
-                rotation_location_matrix.m[0][3] += fk->first_curve_instance[i++].cached_value;
-            if (fk->bone_anim_track->location_y)
-                rotation_location_matrix.m[1][3] += fk->first_curve_instance[i++].cached_value;
-            if (fk->bone_anim_track->location_z)
-                rotation_location_matrix.m[2][3] += fk->first_curve_instance[i++].cached_value;
+            rotation_location_matrix.m[0][3] += fk->location_blend.f[0];
+            rotation_location_matrix.m[1][3] += fk->location_blend.f[1];
+            rotation_location_matrix.m[2][3] += fk->location_blend.f[2];
             
             // Concatenate transforms
             pmdl_matrix34_mul(&scale_matrix, &rotation_location_matrix, fk->bone_matrix);
             
             
-        } else if (fk->bone_anim_track) {
+        } else if (fk->is_animated) {
             // Animated root bone
             
             // Scale transform
             pspl_matrix34_t scale_matrix;
             pmdl_matrix34_identity(&scale_matrix);
-            if (fk->bone_anim_track->scale_x)
-                scale_matrix.m[0][0] = fk->first_curve_instance[i++].cached_value;
-            if (fk->bone_anim_track->scale_y)
-                scale_matrix.m[1][1] = fk->first_curve_instance[i++].cached_value;
-            if (fk->bone_anim_track->scale_z)
-                scale_matrix.m[2][2] = fk->first_curve_instance[i++].cached_value;
+            scale_matrix.m[0][0] = fk->scale_blend.f[0];
+            scale_matrix.m[1][1] = fk->scale_blend.f[1];
+            scale_matrix.m[2][2] = fk->scale_blend.f[2];
             
             // Rotation transform
             pspl_matrix34_t rotation_location_matrix;
-            pspl_vector4_t rotation_quat = {.f[0]=0, .f[1]=0, .f[2]=0, .f[3]=1};
-            if (fk->bone_anim_track->rotation_w)
-                rotation_quat.f[3] = fk->first_curve_instance[i++].cached_value;
-            if (fk->bone_anim_track->rotation_x)
-                rotation_quat.f[0] = fk->first_curve_instance[i++].cached_value;
-            if (fk->bone_anim_track->rotation_y)
-                rotation_quat.f[1] = fk->first_curve_instance[i++].cached_value;
-            if (fk->bone_anim_track->rotation_z)
-                rotation_quat.f[2] = fk->first_curve_instance[i++].cached_value;
+            pspl_vector4_t rotation_quat;
+            rotation_quat.f[3] = fk->rotation_blend.f[3];
+            rotation_quat.f[0] = fk->rotation_blend.f[0];
+            rotation_quat.f[2] = fk->rotation_blend.f[1];
+            rotation_quat.f[1] = -fk->rotation_blend.f[2];
             pmdl_matrix34_quat(&rotation_location_matrix, &rotation_quat);
-
+            
             // Location transform
             rotation_location_matrix.m[0][3] = (fk->bone->base_vector)->f[0];
             rotation_location_matrix.m[1][3] = (fk->bone->base_vector)->f[1];
             rotation_location_matrix.m[2][3] = (fk->bone->base_vector)->f[2];
-            if (fk->bone_anim_track->location_x)
-                rotation_location_matrix.m[0][3] += fk->first_curve_instance[i++].cached_value;
-            if (fk->bone_anim_track->location_y)
-                rotation_location_matrix.m[1][3] += fk->first_curve_instance[i++].cached_value;
-            if (fk->bone_anim_track->location_z)
-                rotation_location_matrix.m[2][3] += fk->first_curve_instance[i++].cached_value;
-
+            rotation_location_matrix.m[0][3] += fk->location_blend.f[0];
+            rotation_location_matrix.m[1][3] += fk->location_blend.f[1];
+            rotation_location_matrix.m[2][3] += fk->location_blend.f[2];
+            
             // Concatenate transforms
             pmdl_matrix34_mul(&scale_matrix, &rotation_location_matrix, fk->bone_matrix);
             
@@ -625,20 +616,12 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, char flip_bit) {
     }
 }
 
-/* Routine to advance animation context */
-void pmdl_animation_advance(pmdl_animation_ctx* ctx_ptr, double abs_time) {
+/* Routine to advance action context */
+void pmdl_action_advance(pmdl_action_ctx* ctx_ptr, double time_delta) {
     int i,j;
     
     // Calculate current time in animation
-    double current_time;
-    if (ctx_ptr->have_abs_time) {
-        current_time = ((abs_time - ctx_ptr->previous_abs_time) * ctx_ptr->playback_rate) + ctx_ptr->current_time;
-        ctx_ptr->previous_abs_time = abs_time;
-    } else {
-        ctx_ptr->have_abs_time = 1;
-        current_time = 0.0;
-        ctx_ptr->previous_abs_time = abs_time;
-    }
+    double current_time = ctx_ptr->current_time + time_delta;
     
     // Determine if animation has ended
     if (current_time > ctx_ptr->action->action_duration) {
@@ -695,13 +678,148 @@ void pmdl_animation_advance(pmdl_animation_ctx* ctx_ptr, double abs_time) {
         
     }
     
+}
+
+
+/* Routine to init animation context */
+pmdl_animation_ctx* pmdl_animation_init(unsigned action_ctx_count,
+                                        const pmdl_action_ctx** action_ctx_array) {
+    int i,j,k,l;
+    if (!action_ctx_count)
+        return NULL;
+    
+    // Ensure all action contexts have been initialised from the same rigging context
+    for (i=1 ; i<action_ctx_count ; ++i) {
+        if (action_ctx_array[i]->action->parent_ctx != action_ctx_array[0]->action->parent_ctx)
+            return NULL;
+    }
+    
+    // Common rigging context
+    const pmdl_rigging_ctx* parent_ctx = action_ctx_array[0]->action->parent_ctx;
+    
+    // Allocate context block
+    size_t block_size = sizeof(pmdl_animation_ctx);
+    block_size += sizeof(pmdl_action_ctx*)*action_ctx_count;
+    block_size += sizeof(pmdl_fk_playback)*parent_ctx->bone_count;
+    block_size += sizeof(pmdl_fk_action_playback)*action_ctx_count*parent_ctx->bone_count;
+    void* context_block = pspl_allocate_media_block(block_size);
+    pmdl_animation_ctx* new_ctx = context_block;
+    
+    // Populate main members
+    new_ctx->parent_ctx = parent_ctx;
+    new_ctx->action_ctx_count = action_ctx_count;
+    new_ctx->action_ctx_array = context_block + sizeof(pmdl_animation_ctx);
+    for (i=0 ; i<action_ctx_count ; ++i)
+        new_ctx->action_ctx_array[i] = action_ctx_array[i];
+    new_ctx->fk_instance_count = parent_ctx->bone_count;
+    new_ctx->fk_instance_array = context_block + sizeof(pmdl_animation_ctx) +
+    sizeof(pmdl_action_ctx*)*action_ctx_count;
+    new_ctx->master_fk_flip_bit = 0;
+    
+    // Allocate bone matrix array
+    // (separate block on heap due to SIMD vector alignment requirements)
+    pspl_matrix34_t* matrix_array_block =
+    pspl_allocate_media_block(parent_ctx->bone_count*sizeof(pspl_matrix34_t));
+    
+    // Populate FK instance array
+    void* cur_action_playback = context_block + sizeof(pmdl_animation_ctx) +
+    sizeof(pmdl_action_ctx*)*action_ctx_count + sizeof(pmdl_fk_playback)*parent_ctx->bone_count;
+    for (i=0 ; i<parent_ctx->bone_count ; ++i) {
+        
+        const pmdl_bone* bone = &parent_ctx->bone_array[i];
+        pmdl_fk_playback* target_fk = &new_ctx->fk_instance_array[i];
+        
+        target_fk->bone = bone;
+        
+        target_fk->action_playback_array = cur_action_playback;
+        for (l=0 ; l<action_ctx_count ; ++l) {
+            const pmdl_action_ctx* action_ctx = action_ctx_array[l];
+            pmdl_fk_action_playback* target_fk_action = (pmdl_fk_action_playback*)&target_fk->action_playback_array[l];
+            
+            target_fk_action->bone_anim_track = NULL;
+            target_fk_action->first_curve_instance = NULL;
+            for (j=0 ; j<action_ctx->action->bone_track_count ; ++j) {
+                const pmdl_action_bone_track* bone_track = &action_ctx->action->bone_track_array[j];
+                if (bone_track->bone_index == i) {
+                    target_fk_action->bone_anim_track = bone_track;
+                    for (k=0 ; k<action_ctx->curve_instance_count ; ++k) {
+                        pmdl_curve_playback* curve_pb = &action_ctx->curve_instance_array[k];
+                        if (curve_pb->bone_index == i) {
+                            target_fk_action->first_curve_instance = curve_pb;
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            
+        }
+        cur_action_playback += sizeof(pmdl_fk_action_playback)*action_ctx_count;
+        
+        if (bone->parent)
+            target_fk->parent_fk = &new_ctx->fk_instance_array[bone->parent->bone_index];
+        else
+            target_fk->parent_fk = NULL;
+        
+        
+        target_fk->bone_matrix = &matrix_array_block[i];
+        pmdl_matrix34_identity(target_fk->bone_matrix);
+        target_fk->bone_matrix->m[0][3] = (bone->base_vector)->f[0];
+        target_fk->bone_matrix->m[1][3] = (bone->base_vector)->f[1];
+        target_fk->bone_matrix->m[2][3] = (bone->base_vector)->f[2];
+        
+        target_fk->eval_flip_bit = 0;
+        
+    }
+    
+    return new_ctx;
+    
+}
+
+/* Variadic version of the array initialiser above (please NULL terminate) */
+pmdl_animation_ctx* pmdl_animation_initv(const pmdl_action_ctx* first_action_ctx, ...) {
+    int i;
+    
+    if (!first_action_ctx)
+        return NULL;
+    
+    va_list va;
+    va_start(va, first_action_ctx);
+    unsigned count = 1;
+    while (va_arg(va, const pmdl_action_ctx*))
+        ++count;
+    va_end(va);
+    
+    const pmdl_action_ctx** ctx_arr = alloca(sizeof(pmdl_action_ctx*)*count);
+    ctx_arr[0] = first_action_ctx;
+    va_start(va, first_action_ctx);
+    for (i=1 ; i<count ; ++i)
+        ctx_arr[i] = va_arg(va, const pmdl_action_ctx*);
+    va_end(va);
+    
+    return pmdl_animation_init(count, ctx_arr);
+    
+}
+
+/* Composites and evaluates bone transformation matrices from contained action contexts
+ * Call *before* drawing a rigged model */
+void pmdl_animation_evaluate(pmdl_animation_ctx* ctx_ptr) {
+    int i;
+    
     // Iterate bone structure and perform FK transformations
     ctx_ptr->master_fk_flip_bit ^= 1;
     for (i=0 ; i<ctx_ptr->fk_instance_count ; ++i) {
         pmdl_fk_playback* fk = &ctx_ptr->fk_instance_array[i];
         if (fk->bone)
-            recursive_fk_evaluate(fk, ctx_ptr->master_fk_flip_bit);
+            recursive_fk_evaluate(fk, ctx_ptr->action_ctx_count, ctx_ptr->master_fk_flip_bit);
     }
     
+}
+
+
+/* Routine to destroy animation context */
+void pmdl_animation_destroy(pmdl_animation_ctx* ctx_ptr) {
+    pspl_free_media_block(ctx_ptr->fk_instance_array[0].bone_matrix);
+    pspl_free_media_block(ctx_ptr);
 }
 

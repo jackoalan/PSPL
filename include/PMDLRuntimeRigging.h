@@ -14,7 +14,7 @@
 typedef float float2[2];
 
 struct pmdl_rigging_ctx;
-struct pmdl_animation_ctx;
+struct pmdl_action_ctx;
 
 #pragma mark Skeleton
 
@@ -138,7 +138,7 @@ typedef struct pmdl_rigging_ctx {
 } pmdl_rigging_ctx;
 
 
-#pragma mark Animation API Context
+#pragma mark Action API Context
 
 /* Curve context representation (for animating bézier curve instances) */
 typedef struct {
@@ -154,60 +154,23 @@ typedef struct {
     
 } pmdl_curve_playback;
 
-/* Forward kinematic representation (for converting evaluated curves to bone matrices) */
-typedef struct pmdl_fk_playback {
-    
-    // Original bone data
-    const pmdl_bone* bone;
-    
-    // Bone animation track from action data
-    const pmdl_action_bone_track* bone_anim_track;
-    
-    // First curve-playback instance for this bone within animation context
-    const pmdl_curve_playback* first_curve_instance;
-    
-    // Parent FK instance (or NULL if none)
-    struct pmdl_fk_playback* parent_fk;
-    
-    // Cumulative bone transformation matrix
-    pspl_matrix34_t* bone_matrix;
-    
-    // Evaluation flip-bit (alternates 0/1 to synchronise with other FK instances)
-    char eval_flip_bit;
-    
-} pmdl_fk_playback;
-
 /* Action event function type */
-typedef void(*pmdl_animation_event)(struct pmdl_animation_ctx* animation_ctx);
+typedef void(*pmdl_animation_event)(struct pmdl_action_ctx* animation_ctx);
 
-/* Application-allocatable structure used to playback actions
+/* Structure used to playback actions
  * Multiple contexts may be established for instanced playback */
-typedef struct pmdl_animation_ctx {
+typedef struct pmdl_action_ctx {
     
     // Selected action to playback (do not change!!!)
     const pmdl_action* action;
     
     
-    // Playback-rate (original time units per second; negative to reverse)
-    double playback_rate;
-    
-    // Previous absolute time (to calculate advancement delta)
-    int have_abs_time;
-    double previous_abs_time;
-    
-    // Current time value for animation (in original time units)
+    // Current time value for action (in original time units)
     double current_time;
     
     // Curve playback instance array (indexing corresponds to active bone tracks in `pmdl_action`)
     unsigned curve_instance_count;
     pmdl_curve_playback* curve_instance_array;
-    
-    // Forward-kinematic rigging instance array (indexing corresponds to original bone indexing from file)
-    unsigned fk_instance_count;
-    pmdl_fk_playback* fk_instance_array;
-    
-    // Master FK flip-bit
-    char master_fk_flip_bit;
     
     
     // Loop flag (set to automatically loop action)
@@ -218,19 +181,94 @@ typedef struct pmdl_animation_ctx {
     pmdl_animation_event anim_loop_point_cb;
     pmdl_animation_event anim_end_cb;
     
+} pmdl_action_ctx;
+
+/* Routine to init action context */
+pmdl_action_ctx* pmdl_action_init(const pmdl_action* action);
+
+/* Routine to destroy action context */
+void pmdl_action_destroy(pmdl_action_ctx* ctx_ptr);
+
+/* Routine to advance action context */
+void pmdl_action_advance(pmdl_action_ctx* ctx_ptr, double time_delta);
+
+/* Routine to rewind action context (call advance afterwards before drawing) */
+#define pmdl_action_rewind(ctx_ptr) (ctx_ptr)->have_abs_time = 0
+
+
+#pragma mark Animation API Context
+
+/* Referenced within `fk_playback` to compose individual actions together */
+typedef struct {
+    
+    // Bone animation track from action data
+    const pmdl_action_bone_track* bone_anim_track;
+    
+    // First curve-playback instance for this bone within animation context
+    const pmdl_curve_playback* first_curve_instance;
+    
+} pmdl_fk_action_playback;
+
+/* Forward kinematic representation (for converting evaluated curves to bone matrices) */
+typedef struct pmdl_fk_playback {
+    
+    // Original bone data
+    const pmdl_bone* bone;
+    
+    // Array of per-action animation data references
+    const pmdl_fk_action_playback* action_playback_array;
+    
+    // Parent FK instance (or NULL if none)
+    struct pmdl_fk_playback* parent_fk;
+    
+    // Blended values
+    int is_animated;
+    pspl_vector3_t scale_blend;
+    pspl_vector4_t rotation_blend;
+    pspl_vector3_t location_blend;
+    
+    // Cumulative bone transformation matrix
+    pspl_matrix34_t* bone_matrix;
+    
+    // Evaluation flip-bit (alternates 0/1 to synchronise with other FK instances)
+    char eval_flip_bit;
+    
+} pmdl_fk_playback;
+
+/* Structure to represent animation context
+ * An animation context mixes together a set of action contexts
+ * for cumulative skeletal animation compositions */
+typedef struct {
+    
+    // Common parent rigging context
+    const pmdl_rigging_ctx* parent_ctx;
+    
+    // Action context array
+    unsigned action_ctx_count;
+    const pmdl_action_ctx** action_ctx_array;
+    
+    // Forward-kinematic rigging instance array (indexing corresponds to original bone indexing from file)
+    unsigned fk_instance_count;
+    pmdl_fk_playback* fk_instance_array;
+    
+    // Master FK flip-bit
+    char master_fk_flip_bit;
+    
 } pmdl_animation_ctx;
 
+
 /* Routine to init animation context */
-pmdl_animation_ctx* pmdl_animation_init(const pmdl_action* action);
+pmdl_animation_ctx* pmdl_animation_init(unsigned action_ctx_count,
+                                        const pmdl_action_ctx** action_ctx_array);
+/* Variadic version of the array initialiser above (please NULL terminate) */
+pmdl_animation_ctx* pmdl_animation_initv(const pmdl_action_ctx* first_action_ctx, ...);
 
-/* Routine to destroy aimation context */
+/* Composites and evaluates bone transformation matrices from contained action contexts
+ * Call *before* drawing a rigged model */
+void pmdl_animation_evaluate(pmdl_animation_ctx* ctx_ptr);
+
+/* Routine to destroy animation context */
 void pmdl_animation_destroy(pmdl_animation_ctx* ctx_ptr);
-
-/* Routine to advance animation context */
-void pmdl_animation_advance(pmdl_animation_ctx* ctx_ptr, double abs_time);
-
-/* Routine to rewind animation context (call advance afterwards before drawing) */
-#define pmdl_animation_rewind(ctx_ptr) (ctx_ptr)->have_abs_time = 0
  
  
 #endif

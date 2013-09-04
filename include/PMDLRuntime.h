@@ -115,8 +115,8 @@ const pmdl_action* pmdl_action_lookup(const pmdl_t* pmdl, const char* action_nam
 void pmdl_draw(pmdl_draw_context_t* ctx, const pmdl_t* pmdl_file);
 
 /* Rigged master draw routine */
-void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pmdl_t* pmdl_file,
-                      pmdl_animation_ctx* anim_ctx);
+void pmdl_draw_rigged(const pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
+                      const pmdl_animation_ctx* anim_ctx);
 
 
 
@@ -216,9 +216,11 @@ void pmdl_vector3_normalise(REGISTER_KEY pspl_vector3_t* v);
 #define pmdl_vector3_sub(a,b,ab) (ab) = (a)-(b)
 #define pmdl_vector4_sub(a,b,ab) (ab) = (a)-(b)
 
-void pmdl_vector3_matrix_mul(REGISTER_KEY pspl_matrix34_t* mtx, REGISTER_KEY pspl_vector3_t* src, REGISTER_KEY pspl_vector3_t* dst);
+void pmdl_vector3_matrix_mul(const REGISTER_KEY pspl_matrix34_t* mtx, const REGISTER_KEY pspl_vector3_t* src, REGISTER_KEY pspl_vector3_t* dst);
 
 void pmdl_matrix34_quat(REGISTER_KEY pspl_matrix34_t* m, REGISTER_KEY pspl_vector4_t* a);
+    
+void pmdl_quat_mul(pspl_vector4_t* a, pspl_vector4_t* b, pspl_vector4_t* ab);
 
 #endif
 

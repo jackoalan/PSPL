@@ -214,7 +214,7 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
             } else
                 pspl_error(-1, "Invalid UV_GEN usage", "there must be *two* arguments: UV_GEN(<GEN_IDX>, <UV SOURCE>)");
             
-        } else if (!strcasecmp(current_heading->heading_name, "SHADER")) {
+        } else if (!strcasecmp(command_name, "SHADER")) {
             
             // Begin a vertex shader
             if (command_argc < 2)

@@ -90,7 +90,7 @@ static const pspl_vector4_t HOMOGENOUS_BOTTOM_VECTOR = {.f[0]=0, .f[1]=0, .f[2]=
 #endif
 
 /* Static identity matrix */
-static pspl_matrix44_t IDENTITY_MATRIX = {
+static const pspl_matrix44_t IDENTITY_MATRIX = {
     .m[0][0] = 1, .m[0][1] = 0, .m[0][2] = 0, .m[0][3] = 0,
     .m[1][0] = 0, .m[1][1] = 1, .m[1][2] = 0, .m[1][3] = 0,
     .m[2][0] = 0, .m[2][1] = 0, .m[2][2] = 1, .m[2][3] = 0,
@@ -98,8 +98,15 @@ static pspl_matrix44_t IDENTITY_MATRIX = {
 };
 
 /* Static zero vector */
-static pspl_vector4_t ZERO_VECTOR = {
+static const pspl_vector4_t ZERO_VECTOR = {
     .f[0] = 0, .f[1] = 0, .f[2] = 0, .f[3] = 0
+};
+
+/* RH->LH swizzle matrix */
+static const pspl_matrix34_t LH_SWIZZLE_MATRIX = {
+    .m[0][0] = -1, .m[0][1] = 0, .m[0][2] = 0, .m[0][3] = 0,
+    .m[1][0] = 0, .m[1][1] = 0, .m[1][2] = 1, .m[1][3] = 0,
+    .m[2][0] = 0, .m[2][1] = 1, .m[2][2] = 0, .m[2][3] = 0,
 };
 
 
@@ -246,7 +253,7 @@ static int pmdl_init_collections(const pspl_runtime_arc_file_t* pmdl_file) {
             if (collection_header->bone_count) {
                 for (j=0 ; j<(collection_header->bone_count/4) ; ++j) { // Bone Weight Coefficients
                     glEnableVertexAttribArray(idx);
-                    glVertexAttribPointer(idx, 2, GL_FLOAT, GL_FALSE, buf_stride, (GLvoid*)(weight_offset+4*j));
+                    glVertexAttribPointer(idx, 4, GL_FLOAT, GL_FALSE, buf_stride, (GLvoid*)(weight_offset+16*j));
                     ++idx;
                 }
             }
@@ -435,6 +442,7 @@ void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv
     if (inv_bits & (PMDL_INVALIDATE_MODEL | PMDL_INVALIDATE_VIEW)) {
         
         pmdl_matrix34_mul(&ctx->model_mtx, &ctx->cached_view_mtx, &ctx->cached_modelview_mtx.m34);
+        pmdl_matrix34_mul(&ctx->cached_modelview_mtx.m34, (pspl_matrix34_t*)&LH_SWIZZLE_MATRIX, &ctx->cached_modelview_mtx.m34);
         pmdl_vector4_cpy(HOMOGENOUS_BOTTOM_VECTOR, ctx->cached_modelview_mtx.v[3]);
         
         pmdl_matrix34_invxpose(&ctx->cached_modelview_mtx.m34, &ctx->cached_modelview_invxpose_mtx.m34);
@@ -455,7 +463,7 @@ void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv
 }
 
 /* Perform AABB frustum test */
-static int pmdl_aabb_frustum_test(pmdl_draw_context_t* ctx, float aabb[2][3]) {
+static int pmdl_aabb_frustum_test(const pmdl_draw_context_t* ctx, float aabb[2][3]) {
     
     // Setup straddle-test state
     enum {
@@ -602,7 +610,7 @@ static inline int resolve_prim(uint32_t prim) {
 
 /* Set NULL shader (some sort of fixed-function preset) */
 #if PSPL_RUNTIME_PLATFORM_GL2
-static inline void null_shader(pmdl_draw_context_t* ctx) {
+static inline void null_shader(const pmdl_draw_context_t* ctx) {
     glUseProgram(0);
 }
 #elif PSPL_RUNTIME_PLATFORM_GX
@@ -837,8 +845,8 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pmdl_t* pmdl) {
 
 
 /* This routine will draw PAR1 PMDLs */
-void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
-                      pmdl_animation_ctx* anim_ctx) {
+void pmdl_draw_rigged(const pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
+                      const pmdl_animation_ctx* anim_ctx) {
     pmdl_header* header = pmdl->file_ptr->file_data;
 
     int i,j,k,l;
@@ -936,7 +944,7 @@ void pmdl_draw_rigged(pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
                         pspl_vector4_t bone_bases[PMDL_MAX_BONES];
                         if (anim_ctx) {
                             const pmdl_skin_entry* skin_entry =
-                            &anim_ctx->action->parent_ctx->skin_entry_array[last_skin_index];
+                            &anim_ctx->parent_ctx->skin_entry_array[last_skin_index];
                             for (l=0 ; l<skin_entry->bone_count ; ++l) {
                                 const pmdl_bone* bone = skin_entry->bone_array[l];
                                 const pmdl_fk_playback* bone_fk = &anim_ctx->fk_instance_array[bone->bone_index];

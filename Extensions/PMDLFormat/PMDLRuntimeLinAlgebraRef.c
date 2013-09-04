@@ -134,9 +134,6 @@ void pmdl_matrix34_mul(pspl_matrix34_t* a, pspl_matrix34_t* b, pspl_matrix34_t* 
     m->m[2][1] = a->m[2][0]*b->m[0][1] + a->m[2][1]*b->m[1][1] + a->m[2][2]*b->m[2][1];
     m->m[2][2] = a->m[2][0]*b->m[0][2] + a->m[2][1]*b->m[1][2] + a->m[2][2]*b->m[2][2];
     m->m[2][3] = a->m[2][0]*b->m[0][3] + a->m[2][1]*b->m[1][3] + a->m[2][2]*b->m[2][3] + a->m[2][3];
-    //float debug = a->m[2][2]*b->m[2][3];
-    //float debpg2 = m->m[2][3];
-    //printf("%f %f\n", debug, debpg2);
     
 	if(m==&tmp) {
 		pmdl_matrix34_cpy(tmp.v,ab->v);
@@ -279,9 +276,7 @@ void pmdl_vector3_cross(pspl_vector3_t* a, pspl_vector3_t* b, pspl_vector3_t* ax
 	vTmp.f[1] = (a->f[2]*b->f[0])-(a->f[0]*b->f[2]);
 	vTmp.f[2] = (a->f[0]*b->f[1])-(a->f[1]*b->f[0]);
     
-	axb->f[0] = vTmp.f[0];
-	axb->f[1] = vTmp.f[1];
-	axb->f[2] = vTmp.f[2];
+    axb->v = vTmp.v;
 }
 
 void pmdl_vector3_normalise(pspl_vector3_t* v) {
@@ -331,7 +326,7 @@ void pmdl_vector4_sub(pspl_vector4_t a, pspl_vector4_t b, pspl_vector4_t ab) {
 }
  */
 
-void pmdl_vector3_matrix_mul(pspl_matrix34_t* mt, pspl_vector3_t* src, pspl_vector3_t* dst) {
+void pmdl_vector3_matrix_mul(const pspl_matrix34_t* mt, const pspl_vector3_t* src, pspl_vector3_t* dst) {
     pspl_vector3_t tmp;
 	
     tmp.f[0] = mt->m[0][0]*src->f[0] + mt->m[0][1]*src->f[1] + mt->m[0][2]*src->f[2] + mt->m[0][3];
@@ -372,17 +367,46 @@ void _pmdl_matrix_lookat(pspl_matrix34_t* mt, pspl_vector3_t* pos, pspl_vector3_
 
 
 void pmdl_matrix34_quat(pspl_matrix34_t* m, pspl_vector4_t* a) {
-	m->m[0][0] = 1.0f - 2.0f*a->f[1]*a->f[1] - 2.0f*a->f[2]*a->f[2];
-	m->m[1][0] = 2.0f*a->f[0]*a->f[1] - 2.0f*a->f[2]*a->f[3];
-	m->m[2][0] = 2.0f*a->f[0]*a->f[2] + 2.0f*a->f[1]*a->f[3];
     
-	m->m[0][1] = 2.0f*a->f[0]*a->f[1] + 2.0f*a->f[2]*a->f[3];
-	m->m[1][1] = 1.0f - 2.0f*a->f[0]*a->f[0] - 2.0f*a->f[2]*a->f[2];
-	m->m[2][1] = 2.0f*a->f[2]*a->f[1] - 2.0f*a->f[0]*a->f[3];
+    // Normalise vector
+    // (this can't be done reliably in a static manner due to 4-track bézier representation)
+    float n = 1.0f/sqrtf(pmdl_vector4_dot(a, a));
+    pspl_vector4_t na = {.v = a->v * n};
+    a = &na;
     
-	m->m[0][2] = 2.0f*a->f[0]*a->f[2] - 2.0f*a->f[1]*a->f[3];
-	m->m[1][2] = 2.0f*a->f[2]*a->f[1] + 2.0f*a->f[0]*a->f[3];
-	m->m[2][2] = 1.0f - 2.0f*a->f[0]*a->f[0] - 2.0f*a->f[1]*a->f[1];
+    // Compose rotation matrix
+	m->m[0][0] = 1.0f - (2.0f*a->f[1]*a->f[1]) - (2.0f*a->f[2]*a->f[2]);
+	m->m[1][0] = (2.0f*a->f[0]*a->f[1]) - (2.0f*a->f[2]*a->f[3]);
+	m->m[2][0] = (2.0f*a->f[0]*a->f[2]) + (2.0f*a->f[1]*a->f[3]);
+    
+	m->m[0][1] = (2.0f*a->f[0]*a->f[1]) + (2.0f*a->f[2]*a->f[3]);
+	m->m[1][1] = 1.0f - (2.0f*a->f[0]*a->f[0]) - (2.0f*a->f[2]*a->f[2]);
+	m->m[2][1] = (2.0f*a->f[2]*a->f[1]) - (2.0f*a->f[0]*a->f[3]);
+    
+	m->m[0][2] = (2.0f*a->f[0]*a->f[2]) - (2.0f*a->f[1]*a->f[3]);
+	m->m[1][2] = (2.0f*a->f[2]*a->f[1]) + (2.0f*a->f[0]*a->f[3]);
+	m->m[2][2] = 1.0f - (2.0f*a->f[0]*a->f[0]) - (2.0f*a->f[1]*a->f[1]);
+    
+}
+
+void pmdl_quat_mul(pspl_vector4_t* a, pspl_vector4_t* b, pspl_vector4_t* ab) {
+	pspl_vector4_t* r;
+	pspl_vector4_t ab_tmp;
+	
+	if(a==ab || b==ab) r = &ab_tmp;
+	else r = ab;
+	
+	r->f[3] = a->f[3]*b->f[3] - a->f[0]*b->f[0] - a->f[1]*b->f[1] - a->f[2]*b->f[2];
+	r->f[0] = a->f[3]*b->f[0] + a->f[0]*b->f[3] + a->f[1]*b->f[2] - a->f[2]*b->f[1];
+	r->f[1] = a->f[3]*b->f[1] + a->f[1]*b->f[3] + a->f[2]*b->f[0] - a->f[0]*b->f[2];
+	r->f[2] = a->f[3]*b->f[2] + a->f[2]*b->f[3] + a->f[0]*b->f[1] - a->f[1]*b->f[0];
+    
+	if(r==&ab_tmp) {
+        ab->f[0] = ab_tmp.f[0];
+        ab->f[1] = ab_tmp.f[1];
+        ab->f[2] = ab_tmp.f[2];
+        ab->f[3] = ab_tmp.f[3];
+    }
 }
 
 #endif

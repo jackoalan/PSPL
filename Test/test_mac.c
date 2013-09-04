@@ -25,6 +25,8 @@ static double fps = 0;
 
 static pmdl_draw_context_t monkey_ctx;
 static const pmdl_t* monkey_model;
+static pmdl_action_ctx* rotate_action_ctx;
+static pmdl_action_ctx* haha_action_ctx;
 static pmdl_animation_ctx* anim_ctx;
 
 static void renderfunc() {
@@ -41,9 +43,9 @@ static void renderfunc() {
     double time = tv.tv_sec + ((double)tv.tv_usec / (double)USEC_PER_SEC);
 
     // Rotate camera around monkey
-    monkey_ctx.camera_view.pos.f[0] = sin(time) * 5;
-    monkey_ctx.camera_view.pos.f[2] = cos(time) * 5;
-    pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_VIEW);
+    //monkey_ctx.camera_view.pos.f[0] = sin(time) * 5;
+    //monkey_ctx.camera_view.pos.f[2] = cos(time) * 5;
+    //pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_VIEW);
     
     // Update Texcoord 1
     monkey_ctx.texcoord_mtx[1].m[0][0] = 0.5;
@@ -51,8 +53,10 @@ static void renderfunc() {
     monkey_ctx.texcoord_mtx[1].m[0][3] = fmod(time, 1.41);
     monkey_ctx.texcoord_mtx[1].m[1][3] = 1.0;
     
-    // Update animation context
-    pmdl_animation_advance(anim_ctx, time);
+    // Update action contexts
+    pmdl_action_advance(rotate_action_ctx, 1/60.0);
+    pmdl_action_advance(haha_action_ctx, 1/60.0);
+    pmdl_animation_evaluate(anim_ctx);
     
     // Draw monkey
     glEnable(GL_CULL_FACE);
@@ -142,14 +146,14 @@ int main(int argc, char* argv[]) {
     monkey_ctx.model_mtx.m[1][1] = 1;
     monkey_ctx.model_mtx.m[2][2] = 1;
     monkey_ctx.camera_view.pos.f[0] = 0;
-    monkey_ctx.camera_view.pos.f[1] = 0;
-    monkey_ctx.camera_view.pos.f[2] = 5;
+    monkey_ctx.camera_view.pos.f[1] = 4;
+    monkey_ctx.camera_view.pos.f[2] = 0;
     monkey_ctx.camera_view.look.f[0] = 0;
     monkey_ctx.camera_view.look.f[1] = 0;
     monkey_ctx.camera_view.look.f[2] = 0;
     monkey_ctx.camera_view.up.f[0] = 0;
-    monkey_ctx.camera_view.up.f[1] = 1;
-    monkey_ctx.camera_view.up.f[2] = 0;
+    monkey_ctx.camera_view.up.f[1] = 0;
+    monkey_ctx.camera_view.up.f[2] = 1;
     monkey_ctx.projection_type = PMDL_PERSPECTIVE;
     monkey_ctx.projection.perspective.fov = 55;
     monkey_ctx.projection.perspective.far = 5;
@@ -165,9 +169,12 @@ int main(int argc, char* argv[]) {
     monkey_model = pmdl_lookup(monkey_obj, "monkey");
     
     // Setup animation context
-    const pmdl_action* sway = pmdl_action_lookup(monkey_model, "haha");
-    anim_ctx = pmdl_animation_init(sway);
-    anim_ctx->loop_flag = 1;
+    haha_action_ctx = pmdl_action_init(pmdl_action_lookup(monkey_model, "haha"));
+    haha_action_ctx->loop_flag = 1;
+    rotate_action_ctx = pmdl_action_init(pmdl_action_lookup(monkey_model, "rotate"));
+    rotate_action_ctx->loop_flag = 1;
+    
+    anim_ctx = pmdl_animation_initv(rotate_action_ctx, haha_action_ctx, NULL);
     
     // Start rendering
     glutMainLoop();

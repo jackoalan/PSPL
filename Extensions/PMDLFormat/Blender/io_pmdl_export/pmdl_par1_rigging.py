@@ -97,6 +97,7 @@ class pmdl_par1_rigging:
         bone_array.extend(new_bones)
         return_weights = [identity_blend]
         return_weights.extend(weight_array)
+        #print(return_weights)
         return return_weights
 
 
