@@ -151,8 +151,8 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
     for (j=0 ; j<ir_state->vertex.tc_count ; ++j) {
         char assign[64];
         if (ir_state->vertex.tc_array[j].tc_source == TEXCOORD_UV)
-            snprintf(assign, 64, "    tex_coords[%u] = (vec4(uv%u,0,0) * tc_generator_mats[%u]).xy;\n", j, j,
-                     ir_state->vertex.tc_array[j].uv_idx);
+            snprintf(assign, 64, "    tex_coords[%u] = (vec4(uv%u,0,0) * tc_generator_mats[%u]).xy;\n", j,
+                     ir_state->vertex.tc_array[j].uv_idx, j);
         else if (ir_state->vertex.tc_array[j].tc_source == TEXCOORD_POS)
             snprintf(assign, 64, "    tex_coords[%u] = (pos * tc_generator_mats[%u]).xy;\n", j, j);
         else if (ir_state->vertex.tc_array[j].tc_source == TEXCOORD_NORM)

@@ -168,8 +168,8 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
 
         pspl_vector4_t* base_vector = &base_vector_block[i];
         base_vector->f[0] = bone->bone_head[0];
-        base_vector->f[1] = bone->bone_head[1];
-        base_vector->f[2] = bone->bone_head[2];
+        base_vector->f[1] = bone->bone_head[2];
+        base_vector->f[2] = -bone->bone_head[1];
         target_bone->base_vector = base_vector;
         
     }
@@ -400,50 +400,43 @@ void pmdl_action_destroy(pmdl_action_ctx* ctx_ptr) {
     pspl_free_media_block(ctx_ptr);
 }
 
-/* Evaluate cubic bézier given T value */
-static inline void evaluate_bezier(float2 result,
-                                   double t,
-                                   const pmdl_curve_keyframe* left_kf,
-                                   const pmdl_curve_keyframe* right_kf) {
-    
-    double t1m = 1.0-t;
-    double t1msq = t1m*t1m;
-    double tsq = t*t;
-    
-    float a = (float)(t1msq*t1m);
-    float b = (float)(3*t1msq*t);
-    float c = (float)(3*t1m*tsq);
-    float d = (float)(tsq*t);
-    
-
-    result[0] = (a*left_kf->main_handle[0]) + (b*left_kf->right_handle[0]) +
-                (c*right_kf->left_handle[0]) + (d*right_kf->main_handle[0]);
-    result[1] = (a*left_kf->main_handle[1]) + (b*left_kf->right_handle[1]) +
-                (c*right_kf->left_handle[1]) + (d*right_kf->main_handle[1]);
-    
-}
-
-/* Solve *fcurve* bézier Y (value) for X (time) by approaching 
- * acceptable limit error */
-#define LIMIT_ERROR 0.01
-static inline float solve_bezier(double time,
-                                 const pmdl_curve_keyframe* left_kf,
-                                 const pmdl_curve_keyframe* right_kf) {
+/* Recursively solve bézier Y (value) for X (time) by approaching
+ * acceptable limit error. CURVE MUST BE A FUNCTION!! */
+#define LIMIT_ERROR 0.0005
+static inline double solve_bezier(double time,
+                                  const pmdl_curve_keyframe* left_kf,
+                                  const pmdl_curve_keyframe* right_kf) {
     
     double err;
     double epsilon = 0.5;
     double t = 0.5;
-    float2 result;
+    double result[2];
     for (;;) {
-        evaluate_bezier(result, t, left_kf, right_kf);
+        
+        double t1m = 1.0-t;
+        double t1msq = t1m*t1m;
+        double tsq = t*t;
+        
+        double a = (t1msq*t1m);
+        double b = (3*t1msq*t);
+        double c = (3*t1m*tsq);
+        double d = (tsq*t);
+        
+        result[0] = (a*left_kf->main_handle[0]) + (b*left_kf->right_handle[0]) +
+                    (c*right_kf->left_handle[0]) + (d*right_kf->main_handle[0]);
+        
         err = fabs(result[0] - time);
-        if (err < LIMIT_ERROR)
+        if (err < LIMIT_ERROR) {
+            result[1] = (a*left_kf->main_handle[1]) + (b*left_kf->right_handle[1]) +
+                        (c*right_kf->left_handle[1]) + (d*right_kf->main_handle[1]);
             break;
+        }
         epsilon /= 2;
         if (result[0] > time)
             t -= epsilon;
         else
             t += epsilon;
+        
     }
     
     return result[1];
@@ -483,7 +476,6 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, unsigned action_count, c
             const pmdl_fk_action_playback* action_playback = &fk->action_playback_array[j];
             
             if (action_playback->bone_anim_track) {
-                fk->is_animated = 1;
                 
                 // Scale blend
                 if (action_playback->bone_anim_track->scale_x)
@@ -500,10 +492,11 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, unsigned action_count, c
                 if (action_playback->bone_anim_track->rotation_x)
                     rotation_quat.f[0] = action_playback->first_curve_instance[i++].cached_value;
                 if (action_playback->bone_anim_track->rotation_y)
-                    rotation_quat.f[1] = action_playback->first_curve_instance[i++].cached_value;
-                if (action_playback->bone_anim_track->rotation_z)
                     rotation_quat.f[2] = action_playback->first_curve_instance[i++].cached_value;
-                pmdl_quat_mul(&fk->rotation_blend, &rotation_quat, &fk->rotation_blend);
+                if (action_playback->bone_anim_track->rotation_z)
+                    rotation_quat.f[1] = action_playback->first_curve_instance[i++].cached_value;
+                if (!fk->is_animated)
+                    pmdl_quat_mul(&fk->rotation_blend, &rotation_quat, &fk->rotation_blend);
                 
                 // Location blend
                 if (action_playback->bone_anim_track->location_x)
@@ -513,7 +506,7 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, unsigned action_count, c
                 if (action_playback->bone_anim_track->location_z)
                     fk->location_blend.f[2] += action_playback->first_curve_instance[i++].cached_value;
 
-                
+                fk->is_animated = 1;
                 
             }
             
@@ -529,22 +522,26 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, unsigned action_count, c
             scale_matrix.m[0][0] *= fk->scale_blend.f[0];
             scale_matrix.m[1][1] *= fk->scale_blend.f[1];
             scale_matrix.m[2][2] *= fk->scale_blend.f[2];
-            scale_matrix.m[0][3] = 0.0f;
-            scale_matrix.m[1][3] = 0.0f;
-            scale_matrix.m[2][3] = 0.0f;
+            //scale_matrix.m[0][3] = 0.0f;
+            //scale_matrix.m[1][3] = 0.0f;
+            //scale_matrix.m[2][3] = 0.0f;
             
             // Rotation transform
             pspl_matrix34_t rotation_location_matrix;
             pspl_vector4_t rotation_quat;
             rotation_quat.f[3] = fk->rotation_blend.f[3];
             rotation_quat.f[0] = fk->rotation_blend.f[0];
-            rotation_quat.f[2] = fk->rotation_blend.f[1];
-            rotation_quat.f[1] = -fk->rotation_blend.f[2];
+            rotation_quat.f[1] = fk->rotation_blend.f[1];
+            rotation_quat.f[2] = fk->rotation_blend.f[2];
             pmdl_matrix34_quat(&rotation_location_matrix, &rotation_quat);
             
             // Location transform
             pspl_vector4_t parent_base_vector;
             pmdl_vector4_sub(fk->bone->base_vector->v, fk->parent_fk->bone->base_vector->v, parent_base_vector.v);
+            rotation_location_matrix.m[0][3] = parent_base_vector.f[0];
+            rotation_location_matrix.m[1][3] = parent_base_vector.f[1];
+            rotation_location_matrix.m[2][3] = parent_base_vector.f[2];
+            /*
             pmdl_vector3_matrix_mul(fk->parent_fk->bone_matrix,
                                     (pspl_vector3_t*)&parent_base_vector, (pspl_vector3_t*)&parent_base_vector);
             rotation_location_matrix.m[0][3] = parent_base_vector.f[0];
@@ -553,6 +550,7 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, unsigned action_count, c
             rotation_location_matrix.m[0][3] += fk->location_blend.f[0];
             rotation_location_matrix.m[1][3] += fk->location_blend.f[1];
             rotation_location_matrix.m[2][3] += fk->location_blend.f[2];
+             */
             
             // Concatenate transforms
             pmdl_matrix34_mul(&scale_matrix, &rotation_location_matrix, fk->bone_matrix);
@@ -573,8 +571,8 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, unsigned action_count, c
             pspl_vector4_t rotation_quat;
             rotation_quat.f[3] = fk->rotation_blend.f[3];
             rotation_quat.f[0] = fk->rotation_blend.f[0];
-            rotation_quat.f[2] = fk->rotation_blend.f[1];
-            rotation_quat.f[1] = -fk->rotation_blend.f[2];
+            rotation_quat.f[1] = fk->rotation_blend.f[1];
+            rotation_quat.f[2] = fk->rotation_blend.f[2];
             pmdl_matrix34_quat(&rotation_location_matrix, &rotation_quat);
             
             // Location transform

@@ -11,8 +11,6 @@
 
 #include <PSPLRuntime.h>
 
-typedef float float2[2];
-
 struct pmdl_rigging_ctx;
 struct pmdl_action_ctx;
 
@@ -57,9 +55,9 @@ typedef struct {
 /* In-memory curve keyframe representation (matches file structure) */
 typedef struct {
     
-    float2 left_handle;
-    float2 main_handle;
-    float2 right_handle;
+    float left_handle[2];
+    float main_handle[2];
+    float right_handle[2];
     
 } pmdl_curve_keyframe;
 

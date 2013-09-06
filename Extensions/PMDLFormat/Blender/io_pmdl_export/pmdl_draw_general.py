@@ -313,7 +313,7 @@ class pmdl_draw_general:
             
             # UVs
             for uv_idx in range(collection['uv_count']):
-                for comp in mesh.uv_layers[uv_idx].data[loop_vert.loop.index].uv:
+                for comp in mesh.uv_layers[uv_idx].data[bloop.loop.index].uv:
                     vert_bytes += vstruct.pack(comp)
 
             # Weights

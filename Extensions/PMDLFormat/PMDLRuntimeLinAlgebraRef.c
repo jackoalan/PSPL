@@ -387,6 +387,39 @@ void pmdl_matrix34_quat(pspl_matrix34_t* m, pspl_vector4_t* a) {
 	m->m[1][2] = (2.0f*a->f[2]*a->f[1]) + (2.0f*a->f[0]*a->f[3]);
 	m->m[2][2] = 1.0f - (2.0f*a->f[0]*a->f[0]) - (2.0f*a->f[1]*a->f[1]);
     
+    /*
+    float q[] = {a->f[3], a->f[0], a->f[1], a->f[2]};
+    
+    double q0, q1, q2, q3, qda, qdb, qdc, qaa, qab, qac, qbb, qbc, qcc;
+    
+	q0 = M_SQRT2 * (double)q[0];
+	q1 = M_SQRT2 * (double)q[1];
+	q2 = M_SQRT2 * (double)q[2];
+	q3 = M_SQRT2 * (double)q[3];
+    
+	qda = q0 * q1;
+	qdb = q0 * q2;
+	qdc = q0 * q3;
+	qaa = q1 * q1;
+	qab = q1 * q2;
+	qac = q1 * q3;
+	qbb = q2 * q2;
+	qbc = q2 * q3;
+	qcc = q3 * q3;
+    
+	m->m[0][0] = (float)(1.0 - qbb - qcc);
+	m->m[0][1] = (float)(qdc + qab);
+	m->m[0][2] = (float)(-qdb + qac);
+    
+	m->m[1][0] = (float)(-qdc + qab);
+	m->m[1][1] = (float)(1.0 - qaa - qcc);
+	m->m[1][2] = (float)(qda + qbc);
+    
+	m->m[2][0] = (float)(qdb + qac);
+	m->m[2][1] = (float)(-qda + qbc);
+	m->m[2][2] = (float)(1.0 - qaa - qbb);
+     */
+    
 }
 
 void pmdl_quat_mul(pspl_vector4_t* a, pspl_vector4_t* b, pspl_vector4_t* ab) {

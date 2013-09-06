@@ -1618,6 +1618,7 @@ void pspl_runtime_retain_psplc(const pspl_runtime_psplc_t* psplc) {
     
     // See if it needs loading
     if (!obj->ref_count) {
+        ++obj->ref_count;
         
         // Load data objects
         psplc->parent->provider_hooks->seek(package_provider, obj->blobs_off);
@@ -1654,9 +1655,9 @@ void pspl_runtime_retain_psplc(const pspl_runtime_psplc_t* psplc) {
         
         pspl_api_set_load_state(PSPL_LOADING_NONE);
         
-    }
+    } else
+        ++obj->ref_count;
     
-    ++obj->ref_count;
 }
 
 /**
@@ -1675,6 +1676,7 @@ static void _pspl_runtime_release_psplc(pspl_runtime_psplc_t* psplc, int total) 
     
     // See if it needs unloading
     if (obj->ref_count == 1 || total) {
+        --obj->ref_count;
         
         // Run extension hooks
         pspl_api_set_load_state(PSPL_LOADING_EXT);
@@ -1707,9 +1709,9 @@ static void _pspl_runtime_release_psplc(pspl_runtime_psplc_t* psplc, int total) 
             pspl_free_media_block(obj->blobs_buf);
         obj->blobs_buf = NULL;
         
-    }
+    } else
+        --obj->ref_count;
     
-    --obj->ref_count;
     if (total)
         obj->ref_count = 0;
 }
@@ -1850,6 +1852,7 @@ void pspl_runtime_retain_archived_file(const pspl_runtime_arc_file_t* file) {
     
     // See if it needs loading
     if (!obj->ref_count) {
+        ++obj->ref_count;
         
         // Load data objects
         file->parent->provider_hooks->seek(package_provider, obj->file_off);
@@ -1860,9 +1863,9 @@ void pspl_runtime_retain_archived_file(const pspl_runtime_arc_file_t* file) {
             file->parent->provider_hooks->read_direct(package_provider, obj->public.file_len, obj->public.file_data);
         }
         
-    }
+    } else
+        ++obj->ref_count;
     
-    ++obj->ref_count;
 }
 
 /**
@@ -1880,15 +1883,16 @@ static void _pspl_runtime_release_archived_file(const pspl_runtime_arc_file_t* f
     
     // See if it needs unloading
     if (obj->ref_count == 1 || total) {
+        --obj->ref_count;
         
         // Free data buffer if allocated with stdio
         if (file->parent->provider_hooks != &membuf)
             pspl_free_media_block(obj->public.file_data);
         obj->public.file_data = NULL;
         
-    }
+    } else
+        --obj->ref_count;
     
-    --obj->ref_count;
     if (total)
         obj->ref_count = 0;
 }

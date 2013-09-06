@@ -842,8 +842,6 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pmdl_t* pmdl) {
     }
 }
 
-
-
 /* This routine will draw PAR1 PMDLs */
 void pmdl_draw_rigged(const pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
                       const pmdl_animation_ctx* anim_ctx) {
@@ -885,7 +883,10 @@ void pmdl_draw_rigged(const pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
         
             // Platform specific index buffer array
 #           if PSPL_RUNTIME_PLATFORM_GL2
-                GLVAO(glBindVertexArray)(*(GLuint*)index_buf);
+                struct gl_bufs_t* gl_bufs = index_buf;
+                GLVAO(glBindVertexArray)(gl_bufs->vao);
+                glBindBuffer(GL_ARRAY_BUFFER, gl_bufs->vert_buf);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gl_bufs->elem_buf);
 #           elif PSPL_RUNTIME_PLATFORM_D3D11
             
 #           endif
@@ -938,10 +939,10 @@ void pmdl_draw_rigged(const pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
                     index_buf += sizeof(pmdl_general_prim_par1);
                     
                     // Load evaluated bones from skinning entry into GPU
+                    pspl_matrix44_t bone_mats[PMDL_MAX_BONES];
+                    pspl_vector4_t bone_bases[PMDL_MAX_BONES];
                     if (last_skin_index != prim->skin_idx) {
                         last_skin_index = prim->skin_idx;
-                        pspl_matrix44_t bone_mats[PMDL_MAX_BONES];
-                        pspl_vector4_t bone_bases[PMDL_MAX_BONES];
                         if (anim_ctx) {
                             const pmdl_skin_entry* skin_entry =
                             &anim_ctx->parent_ctx->skin_entry_array[last_skin_index];
@@ -979,10 +980,12 @@ void pmdl_draw_rigged(const pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
                     
 #                   endif
                     
+                        
+
                 }
                 
             }
-            
+        
 
         
 #       elif PMDL_GX

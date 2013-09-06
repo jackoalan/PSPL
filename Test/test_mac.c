@@ -54,16 +54,13 @@ static void renderfunc() {
     monkey_ctx.texcoord_mtx[1].m[1][3] = 1.0;
     
     // Update action contexts
-    pmdl_action_advance(rotate_action_ctx, 1/60.0);
+    pmdl_action_advance(rotate_action_ctx, 0.5/60.0);
     pmdl_action_advance(haha_action_ctx, 1/60.0);
     pmdl_animation_evaluate(anim_ctx);
     
     // Draw monkey
     glEnable(GL_CULL_FACE);
-    //pmdl_draw(&monkey_ctx, monkey_model);
     pmdl_draw_rigged(&monkey_ctx, monkey_model, anim_ctx);
-    //glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE);
-    //glUseProgram(0);
     
     if (!((frame_count)%10)) {
         double diff = time - last_render_time;
@@ -73,27 +70,6 @@ static void renderfunc() {
     }
     ++frame_count;
     
-    char fps_str[128];
-    snprintf(fps_str, 128, "FPS: %.f", fps);
-    //size_t fps_str_len = strlen(fps_str);
-    
-    //glDisable(GL_DEPTH_TEST);
-    
-    // Render
-    /*
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0, 800, 0.0, 600, -2.0, 500.0);
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glTranslatef(0, 585, 0);
-    glScalef(0.1,0.1,0.1);
-    
-    int i;
-    for (i=0 ; i<fps_str_len ; ++i)
-        glutStrokeCharacter(GLUT_STROKE_MONO_ROMAN, fps_str[i]);
-     */
     
     glutSwapBuffers();
     
@@ -141,6 +117,9 @@ int main(int argc, char* argv[]) {
     monkey_ctx.texcoord_mtx[0].m[0][3] = 0.5;
     monkey_ctx.texcoord_mtx[0].m[1][3] = 0.5;
     
+    monkey_ctx.texcoord_mtx[2].m[0][0] = 1;
+    monkey_ctx.texcoord_mtx[2].m[1][1] = -1;
+    
     memset(monkey_ctx.model_mtx.m, 0, sizeof(pspl_matrix34_t));
     monkey_ctx.model_mtx.m[0][0] = 1;
     monkey_ctx.model_mtx.m[1][1] = 1;
@@ -164,7 +143,7 @@ int main(int argc, char* argv[]) {
     pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_ALL);
     
     // Load monkey
-    const pspl_runtime_psplc_t* monkey_obj = pspl_runtime_get_psplc_from_key(package, "monkey", 1);
+    const pspl_runtime_psplc_t* monkey_obj = pspl_runtime_get_psplc_from_key(package, "MonkeyMaterial", 1);
     monkey_ctx.default_shader = monkey_obj;
     monkey_model = pmdl_lookup(monkey_obj, "monkey");
     

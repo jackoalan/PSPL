@@ -67,7 +67,8 @@ class pmdl:
                 copy_name = object.name + "_pmdltri"
                 copy_mesh = bpy.data.meshes.new(copy_name)
                 copy_obj = bpy.data.objects.new(copy_name, copy_mesh)
-                copy_obj.data = object.data.copy()
+                #copy_obj.data = object.data.copy()
+                copy_obj.data = object.to_mesh(bpy.context.scene, True, 'RENDER')
                 copy_obj.scale = object.scale
                 copy_obj.location = root_rel_loc # This is set to be root-object-relative
                 bpy.context.scene.objects.link(copy_obj)
