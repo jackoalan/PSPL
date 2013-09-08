@@ -37,12 +37,14 @@ int CoreGraphics_decode(const char* file_path, const char* file_path_ext,
     
     CGImageAlphaInfo new_alpha_info = (image_out->image_type == PSPL_TM_IMAGE_RGBA) ?
                                       kCGImageAlphaPremultipliedLast : kCGImageAlphaNone;
+    CGColorSpaceRef rgb_space = CGColorSpaceCreateDeviceRGB();
     CGContextRef quartz_context = CGBitmapContextCreate((void*)image_out->image_buffer, image_out->width,
                                                         image_out->height, 8, image_out->width * image_out->image_type,
-                                                        CGColorSpaceCreateDeviceRGB(), new_alpha_info);
+                                                        rgb_space, new_alpha_info);
     CGContextDrawImage(quartz_context, CGRectMake(0, 0, image_out->width, image_out->height), image);
     
     CGContextRelease(quartz_context);
+    CGColorSpaceRelease(rgb_space);
     CGImageRelease(image);
     CFRelease(image_source);
     CGDataProviderRelease(image_file_provider);
