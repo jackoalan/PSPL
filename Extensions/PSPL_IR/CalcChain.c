@@ -287,19 +287,19 @@ void pspl_calc_chain_destroy(pspl_calc_chain_t* chain) {
 }
 void pspl_calc_chain_add_static_transform(pspl_calc_chain_t* chain,
                                           const pspl_matrix34_t matrix) {
-    pspl_calc_link_t* link = pspl_malloc_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
+    pspl_calc_link_t* link = pspl_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
     link->use = LINK_USE_STATIC;
     memcpy(link->matrix_value, matrix, sizeof(pspl_matrix34_t));
 }
 void pspl_calc_chain_add_dynamic_transform(pspl_calc_chain_t* chain,
                                            const char* bind_name) {
-    pspl_calc_link_t* link = pspl_malloc_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
+    pspl_calc_link_t* link = pspl_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
     link->use = LINK_USE_DYNAMIC;
     strlcpy(link->link_dynamic_bind_name, bind_name, IR_NAME_LEN);
 }
 void pspl_calc_chain_add_static_scale(pspl_calc_chain_t* chain,
                                       const pspl_vector3_t scale_vector) {
-    pspl_calc_link_t* link = pspl_malloc_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
+    pspl_calc_link_t* link = pspl_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
     link->use = LINK_USE_STATIC;
     memcpy(link->matrix_value, &identity_mtx, sizeof(pspl_matrix34_t));
     link->matrix_value[0][0] = scale_vector[0];
@@ -308,25 +308,25 @@ void pspl_calc_chain_add_static_scale(pspl_calc_chain_t* chain,
 }
 void pspl_calc_chain_add_dynamic_scale(pspl_calc_chain_t* chain,
                                        const char* bind_name) {
-    pspl_calc_link_t* link = pspl_malloc_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
+    pspl_calc_link_t* link = pspl_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
     link->use = LINK_USE_DYNAMIC;
     strlcpy(link->link_dynamic_bind_name, bind_name, IR_NAME_LEN);
 }
 void pspl_calc_chain_add_static_rotation(pspl_calc_chain_t* chain,
                                          const pspl_rotation_t* rotation) {
-    pspl_calc_link_t* link = pspl_malloc_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
+    pspl_calc_link_t* link = pspl_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
     link->use = LINK_USE_STATIC;
     build_rotation_matrix(link->matrix_value, rotation);
 }
 void pspl_calc_chain_add_dynamic_rotation(pspl_calc_chain_t* chain,
                                           const char* bind_name) {
-    pspl_calc_link_t* link = pspl_malloc_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
+    pspl_calc_link_t* link = pspl_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
     link->use = LINK_USE_DYNAMIC;
     strlcpy(link->link_dynamic_bind_name, bind_name, IR_NAME_LEN);
 }
 void pspl_calc_chain_add_static_translation(pspl_calc_chain_t* chain,
                                             const pspl_vector3_t trans_vector) {
-    pspl_calc_link_t* link = pspl_malloc_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
+    pspl_calc_link_t* link = pspl_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
     link->use = LINK_USE_STATIC;
     memcpy(link->matrix_value, &identity_mtx, sizeof(pspl_matrix34_t));
     link->matrix_value[0][3] = trans_vector[0];
@@ -335,7 +335,7 @@ void pspl_calc_chain_add_static_translation(pspl_calc_chain_t* chain,
 }
 void pspl_calc_chain_add_dynamic_translation(pspl_calc_chain_t* chain,
                                              const char* bind_name) {
-    pspl_calc_link_t* link = pspl_malloc_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
+    pspl_calc_link_t* link = pspl_malloc(&chain->mem_ctx, sizeof(pspl_calc_link_t));
     link->use = LINK_USE_DYNAMIC;
     strlcpy(link->link_dynamic_bind_name, bind_name, IR_NAME_LEN);
 }
@@ -377,7 +377,7 @@ static void fold_chain(pspl_calc_chain_t* chain, void** big_data_out,
                 }
             }
             if (!found) {
-                void* buf = pspl_malloc_malloc(&string_table_ctx, sizeof(uint32_t) +
+                void* buf = pspl_malloc(&string_table_ctx, sizeof(uint32_t) +
                                                strlen(link->link_dynamic_bind_name)+1);
                 uint32_t* offset = buf;
                 *offset = (uint32_t)str_table_size;

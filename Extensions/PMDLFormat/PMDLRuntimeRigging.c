@@ -402,8 +402,8 @@ void pmdl_action_destroy(pmdl_action_ctx* ctx_ptr) {
 
 /* Recursively solve bézier Y (value) for X (time) by approaching
  * acceptable limit error. CURVE MUST BE A FUNCTION!! */
-#define LIMIT_ERROR 0.0005
 static inline double solve_bezier(double time,
+                                  double limit_error,
                                   const pmdl_curve_keyframe* left_kf,
                                   const pmdl_curve_keyframe* right_kf) {
     
@@ -426,7 +426,7 @@ static inline double solve_bezier(double time,
                     (c*right_kf->left_handle[0]) + (d*right_kf->main_handle[0]);
         
         err = fabs(result[0] - time);
-        if (err < LIMIT_ERROR) {
+        if (err < limit_error) {
             result[1] = (a*left_kf->main_handle[1]) + (b*left_kf->right_handle[1]) +
                         (c*right_kf->left_handle[1]) + (d*right_kf->main_handle[1]);
             break;
@@ -618,6 +618,9 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, unsigned action_count, c
 void pmdl_action_advance(pmdl_action_ctx* ctx_ptr, double time_delta) {
     int i,j;
     
+    // Target epsilon value for solving cubic bézier values (adaptive to playback rate)
+    double limit_error = time_delta / 8.0;
+    
     // Calculate current time in animation
     double current_time = ctx_ptr->current_time + time_delta;
     
@@ -672,7 +675,7 @@ void pmdl_action_advance(pmdl_action_ctx* ctx_ptr, double time_delta) {
         }
         
         // Otherwise, solve cubic polynomial
-        curve_inst->cached_value = solve_bezier(current_time, left_kf, right_kf);
+        curve_inst->cached_value = solve_bezier(current_time, limit_error, left_kf, right_kf);
         
     }
     

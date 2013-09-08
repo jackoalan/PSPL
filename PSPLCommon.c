@@ -52,7 +52,7 @@ void pspl_malloc_context_destroy(pspl_malloc_context_t* context) {
     free(context->object_arr);
 }
 
-void* pspl_malloc_malloc(pspl_malloc_context_t* context, size_t size) {
+void* pspl_malloc(pspl_malloc_context_t* context, size_t size) {
     int i;
     for (i=0 ; i<context->object_num ; ++i)
         if (!context->object_arr[i])

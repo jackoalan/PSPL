@@ -1264,7 +1264,7 @@ static size_t stdio_read(const void* handle, size_t num_bytes, void** data_out) 
 #   if PSPL_RUNTIME_PLATFORM_GX
     void* buf = pspl_malloc_memalign(&stdio->mem_ctx, num_bytes, 32);
 #   else
-    void* buf = pspl_malloc_malloc(&stdio->mem_ctx, num_bytes);
+    void* buf = pspl_malloc(&stdio->mem_ctx, num_bytes);
 #   endif
     *data_out = buf;
     return fread(buf, 1, num_bytes, stdio->file);
@@ -1307,7 +1307,7 @@ static const pspl_data_provider_t stdio = {
  */
 int pspl_runtime_load_package_file(const char* package_path,
                                    const pspl_runtime_package_t** package_out) {
-    pspl_runtime_package_t* package = pspl_malloc_malloc(&package_mem_ctx, sizeof(pspl_runtime_package_t));
+    pspl_runtime_package_t* package = pspl_malloc(&package_mem_ctx, sizeof(pspl_runtime_package_t));
     package->provider_hooks = &stdio;
     package->provider_local = 1;
     if (stdio.open(&package->provider.stdio, package_path)) {
@@ -1409,7 +1409,7 @@ int pspl_runtime_load_package_membuf(void* package_data, size_t package_len,
                                      const pspl_runtime_package_t** package_out) {
     if (!package_data)
         return -1;
-    pspl_runtime_package_t* package = pspl_malloc_malloc(&package_mem_ctx, sizeof(pspl_runtime_package_t));
+    pspl_runtime_package_t* package = pspl_malloc(&package_mem_ctx, sizeof(pspl_runtime_package_t));
     package->provider_hooks = &membuf;
     package->provider_local = 1;
     package->provider.mem.data = package_data;
@@ -1449,7 +1449,7 @@ int pspl_runtime_load_package_provider(const char* package_path,
                                        const pspl_runtime_package_t** package_out) {
     if (!package_path || !data_provider_handle || !data_provider_hooks)
         return -1;
-    pspl_runtime_package_t* package = pspl_malloc_malloc(&package_mem_ctx, sizeof(pspl_runtime_package_t));
+    pspl_runtime_package_t* package = pspl_malloc(&package_mem_ctx, sizeof(pspl_runtime_package_t));
     package->provider_hooks = data_provider_hooks;
     package->provider.provider = data_provider_handle;
     package->provider_local = 0;

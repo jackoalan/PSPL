@@ -27,8 +27,8 @@ enum PSPL_TM_IMAGE_TYPE {
 typedef struct {
     enum PSPL_TM_IMAGE_TYPE image_type;
     unsigned int width, height;
-    const uint8_t* image_buffer;
-    const uint8_t* index_buffer;
+    uint8_t* image_buffer;
+    uint8_t* index_buffer;
 } pspl_tm_image_t;
 
 

@@ -63,7 +63,7 @@ int RGBAGX_encode(pspl_malloc_context_t* mem_ctx, const uint8_t* image_in, unsig
         alloc_sz = 64;
     
     /* Perform tiling for GX */
-    void* tiled_data = pspl_malloc_malloc(mem_ctx, alloc_sz);
+    void* tiled_data = pspl_malloc(mem_ctx, alloc_sz);
     void* td_cur = tiled_data;
     
     int x,y,ix,iy;

@@ -54,7 +54,7 @@ static void renderfunc() {
     monkey_ctx.texcoord_mtx[1].m[1][3] = 1.0;
     
     // Update action contexts
-    pmdl_action_advance(rotate_action_ctx, 0.5/60.0);
+    pmdl_action_advance(rotate_action_ctx, 0.1/60.0);
     pmdl_action_advance(haha_action_ctx, 1/60.0);
     pmdl_animation_evaluate(anim_ctx);
     
@@ -89,6 +89,12 @@ static int enumerate_psplc_hook(pspl_runtime_psplc_t* psplc_object) {
     return 0;
 }
 
+static void reshape(int w, int h) {
+    glViewport(0, 0, (GLsizei)w, (GLsizei)h);
+    monkey_ctx.projection.perspective.aspect = (float)w / (float)h;
+    pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_PROJECTION);
+}
+
 #define PSPL_HASHING_BUILTIN 1
 #include <PSPL/PSPLHash.h>
 int main(int argc, char* argv[]) {
@@ -101,6 +107,7 @@ int main(int argc, char* argv[]) {
 	glutCreateWindow("PSPL Test");
     glutDisplayFunc(renderfunc);
     glutKeyboardFunc(kbfunc);
+    glutReshapeFunc(reshape);
     
     
     // Setup PSPL
@@ -125,7 +132,7 @@ int main(int argc, char* argv[]) {
     monkey_ctx.model_mtx.m[1][1] = 1;
     monkey_ctx.model_mtx.m[2][2] = 1;
     monkey_ctx.camera_view.pos.f[0] = 0;
-    monkey_ctx.camera_view.pos.f[1] = 4;
+    monkey_ctx.camera_view.pos.f[1] = 3;
     monkey_ctx.camera_view.pos.f[2] = 0;
     monkey_ctx.camera_view.look.f[0] = 0;
     monkey_ctx.camera_view.look.f[1] = 0;

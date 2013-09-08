@@ -9,6 +9,8 @@
 #ifndef PSPL_gx_common_h
 #define PSPL_gx_common_h
 
+#include <PSPL/PSPL_IR.h>
+
 enum gl_object {
     GX_SHADER_CONFIG = 1,
     GX_SHADER_DL     = 2

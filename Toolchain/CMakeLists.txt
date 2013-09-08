@@ -1,5 +1,13 @@
 include_directories(${PSPL_SOURCE_DIR})
 
+# Toolchain-platform-specific frameworks
+unset(PLATFORM_LIBS)
+if(APPLE)
+  find_library(APP_SERVICES_LIBRARY ApplicationServices)
+  list(APPEND PLATFORM_LIBS ${APP_SERVICES_LIBRARY})
+endif()
+
+
 # Hashing library define
 unset(HASH_LIB)
 if(PSPL_TOOLCHAIN_HASHING STREQUAL BUILTIN)
@@ -37,4 +45,4 @@ set_target_properties(pspl PROPERTIES
                       COMPILE_DEFINITIONS PSPL_TOOLCHAIN=1)
 
 # Link toolchain extensions
-pspl_target_link_libraries(pspl ${pspl_extension_toolchain_link_list} ${HASH_LIB} pspl_common)
+pspl_target_link_libraries(pspl ${pspl_extension_toolchain_link_list} ${HASH_LIB} pspl_common ${PLATFORM_LIBS})

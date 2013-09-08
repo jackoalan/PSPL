@@ -342,10 +342,10 @@ static void sample_direc(const pspl_toolchain_context_t* driver_context,
     // Add to name cache and convert if needed
     if (tex_idx == converted_names.object_num) {
         if (!convert_state.name_ext) {
-            void* name_buf = pspl_malloc_malloc(&converted_names, strlen(convert_state.name) + 1);
+            void* name_buf = pspl_malloc(&converted_names, strlen(convert_state.name) + 1);
             sprintf(name_buf, "%s", convert_state.name);
         } else {
-            void* name_buf = pspl_malloc_malloc(&converted_names, strlen(convert_state.name) +
+            void* name_buf = pspl_malloc(&converted_names, strlen(convert_state.name) +
                                                 strlen(convert_state.name_ext) + 1);
             sprintf(name_buf, "%s%s", convert_state.name, convert_state.name_ext);
         }

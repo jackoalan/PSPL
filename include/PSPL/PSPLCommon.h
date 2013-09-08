@@ -197,7 +197,7 @@ void pspl_malloc_context_destroy(pspl_malloc_context_t* context);
  * @param context Context object to add memory object within
  * @return Newly-allocated memory object pointer
  */
-void* pspl_malloc_malloc(pspl_malloc_context_t* context, size_t size);
+void* pspl_malloc(pspl_malloc_context_t* context, size_t size);
 
 #if PSPL_RUNTIME_PLATFORM_GX
 void* pspl_malloc_memalign(pspl_malloc_context_t* context, size_t size, size_t align);

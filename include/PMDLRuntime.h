@@ -95,7 +95,19 @@ typedef struct {
     
 } pmdl_draw_context_t;
 
-/* Invalidate context transformation cache (if values updated) */
+/* Routine to allocate and return a new draw context */
+pmdl_draw_context_t* pmdl_new_context();
+
+/* Routine to free draw context */
+void pmdl_free_context(pmdl_draw_context_t* context);
+    
+/* Routine to allocate and return a (NULL-terminated) array of new draw contexts */
+pmdl_draw_context_t* pmdl_new_context_array(unsigned count);
+    
+/* Routine to free said (NULL-terminated) array */
+void pmdl_free_context_array(pmdl_draw_context_t* array);
+
+/* Invalidate draw context transformation cache (if values updated) */
 enum pmdl_invalidate_bits {
     PMDL_INVALIDATE_NONE        = 0,
     PMDL_INVALIDATE_MODEL       = 1,

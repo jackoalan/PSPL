@@ -427,6 +427,73 @@ const pmdl_action* pmdl_action_lookup(const pmdl_t* pmdl, const char* action_nam
 }
 
 
+#pragma mark Context Init
+
+static void _pmdl_set_default_context(pmdl_draw_context_t* ctx) {
+    
+    int i;
+    memset(ctx->texcoord_mtx, 0, 8*sizeof(pspl_matrix34_t));
+    for (i=0 ; i<PMDL_MAX_TEXCOORD_MATS ; ++i) {
+        ctx->texcoord_mtx[i].m[0][0] = 1;
+        ctx->texcoord_mtx[i].m[1][1] = -1;
+    }
+    
+    memset(ctx->model_mtx.m, 0, sizeof(pspl_matrix34_t));
+    ctx->model_mtx.m[0][0] = 1;
+    ctx->model_mtx.m[1][1] = 1;
+    ctx->model_mtx.m[2][2] = 1;
+    ctx->camera_view.pos.f[0] = 0;
+    ctx->camera_view.pos.f[1] = 3;
+    ctx->camera_view.pos.f[2] = 0;
+    ctx->camera_view.look.f[0] = 0;
+    ctx->camera_view.look.f[1] = 0;
+    ctx->camera_view.look.f[2] = 0;
+    ctx->camera_view.up.f[0] = 0;
+    ctx->camera_view.up.f[1] = 0;
+    ctx->camera_view.up.f[2] = 1;
+    ctx->projection_type = PMDL_PERSPECTIVE;
+    ctx->projection.perspective.fov = 55;
+    ctx->projection.perspective.far = 5;
+    ctx->projection.perspective.near = 1;
+    ctx->projection.perspective.aspect = 1.3333;
+    ctx->projection.perspective.post_translate_x = 0;
+    ctx->projection.perspective.post_translate_y = 0;
+    
+}
+
+/* Routine to allocate and return a new draw context */
+pmdl_draw_context_t* pmdl_new_context() {
+    
+    pmdl_draw_context_t* ctx = pspl_allocate_indexing_block(sizeof(pmdl_draw_context_t));
+    _pmdl_set_default_context(ctx);
+    return ctx;
+    
+}
+
+/* Routine to free draw context */
+void pmdl_free_context(pmdl_draw_context_t* context) {
+    pspl_free_indexing_block(context);
+}
+
+/* Routine to allocate and return a (NULL-terminated) array of new draw contexts */
+pmdl_draw_context_t* pmdl_new_context_array(unsigned count) {
+    
+    pmdl_draw_context_t* array = pspl_allocate_indexing_block(sizeof(pmdl_draw_context_t) * count);
+
+    int i;
+    for (i=0 ; i<count ; ++i)
+        _pmdl_set_default_context(&array[i]);
+    
+    return array;
+    
+}
+
+/* Routine to free said (NULL-terminated) array */
+void pmdl_free_context_array(pmdl_draw_context_t* array) {
+    pspl_free_indexing_block(array);
+}
+
+
 #pragma mark Context Representation and Frustum Testing
 
 /* Invalidate context transformation cache (if values updated) */

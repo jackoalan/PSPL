@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E4253AF717DCD4650026234E /* coregraphics_dec.c in Sources */ = {isa = PBXBuildFile; fileRef = E4253AF617DCD4650026234E /* coregraphics_dec.c */; };
 		E42D4EE517CBFAF900F81458 /* PMDLRuntimeRigging.c in Sources */ = {isa = PBXBuildFile; fileRef = E42D4EE317CBF8CE00F81458 /* PMDLRuntimeRigging.c */; };
 		E43B8EBB174DC28900F8C5FB /* BuiltinsToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DB173462A800B8CDD1 /* BuiltinsToolchain.c */; };
 		E43C50F617B49C5C00F25742 /* RuntimeWiiHeaps.c in Sources */ = {isa = PBXBuildFile; fileRef = E4D6302417B47C6D001D1E0E /* RuntimeWiiHeaps.c */; };
@@ -47,6 +48,7 @@
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
 		E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3A1740578E003B06BF /* ReferenceGatherer.c */; };
 		E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3D17411620003B06BF /* ObjectIndexer.c */; };
+		E4A0BFF517DC36CA00656E05 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E4A0BFF417DC36CA00656E05 /* ApplicationServices.framework */; };
 		E4A1640A17BB00BA00AF995B /* gx_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */; };
 		E4A6251B17C3AD6D0021764B /* TMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E5175CDA560079B62D /* TMRuntime.c */; };
 		E4A6251F17C3CC600021764B /* d3d11_runtime_interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4C5E8BA177E826B00D73E7D /* d3d11_runtime_interface.cpp */; };
@@ -99,6 +101,8 @@
 		E403AB971797094900D6B203 /* pmdl_loop_vert.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pmdl_loop_vert.py; sourceTree = "<group>"; };
 		E4069D26179EF34B00FB4D73 /* PMDLRuntime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PMDLRuntime.h; sourceTree = "<group>"; };
 		E40E323C17CEC00900F9C2A2 /* PMDLRuntimeRigging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PMDLRuntimeRigging.h; sourceTree = "<group>"; };
+		E4253AF517DCD4260026234E /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		E4253AF617DCD4650026234E /* coregraphics_dec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = coregraphics_dec.c; sourceTree = "<group>"; };
 		E42D4EE317CBF8CE00F81458 /* PMDLRuntimeRigging.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = PMDLRuntimeRigging.c; sourceTree = "<group>"; };
 		E4360CB717B9C16D0016DCDD /* pspl.1.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = pspl.1.md; sourceTree = "<group>"; };
 		E44577BD1781DBA4003EE09C /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -161,6 +165,7 @@
 		E49E63BC17BEA98F002550A7 /* MonkeyMaterial.pxm */ = {isa = PBXFileReference; lastKnownFileType = file; path = MonkeyMaterial.pxm; sourceTree = "<group>"; };
 		E49E63BD17BEA995002550A7 /* MonkeyMaterial.psd */ = {isa = PBXFileReference; lastKnownFileType = file; path = MonkeyMaterial.psd; sourceTree = "<group>"; };
 		E49E63BE17BEAD8F002550A7 /* PSPL-RTConfig.cmake.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = "PSPL-RTConfig.cmake.in"; sourceTree = "<group>"; };
+		E4A0BFF417DC36CA00656E05 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
 		E4A1640B17BB143C00AF995B /* pspl.1.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = pspl.1.html; sourceTree = "<group>"; };
 		E4A6251D17C3CC100021764B /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E4A6252317C414140021764B /* FindDirectX11.cmake */ = {isa = PBXFileReference; lastKnownFileType = text; path = FindDirectX11.cmake; sourceTree = "<group>"; };
@@ -283,6 +288,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E4A0BFF517DC36CA00656E05 /* ApplicationServices.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -296,6 +302,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		E4253AF417DCD40D0026234E /* CoreGraphics */ = {
+			isa = PBXGroup;
+			children = (
+				E4253AF517DCD4260026234E /* CMakeLists.txt */,
+				E4253AF617DCD4650026234E /* coregraphics_dec.c */,
+			);
+			path = CoreGraphics;
+			sourceTree = "<group>";
+		};
 		E44577F01781FA10003EE09C /* Blender */ = {
 			isa = PBXGroup;
 			children = (
@@ -325,6 +340,7 @@
 			isa = PBXGroup;
 			children = (
 				E45034DD175CD5860079B62D /* CMakeLists.txt */,
+				E4253AF417DCD40D0026234E /* CoreGraphics */,
 				E45034EE175CDFBF0079B62D /* PNG */,
 				E45034EF175CDFC40079B62D /* JPEG */,
 				E45034F0175CDFD30079B62D /* TGA */,
@@ -462,6 +478,7 @@
 		E4AFAE1E171C8F8E00F7A0BF = {
 			isa = PBXGroup;
 			children = (
+				E4A0BFF417DC36CA00656E05 /* ApplicationServices.framework */,
 				E4E4918D1753FACF006FCA59 /* pspl_available_toolchain_extensions.c */,
 				E4E4918C1753FACF006FCA59 /* pspl_available_runtime_extensions.c */,
 				E4AFAE28171C92B900F7A0BF /* COPYING */,
@@ -957,6 +974,7 @@
 				E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */,
 				E44577C01781DD57003EE09C /* PMDLToolchain.c in Sources */,
 				E44577C21781DDDA003EE09C /* d3d11_toolchain.c in Sources */,
+				E4253AF717DCD4650026234E /* coregraphics_dec.c in Sources */,
 				E45591D6174ADA8F00CE0A08 /* Packager.c in Sources */,
 				E45591D8174D60C100CE0A08 /* gx_toolchain.c in Sources */,
 				E43B8EBB174DC28900F8C5FB /* BuiltinsToolchain.c in Sources */,

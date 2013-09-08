@@ -441,7 +441,7 @@ static void load_texture_thread(void* null) {
 
 static void load_object(pspl_runtime_psplc_t* object) {
     int tex_c = pspl_runtime_count_integer_embedded_data_objects(object);
-    pspl_tm_map_entry* ent = pspl_malloc_malloc(&map_ctx, sizeof(pspl_tm_map_entry));
+    pspl_tm_map_entry* ent = pspl_malloc(&map_ctx, sizeof(pspl_tm_map_entry));
     ent->owner = object;
     ent->texture_count = tex_c;
     ent->texture_arr = calloc(tex_c, sizeof(TEX_T));
