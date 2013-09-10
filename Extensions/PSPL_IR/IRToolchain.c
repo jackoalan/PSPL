@@ -186,6 +186,12 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
                 if (nametest == command_argv[0])
                     pspl_error(-1, "Invalid UV_GEN usage", "first argument must be texcoord generator index");
                 
+                int i;
+                for (i=0 ; i<pspl_ir_state.vertex.tc_count ; ++i) {
+                    if (pspl_ir_state.vertex.tc_array[i].name_idx == name_idx)
+                        pspl_error(-1, "Redefined TexCoord Generator", "a UV generator with index %ld has already been defined", name_idx);
+                }
+                
                 char* numtest = (char*)command_argv[1];
                 long idx = strtol(command_argv[1], &numtest, 10);
                 
@@ -358,7 +364,7 @@ static void command_call(const pspl_toolchain_context_t* driver_context,
             int tcidx = (int)strtol(command_argv[1], &nametest, 10);
             if (nametest == command_argv[1])
                 pspl_error(-1, "Invalid SAMPLE value", "texgen index must be positive");
-            pspl_ir_state.fragment.stage_array[stage_idx].stage_texmap.texcoord_idx = tcidx;
+            pspl_ir_state.fragment.stage_array[stage_idx].stage_texmap.texcoord_name_idx = tcidx;
             pspl_ir_state.fragment.stage_array[stage_idx].using_texture = 1;
             
             
@@ -902,7 +908,7 @@ static void line_read(const pspl_toolchain_context_t* driver_context,
 
 /* Called when done */
 static void platform_instruct(const pspl_toolchain_context_t* driver_context) {
-    int j;
+    int j,k;
     
     // Calculate total UV attr count
     pspl_ir_state.total_uv_attr_count = 0;
@@ -915,13 +921,33 @@ static void platform_instruct(const pspl_toolchain_context_t* driver_context) {
     // Calculate total texmap count
     pspl_ir_state.total_texmap_count = 0;
     for (j=0 ; j<pspl_ir_state.fragment.stage_count ; ++j) {
-        if (pspl_ir_state.fragment.stage_array[j].using_texture)
+        if (pspl_ir_state.fragment.stage_array[j].using_texture) {
             if (pspl_ir_state.total_texmap_count <= pspl_ir_state.fragment.stage_array[j].stage_texmap.texmap_idx)
                 pspl_ir_state.total_texmap_count = pspl_ir_state.fragment.stage_array[j].stage_texmap.texmap_idx + 1;
-        if (pspl_ir_state.fragment.stage_array[j].using_indirect)
+            pspl_ir_state.fragment.stage_array[j].stage_texmap.texcoord_idx = 0xffffffff;
+            for (k=0 ; k<pspl_ir_state.vertex.tc_count ; ++k) {
+                if (pspl_ir_state.fragment.stage_array[j].stage_texmap.texcoord_name_idx == pspl_ir_state.vertex.tc_array[k].name_idx)
+                    pspl_ir_state.fragment.stage_array[j].stage_texmap.texcoord_idx = k;
+            }
+            if (pspl_ir_state.fragment.stage_array[j].stage_texmap.texcoord_idx == 0xffffffff)
+                pspl_error(-1, "Undefined TexCoord Generator Index", "fragment stage at index %u references non-existant UV generator %u", j,
+                           pspl_ir_state.fragment.stage_array[j].stage_texmap.texcoord_name_idx);
+        }
+        if (pspl_ir_state.fragment.stage_array[j].using_indirect) {
             if (pspl_ir_state.total_texmap_count <= pspl_ir_state.fragment.stage_array[j].stage_indtexmap.texmap_idx)
                 pspl_ir_state.total_texmap_count = pspl_ir_state.fragment.stage_array[j].stage_indtexmap.texmap_idx + 1;
+            pspl_ir_state.fragment.stage_array[j].stage_indtexmap.texcoord_idx = 0xffffffff;
+            for (k=0 ; k<pspl_ir_state.vertex.tc_count ; ++k) {
+                if (pspl_ir_state.fragment.stage_array[j].stage_indtexmap.texcoord_name_idx == pspl_ir_state.vertex.tc_array[k].name_idx)
+                    pspl_ir_state.fragment.stage_array[j].stage_indtexmap.texcoord_idx = k;
+            }
+            if (pspl_ir_state.fragment.stage_array[j].stage_indtexmap.texcoord_idx == 0xffffffff)
+                pspl_error(-1, "Undefined TexCoord Generator Index", "indirect fragment stage at index %u references non-existant UV generator %u", j,
+                           pspl_ir_state.fragment.stage_array[j].stage_indtexmap.texcoord_name_idx);
+        }
     }
+    
+    
     
     // Write chains into PSPLC
     //pspl_calc_chain_write_position(&pspl_ir_state.vertex.pos_chain);

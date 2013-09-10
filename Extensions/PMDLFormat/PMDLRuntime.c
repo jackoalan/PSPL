@@ -72,6 +72,8 @@ static void unload_object_hook(pspl_runtime_psplc_t* object) {
 #pragma mark PMDL Lookup
 
 const pmdl_t* pmdl_lookup(const pspl_runtime_psplc_t* pspl_object, const char* pmdl_name) {
+    if (!pspl_object || !pmdl_name)
+        return NULL;
     
     struct file_array* files = pspl_runtime_get_extension_user_data_pointer(&PMDL_extension, pspl_object);
 

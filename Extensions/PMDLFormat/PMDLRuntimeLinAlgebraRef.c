@@ -82,17 +82,6 @@ void pmdl_matrix34_identity(pspl_matrix34_t* mt) {
 	}
 }
 
-void pmdl_matrix44_identity(pspl_matrix44_t* mt) {
-    int i,j;
-    
-	for(i=0;i<4;i++) {
-		for(j=0;j<4;j++) {
-			if(i==j) mt->m[i][j] = 1.0;
-			else mt->m[i][j] = 0.0;
-		}
-	}
-}
-
 /*
 void pspl_matrix34_cpy(const pspl_matrix34_t src, pspl_matrix34_t dst) {
     if(src==dst) return;
@@ -263,11 +252,6 @@ float pmdl_vector3_dot(pspl_vector3_t* a, pspl_vector3_t* b) {
     tmp.v = a->v * b->v;
 	return tmp.v[0] + tmp.v[1] + tmp.v[2];
 }
-float pmdl_vector4_dot(pspl_vector4_t* a, pspl_vector4_t* b) {
-    pspl_vector4_t tmp;
-    tmp.v = a->v * b->v;
-	return tmp.v[0] + tmp.v[1] + tmp.v[2] + tmp.v[3];
-}
 
 void pmdl_vector3_cross(pspl_vector3_t* a, pspl_vector3_t* b, pspl_vector3_t* axb) {
     pspl_vector3_t vTmp;
@@ -366,6 +350,25 @@ void _pmdl_matrix_lookat(pspl_matrix34_t* mt, pspl_vector3_t* pos, pspl_vector3_
 }
 
 
+#endif
+
+void pmdl_matrix44_identity(pspl_matrix44_t* mt) {
+    int i,j;
+    
+	for(i=0;i<4;i++) {
+		for(j=0;j<4;j++) {
+			if(i==j) mt->m[i][j] = 1.0;
+			else mt->m[i][j] = 0.0;
+		}
+	}
+}
+
+float pmdl_vector4_dot(pspl_vector4_t* a, pspl_vector4_t* b) {
+    pspl_vector4_t tmp;
+    tmp.v = a->v * b->v;
+	return tmp.v[0] + tmp.v[1] + tmp.v[2] + tmp.v[3];
+}
+
 void pmdl_matrix34_quat(pspl_matrix34_t* m, pspl_vector4_t* a) {
     
     // Normalise vector
@@ -388,36 +391,36 @@ void pmdl_matrix34_quat(pspl_matrix34_t* m, pspl_vector4_t* a) {
 	m->m[2][2] = 1.0f - (2.0f*a->f[0]*a->f[0]) - (2.0f*a->f[1]*a->f[1]);
     
     /*
-    float q[] = {a->f[3], a->f[0], a->f[1], a->f[2]};
-    
-    double q0, q1, q2, q3, qda, qdb, qdc, qaa, qab, qac, qbb, qbc, qcc;
-    
-	q0 = M_SQRT2 * (double)q[0];
-	q1 = M_SQRT2 * (double)q[1];
-	q2 = M_SQRT2 * (double)q[2];
-	q3 = M_SQRT2 * (double)q[3];
-    
-	qda = q0 * q1;
-	qdb = q0 * q2;
-	qdc = q0 * q3;
-	qaa = q1 * q1;
-	qab = q1 * q2;
-	qac = q1 * q3;
-	qbb = q2 * q2;
-	qbc = q2 * q3;
-	qcc = q3 * q3;
-    
-	m->m[0][0] = (float)(1.0 - qbb - qcc);
-	m->m[0][1] = (float)(qdc + qab);
-	m->m[0][2] = (float)(-qdb + qac);
-    
-	m->m[1][0] = (float)(-qdc + qab);
-	m->m[1][1] = (float)(1.0 - qaa - qcc);
-	m->m[1][2] = (float)(qda + qbc);
-    
-	m->m[2][0] = (float)(qdb + qac);
-	m->m[2][1] = (float)(-qda + qbc);
-	m->m[2][2] = (float)(1.0 - qaa - qbb);
+     float q[] = {a->f[3], a->f[0], a->f[1], a->f[2]};
+     
+     double q0, q1, q2, q3, qda, qdb, qdc, qaa, qab, qac, qbb, qbc, qcc;
+     
+     q0 = M_SQRT2 * (double)q[0];
+     q1 = M_SQRT2 * (double)q[1];
+     q2 = M_SQRT2 * (double)q[2];
+     q3 = M_SQRT2 * (double)q[3];
+     
+     qda = q0 * q1;
+     qdb = q0 * q2;
+     qdc = q0 * q3;
+     qaa = q1 * q1;
+     qab = q1 * q2;
+     qac = q1 * q3;
+     qbb = q2 * q2;
+     qbc = q2 * q3;
+     qcc = q3 * q3;
+     
+     m->m[0][0] = (float)(1.0 - qbb - qcc);
+     m->m[0][1] = (float)(qdc + qab);
+     m->m[0][2] = (float)(-qdb + qac);
+     
+     m->m[1][0] = (float)(-qdc + qab);
+     m->m[1][1] = (float)(1.0 - qaa - qcc);
+     m->m[1][2] = (float)(qda + qbc);
+     
+     m->m[2][0] = (float)(qdb + qac);
+     m->m[2][1] = (float)(-qda + qbc);
+     m->m[2][2] = (float)(1.0 - qaa - qbb);
      */
     
 }
@@ -441,5 +444,3 @@ void pmdl_quat_mul(pspl_vector4_t* a, pspl_vector4_t* b, pspl_vector4_t* ab) {
         ab->f[3] = ab_tmp.f[3];
     }
 }
-
-#endif

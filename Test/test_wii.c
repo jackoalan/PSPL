@@ -27,8 +27,11 @@
 #define DEFAULT_FIFO_SIZE (256 * 1024)
 
 
-static pmdl_draw_context_t monkey_ctx;
-static const pspl_runtime_arc_file_t* monkey_model = NULL;
+static pmdl_draw_context_t* monkey_ctx;
+static const pmdl_t* monkey_model = NULL;
+static pmdl_action_ctx* rotate_action_ctx;
+static pmdl_action_ctx* haha_action_ctx;
+static pmdl_animation_ctx* anim_ctx;
 
 /* GX external framebuffer */
 static void* xfb = NULL;
@@ -57,20 +60,17 @@ static void renderfunc() {
     float time = (float)cur_frame / 60.0f;
     
     // Rotate camera around monkey
-    monkey_ctx.camera_view.pos[0] = sinf(time) * 5;
-    monkey_ctx.camera_view.pos[2] = cosf(time) * 5;
-    pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_VIEW);
+    monkey_ctx->camera_view.pos.f[0] = sinf(time) * 5;
+    monkey_ctx->camera_view.pos.f[1] = cosf(time) * 5;
+    pmdl_update_context(monkey_ctx, PMDL_INVALIDATE_VIEW);
     
-    // Update Texcoord 1
-    monkey_ctx.texcoord_mtx[1][0][0] = 0.5;
-    monkey_ctx.texcoord_mtx[1][1][1] = 1.0;
-    monkey_ctx.texcoord_mtx[1][0][3] = fmodf(-time, 1.0);
-    monkey_ctx.texcoord_mtx[1][1][3] = 1.0;
+    // Update action contexts
+    pmdl_action_advance(rotate_action_ctx, 0.1/60.0);
+    pmdl_action_advance(haha_action_ctx, 1/60.0);
+    pmdl_animation_evaluate(anim_ctx);
     
     // Draw monkey
-    GX_SetCullMode(GX_CULL_NONE);
-    GX_SetZMode(GX_TRUE, GX_LESS, GX_TRUE);
-    pmdl_draw(&monkey_ctx, monkey_model);
+    pmdl_draw_rigged(monkey_ctx, monkey_model, NULL);
     
     // Swap buffers
     GX_DrawDone();
@@ -161,40 +161,46 @@ int main(int argc, char* argv[]) {
     printf("PSPL package read\n");
     
     // Setup monkey rendering context
-    memset(monkey_ctx.texcoord_mtx, 0, 8*sizeof(pspl_matrix34_t));
-    monkey_ctx.texcoord_mtx[0][0][0] = 1.0;
-    monkey_ctx.texcoord_mtx[0][1][1] = -1.0;
-    monkey_ctx.texcoord_mtx[0][0][3] = 1.0;
-    monkey_ctx.texcoord_mtx[0][1][3] = 1.0;
+    monkey_ctx = pmdl_new_draw_context();
+    monkey_ctx->texcoord_mtx[0].m[0][0] = 0.5;
+    monkey_ctx->texcoord_mtx[0].m[1][1] = -0.5;
+    monkey_ctx->texcoord_mtx[0].m[0][3] = 0.5;
+    monkey_ctx->texcoord_mtx[0].m[1][3] = 0.5;
     
-    memset(monkey_ctx.model_mtx, 0, sizeof(pspl_matrix34_t));
-    monkey_ctx.model_mtx[0][0] = 1;
-    monkey_ctx.model_mtx[1][1] = 1;
-    monkey_ctx.model_mtx[2][2] = 1;
-    monkey_ctx.camera_view.pos[0] = 0;
-    monkey_ctx.camera_view.pos[1] = 0;
-    monkey_ctx.camera_view.pos[2] = 5;
-    monkey_ctx.camera_view.look[0] = 0;
-    monkey_ctx.camera_view.look[1] = 0;
-    monkey_ctx.camera_view.look[2] = 0;
-    monkey_ctx.camera_view.up[0] = 0;
-    monkey_ctx.camera_view.up[1] = 1;
-    monkey_ctx.camera_view.up[2] = 0;
-    monkey_ctx.projection_type = PMDL_PERSPECTIVE;
-    monkey_ctx.projection.perspective.fov = 55;
-    monkey_ctx.projection.perspective.far = 10;
-    monkey_ctx.projection.perspective.near = 1;
-    monkey_ctx.projection.perspective.aspect = 1.77;
-    monkey_ctx.projection.perspective.post_translate_x = 0;
-    monkey_ctx.projection.perspective.post_translate_y = 0;
-    pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_ALL);
+    monkey_ctx->camera_view.pos.f[0] = 0;
+    monkey_ctx->camera_view.pos.f[1] = 3;
+    monkey_ctx->camera_view.pos.f[2] = 0;
+    monkey_ctx->camera_view.look.f[0] = 0;
+    monkey_ctx->camera_view.look.f[1] = 0;
+    monkey_ctx->camera_view.look.f[2] = 0;
+    monkey_ctx->camera_view.up.f[0] = 0;
+    monkey_ctx->camera_view.up.f[1] = 0;
+    monkey_ctx->camera_view.up.f[2] = 1;
+    monkey_ctx->projection_type = PMDL_PERSPECTIVE;
+    monkey_ctx->projection.perspective.fov = 55;
+    monkey_ctx->projection.perspective.far = 5;
+    monkey_ctx->projection.perspective.near = 1;
+    monkey_ctx->projection.perspective.aspect = 1.3333;
+    monkey_ctx->projection.perspective.post_translate_x = 0;
+    monkey_ctx->projection.perspective.post_translate_y = 0;
+    pmdl_update_context(monkey_ctx, PMDL_INVALIDATE_ALL);
     
     // Load monkey
-    const pspl_runtime_psplc_t* monkey_obj = pspl_runtime_get_psplc_from_key(package, "monkey", 1);
-    monkey_ctx.default_shader = monkey_obj;
+    const pspl_runtime_psplc_t* monkey_obj = pspl_runtime_get_psplc_from_key(package, "MonkeyMaterial", 1);
+    monkey_ctx->default_shader = monkey_obj;
     monkey_model = pmdl_lookup(monkey_obj, "monkey");
     
     printf("Monkey loaded\n");
+    
+    // Setup animation context
+    haha_action_ctx = pmdl_action_init(pmdl_action_lookup(monkey_model, "haha"));
+    haha_action_ctx->loop_flag = 1;
+    rotate_action_ctx = pmdl_action_init(pmdl_action_lookup(monkey_model, "rotate"));
+    rotate_action_ctx->loop_flag = 1;
+    
+    anim_ctx = pmdl_animation_initv(rotate_action_ctx, haha_action_ctx, NULL);
+    
+    printf("Animation Context Setup\n");
     
     // Start rendering
     VIDEO_SetPostRetraceCallback(post_retrace_cb);

@@ -8,21 +8,16 @@
 
 /* Begin PBXBuildFile section */
 		E4253AF717DCD4650026234E /* coregraphics_dec.c in Sources */ = {isa = PBXBuildFile; fileRef = E4253AF617DCD4650026234E /* coregraphics_dec.c */; };
-		E42D4EE517CBFAF900F81458 /* PMDLRuntimeRigging.c in Sources */ = {isa = PBXBuildFile; fileRef = E42D4EE317CBF8CE00F81458 /* PMDLRuntimeRigging.c */; };
 		E43B8EBB174DC28900F8C5FB /* BuiltinsToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4BB18DB173462A800B8CDD1 /* BuiltinsToolchain.c */; };
 		E43C50F617B49C5C00F25742 /* RuntimeWiiHeaps.c in Sources */ = {isa = PBXBuildFile; fileRef = E4D6302417B47C6D001D1E0E /* RuntimeWiiHeaps.c */; };
 		E44577C01781DD57003EE09C /* PMDLToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E44577BE1781DC4F003EE09C /* PMDLToolchain.c */; };
 		E44577C11781DDAE003EE09C /* PMDLRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E44577BF1781DC5B003EE09C /* PMDLRuntime.c */; };
 		E44577C21781DDDA003EE09C /* d3d11_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E49178175109D4006FCA59 /* d3d11_toolchain.c */; };
-		E44577C51781DE8A003EE09C /* gl_runtime_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = E462EEA81778FC0200211193 /* gl_runtime_ios.m */; };
-		E44577C71781DE8A003EE09C /* gl_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4917417510956006FCA59 /* gl_runtime.c */; };
 		E44577CA1781DE8A003EE09C /* RuntimeThreads.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C527141778B71900D1D822 /* RuntimeThreads.c */; };
 		E44577CB1781DE8A003EE09C /* PSPLCommon.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4916E17510684006FCA59 /* PSPLCommon.c */; };
 		E44577CD1781DE8A003EE09C /* pspl_available_runtime_extensions.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4918C1753FACF006FCA59 /* pspl_available_runtime_extensions.c */; };
 		E44577CE1781DE8A003EE09C /* SMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C5270E1778A32D00D1D822 /* SMRuntime.c */; };
 		E44577D21781DE8A003EE09C /* PSPLRuntimeThreads.h in Headers */ = {isa = PBXBuildFile; fileRef = E4C527101778A4FF00D1D822 /* PSPLRuntimeThreads.h */; };
-		E44577D91781DEB8003EE09C /* gl_runtime_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = E462EEA81778FC0200211193 /* gl_runtime_ios.m */; };
-		E44577DB1781DEB8003EE09C /* gl_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4917417510956006FCA59 /* gl_runtime.c */; };
 		E44577DD1781DEB8003EE09C /* TMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E5175CDA560079B62D /* TMRuntime.c */; };
 		E44577DE1781DEB8003EE09C /* RuntimeThreads.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C527141778B71900D1D822 /* RuntimeThreads.c */; };
 		E44577DF1781DEB8003EE09C /* PSPLCommon.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4916E17510684006FCA59 /* PSPLCommon.c */; };
@@ -30,6 +25,9 @@
 		E44577E21781DEB8003EE09C /* SMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C5270E1778A32D00D1D822 /* SMRuntime.c */; };
 		E44577E61781DEB8003EE09C /* PSPLRuntimeThreads.h in Headers */ = {isa = PBXBuildFile; fileRef = E4C527101778A4FF00D1D822 /* PSPLRuntimeThreads.h */; };
 		E4461F7E17B31EFD0039B479 /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
+		E44DBC8717DF9F350007E2C4 /* PMDLRuntimeRigging.c in Sources */ = {isa = PBXBuildFile; fileRef = E42D4EE317CBF8CE00F81458 /* PMDLRuntimeRigging.c */; };
+		E44DBC8817DFB38D0007E2C4 /* gx_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */; };
+		E44DBC8A17DFC3F70007E2C4 /* PMDLRuntimeRigging.c in Sources */ = {isa = PBXBuildFile; fileRef = E42D4EE317CBF8CE00F81458 /* PMDLRuntimeRigging.c */; };
 		E45034CE175813440079B62D /* libTEST-RUNTIME.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E4E4918017510B35006FCA59 /* libTEST-RUNTIME.a */; };
 		E45034CF175813490079B62D /* test_mac.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034B9175811FB0079B62D /* test_mac.c */; };
 		E45034D11758153E0079B62D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45034D01758153E0079B62D /* OpenGL.framework */; };
@@ -49,7 +47,6 @@
 		E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3A1740578E003B06BF /* ReferenceGatherer.c */; };
 		E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3D17411620003B06BF /* ObjectIndexer.c */; };
 		E4A0BFF517DC36CA00656E05 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E4A0BFF417DC36CA00656E05 /* ApplicationServices.framework */; };
-		E4A1640A17BB00BA00AF995B /* gx_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6F171D83C900F7A0BF /* gx_runtime.c */; };
 		E4A6251B17C3AD6D0021764B /* TMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034E5175CDA560079B62D /* TMRuntime.c */; };
 		E4A6251F17C3CC600021764B /* d3d11_runtime_interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E4C5E8BA177E826B00D73E7D /* d3d11_runtime_interface.cpp */; };
 		E4A6252017C3CCB00021764B /* d3d11_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4917A175109DD006FCA59 /* d3d11_runtime.c */; };
@@ -58,8 +55,6 @@
 		E4AFAE99172D899D00F7A0BF /* Compiler.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE98172D899D00F7A0BF /* Compiler.c */; };
 		E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAEA117315D4000F7A0BF /* Buffer.c */; };
 		E4AFAEA3173161B500F7A0BF /* Driver.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE46171CA34700F7A0BF /* Driver.c */; };
-		E4B7BCF0173C9DC0002A513E /* gx_offline.c in Sources */ = {isa = PBXBuildFile; fileRef = E4AFAE6B171D825400F7A0BF /* gx_offline.c */; };
-		E4BF0DCD17D1849F00AF57AB /* PMDLRuntimeProcessing.c in Sources */ = {isa = PBXBuildFile; fileRef = E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */; };
 		E4C5270F1778A36300D1D822 /* SMRuntime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C5270E1778A32D00D1D822 /* SMRuntime.c */; };
 		E4CD266B179F376300172F31 /* PMDLRuntimeLinAlgebraRef.c in Sources */ = {isa = PBXBuildFile; fileRef = E4CD266A179F374400172F31 /* PMDLRuntimeLinAlgebraRef.c */; };
 		E4CD266E179F39B800172F31 /* PMDLRuntimeLinAlgebraSSE.s in Sources */ = {isa = PBXBuildFile; fileRef = E4CD266D179F396E00172F31 /* PMDLRuntimeLinAlgebraSSE.s */; };
@@ -922,8 +917,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E44577C51781DE8A003EE09C /* gl_runtime_ios.m in Sources */,
-				E44577C71781DE8A003EE09C /* gl_runtime.c in Sources */,
 				E44577CA1781DE8A003EE09C /* RuntimeThreads.c in Sources */,
 				E4A6252217C3D61F0021764B /* test_win.cpp in Sources */,
 				E44577CB1781DE8A003EE09C /* PSPLCommon.c in Sources */,
@@ -939,12 +932,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				E43C50F617B49C5C00F25742 /* RuntimeWiiHeaps.c in Sources */,
-				E44577D91781DEB8003EE09C /* gl_runtime_ios.m in Sources */,
-				E4A1640A17BB00BA00AF995B /* gx_runtime.c in Sources */,
-				E44577DB1781DEB8003EE09C /* gl_runtime.c in Sources */,
+				E44DBC8817DFB38D0007E2C4 /* gx_runtime.c in Sources */,
 				E44577DD1781DEB8003EE09C /* TMRuntime.c in Sources */,
 				E44577DE1781DEB8003EE09C /* RuntimeThreads.c in Sources */,
 				E44577DF1781DEB8003EE09C /* PSPLCommon.c in Sources */,
+				E44DBC8717DF9F350007E2C4 /* PMDLRuntimeRigging.c in Sources */,
 				E4FBB40817BE691B0026EA74 /* PMDLRuntimeProcessing.c in Sources */,
 				E44577E11781DEB8003EE09C /* pspl_available_runtime_extensions.c in Sources */,
 				E44577E21781DEB8003EE09C /* SMRuntime.c in Sources */,
@@ -968,7 +960,6 @@
 				E4AFAE99172D899D00F7A0BF /* Compiler.c in Sources */,
 				E4AFAEA217315D4000F7A0BF /* Buffer.c in Sources */,
 				E4AFAEA3173161B500F7A0BF /* Driver.c in Sources */,
-				E4B7BCF0173C9DC0002A513E /* gx_offline.c in Sources */,
 				E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */,
 				E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */,
 				E4995F3E17411620003B06BF /* ObjectIndexer.c in Sources */,
@@ -999,9 +990,8 @@
 				E44577C11781DDAE003EE09C /* PMDLRuntime.c in Sources */,
 				E4461F7E17B31EFD0039B479 /* hash_builtin.c in Sources */,
 				E4A6251B17C3AD6D0021764B /* TMRuntime.c in Sources */,
-				E42D4EE517CBFAF900F81458 /* PMDLRuntimeRigging.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
-				E4BF0DCD17D1849F00AF57AB /* PMDLRuntimeProcessing.c in Sources */,
+				E44DBC8A17DFC3F70007E2C4 /* PMDLRuntimeRigging.c in Sources */,
 				E4CD266E179F39B800172F31 /* PMDLRuntimeLinAlgebraSSE.s in Sources */,
 				E4CD266B179F376300172F31 /* PMDLRuntimeLinAlgebraRef.c in Sources */,
 				E4CE71F41785043D009F5932 /* RuntimeCore.c in Sources */,
@@ -1117,7 +1107,7 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREFIX_HEADER = build/Runtime/pspl_runtime_platform_typefile.pch;
+				GCC_PREFIX_HEADER = wiibuild/Runtime/pspl_runtime_platform_typefile.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"PSPL_RUNTIME=1",
 					"PSPL_HASHING_OGC=1",
@@ -1135,9 +1125,14 @@
 					include,
 					/Users/jacko/Documents/ProjectPhoton/WiiStep/build/libogc/include,
 					/Users/jacko/Documents/ProjectPhoton/WiiStep/build/libfat/include,
+					"/Users/jacko/Documents/ProjectPhoton/WiiStep/build/devkitPPC/powerpc-eabi/include",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = (
+					"-include",
+					"/Users/jacko/Documents/ProjectPhoton/WiiStep/wii-prefix.pch",
+				);
 				PRODUCT_NAME = "TEST-RUNTIME-WIN32 copy";
 				SDKROOT = macosx;
 			};
@@ -1159,7 +1154,7 @@
 				EXECUTABLE_PREFIX = lib;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_PREFIX_HEADER = build/Runtime/pspl_runtime_platform_typefile.pch;
+				GCC_PREFIX_HEADER = wiibuild/Runtime/pspl_runtime_platform_typefile.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"PSPL_RUNTIME=1",
 					"PSPL_HASHING_OGC=1",
@@ -1176,8 +1171,13 @@
 					include,
 					/Users/jacko/Documents/ProjectPhoton/WiiStep/build/libogc/include,
 					/Users/jacko/Documents/ProjectPhoton/WiiStep/build/libfat/include,
+					"/Users/jacko/Documents/ProjectPhoton/WiiStep/build/devkitPPC/powerpc-eabi/include",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				OTHER_CFLAGS = (
+					"-include",
+					"/Users/jacko/Documents/ProjectPhoton/WiiStep/wii-prefix.pch",
+				);
 				PRODUCT_NAME = "TEST-RUNTIME-WIN32 copy";
 				SDKROOT = macosx;
 			};

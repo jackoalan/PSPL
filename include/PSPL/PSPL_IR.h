@@ -100,6 +100,7 @@ typedef struct {
     unsigned texmap_idx;
     
     // Index of texcoord gen (binds fragment stage to vertex stage)
+    unsigned texcoord_name_idx;
     unsigned texcoord_idx;
     
 } pspl_ir_texture_t;
@@ -109,8 +110,8 @@ typedef struct {
     
     // Stage output
     enum {
-        OUT_MAIN,
-        OUT_SIDECHAIN
+        OUT_MAIN = 0,
+        OUT_SIDECHAIN = 1
     } stage_output;
     
     // Sidechain output name (when output 'OUT_SIDECHAIN')
@@ -118,22 +119,22 @@ typedef struct {
     
     // Stage Operation
     enum stage_op {
-        OP_SET,    // 1-source, always used in first stage
-        OP_MUL,    // 2-sources; (a*b)
-        OP_ADD,    // 2-sources; (a+b)
-        OP_SUB,    // 2-sources; (a-b)
-        OP_BLEND,  // 3-sources; ((1.0 - c)*a + c*b)
+        OP_SET = 0,    // 1-source, always used in first stage
+        OP_MUL = 1,    // 2-sources; (a*b)
+        OP_ADD = 2,    // 2-sources; (a+b)
+        OP_SUB = 3,    // 2-sources; (a-b)
+        OP_BLEND = 4,  // 3-sources; ((1.0 - c)*a + c*b)
     } stage_op;
     
     // Stage Operation Sources [a,b,c]
     enum {
-        IN_ZERO,     // Constant '0' value
-        IN_ONE,      // Constant '1' value
-        IN_TEXTURE,  // Sampled texel value
-        IN_LIGHTING, // Computed lighting channel value // NOT USED QUITE YET!!!
-        IN_COLOUR,   // Specified constant colour value (from parent stage structure)
-        IN_MAIN,     // Previous-stage-output main value
-        IN_SIDECHAIN // Previous-stage-output sidechain value
+        IN_ZERO = 0,     // Constant '0' value
+        IN_ONE = 1,      // Constant '1' value
+        IN_TEXTURE = 2,  // Sampled texel value
+        IN_LIGHTING = 3, // Computed lighting channel value // NOT USED QUITE YET!!!
+        IN_COLOUR = 4,   // Specified constant colour value (from parent stage structure)
+        IN_MAIN = 5,     // Previous-stage-output main value
+        IN_SIDECHAIN = 6 // Previous-stage-output sidechain value
     } sources[3];
     
     // Sidechain input indices (when one or more sources set to 'IN_SIDE')
@@ -197,9 +198,9 @@ typedef struct {
         struct {
             unsigned name_idx;
             enum {
-                TEXCOORD_UV,
-                TEXCOORD_POS,
-                TEXCOORD_NORM
+                TEXCOORD_UV = 0,
+                TEXCOORD_POS = 1,
+                TEXCOORD_NORM = 2
             } tc_source;
             unsigned uv_idx;
             //pspl_calc_chain_t tc_chain;

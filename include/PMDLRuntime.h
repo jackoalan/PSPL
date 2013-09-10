@@ -96,16 +96,16 @@ typedef struct {
 } pmdl_draw_context_t;
 
 /* Routine to allocate and return a new draw context */
-pmdl_draw_context_t* pmdl_new_context();
+pmdl_draw_context_t* pmdl_new_draw_context();
 
 /* Routine to free draw context */
-void pmdl_free_context(pmdl_draw_context_t* context);
+void pmdl_free_draw_context(pmdl_draw_context_t* context);
     
 /* Routine to allocate and return a (NULL-terminated) array of new draw contexts */
-pmdl_draw_context_t* pmdl_new_context_array(unsigned count);
+pmdl_draw_context_t* pmdl_new_draw_context_array(unsigned count);
     
 /* Routine to free said (NULL-terminated) array */
-void pmdl_free_context_array(pmdl_draw_context_t* array);
+void pmdl_free_draw_context_array(pmdl_draw_context_t* array);
 
 /* Invalidate draw context transformation cache (if values updated) */
 enum pmdl_invalidate_bits {
@@ -149,10 +149,10 @@ void pmdl_draw_rigged(const pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
 #include <ogc/gu.h>
 #define _pmdl_matrix_orthographic guOrtho
 #define _pmdl_matrix_perspective guPerspective
-#define _pmdl_matrix_lookat(m,p,u,l) guLookAt((m),(guVector*)(p),(guVector*)(u),(guVector*)(l))
+#define _pmdl_matrix_lookat(mp,p,u,l) guLookAt((mp)->m,(guVector*)(p),(guVector*)(u),(guVector*)(l))
 #define pmdl_matrix34_identity guMtxIdentity
 #define pmdl_matrix34_cpy guMtxCopy
-#define pmdl_matrix34_mul guMtxConcat
+#define pmdl_matrix34_mul(a,b,ab) guMtxConcat((a)->m,(b)->m,(ab)->m)
 #define pmdl_matrix34_invxpose guMtxInvXpose
 #define pmdl_vector3_dot(a,b) guVecDotProduct((guVector*)(a),(guVector*)(b))
 #define pmdl_vector3_cross(a,b,axb) guVecCross((guVector*)(a),(guVector*)(b),(guVector*)(axb))
@@ -160,23 +160,28 @@ void pmdl_draw_rigged(const pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
 #define pmdl_vector3_scale(src,dst,scale) guVecScale((guVector*)(src),(guVector*)(dst),(scale))
 #define pmdl_vector3_add(a,b,ab) guVecAdd((guVector*)(a),(guVector*)(b),(guVector*)(ab))
 #define pmdl_vector3_sub(a,b,ab) guVecSub((guVector*)(a),(guVector*)(b),(guVector*)(ab))
-#define pmdl_vector3_matrix_mul(m,s,d) guVecMultiply((m),(guVector*)(&s[0]),(guVector*)(&d[0]))
-#define pmdl_matrix34_quat(m,a) guMtxQuat(m,a)
+#define pmdl_vector3_matrix_mul(mp,s,d) guVecMultiply((mp)->m,(guVector*)(s),(guVector*)(d))
 
 
 /* Extended libogc matrix routines */
-void pspl_matrix44_cpy(REGISTER_KEY pspl_matrix44_t src, REGISTER_KEY pspl_matrix44_t dst);
+void pmdl_matrix44_identity(REGISTER_KEY pspl_matrix44_t* mt);
+    
+void pspl_matrix44_cpy(REGISTER_KEY pspl_matrix44_t* src, REGISTER_KEY pspl_matrix44_t* dst);
 
-void pmdl_matrix44_mul(REGISTER_KEY pspl_matrix44_t a, REGISTER_KEY pspl_matrix44_t b, REGISTER_KEY pspl_matrix44_t ab);
-void pmdl_matrix3444_mul(REGISTER_KEY pspl_matrix34_t a, REGISTER_KEY pspl_matrix44_t b, REGISTER_KEY pspl_matrix44_t ab);
+void pmdl_matrix44_mul(REGISTER_KEY pspl_matrix44_t* a, REGISTER_KEY pspl_matrix44_t* b, REGISTER_KEY pspl_matrix44_t* ab);
+void pmdl_matrix3444_mul(REGISTER_KEY pspl_matrix34_t* a, REGISTER_KEY pspl_matrix44_t* b, REGISTER_KEY pspl_matrix44_t* ab);
 
-float pmdl_vector4_dot(REGISTER_KEY pspl_vector4_t a, REGISTER_KEY pspl_vector4_t b);
+float pmdl_vector4_dot(REGISTER_KEY pspl_vector4_t* a, REGISTER_KEY pspl_vector4_t* b);
 
-void pmdl_vector4_scale(REGISTER_KEY pspl_vector4_t src, REGISTER_KEY pspl_vector4_t dst, REGISTER_KEY float scale);
+void pmdl_vector4_scale(REGISTER_KEY pspl_vector4_t* src, REGISTER_KEY pspl_vector4_t* dst, REGISTER_KEY float scale);
 
-void pmdl_vector4_add(REGISTER_KEY pspl_vector4_t a, REGISTER_KEY pspl_vector4_t b, REGISTER_KEY pspl_vector4_t ab);
-
-void pmdl_vector4_sub(REGISTER_KEY pspl_vector4_t a, REGISTER_KEY pspl_vector4_t b, REGISTER_KEY pspl_vector4_t ab);
+void pmdl_quat_mul(pspl_vector4_t* a, pspl_vector4_t* b, pspl_vector4_t* ab);
+    
+void pmdl_matrix34_quat(REGISTER_KEY pspl_matrix34_t* m, REGISTER_KEY pspl_vector4_t* a);
+    
+#define pmdl_vector4_cpy(s,d) (d) = (s)
+#define pmdl_vector4_add(a,b,ab) (ab) = (a)+(b)
+#define pmdl_vector4_sub(a,b,ab) (ab) = (a)-(b)
 
 
 #else

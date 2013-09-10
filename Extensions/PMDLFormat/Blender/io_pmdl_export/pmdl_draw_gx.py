@@ -98,6 +98,9 @@ class pmdl_draw_gx:
         # used to generate GX-specific POSITION and NORMAL buffers
         self.meshes = []
     
+        # GX drawgen keeps a rigger reference to facilitate vertex-buffer generation
+        self.rigger = None
+    
     
     # Method to get collection-scope vertex indices across all meshes
     def _get_collection_vertex_index(self, mesh, idx):
@@ -124,6 +127,7 @@ class pmdl_draw_gx:
 
     # Augments draw generator with a single blender MESH data object
     def add_mesh(self, pmdl, obj, rigger):
+        self.rigger = rigger
         mesh = obj.data
         print("Optimising mesh:", obj.name)
         opt_gpu_vert_count = 0
@@ -232,8 +236,9 @@ class pmdl_draw_gx:
 
                 # This polygon is good
                 visited_polys.add(temp_poly)
-                
-                
+                pmdl.prog_add_polygon()
+
+
                 # Find a polygon directly connected to this one to continue strip
                 temp_poly = _find_polygon_opposite_lvs(mesh, temp_poly, last_loop_vert_a, last_loop_vert_b)
                 if temp_poly in visited_polys:
@@ -292,7 +297,7 @@ class pmdl_draw_gx:
                 mesh = bloop.mesh
                 
                 # UVs
-                for comp in mesh.uv_layers[uv_idx].data[loop_vert.loop.index].uv:
+                for comp in mesh.uv_layers[uv_idx].data[bloop.loop.index].uv:
                     uv_sub_bytes += vstruct.pack(comp)
 
             uv_bytes.append(uv_sub_bytes)
@@ -300,9 +305,22 @@ class pmdl_draw_gx:
 
         # Arrange into master buffer-struct
         master_bytes = bytearray()
+        
+        # If rigging, compute offset to PAR1-specific data within vertex buffer
+        par1_off_pad = 0
+        if self.rigger:
+            par1_off = 32 + len(vert_bytes) + len(normal_bytes)
+            for uv_sub_bytes in uv_bytes:
+                par1_off += len(uv_sub_bytes)
+            par1_off_pad = ROUND_UP_32(par1_off)
+            par1_off_pad -= par1_off
+            par1_off = ROUND_UP_32(par1_off)
+            master_bytes += struct.pack(endian_char + 'I', par1_off)
+        
+        # Construct master byte array
         master_bytes += struct.pack(endian_char + 'I', vert_count)
         master_bytes += struct.pack(endian_char + 'I', len(collection['vertices']))
-        for i in range(24):
+        for i in range(32-len(master_bytes)):
             master_bytes.append(0)
         
         master_bytes += vert_bytes
@@ -310,6 +328,54 @@ class pmdl_draw_gx:
         
         for uv_sub_bytes in uv_bytes:
             master_bytes += uv_sub_bytes
+        
+        # If rigging, add PAR1-specific data members
+        if self.rigger:
+            for i in range(par1_off_pad):
+                master_bytes.append(0)
+            for i in range(psize):
+                master_bytes.append(0)
+            for i in range(psize):
+                master_bytes.append(0)
+
+            # Build skinning-list in same order as vertex buffers
+            for mesh in self.meshes:
+                for vertex in mesh.vertices:
+    
+                    # Identity blend value (remainder blend factor)
+                    identity_blend = 1.0
+                    
+                    # Loop-vert weight array
+                    weight_array = []
+                    
+                    # Bone indices
+                    new_bones = []
+                    
+                    # Determine which bones (vertex groups) belong to loop_vert
+                    for group_elem in vertex.groups:
+                        vertex_group = self.rigger.mesh_vertex_groups[group_elem.group]
+                            
+                        # Add to array otherwise
+                        new_bones.append(self.rigger.armature.data.bones.find(vertex_group.name))
+                        
+                        # Record bone weight
+                        weight_array.append(group_elem.weight)
+                        identity_blend -= group_elem.weight
+                    
+                    
+                    # Write bone count into master bytes
+                    master_bytes += struct.pack(endian_char + 'I', len(vertex.groups))
+                    
+                    # Write identity blend value
+                    master_bytes += struct.pack(endian_char + 'f', identity_blend)
+                    
+                    # Write alternating bone-index, bone-weight pairs
+                    for i in range(len(vertex.groups)):
+                        master_bytes += struct.pack(endian_char + 'I', new_bones[i])
+                        master_bytes += struct.pack(endian_char + 'f', weight_array[i])
+    
+
+
 
         return collection['uv_count'], collection['max_bone_count'], master_bytes
         

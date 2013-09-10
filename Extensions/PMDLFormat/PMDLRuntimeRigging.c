@@ -14,6 +14,13 @@
 #include <PMDLRuntimeRigging.h>
 #include "PMDLRuntimeProcessing.h"
 
+/* If using OpenGL OR Direct3D, we're using the General Draw Format */
+#if PSPL_RUNTIME_PLATFORM_GL2 || PSPL_RUNTIME_PLATFORM_D3D11
+#   define PMDL_GENERAL 1
+#elif PSPL_RUNTIME_PLATFORM_GX
+#   define PMDL_GX 1
+#endif
+
 #pragma pack(1)
 struct file_bone {
     uint32_t string_off;
@@ -74,11 +81,15 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
     
     // Establish skinning section
     const void* skinning_section = file_data + skel_section_length;
+    uint32_t skinning_section_length = 0;
+    uint32_t skin_count = 0;
+    unsigned skin_bone_array_count = 0;
+#if PMDL_GENERAL
     file_cur = skinning_section;
-    uint32_t skinning_section_length = *(uint32_t*)(file_cur);
+    skinning_section_length = *(uint32_t*)(file_cur);
     file_cur += sizeof(uint32_t);
     
-    uint32_t skin_count = *(uint32_t*)(file_cur);
+    skin_count = *(uint32_t*)(file_cur);
     file_cur += sizeof(uint32_t);
     
     uint32_t* skin_offsets = (uint32_t*)(file_cur);
@@ -87,12 +98,11 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
     const void* skin_arr = file_cur;
     
     // Add up bone array sizes
-    unsigned skin_bone_array_count = 0;
     for (i=0 ; i<skin_count ; ++i) {
         struct file_skin* skin = (struct file_skin*)(skin_arr + skin_offsets[i]);
         skin_bone_array_count += skin->bone_count;
     }
-    
+#endif
     
     // Establish animation section
     const void* animation_section = skinning_section + skinning_section_length;
@@ -191,6 +201,7 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
     rigging_ctx->skin_entry_array = context_cur;
     context_cur += sizeof(pmdl_skin_entry)*skin_count;
     
+#if PMDL_GENERAL
     for (i=0 ; i<skin_count ; ++i) {
         
         struct file_skin* skin = (struct file_skin*)(skin_arr + skin_offsets[i]);
@@ -204,6 +215,7 @@ void pmdl_rigging_init(pmdl_rigging_ctx** rig_ctx, const void* file_data, const 
         context_cur += sizeof(pmdl_bone*)*skin->bone_count;
         
     }
+#endif
     
     
     // Animation entries
@@ -401,7 +413,8 @@ void pmdl_action_destroy(pmdl_action_ctx* ctx_ptr) {
 }
 
 /* Recursively solve bézier Y (value) for X (time) by approaching
- * acceptable limit error. CURVE MUST BE A FUNCTION!! */
+ * acceptable limit error. 
+ * CURVE MUST BE A FUNCTION! NON-FCURVES YIELD UNDEFINED RESULTS!! */
 static inline double solve_bezier(double time,
                                   double limit_error,
                                   const pmdl_curve_keyframe* left_kf,
@@ -616,6 +629,9 @@ static void recursive_fk_evaluate(pmdl_fk_playback* fk, unsigned action_count, c
 
 /* Routine to advance action context */
 void pmdl_action_advance(pmdl_action_ctx* ctx_ptr, double time_delta) {
+    if (!ctx_ptr)
+        return;
+    
     int i,j;
     
     // Target epsilon value for solving cubic bézier values (adaptive to playback rate)

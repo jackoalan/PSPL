@@ -67,7 +67,6 @@ class pmdl:
                 copy_name = object.name + "_pmdltri"
                 copy_mesh = bpy.data.meshes.new(copy_name)
                 copy_obj = bpy.data.objects.new(copy_name, copy_mesh)
-                #copy_obj.data = object.data.copy()
                 copy_obj.data = object.to_mesh(bpy.context.scene, True, 'RENDER')
                 copy_obj.scale = object.scale
                 copy_obj.location = root_rel_loc # This is set to be root-object-relative
@@ -88,6 +87,13 @@ class pmdl:
                 for vert in copy_mesh.vertices:
                     for i in range(3):
                         vert.co[i] += root_rel_loc[i]
+                
+                # Accumulate polygon total (for progress meter)
+                self.prog_poly_total += len(copy_obj.data.polygons)
+                
+                # Recursively reach out to children here (to build up polygon count for progress meter)
+                for child in object.children:
+                    self._recursive_add_mesh(draw_gen, child, add_vec3(root_rel_loc, child.location), rigger)
     
                 # Add mesh to draw generator
                 draw_gen.add_mesh(self, copy_obj, rigger)
@@ -101,13 +107,25 @@ class pmdl:
                 # Account for mesh bounding box
                 self._accumulate_bound_box(object)
     
+            else:
+                
+                # Recursively reach out to children here (if parent has no polygons)
+                for child in object.children:
+                    self._recursive_add_mesh(draw_gen, child, add_vec3(root_rel_loc, child.location), rigger)
 
-        # Recursively incorporate child meshes
-        for child in object.children:
-            if child.type == 'MESH':
+        else:
+            
+            # Recursively reach out to children here (if parent not a MESH)
+            for child in object.children:
                 self._recursive_add_mesh(draw_gen, child, add_vec3(root_rel_loc, child.location), rigger)
-
     
+
+    # Update progress meter with another polygon (called from draw generator)
+    def prog_add_polygon(self):
+        self.prog_poly_completed += 1
+        if not bpy.app.background:
+            bpy.context.window_manager.progress_update(self.prog_poly_completed / self.prog_poly_total)
+
     # PMDL Constructor, given a blender object for initialisation
     def __init__(self, object, draw_gen):
         
@@ -136,10 +154,19 @@ class pmdl:
             self.sub_type = 'PAR1'
             self.rigging = pmdl_par1_rigging.pmdl_par1_rigging(8, object)
         
+        # Start tracking polygon progress
+        self.prog_poly_total = 0
+        self.prog_poly_completed = 0
+        if not bpy.app.background:
+            bpy.context.window_manager.progress_begin(0.0, 1.0)
         
         # Break down blender object into collections
         self.collections = set()
         self._recursive_add_mesh(draw_gen, object, (0,0,0), self.rigging)
+    
+        # Remove progress meter
+        if not bpy.app.background:
+            bpy.context.window_manager.progress_end()
 
 
     # Get shader index
@@ -197,7 +224,7 @@ class pmdl:
         self.sub_type = 'PAR2'
         
         # Add octree and perform subdivision
-        self.octree = pmdl_par2_octree.pmdl_par2_octree(self)
+        self.octree = pmdl_par2_octree.pmdl_par2_octree(self, levels)
 
 
         return None
@@ -362,7 +389,8 @@ class pmdl:
         
         if self.rigging:
             skeleton_info_buffer = self.rigging.generate_skeleton_info(self, endian_char, psize)
-            rigging_info_buffer = self.rigging.generate_rigging_info(self, endian_char, psize)
+            if self.draw_gen.file_identifier == '_GEN':
+                rigging_info_buffer = self.rigging.generate_rigging_info(self, endian_char, psize)
             animation_info_buffer = self.rigging.generate_animation_info(self, endian_char, psize)
         
         collection_offset = header_size + len(skeleton_info_buffer) + len(rigging_info_buffer) + len(animation_info_buffer) + len(octree_buffer)

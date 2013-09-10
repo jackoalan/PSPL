@@ -195,7 +195,7 @@ static int load_enumerate(pspl_data_object_t* obj, uint32_t key, pspl_tm_map_ent
                    "this build of TextureManager doesn't support '%s' textures", tex_type);
     
     // Validate mip count
-    if (tex_head->num_mips >= MAX_MIPS)
+    if (tex_head->num_mips > MAX_MIPS)
         pspl_error(-1, "Unsupported mip-mapped texture",
                    "maximum of %d mips supported; this texture has %d",
                    MAX_MIPS, tex_head->num_mips);

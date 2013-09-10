@@ -146,7 +146,7 @@ how the PMDL runtime will transform data for skeletally-rigged models.
 * Bone structure array (each of variable length)
     * Bone name absolute offset (32-bit word)
         * References into string table at end of file
-    * Armature-relative bone-head coordinates (3x float + 1 padding float)
+    * Armature-relative bone-head coordinates (3x float)
     * Parent bone index (or -1 if no parent) (signed 32-bit word)
     * Child count (32-bit word)
     * Child index array
@@ -154,6 +154,8 @@ how the PMDL runtime will transform data for skeletally-rigged models.
 
 
 ### Rigged Skinning Info Section ###
+
+**Please Note:** This section is only added for the [*General Draw Format*](#general-draw-format)
 
 * Section length (32-bit word)
 * Skin structure count (32-bit word)
@@ -329,13 +331,15 @@ PMDL skin entries.
 * *UV* count (32-bit word)
 * 32-byte-aligned padding
 * Array Buffers
-    * Each array is prepended and appended with 32-byte padding
     * Each value is expressed as 2 or 3 component, single-precision floats
 * (`PAR1` only) Pointer to dynamically-allocated *position-transform* stage (pointer space)
 * (`PAR1` only) Pointer to dynamically-allocated *normal-transform* stage (pointer space)
 * (`PAR1` only) *Bone-weight coefficient* array
-    * Skin-entry index (32-bit word)
-    * Weight-values (32-bit floats; matches count of bones in enclosing collection)
+    * Skinned bone-count (32-bit word)
+    * Identity blend value (float)
+    * Skinning array (members counted by 'skinned bone-count' value above)
+        * Bone index (32-bit word; same indexing-space as [*Rigged Skeleton Info Section*](#rigged-skeleton-info-section))
+        * Bone weight (float)
     * Has same count and order of *position* and *normal* array entries
     * Before the PMDL is rendered, the transform stages are populated with
       blended, skeletally-transformed versions for the entire model. The

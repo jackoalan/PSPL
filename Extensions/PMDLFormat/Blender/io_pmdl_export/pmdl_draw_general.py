@@ -255,6 +255,7 @@ class pmdl_draw_general:
 
                 # This polygon is good
                 visited_polys.add(temp_poly)
+                pmdl.prog_add_polygon()
                 
                 
                 # Find a polygon directly connected to this one to continue strip

@@ -15,12 +15,12 @@
 /* GX-specific type for shader object */
 typedef struct {
     
-    // Config structure
-    gx_config_t* config;
+    // Idempotent PSPL-IR buffer for playback into GX
+    void* ir_stream_buf;
+    u32 ir_stream_len;
     
-    // Idempotent display-list buffer for `GX_CallDisplayList`
-    void* disp_list;
-    u32 disp_list_len;
+    // Select values loaded from IR-buffer immediately
+    uint8_t texgen_count, using_texcoord_normal;
     
 } GX_shader_object_t;
 
