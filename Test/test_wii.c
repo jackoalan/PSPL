@@ -60,8 +60,8 @@ static void renderfunc() {
     float time = (float)cur_frame / 60.0f;
     
     // Rotate camera around monkey
-    monkey_ctx->camera_view.pos.f[0] = sinf(time) * 5;
-    monkey_ctx->camera_view.pos.f[1] = cosf(time) * 5;
+    monkey_ctx->camera_view.pos.f[0] = sinf(time) * 3;
+    monkey_ctx->camera_view.pos.f[1] = cosf(time) * 3;
     pmdl_update_context(monkey_ctx, PMDL_INVALIDATE_VIEW);
     
     // Update action contexts
@@ -162,10 +162,12 @@ int main(int argc, char* argv[]) {
     
     // Setup monkey rendering context
     monkey_ctx = pmdl_new_draw_context();
-    monkey_ctx->texcoord_mtx[0].m[0][0] = 0.5;
-    monkey_ctx->texcoord_mtx[0].m[1][1] = -0.5;
-    monkey_ctx->texcoord_mtx[0].m[0][3] = 0.5;
-    monkey_ctx->texcoord_mtx[0].m[1][3] = 0.5;
+    
+    monkey_ctx->texcoord_mtx[1].m[0][0] = 0.5;
+    monkey_ctx->texcoord_mtx[1].m[1][1] = -0.5;
+    monkey_ctx->texcoord_mtx[1].m[0][3] = 0.5;
+    monkey_ctx->texcoord_mtx[1].m[1][3] = 0.5;
+
     
     monkey_ctx->camera_view.pos.f[0] = 0;
     monkey_ctx->camera_view.pos.f[1] = 3;
@@ -180,7 +182,7 @@ int main(int argc, char* argv[]) {
     monkey_ctx->projection.perspective.fov = 55;
     monkey_ctx->projection.perspective.far = 5;
     monkey_ctx->projection.perspective.near = 1;
-    monkey_ctx->projection.perspective.aspect = 1.3333;
+    monkey_ctx->projection.perspective.aspect = 1.777;
     monkey_ctx->projection.perspective.post_translate_x = 0;
     monkey_ctx->projection.perspective.post_translate_y = 0;
     pmdl_update_context(monkey_ctx, PMDL_INVALIDATE_ALL);

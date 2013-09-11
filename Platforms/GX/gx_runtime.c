@@ -41,7 +41,7 @@ static void bind_object(pspl_runtime_psplc_t* object) {
                        "GX supports a maximum of 8 TexCoord Generators; this PSPL has %u generators",
                        ir_state->vertex.tc_count);
         if (tc_array[j].tc_source == PSPL_GX_TEXCOORD_UV)
-            GX_SetTexCoordGen(GX_TEXCOORD0 + j, GX_TG_MTX3x4,
+            GX_SetTexCoordGen(GX_TEXCOORD0 + j, GX_TG_MTX2x4,
                               GX_TG_TEX0 + tc_array[j].uv_idx,
                               GX_TEXMTX0 + (j*3));
         else if (tc_array[j].tc_source == PSPL_GX_TEXCOORD_POS)
