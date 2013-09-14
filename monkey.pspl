@@ -1,0 +1,16 @@
+NAME(Monkey)
+ADD_BLENDER_OBJECT(monkey monkey.blend SuzArmature)
+
+VERTEX
+======
+BONE_COUNT(3)
+UV_GEN(0 0)
+UV_GEN(1 NORMAL)
+
+FRAGMENT
+========
+[SAMPLE MonkeyMap.png UV 0 MIPMAP]
+**********************************
+[SAMPLE MonkeyMaterial.psd LAYER LightingMultiply UV 1 MIPMAP]
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[SAMPLE MonkeyMaterial.psd LAYER LightingAdditive UV 1 MIPMAP]

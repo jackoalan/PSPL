@@ -1,0 +1,1 @@
+add_pspl_package(monkey monkey.pspl)
