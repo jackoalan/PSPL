@@ -33,6 +33,14 @@ pspl_target_link_libraries(pspl-test pspl-rt ${GL_LIB} ${GLUT_LIB})
 
 endif()
 
-
-add_pspl_package(monkey monkey.pspl)
-
+# Add Test Assets
+get_filename_component(ta_path test-assets ABSOLUTE)
+if(EXISTS ${ta_path})
+  add_subdirectory(test-assets)
+  add_test(NAME monkey-test 
+           WORKING_DIRECTORY ${PSPL_BINARY_DIR}/Test/test-assets
+           COMMAND pspl-test)
+else()
+  message(WARNING "Missing `test-assets` directory; test assets WILL NOT be built")
+  message(WARNING "Run `./bootstrap.sh` in PSPL source root to obtain assets with git")
+endif()

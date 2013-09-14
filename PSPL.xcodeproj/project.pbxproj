@@ -42,6 +42,7 @@
 		E462EEA91778FC5B00211193 /* gl_runtime_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = E462EEA81778FC0200211193 /* gl_runtime_ios.m */; };
 		E464158117AAF3EF00CC1CC2 /* RuntimeThreads.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C527141778B71900D1D822 /* RuntimeThreads.c */; };
 		E4669F4417B1B1F3005B7BB5 /* test_wii.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034BB175812050079B62D /* test_wii.c */; };
+		E473376D17E4EC54005A6C3F /* PMDLRuntimeProcessing.c in Sources */ = {isa = PBXBuildFile; fileRef = E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */; };
 		E48FF5601764CF29000231AA /* IRToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E48FF55F1764CF29000231AA /* IRToolchain.c */; };
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
 		E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3A1740578E003B06BF /* ReferenceGatherer.c */; };
@@ -132,6 +133,13 @@
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
 		E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PMDLRuntimeProcessing.c; sourceTree = "<group>"; };
 		E462EEA81778FC0200211193 /* gl_runtime_ios.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = gl_runtime_ios.m; sourceTree = "<group>"; };
+		E473376617E4E235005A6C3F /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
+		E473376717E4E235005A6C3F /* monkey.blend */ = {isa = PBXFileReference; lastKnownFileType = file; path = monkey.blend; sourceTree = "<group>"; };
+		E473376817E4E235005A6C3F /* monkey.pspl */ = {isa = PBXFileReference; lastKnownFileType = text; path = monkey.pspl; sourceTree = "<group>"; };
+		E473376917E4E235005A6C3F /* MonkeyMap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = MonkeyMap.png; sourceTree = "<group>"; };
+		E473376A17E4E235005A6C3F /* MonkeyMap_layout.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = MonkeyMap_layout.png; sourceTree = "<group>"; };
+		E473376B17E4E235005A6C3F /* MonkeyMaterial.psd */ = {isa = PBXFileReference; lastKnownFileType = file; path = MonkeyMaterial.psd; sourceTree = "<group>"; };
+		E473376C17E4E27C005A6C3F /* bootstrap.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = bootstrap.sh; sourceTree = "<group>"; };
 		E4874079178C62E8009EAD1A /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 		E487407A178C63A6009EAD1A /* pmdl.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pmdl.py; sourceTree = "<group>"; };
 		E487407B178C63EE009EAD1A /* pmdl_par1_rigging.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pmdl_par1_rigging.py; sourceTree = "<group>"; };
@@ -155,10 +163,6 @@
 		E4995F3C17411617003B06BF /* ObjectIndexer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ObjectIndexer.h; sourceTree = "<group>"; };
 		E4995F3D17411620003B06BF /* ObjectIndexer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = ObjectIndexer.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		E49E051C176A04AA002E1492 /* CalcChain.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = CalcChain.c; sourceTree = "<group>"; };
-		E49E63BA17BEA92A002550A7 /* monkey.pspl */ = {isa = PBXFileReference; lastKnownFileType = text; path = monkey.pspl; sourceTree = "<group>"; };
-		E49E63BB17BEA978002550A7 /* monkey.blend */ = {isa = PBXFileReference; lastKnownFileType = file; path = monkey.blend; sourceTree = "<group>"; };
-		E49E63BC17BEA98F002550A7 /* MonkeyMaterial.pxm */ = {isa = PBXFileReference; lastKnownFileType = file; path = MonkeyMaterial.pxm; sourceTree = "<group>"; };
-		E49E63BD17BEA995002550A7 /* MonkeyMaterial.psd */ = {isa = PBXFileReference; lastKnownFileType = file; path = MonkeyMaterial.psd; sourceTree = "<group>"; };
 		E49E63BE17BEAD8F002550A7 /* PSPL-RTConfig.cmake.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = "PSPL-RTConfig.cmake.in"; sourceTree = "<group>"; };
 		E4A0BFF417DC36CA00656E05 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = System/Library/Frameworks/ApplicationServices.framework; sourceTree = SDKROOT; };
 		E4A1640B17BB143C00AF995B /* pspl.1.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = pspl.1.html; sourceTree = "<group>"; };
@@ -317,16 +321,13 @@
 		E45034B7175811600079B62D /* Test */ = {
 			isa = PBXGroup;
 			children = (
-				E45034B8175811860079B62D /* CMakeLists.txt */,
 				E45034D2175815420079B62D /* GLUT.framework */,
 				E45034D01758153E0079B62D /* OpenGL.framework */,
+				E45034B8175811860079B62D /* CMakeLists.txt */,
 				E45034B9175811FB0079B62D /* test_mac.c */,
 				E45034BB175812050079B62D /* test_wii.c */,
 				E45034BD175812110079B62D /* test_win.cpp */,
-				E49E63BA17BEA92A002550A7 /* monkey.pspl */,
-				E49E63BB17BEA978002550A7 /* monkey.blend */,
-				E49E63BC17BEA98F002550A7 /* MonkeyMaterial.pxm */,
-				E49E63BD17BEA995002550A7 /* MonkeyMaterial.psd */,
+				E473376417E4E235005A6C3F /* test-assets */,
 			);
 			path = Test;
 			sourceTree = "<group>";
@@ -419,6 +420,19 @@
 			path = TIFF;
 			sourceTree = "<group>";
 		};
+		E473376417E4E235005A6C3F /* test-assets */ = {
+			isa = PBXGroup;
+			children = (
+				E473376617E4E235005A6C3F /* CMakeLists.txt */,
+				E473376717E4E235005A6C3F /* monkey.blend */,
+				E473376817E4E235005A6C3F /* monkey.pspl */,
+				E473376917E4E235005A6C3F /* MonkeyMap.png */,
+				E473376A17E4E235005A6C3F /* MonkeyMap_layout.png */,
+				E473376B17E4E235005A6C3F /* MonkeyMaterial.psd */,
+			);
+			path = "test-assets";
+			sourceTree = "<group>";
+		};
 		E4874078178C62C4009EAD1A /* io_pmdl_export */ = {
 			isa = PBXGroup;
 			children = (
@@ -473,6 +487,7 @@
 		E4AFAE1E171C8F8E00F7A0BF = {
 			isa = PBXGroup;
 			children = (
+				E473376C17E4E27C005A6C3F /* bootstrap.sh */,
 				E4A0BFF417DC36CA00656E05 /* ApplicationServices.framework */,
 				E4E4918D1753FACF006FCA59 /* pspl_available_toolchain_extensions.c */,
 				E4E4918C1753FACF006FCA59 /* pspl_available_runtime_extensions.c */,
@@ -992,6 +1007,7 @@
 				E4A6251B17C3AD6D0021764B /* TMRuntime.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
 				E44DBC8A17DFC3F70007E2C4 /* PMDLRuntimeRigging.c in Sources */,
+				E473376D17E4EC54005A6C3F /* PMDLRuntimeProcessing.c in Sources */,
 				E4CD266E179F39B800172F31 /* PMDLRuntimeLinAlgebraSSE.s in Sources */,
 				E4CD266B179F376300172F31 /* PMDLRuntimeLinAlgebraRef.c in Sources */,
 				E4CE71F41785043D009F5932 /* RuntimeCore.c in Sources */,

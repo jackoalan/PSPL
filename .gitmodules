@@ -1,0 +1,4 @@
+[submodule "Test/test-assets"]
+	path = Test/test-assets
+	url = git@github.com:jackoalan/PSPL.git
+	branch = test-assets

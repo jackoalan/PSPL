@@ -955,7 +955,6 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pmdl_t* pmdl) {
     }
 }
 
-static int load_test = 0;
 /* This routine will draw PAR1 PMDLs */
 void pmdl_draw_rigged(const pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
                       const pmdl_animation_ctx* anim_ctx) {

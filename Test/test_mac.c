@@ -41,17 +41,6 @@ static void renderfunc() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     double time = tv.tv_sec + ((double)tv.tv_usec / (double)USEC_PER_SEC);
-
-    // Rotate camera around monkey
-    //monkey_ctx->camera_view.pos.f[0] = sin(time) * 5;
-    //monkey_ctx->camera_view.pos.f[2] = cos(time) * 5;
-    //pmdl_update_context(&monkey_ctx, PMDL_INVALIDATE_VIEW);
-    
-    // Update Texcoord 1
-    monkey_ctx->texcoord_mtx[1].m[0][0] = 0.5;
-    monkey_ctx->texcoord_mtx[1].m[1][1] = 1.0;
-    monkey_ctx->texcoord_mtx[1].m[0][3] = fmod(time, 1.41);
-    monkey_ctx->texcoord_mtx[1].m[1][3] = 1.0;
     
     // Update action contexts
     pmdl_action_advance(rotate_action_ctx, 0.1/60.0);
@@ -119,10 +108,10 @@ int main(int argc, char* argv[]) {
     
     // Setup monkey rendering context
     monkey_ctx = pmdl_new_draw_context();
-    monkey_ctx->texcoord_mtx[0].m[0][0] = 0.5;
-    monkey_ctx->texcoord_mtx[0].m[1][1] = -0.5;
-    monkey_ctx->texcoord_mtx[0].m[0][3] = 0.5;
-    monkey_ctx->texcoord_mtx[0].m[1][3] = 0.5;
+    monkey_ctx->texcoord_mtx[1].m[0][0] = 0.5;
+    monkey_ctx->texcoord_mtx[1].m[1][1] = -0.5;
+    monkey_ctx->texcoord_mtx[1].m[0][3] = 0.5;
+    monkey_ctx->texcoord_mtx[1].m[1][3] = 0.5;
     
     monkey_ctx->camera_view.pos.f[0] = 0;
     monkey_ctx->camera_view.pos.f[1] = 3;
@@ -143,7 +132,7 @@ int main(int argc, char* argv[]) {
     pmdl_update_context(monkey_ctx, PMDL_INVALIDATE_ALL);
     
     // Load monkey
-    const pspl_runtime_psplc_t* monkey_obj = pspl_runtime_get_psplc_from_key(package, "MonkeyMaterial", 1);
+    const pspl_runtime_psplc_t* monkey_obj = pspl_runtime_get_psplc_from_key(package, "Monkey", 1);
     monkey_ctx->default_shader = monkey_obj;
     monkey_model = pmdl_lookup(monkey_obj, "monkey");
     

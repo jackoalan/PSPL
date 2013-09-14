@@ -185,7 +185,7 @@ int main(int argc, char* argv[]) {
     pmdl_update_context(monkey_ctx, PMDL_INVALIDATE_ALL);
     
     // Load monkey
-    const pspl_runtime_psplc_t* monkey_obj = pspl_runtime_get_psplc_from_key(package, "MonkeyMaterial", 1);
+    const pspl_runtime_psplc_t* monkey_obj = pspl_runtime_get_psplc_from_key(package, "Monkey", 1);
     monkey_ctx->default_shader = monkey_obj;
     monkey_model = pmdl_lookup(monkey_obj, "monkey");
     

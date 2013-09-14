@@ -81,6 +81,7 @@ elseif(PSPL_CROSS_WII)
   endmacro(pspl_target_link_libraries)
 
 else()
+  enable_testing()
   macro(pspl_add_library name)
     add_library(${name} ${ARGN})
   endmacro(pspl_add_library)
