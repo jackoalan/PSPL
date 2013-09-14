@@ -66,6 +66,7 @@ In practice, this looks like the following:
 ```sh
 >$ git clone https://github.com/jackoalan/PSPL.git
 >$ cd PSPL
+>$ ./bootstrap.sh
 >$ mkdir build
 >$ cd build
 >$ cmake ..
