@@ -26,6 +26,8 @@
 
 #define DEFAULT_FIFO_SIZE (256 * 1024)
 
+#define USING_AA 1
+
 
 static pmdl_draw_context_t* monkey_ctx;
 static const pmdl_t* monkey_model = NULL;
@@ -33,8 +35,8 @@ static pmdl_action_ctx* rotate_action_ctx;
 static pmdl_action_ctx* haha_action_ctx;
 static pmdl_animation_ctx* anim_ctx;
 
-/* GX external framebuffer */
-static void* xfb = NULL;
+/* GX external framebuffer (double buffered) */
+static void* xfb[2];
 
 /* Reset button pressed */
 static uint8_t reset_pressed = 0;
@@ -45,15 +47,12 @@ static uint8_t ready_to_render = 0;
 /* Frame Count */
 u32 cur_frame = 0;
 
-/* Texcoord scale matrix */
-/*
-static pspl_matrix34_t TC_SCALE = {
-    0.5, 0.0, 0.0, 0.5,
-    0.0, 0.5, 0.0, 0.5,
-    0.0, 0.0, 1.0, 0.0
-};
- */
+u32 perf0, perf1;
+static void perffunc(u16 token) {
+    GX_ReadGPMetric(&perf0, &perf1);
+}
 
+static int fbi = 0;
 static void renderfunc() {
     
     // Current time
@@ -72,12 +71,6 @@ static void renderfunc() {
     // Draw monkey
     pmdl_draw_rigged(monkey_ctx, monkey_model, NULL);
     
-    // Swap buffers
-    GX_DrawDone();
-    GX_CopyDisp(xfb, GX_TRUE);
-    
-    //printf("Console active\n");
-    
 }
 
 static int enumerate_psplc_hook(pspl_runtime_psplc_t* psplc_object) {
@@ -89,11 +82,6 @@ static void reset_press_cb() {
     reset_pressed = 1;
 }
 
-static void post_retrace_cb(uint32_t rcnt) {
-    cur_frame = rcnt;
-    ready_to_render = 1;
-}
-
 #define PSPL_HASHING_BUILTIN 1
 #include <PSPL/PSPLHash.h>
 int main(int argc, char* argv[]) {
@@ -101,12 +89,19 @@ int main(int argc, char* argv[]) {
     // Setup video
     VIDEO_Init();
     GXRModeObj* pref_vid_mode = VIDEO_GetPreferredMode(NULL);
+#if USING_AA
+    pref_vid_mode = &TVNtsc480ProgAa;
+    u32 half_height = pref_vid_mode->xfbHeight / 2;
+    u32 bottom_offset = VIDEO_PadFramebufferWidth(pref_vid_mode->fbWidth) * (pref_vid_mode->efbHeight-3) * VI_DISPLAY_PIX_SZ;
+#endif
     VIDEO_Configure(pref_vid_mode);
-    xfb = MEM_K0_TO_K1(SYS_AllocateFramebuffer(pref_vid_mode));
-    VIDEO_SetNextFramebuffer(xfb);
+    xfb[0] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(pref_vid_mode));
+    xfb[1] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(pref_vid_mode));
+    fbi = 0;
+    VIDEO_SetNextFramebuffer(xfb[0]);
 
     // Console
-    console_init(xfb,20,20,pref_vid_mode->fbWidth,pref_vid_mode->xfbHeight,pref_vid_mode->fbWidth*VI_DISPLAY_PIX_SZ);
+    console_init(xfb[0],20,20,pref_vid_mode->fbWidth,pref_vid_mode->xfbHeight,pref_vid_mode->fbWidth*VI_DISPLAY_PIX_SZ);
     
     // Make display visible
     VIDEO_SetBlack(FALSE);
@@ -136,9 +131,11 @@ int main(int argc, char* argv[]) {
 	GX_SetCopyFilter(pref_vid_mode->aa,pref_vid_mode->sample_pattern,GX_TRUE,pref_vid_mode->vfilter);
 	GX_SetFieldMode(pref_vid_mode->field_rendering,((pref_vid_mode->viHeight==2*pref_vid_mode->xfbHeight)?GX_ENABLE:GX_DISABLE));
     
-	if (pref_vid_mode->aa)
+	if (pref_vid_mode->aa) {
 		GX_SetPixelFmt(GX_PF_RGB565_Z16, GX_ZC_LINEAR);
-	else
+        GX_SetDispCopyYScale(1);
+        GX_SetDither(GX_ENABLE);
+	} else
 		GX_SetPixelFmt(GX_PF_RGB8_Z24, GX_ZC_LINEAR);
     
 	GX_SetDispCopyGamma(GX_GM_1_0);
@@ -204,17 +201,45 @@ int main(int argc, char* argv[]) {
     
     printf("Animation Context Setup\n");
     
-    // Start rendering
-    VIDEO_SetPostRetraceCallback(post_retrace_cb);
-    
-    
     // Loop until reset button pressed
     SYS_SetResetCallback(reset_press_cb);
     while (!reset_pressed) {
-        if (ready_to_render) {
-            ready_to_render = 0;
-            renderfunc();
-        }
+        
+#if USING_AA
+        GX_SetViewport(0, 0, pref_vid_mode->fbWidth, pref_vid_mode->xfbHeight, 0, 1);
+        GX_SetScissor(0, 0, pref_vid_mode->fbWidth, half_height);
+        GX_SetScissorBoxOffset(0, 0);
+
+#endif
+        
+        // Render top
+        renderfunc();
+        
+        // Copy to XFB
+        GX_CopyDisp(xfb[fbi], GX_TRUE);
+        
+#if USING_AA
+        GX_SetViewport(0, 1, pref_vid_mode->fbWidth, pref_vid_mode->xfbHeight, 0, 1);
+        GX_SetScissor(0, half_height, pref_vid_mode->fbWidth, half_height);
+        GX_SetScissorBoxOffset(0, half_height);
+        
+        // Render bottom
+        renderfunc();
+        
+        // Copy to XFB
+        GX_CopyDisp(xfb[fbi] + bottom_offset, GX_TRUE);
+#endif
+        
+
+        GX_DrawDone();
+        
+        // Swap buffers
+        VIDEO_SetNextFramebuffer(xfb[fbi]);
+        fbi ^= 1;
+        VIDEO_Flush();
+        
+        ++cur_frame;
+        VIDEO_WaitVSync();
     }
     
     return 0;
