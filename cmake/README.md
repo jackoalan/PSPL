@@ -74,6 +74,11 @@ In practice, this looks like the following:
 ># make install
 ```
 
+Once built, the *test application* may be ran by simply calling
+```sh
+>$ make test
+```
+
 
 ### Cross Compiling To Other Targets
 
