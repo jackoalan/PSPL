@@ -36,10 +36,15 @@ endif()
 # Add Test Assets
 get_filename_component(ta_path test-assets ABSOLUTE)
 if(EXISTS ${ta_path})
-  add_subdirectory(test-assets)
-  add_test(NAME monkey-test 
-           WORKING_DIRECTORY ${PSPL_BINARY_DIR}/Test/test-assets
-           COMMAND pspl-test)
+  add_pspl_package(monkey test-assets/monkey.pspl)
+  if (PSPL_CROSS_WII)
+    target_link_wii_binary_files(pspl-test ${PSPL_BINARY_DIR}/Test/monkey.psplp)
+    add_wii_test(monkey-test pspl-test)
+  else()
+    add_test(NAME monkey-test
+             WORKING_DIRECTORY ${PSPL_BINARY_DIR}/Test/test-assets
+             COMMAND pspl-test)
+  endif()
 else()
   message(WARNING "Missing `test-assets` directory; test assets WILL NOT be built")
   message(WARNING "Run `./bootstrap.sh` in PSPL source root to obtain assets with git")

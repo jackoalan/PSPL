@@ -18,15 +18,16 @@
 #include <ogcsys.h>
 #include <ogc/gx.h>
 #include <ogc/system.h>
-#define __wii__ 1
-#include <fat.h>
-#include <sdcard/wiisd_io.h>
 
 #define USEC_PER_SEC 1000000
 
 #define DEFAULT_FIFO_SIZE (256 * 1024)
 
 #define USING_AA 1
+
+/* Linked-in PSPLP package */
+extern uint8_t monkey_psplp;
+extern size_t monkey_psplp_size;
 
 
 static pmdl_draw_context_t* monkey_ctx;
@@ -140,19 +141,14 @@ int main(int argc, char* argv[]) {
     
 	GX_SetDispCopyGamma(GX_GM_1_0);
     
-    
-    // Setup SD Card
-    fatInitDefault();
-    fatMountSimple("sd", &__io_wiisd);
-    
-    printf("SD mounted\n");
 
     
     // Setup PSPL
     const pspl_platform_t* plat;
     pspl_runtime_init(&plat);
     const pspl_runtime_package_t* package = NULL;
-    pspl_runtime_load_package_file("sd:/monkey.psplp", &package);
+    printf("PACKAGE OFF: %p  SIZE: %u\n", (void*)&monkey_psplp, monkey_psplp_size);
+    pspl_runtime_load_package_membuf((void*)&monkey_psplp, monkey_psplp_size, &package);
     pspl_runtime_enumerate_psplcs(package, enumerate_psplc_hook);
     
     printf("PSPL package read\n");

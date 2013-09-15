@@ -65,6 +65,7 @@ elseif(WIN32)
   endmacro(pspl_target_link_libraries)
 
 elseif(PSPL_CROSS_WII)
+  enable_testing()
   find_package(WiiStep REQUIRED)
   set(PSPL_TOOLCHAIN_TARGET_SYSTEM WII CACHE STRING
       "Select which platform to (cross) compile PSPL Toolchain for [NATIVE, WII, WINDOWS] (default WII)")

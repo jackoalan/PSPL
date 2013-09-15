@@ -53,7 +53,7 @@ macro(add_pspl_package target_name)
     add_custom_command(OUTPUT ${target_name}.psplp COMMAND ${PSPL_BINARY_LOC} ARGS 
                        -o ${target_name}.psplp -S ${CMAKE_BINARY_DIR} ${PSPL_TARGET_PLATFORMS} ${objects}
                        DEPENDS ${objects})
-    add_custom_target(${target_name} ALL DEPENDS ${target_name}.psplp)
+    add_custom_target(${target_name} ALL DEPENDS ${target_name}.psplp ${objects})
     
   endif()
 endmacro(add_pspl_package)

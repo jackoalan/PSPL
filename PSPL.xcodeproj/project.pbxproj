@@ -133,7 +133,6 @@
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
 		E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PMDLRuntimeProcessing.c; sourceTree = "<group>"; };
 		E462EEA81778FC0200211193 /* gl_runtime_ios.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = gl_runtime_ios.m; sourceTree = "<group>"; };
-		E473376617E4E235005A6C3F /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E473376717E4E235005A6C3F /* monkey.blend */ = {isa = PBXFileReference; lastKnownFileType = file; path = monkey.blend; sourceTree = "<group>"; };
 		E473376817E4E235005A6C3F /* monkey.pspl */ = {isa = PBXFileReference; lastKnownFileType = text; path = monkey.pspl; sourceTree = "<group>"; };
 		E473376917E4E235005A6C3F /* MonkeyMap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = MonkeyMap.png; sourceTree = "<group>"; };
@@ -423,7 +422,6 @@
 		E473376417E4E235005A6C3F /* test-assets */ = {
 			isa = PBXGroup;
 			children = (
-				E473376617E4E235005A6C3F /* CMakeLists.txt */,
 				E473376717E4E235005A6C3F /* monkey.blend */,
 				E473376817E4E235005A6C3F /* monkey.pspl */,
 				E473376917E4E235005A6C3F /* MonkeyMap.png */,
