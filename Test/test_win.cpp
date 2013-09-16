@@ -20,7 +20,7 @@ static double last_render_time = 0;
 static double fps = 0;
 #define USEC_PER_SEC 1000000
 
-static pmdl_draw_context_t monkey_ctx;
+static pmdl_draw_ctx monkey_ctx;
 static const pspl_runtime_arc_file_t* monkey_model;
 
 

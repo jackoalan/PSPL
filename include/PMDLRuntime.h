@@ -93,19 +93,19 @@ typedef struct {
     /* Projection matrix */
     pspl_matrix44_t cached_projection_mtx;
     
-} pmdl_draw_context_t;
+} pmdl_draw_ctx;
 
 /* Routine to allocate and return a new draw context */
-pmdl_draw_context_t* pmdl_new_draw_context();
+pmdl_draw_ctx* pmdl_new_draw_context();
 
 /* Routine to free draw context */
-void pmdl_free_draw_context(pmdl_draw_context_t* context);
+void pmdl_free_draw_context(pmdl_draw_ctx* context);
     
 /* Routine to allocate and return a (NULL-terminated) array of new draw contexts */
-pmdl_draw_context_t* pmdl_new_draw_context_array(unsigned count);
+pmdl_draw_ctx* pmdl_new_draw_context_array(unsigned count);
     
 /* Routine to free said (NULL-terminated) array */
-void pmdl_free_draw_context_array(pmdl_draw_context_t* array);
+void pmdl_free_draw_context_array(pmdl_draw_ctx* array);
 
 /* Invalidate draw context transformation cache (if values updated) */
 enum pmdl_invalidate_bits {
@@ -115,7 +115,7 @@ enum pmdl_invalidate_bits {
     PMDL_INVALIDATE_PROJECTION  = (1<<2),
     PMDL_INVALIDATE_ALL         = 0xff
 };
-void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv_bits);
+void pmdl_update_context(pmdl_draw_ctx* ctx, enum pmdl_invalidate_bits inv_bits);
 
 /* Lookup routine to get PMDL file reference from PSPLC */
 const pmdl_t* pmdl_lookup(const pspl_runtime_psplc_t* pspl_object, const char* pmdl_name);
@@ -124,10 +124,10 @@ const pmdl_t* pmdl_lookup(const pspl_runtime_psplc_t* pspl_object, const char* p
 const pmdl_action* pmdl_action_lookup(const pmdl_t* pmdl, const char* action_name);
 
 /* Master draw routine */
-void pmdl_draw(pmdl_draw_context_t* ctx, const pmdl_t* pmdl_file);
+void pmdl_draw(pmdl_draw_ctx* ctx, const pmdl_t* pmdl_file);
 
 /* Rigged master draw routine */
-void pmdl_draw_rigged(const pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
+void pmdl_draw_rigged(const pmdl_draw_ctx* ctx, const pmdl_t* pmdl,
                       const pmdl_animation_ctx* anim_ctx);
 
 

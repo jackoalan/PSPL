@@ -42,7 +42,6 @@
 		E462EEA91778FC5B00211193 /* gl_runtime_ios.m in Sources */ = {isa = PBXBuildFile; fileRef = E462EEA81778FC0200211193 /* gl_runtime_ios.m */; };
 		E464158117AAF3EF00CC1CC2 /* RuntimeThreads.c in Sources */ = {isa = PBXBuildFile; fileRef = E4C527141778B71900D1D822 /* RuntimeThreads.c */; };
 		E4669F4417B1B1F3005B7BB5 /* test_wii.c in Sources */ = {isa = PBXBuildFile; fileRef = E45034BB175812050079B62D /* test_wii.c */; };
-		E473376D17E4EC54005A6C3F /* PMDLRuntimeProcessing.c in Sources */ = {isa = PBXBuildFile; fileRef = E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */; };
 		E48FF5601764CF29000231AA /* IRToolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E48FF55F1764CF29000231AA /* IRToolchain.c */; };
 		E4995F2F173E8C55003B06BF /* hash_builtin.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F2E173E8C55003B06BF /* hash_builtin.c */; };
 		E4995F3B1740578E003B06BF /* ReferenceGatherer.c in Sources */ = {isa = PBXBuildFile; fileRef = E4995F3A1740578E003B06BF /* ReferenceGatherer.c */; };
@@ -60,6 +59,7 @@
 		E4CD266B179F376300172F31 /* PMDLRuntimeLinAlgebraRef.c in Sources */ = {isa = PBXBuildFile; fileRef = E4CD266A179F374400172F31 /* PMDLRuntimeLinAlgebraRef.c */; };
 		E4CD266E179F39B800172F31 /* PMDLRuntimeLinAlgebraSSE.s in Sources */ = {isa = PBXBuildFile; fileRef = E4CD266D179F396E00172F31 /* PMDLRuntimeLinAlgebraSSE.s */; };
 		E4CE71F41785043D009F5932 /* RuntimeCore.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4916C175105FF006FCA59 /* RuntimeCore.c */; };
+		E4DF09D617E6B622007C1EDA /* PMDLRuntimeProcessing.c in Sources */ = {isa = PBXBuildFile; fileRef = E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */; };
 		E4E4916F17510685006FCA59 /* PSPLCommon.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4916E17510684006FCA59 /* PSPLCommon.c */; };
 		E4E491731751094E006FCA59 /* gl_toolchain.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E491721751094E006FCA59 /* gl_toolchain.c */; };
 		E4E4918517510B4D006FCA59 /* gl_runtime.c in Sources */ = {isa = PBXBuildFile; fileRef = E4E4917417510956006FCA59 /* gl_runtime.c */; };
@@ -1003,9 +1003,9 @@
 				E44577C11781DDAE003EE09C /* PMDLRuntime.c in Sources */,
 				E4461F7E17B31EFD0039B479 /* hash_builtin.c in Sources */,
 				E4A6251B17C3AD6D0021764B /* TMRuntime.c in Sources */,
+				E4DF09D617E6B622007C1EDA /* PMDLRuntimeProcessing.c in Sources */,
 				E4E4918917511863006FCA59 /* PSPLCommon.c in Sources */,
 				E44DBC8A17DFC3F70007E2C4 /* PMDLRuntimeRigging.c in Sources */,
-				E473376D17E4EC54005A6C3F /* PMDLRuntimeProcessing.c in Sources */,
 				E4CD266E179F39B800172F31 /* PMDLRuntimeLinAlgebraSSE.s in Sources */,
 				E4CD266B179F376300172F31 /* PMDLRuntimeLinAlgebraRef.c in Sources */,
 				E4CE71F41785043D009F5932 /* RuntimeCore.c in Sources */,

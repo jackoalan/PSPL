@@ -472,7 +472,7 @@ const pmdl_action* pmdl_action_lookup(const pmdl_t* pmdl, const char* action_nam
 
 #pragma mark Context Init
 
-static void _pmdl_set_default_context(pmdl_draw_context_t* ctx) {
+static void _pmdl_set_default_context(pmdl_draw_ctx* ctx) {
     
     int i;
     memset(ctx->texcoord_mtx, 0, 8*sizeof(pspl_matrix34_t));
@@ -505,23 +505,23 @@ static void _pmdl_set_default_context(pmdl_draw_context_t* ctx) {
 }
 
 /* Routine to allocate and return a new draw context */
-pmdl_draw_context_t* pmdl_new_draw_context() {
+pmdl_draw_ctx* pmdl_new_draw_context() {
     
-    pmdl_draw_context_t* ctx = pspl_allocate_indexing_block(sizeof(pmdl_draw_context_t));
+    pmdl_draw_ctx* ctx = pspl_allocate_indexing_block(sizeof(pmdl_draw_ctx));
     _pmdl_set_default_context(ctx);
     return ctx;
     
 }
 
 /* Routine to free draw context */
-void pmdl_free_draw_context(pmdl_draw_context_t* context) {
+void pmdl_free_draw_context(pmdl_draw_ctx* context) {
     pspl_free_indexing_block(context);
 }
 
 /* Routine to allocate and return a (NULL-terminated) array of new draw contexts */
-pmdl_draw_context_t* pmdl_new_draw_context_array(unsigned count) {
+pmdl_draw_ctx* pmdl_new_draw_context_array(unsigned count) {
     
-    pmdl_draw_context_t* array = pspl_allocate_indexing_block(sizeof(pmdl_draw_context_t) * count);
+    pmdl_draw_ctx* array = pspl_allocate_indexing_block(sizeof(pmdl_draw_ctx) * count);
 
     int i;
     for (i=0 ; i<count ; ++i)
@@ -532,7 +532,7 @@ pmdl_draw_context_t* pmdl_new_draw_context_array(unsigned count) {
 }
 
 /* Routine to free said (NULL-terminated) array */
-void pmdl_free_draw_context_array(pmdl_draw_context_t* array) {
+void pmdl_free_draw_context_array(pmdl_draw_ctx* array) {
     pspl_free_indexing_block(array);
 }
 
@@ -540,7 +540,7 @@ void pmdl_free_draw_context_array(pmdl_draw_context_t* array) {
 #pragma mark Context Representation and Frustum Testing
 
 /* Invalidate context transformation cache (if values updated) */
-void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv_bits) {
+void pmdl_update_context(pmdl_draw_ctx* ctx, enum pmdl_invalidate_bits inv_bits) {
     
     if (!inv_bits)
         return;
@@ -571,13 +571,13 @@ void pmdl_update_context(pmdl_draw_context_t* ctx, enum pmdl_invalidate_bits inv
     }
     
 #   if PMDL_GX
-        DCStoreRange((void*)((((uintptr_t)ctx)>>5)<<5), ROUND_UP_32(sizeof(pmdl_draw_context_t)));
+        DCStoreRange((void*)((((uintptr_t)ctx)>>5)<<5), ROUND_UP_32(sizeof(pmdl_draw_ctx)));
 #   endif
     
 }
 
 /* Perform AABB frustum test */
-static int pmdl_aabb_frustum_test(const pmdl_draw_context_t* ctx, float aabb[2][3]) {
+static int pmdl_aabb_frustum_test(const pmdl_draw_ctx* ctx, float aabb[2][3]) {
     
     // Setup straddle-test state
     enum {
@@ -724,11 +724,11 @@ static inline int resolve_prim(uint32_t prim) {
 
 /* Set NULL shader (some sort of fixed-function preset) */
 #if PSPL_RUNTIME_PLATFORM_GL2
-static inline void null_shader(const pmdl_draw_context_t* ctx) {
+static inline void null_shader(const pmdl_draw_ctx* ctx) {
     glUseProgram(0);
 }
 #elif PSPL_RUNTIME_PLATFORM_GX
-static inline void null_shader(pmdl_draw_context_t* ctx) {
+static inline void null_shader(pmdl_draw_ctx* ctx) {
     
 }
 #elif PSPL_RUNTIME_PLATFORM_D3D11
@@ -738,7 +738,7 @@ static inline void null_shader() {
 #endif
 
 /* This routine will draw PAR0 PMDLs */
-static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pmdl_t* pmdl) {
+static void pmdl_draw_par0(pmdl_draw_ctx* ctx, const pmdl_t* pmdl) {
     pmdl_header* header = pmdl->file_ptr->file_data;
 
     int i,j,k;
@@ -956,7 +956,7 @@ static void pmdl_draw_par0(pmdl_draw_context_t* ctx, const pmdl_t* pmdl) {
 }
 
 /* This routine will draw PAR1 PMDLs */
-void pmdl_draw_rigged(const pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
+void pmdl_draw_rigged(const pmdl_draw_ctx* ctx, const pmdl_t* pmdl,
                       const pmdl_animation_ctx* anim_ctx) {
     pmdl_header* header = pmdl->file_ptr->file_data;
     if (header->sub_type_num != '1')
@@ -1182,9 +1182,13 @@ void pmdl_draw_rigged(const pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
                     par1_cur += 8*vert_head->bone_count + 8;
                     vert_cur += 3;
                     norm_cur += 3;
+                    //printf("VERT %u CUR: %p\n", j, vert_cur);
+                    //sleep(1);
                     
                 }
             
+                DCStoreRange(vertbuf_head->position_stage, vert_count*12);
+                DCStoreRange(vertbuf_head->normal_stage, vert_count*12);
             //printf("POST RIG\n");
             
                 GX_SetArray(GX_VA_POS, vertbuf_head->position_stage, 12);
@@ -1305,12 +1309,12 @@ void pmdl_draw_rigged(const pmdl_draw_context_t* ctx, const pmdl_t* pmdl,
 }
 
 /* This routine will draw PAR2 PMDLs */
-static void pmdl_draw_par2(pmdl_draw_context_t* ctx, const pmdl_t* pmdl) {
+static void pmdl_draw_par2(pmdl_draw_ctx* ctx, const pmdl_t* pmdl) {
     
 }
 
 /* This is the main draw dispatch routine */
-void pmdl_draw(pmdl_draw_context_t* ctx, const pmdl_t* pmdl) {
+void pmdl_draw(pmdl_draw_ctx* ctx, const pmdl_t* pmdl) {
     pmdl_header* header = pmdl->file_ptr->file_data;
 
     // Master Frustum test

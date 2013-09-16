@@ -25,12 +25,76 @@
 
 #define USING_AA 1
 
+extern int clock_gettime(struct timespec *tp);
+extern void timespec_subtract(const struct timespec *tp_start,const struct timespec *tp_end,struct timespec *result);
+void timespec_add(const struct timespec *a,const struct timespec *b,struct timespec *ab) {
+    ab->tv_sec = a->tv_sec + b->tv_sec;
+    ab->tv_nsec = a->tv_nsec + b->tv_nsec;
+    if (ab->tv_nsec > TB_NSPERSEC) {
+        ab->tv_sec += 1;
+        ab->tv_nsec -= TB_NSPERSEC;
+    }
+}
+
+struct time_profile {
+    int running;
+    int initialised;
+    struct timespec time_session;
+    struct timespec time_active;
+    struct timespec time_idle;
+} profile;
+
+static void init_time_profile(struct time_profile* profile) {
+    profile->running = 0;
+    profile->initialised = 0;
+    profile->time_active.tv_sec = 0;
+    profile->time_active.tv_nsec = 0;
+    profile->time_idle.tv_sec = 0;
+    profile->time_idle.tv_nsec = 0;
+}
+
+static void start_time_profile(struct time_profile* profile) {
+    if (!profile->initialised) {
+        profile->initialised = 1;
+        clock_gettime(&profile->time_session);
+    }
+    if (profile->running)
+        return;
+    profile->running = 1;
+    struct timeval cur_time;
+    clock_gettime(&cur_time);
+    struct timeval cur_diff;
+    timespec_subtract(&profile->time_session, &cur_time, &cur_diff);
+    timespec_add(&profile->time_idle, &cur_diff, &profile->time_idle);
+}
+
+static void stop_time_profile(struct time_profile* profile) {
+    if (!profile->initialised) {
+        profile->initialised = 1;
+        clock_gettime(&profile->time_session);
+    }
+    if (!profile->running)
+        return;
+    profile->running = 0;
+    struct timeval cur_time;
+    clock_gettime(&cur_time);
+    struct timeval cur_diff;
+    timespec_subtract(&profile->time_session, &cur_time, &cur_diff);
+    timespec_add(&profile->time_active, &cur_diff, &profile->time_active);
+}
+
+static void report_time_profile(struct time_profile* profile) {
+    double active = profile->time_active.tv_sec / (profile->time_active.tv_nsec / (double)TB_NSPERSEC);
+    double idle = profile->time_idle.tv_sec / (profile->time_idle.tv_nsec / (double)TB_NSPERSEC);
+    printf("Active time: %.2f  Idle time: %.2f  CPU%c %02u\n", active, idle, '%', (active / idle)*100);
+}
+
 /* Linked-in PSPLP package */
 extern uint8_t monkey_psplp;
 extern size_t monkey_psplp_size;
 
 
-static pmdl_draw_context_t* monkey_ctx;
+static pmdl_draw_ctx* monkey_ctx;
 static const pmdl_t* monkey_model = NULL;
 static pmdl_action_ctx* rotate_action_ctx;
 static pmdl_action_ctx* haha_action_ctx;
@@ -57,20 +121,17 @@ static int fbi = 0;
 static void renderfunc() {
     
     // Current time
-    float time = (float)cur_frame / 60.0f;
+    //float time = (float)cur_frame / 60.0f;
     
     // Rotate camera around monkey
-    monkey_ctx->camera_view.pos.f[0] = sinf(time) * 3;
-    monkey_ctx->camera_view.pos.f[1] = cosf(time) * 3;
-    pmdl_update_context(monkey_ctx, PMDL_INVALIDATE_VIEW);
+    //monkey_ctx->camera_view.pos.f[0] = sinf(time) * 3;
+    //monkey_ctx->camera_view.pos.f[1] = cosf(time) * 3;
+    //pmdl_update_context(monkey_ctx, PMDL_INVALIDATE_VIEW);
     
-    // Update action contexts
-    pmdl_action_advance(rotate_action_ctx, 0.1/60.0);
-    pmdl_action_advance(haha_action_ctx, 1/60.0);
-    pmdl_animation_evaluate(anim_ctx);
+
     
     // Draw monkey
-    pmdl_draw_rigged(monkey_ctx, monkey_model, NULL);
+    pmdl_draw_rigged(monkey_ctx, monkey_model, anim_ctx);
     
 }
 
@@ -156,10 +217,10 @@ int main(int argc, char* argv[]) {
     // Setup monkey rendering context
     monkey_ctx = pmdl_new_draw_context();
     
-    monkey_ctx->texcoord_mtx[1].m[0][0] = 0.5;
-    monkey_ctx->texcoord_mtx[1].m[1][1] = -0.5;
-    monkey_ctx->texcoord_mtx[1].m[0][3] = 0.5;
-    monkey_ctx->texcoord_mtx[1].m[1][3] = 0.5;
+    monkey_ctx->texcoord_mtx[1].m[0][0] = 1;
+    monkey_ctx->texcoord_mtx[1].m[1][1] = -1;
+    monkey_ctx->texcoord_mtx[1].m[0][3] = 1;
+    monkey_ctx->texcoord_mtx[1].m[1][3] = 1;
 
     
     monkey_ctx->camera_view.pos.f[0] = 0;
@@ -197,9 +258,21 @@ int main(int argc, char* argv[]) {
     
     printf("Animation Context Setup\n");
     
+    init_time_profile(&profile);
+    
     // Loop until reset button pressed
     SYS_SetResetCallback(reset_press_cb);
     while (!reset_pressed) {
+        
+        start_time_profile(&profile);
+        
+        // Update action contexts
+        pmdl_action_advance(rotate_action_ctx, 0.1/60.0);
+        pmdl_action_advance(haha_action_ctx, 1/60.0);
+        pmdl_animation_evaluate(anim_ctx);
+        
+        stop_time_profile(&profile);
+        //report_time_profile(&profile);
         
 #if USING_AA
         GX_SetViewport(0, 0, pref_vid_mode->fbWidth, pref_vid_mode->xfbHeight, 0, 1);
