@@ -76,6 +76,8 @@ static const pspl_vector4_t HOMOGENOUS_BOTTOM_VECTOR = {.f[0]=0, .f[1]=0, .f[2]=
 #elif PSPL_RUNTIME_PLATFORM_GX
 #   include <ogc/gx.h>
 #   include <ogc/cache.h>
+#   define USE_LC 1
+#   define LC_VERT_COUNT 600
 
 #endif
 
@@ -194,6 +196,13 @@ void pmdl_master_init() {
     int i;
     for (i=0 ; i<PMDL_MAX_BONES ; ++i)
         pmdl_matrix44_identity(&IDENTITY_MATS[i]);
+    
+    // For Wii, enable Locked Cache usage if requested for build
+    // This will keep transient, rapidly updated values within the CPU's L1 data cache
+#   if PSPL_RUNTIME_PLATFORM_GX && USE_LC
+        LCEnable();
+#   endif
+
 }
 
 
@@ -313,10 +322,6 @@ static void pmdl_destroy_collections(void* file_data) {
         
 #       if PSPL_RUNTIME_PLATFORM_GL2
             struct gl_bufs_t* gl_bufs = index_buf;
-            GLVAO(glBindVertexArray)(gl_bufs->vao);
-        
-            glGetIntegerv(GL_ARRAY_BUFFER_BINDING, (GLint*)&gl_bufs->vert_buf);
-            glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, (GLint*)&gl_bufs->elem_buf);
             glDeleteBuffers(2, (GLuint*)&gl_bufs->vert_buf);
             GLVAO(glDeleteVertexArrays)(1, &gl_bufs->vao);
         
@@ -1140,12 +1145,51 @@ void pmdl_draw_rigged(const pmdl_draw_ctx* ctx, const pmdl_t* pmdl,
                 // Compute rigged vertex mesh
                 pmdl_gx_par1_vertbuf_head* vertbuf_head = par1_cur;
                 par1_cur += sizeof(pmdl_gx_par1_vertbuf_head);
+
                 
-                // Position and normal stage
-                f32* vert_cur = vert_buf;
-                f32* norm_cur = (vert_buf + (vert_count*12));
+                // Allocate transient variables in locked cache if requested
+#               if USE_LC
+                    // Temporary vectors
+                    guVector* transformed_vert_a = LCGetBase();
+                    guVector* transformed_vert_b = (LCGetBase() + sizeof(guVector));
+                    guVector* transformed_norm_a = (LCGetBase() + sizeof(guVector) * 2);
+                    guVector* transformed_norm_b = (LCGetBase() + sizeof(guVector) * 3);
+                
+                    // Position and normal source verts (default pose)
+                    //f32* vert_cur = LCGetBase() + sizeof(guVector) * 4;
+                    //f32* norm_cur = LCGetBase() + sizeof(guVector) * 4 + LC_VERT_COUNT * 12;
+                    f32* vert_cur = vert_buf;
+                    f32* norm_cur = (vert_buf + (vert_count*12));
+                
+#               else
+                    // Temporary vectors
+                    guVector v1, v2, v3, v4;
+                    guVector* transformed_vert_a = &v1;
+                    guVector* transformed_vert_b = &v2;
+                    guVector* transformed_norm_a = &v3;
+                    guVector* transformed_norm_b = &v4;
+                
+                    // Position and normal source verts (default pose)
+                    f32* vert_cur = vert_buf;
+                    f32* norm_cur = (vert_buf + (vert_count*12));
+                
+#               endif
+                
             //printf("VERT COUNT %u\n", vert_count);
                 for (j=0 ; j<vert_count ; ++j) {
+                    
+#                   if USE_LC
+                    /*
+                        // Load a batch of source verts into locked cache
+                        if (!(j % LC_VERT_COUNT)) {
+                            vert_cur = ((void*)(LCGetBase() + (sizeof(guVector) * 4)));
+                            norm_cur = ((void*)(((void*)vert_cur) + (LC_VERT_COUNT * 12)));
+                            LCLoadData(vert_cur, vert_buf + (j * 12), LC_VERT_COUNT * 12);
+                            LCLoadData(norm_cur, (vert_buf + (vert_count*12)) + j * 12, LC_VERT_COUNT * 12);
+                            LCQueueWait(0);
+                        }
+                     */
+#                   endif
                     
                     f32* target_vert = &vertbuf_head->position_stage[3*j];
                     f32* target_norm = &vertbuf_head->normal_stage[3*j];
@@ -1162,17 +1206,16 @@ void pmdl_draw_rigged(const pmdl_draw_ctx* ctx, const pmdl_t* pmdl,
                         struct pmdl_gx_par1_vert_head_bone* vhb = &vert_head->bone_arr[k];
                         const pmdl_bone* bone = &pmdl->rigging_ptr->bone_array[vhb->bone_idx];
                         
-                        guVector transformed_vert, transformed_norm;
-                        guVecSub((guVector*)vert_cur, (guVector*)bone->base_vector->f, &transformed_vert);
+                        guVecSub((guVector*)vert_cur, (guVector*)bone->base_vector->f, transformed_vert_a);
                         
-                        guVecMultiply(anim_ctx->fk_instance_array[vhb->bone_idx].bone_matrix->m, &transformed_vert, &transformed_vert);
-                        guVecMultiply(anim_ctx->fk_instance_array[vhb->bone_idx].bone_matrix->m, (guVector*)norm_cur, &transformed_norm);
+                        guVecMultiply(anim_ctx->fk_instance_array[vhb->bone_idx].bone_matrix->m, transformed_vert_a, transformed_vert_b);
+                        guVecMultiply(anim_ctx->fk_instance_array[vhb->bone_idx].bone_matrix->m, (guVector*)norm_cur, transformed_norm_b);
                         
-                        guVecScale(&transformed_vert, &transformed_vert, vhb->bone_weight);
-                        guVecScale(&transformed_norm, &transformed_norm, vhb->bone_weight);
+                        guVecScale(transformed_vert_b, transformed_vert_a, vhb->bone_weight);
+                        guVecScale(transformed_norm_b, transformed_norm_a, vhb->bone_weight);
                         
-                        guVecAdd((guVector*)target_vert, &transformed_vert, (guVector*)target_vert);
-                        guVecAdd((guVector*)target_norm, &transformed_norm, (guVector*)target_norm);
+                        guVecAdd((guVector*)target_vert, transformed_vert_a, (guVector*)target_vert);
+                        guVecAdd((guVector*)target_norm, transformed_norm_a, (guVector*)target_norm);
 
                     }
                     
@@ -1187,8 +1230,8 @@ void pmdl_draw_rigged(const pmdl_draw_ctx* ctx, const pmdl_t* pmdl,
                     
                 }
             
-                DCStoreRange(vertbuf_head->position_stage, vert_count*12);
-                DCStoreRange(vertbuf_head->normal_stage, vert_count*12);
+                DCStoreRangeNoSync(vertbuf_head->position_stage, ROUND_UP_32(vert_count*12));
+                DCStoreRange(vertbuf_head->normal_stage, ROUND_UP_32(vert_count*12));
             //printf("POST RIG\n");
             
                 GX_SetArray(GX_VA_POS, vertbuf_head->position_stage, 12);
