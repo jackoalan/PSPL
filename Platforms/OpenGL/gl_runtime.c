@@ -46,7 +46,7 @@ static int init(const pspl_platform_t* platform) {
     return 0;
 }
 
-static const char* HEAD = "";
+static const char* HEAD = "#version 120";
  
 static const GLint TEX_IDX_ARRAY[16] = {
     0,1,2,3,4,5,6,7,

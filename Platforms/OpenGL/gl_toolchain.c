@@ -78,10 +78,10 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
     
     
     // Position attribute
-    pspl_buffer_addstr(vert, "attribute vec4 pos;\n");
+    pspl_buffer_addstr(vert, "attribute vec3 pos;\n");
     
     // Normal attribute
-    pspl_buffer_addstr(vert, "attribute vec4 norm;\n");
+    pspl_buffer_addstr(vert, "attribute vec3 norm;\n");
     
     // Texcoord attributes
     for (j=0 ; j<ir_state->total_uv_attr_count ; ++j) {
@@ -123,26 +123,26 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
     // Position and normal (if no bones)
     if (!ir_state->vertex.bone_count) {
         pspl_buffer_addstr(vert, "    // Non-rigged position and normal\n");
-        pspl_buffer_addstr(vert, "    gl_Position = pos * modelview_mat * projection_mat;\n");
-        pspl_buffer_addstr(vert, "    normal = norm * modelview_invtrans_mat;\n");
+        pspl_buffer_addstr(vert, "    gl_Position = vec4(pos.xyz, 1.0) * modelview_mat * projection_mat;\n");
+        pspl_buffer_addstr(vert, "    normal = norm * mat3(modelview_invtrans_mat);\n");
     } else { // Bones
         pspl_buffer_addstr(vert, "    // Rigged position and normal\n");
         pspl_buffer_addstr(vert, "    gl_Position = vec4(0.0,0.0,0.0,0.0);\n");
         pspl_buffer_addstr(vert, "    normal = vec4(0.0,0.0,0.0,0.0);\n\n");
         pspl_buffer_addstr(vert, "    // First bone weight is the identity blend value (weight remainder)\n");
-        pspl_buffer_addstr(vert, "    gl_Position += pos * bone_weights0[0];\n");
-        pspl_buffer_addstr(vert, "    normal += norm * bone_weights0[0];\n    \n");
+        pspl_buffer_addstr(vert, "    gl_Position += vec4(pos.xyz, 1.0) * bone_weights0[0];\n");
+        pspl_buffer_addstr(vert, "    normal += vec4(norm * bone_weights0[0], 0.0);\n    \n");
         unsigned bone_idx = 0;
         for (j=1 ; j<=ir_state->vertex.bone_count ; ++j) {
             char bone[256];
-            snprintf(bone, 256, "    gl_Position += ((pos - bone_base[%u]) * bone_mat[%u]) * bone_weights%u[%u];\n", j-1, j-1, bone_idx, j%4);
+            snprintf(bone, 256, "    gl_Position += ((vec4(pos.xyz, 1.0) - bone_base[%u]) * bone_mat[%u]) * bone_weights%u[%u];\n", j-1, j-1, bone_idx, j%4);
             pspl_buffer_addstr(vert, bone);
-            snprintf(bone, 256, "    normal += (norm * bone_mat[%u]) * bone_weights%u[%u];\n", j-1, bone_idx, j%4);
+            snprintf(bone, 256, "    normal += vec4(((norm * mat3(bone_mat[%u])) * bone_weights%u[%u]).xyz, 0.0);\n", j-1, bone_idx, j%4);
             pspl_buffer_addstr(vert, bone);
             if (j && !(j%4)) {++bone_idx;}
         }
         pspl_buffer_addstr(vert, "    gl_Position = gl_Position * modelview_mat * projection_mat;\n");
-        pspl_buffer_addstr(vert, "    normal = normalize(normal) * modelview_invtrans_mat;\n");
+        pspl_buffer_addstr(vert, "    normal = vec4(normalize(normal).xyz * mat3(modelview_invtrans_mat), 1.0);\n");
     }
     
     pspl_buffer_addstr(vert, "\n");
@@ -154,7 +154,7 @@ static void generate_vertex(const pspl_toolchain_context_t* driver_context,
             snprintf(assign, 64, "    tex_coords[%u] = (vec4(uv%u,0,0) * tc_generator_mats[%u]).xy;\n", j,
                      ir_state->vertex.tc_array[j].uv_idx, j);
         else if (ir_state->vertex.tc_array[j].tc_source == TEXCOORD_POS)
-            snprintf(assign, 64, "    tex_coords[%u] = (pos * tc_generator_mats[%u]).xy;\n", j, j);
+            snprintf(assign, 64, "    tex_coords[%u] = (vec4(pos.xyz, 1.0) * tc_generator_mats[%u]).xy;\n", j, j);
         else if (ir_state->vertex.tc_array[j].tc_source == TEXCOORD_NORM)
             snprintf(assign, 64, "    tex_coords[%u] = (normal * tc_generator_mats[%u]).xy;\n", j, j);
         pspl_buffer_addstr(vert, assign);

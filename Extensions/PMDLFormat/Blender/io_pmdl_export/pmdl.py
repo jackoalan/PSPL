@@ -8,7 +8,7 @@ The class is initialised with a MESH or ARMATURE object (ARMATUREs generate `PAR
 The provided MESH or ARMATURE may hierarcically contain other MESH objects, 
 resulting in an appropriately sub-divided PMDL. The MATERIAL name assigned to
 MESH objects is hashed with SHA1 and used to reference a PSPLC implementing 
-the appropriate fragment shader.
+the appropriate shader.
 
 Once the object is assigned, the appropriate draw-generator is initialised
 (with optional indexing parameters set) and loaded into the PMDL instance. 
@@ -22,6 +22,27 @@ from . import pmdl_par1_rigging
 import struct
 import bpy
 import hashlib
+import posixpath
+
+# Lookup PSPL material of MESH object
+def lookup_pspl_material(mesh_obj):
+    cur_mesh = mesh_obj
+
+    while cur_mesh is not None:
+        
+        if cur_mesh.pspl_material:
+            base_name = posixpath.splitext(os.path.basename(bpy.data.filepath))[0]
+            mesh_name = string.replace(mesh_obj.name, "/", "_")
+            mesh_name = string.replace(mesh_name, "\\", "_")
+            material_name = string.replace(cur_mesh.pspl_material, "/", "_")
+            material_name = string.replace(material_name, "\\", "_")
+            shader_name = posixpath.normpath(os.path.dirname(bpy.data.filepath) + "/" + base_name + ".psplblend/" + mesh_name + "/" + material_name + ".pspl")
+            return shader_name
+        
+        cur_mesh = cur_mesh.parent
+
+    return None
+
 
 def add_vec3(a,b):
     return (a[0]+b[0],a[1]+b[1],a[2]+b[2])
@@ -276,8 +297,9 @@ class pmdl:
                     mesh_headers += struct.pack(endian_char + 'f', comp)
                 
                 # Individual mesh shader index
-                if len(mesh_primitives['mesh'].data.materials):
-                    shader_idx = self.get_shader_index(mesh_primitives['mesh'].data.materials[0].name)
+                material_name = lookup_pspl_material(mesh_primitives['mesh'])
+                if material_name is not None:
+                    shader_idx = self.get_shader_index(material_name)
                 else:
                     shader_idx = -1
                 mesh_headers += struct.pack(endian_char + 'i', shader_idx)

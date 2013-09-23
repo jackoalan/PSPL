@@ -101,6 +101,7 @@
 		E4253AF617DCD4650026234E /* coregraphics_dec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = coregraphics_dec.c; sourceTree = "<group>"; };
 		E42D4EE317CBF8CE00F81458 /* PMDLRuntimeRigging.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = PMDLRuntimeRigging.c; sourceTree = "<group>"; };
 		E4360CB717B9C16D0016DCDD /* pspl.1.md */ = {isa = PBXFileReference; lastKnownFileType = text; path = pspl.1.md; sourceTree = "<group>"; };
+		E44432CE17F0A70E00E3AF5C /* pspl_uvgen.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pspl_uvgen.py; sourceTree = "<group>"; };
 		E44577BD1781DBA4003EE09C /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		E44577BE1781DC4F003EE09C /* PMDLToolchain.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PMDLToolchain.c; sourceTree = "<group>"; };
 		E44577BF1781DC5B003EE09C /* PMDLRuntime.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PMDLRuntime.c; sourceTree = "<group>"; };
@@ -133,6 +134,7 @@
 		E45591D7174D60C100CE0A08 /* gx_toolchain.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gx_toolchain.c; sourceTree = "<group>"; };
 		E460001F179D74450013FE3A /* PMDLRuntimeProcessing.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PMDLRuntimeProcessing.c; sourceTree = "<group>"; };
 		E462EEA81778FC0200211193 /* gl_runtime_ios.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = gl_runtime_ios.m; sourceTree = "<group>"; };
+		E4709EE417EF57A00029F264 /* pspl_writer.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = pspl_writer.py; sourceTree = "<group>"; };
 		E473376717E4E235005A6C3F /* monkey.blend */ = {isa = PBXFileReference; lastKnownFileType = file; path = monkey.blend; sourceTree = "<group>"; };
 		E473376817E4E235005A6C3F /* monkey.pspl */ = {isa = PBXFileReference; lastKnownFileType = text; path = monkey.pspl; sourceTree = "<group>"; };
 		E473376917E4E235005A6C3F /* MonkeyMap.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = MonkeyMap.png; sourceTree = "<group>"; };
@@ -255,6 +257,7 @@
 		E4E7F23F1770040800E87FCB /* gl_common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gl_common.h; sourceTree = "<group>"; };
 		E4F078E4173AA5F9000D6699 /* GX_PSPLTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GX_PSPLTypes.h; sourceTree = "<group>"; };
 		E4F078E5173AA891000D6699 /* pspl_runtime_platform_typefile.pch.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = pspl_runtime_platform_typefile.pch.in; sourceTree = "<group>"; };
+		E4F1DBD817EA1F42000FB313 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -312,6 +315,7 @@
 		E44577F01781FA10003EE09C /* Blender */ = {
 			isa = PBXGroup;
 			children = (
+				E4F1DBD717EA1E0E000FB313 /* io_pspl */,
 				E4874078178C62C4009EAD1A /* io_pmdl_export */,
 			);
 			path = Blender;
@@ -779,6 +783,16 @@
 				E4AFAE6B171D825400F7A0BF /* gx_offline.c */,
 			);
 			path = GXStreamGen;
+			sourceTree = "<group>";
+		};
+		E4F1DBD717EA1E0E000FB313 /* io_pspl */ = {
+			isa = PBXGroup;
+			children = (
+				E4F1DBD817EA1F42000FB313 /* __init__.py */,
+				E4709EE417EF57A00029F264 /* pspl_writer.py */,
+				E44432CE17F0A70E00E3AF5C /* pspl_uvgen.py */,
+			);
+			path = io_pspl;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

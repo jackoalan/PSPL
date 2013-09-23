@@ -113,6 +113,7 @@ enum pmdl_invalidate_bits {
     PMDL_INVALIDATE_MODEL       = 1,
     PMDL_INVALIDATE_VIEW        = (1<<1),
     PMDL_INVALIDATE_PROJECTION  = (1<<2),
+    PMDL_INVALIDATE_TEXMTXS     = (1<<3),
     PMDL_INVALIDATE_ALL         = 0xff
 };
 void pmdl_update_context(pmdl_draw_ctx* ctx, enum pmdl_invalidate_bits inv_bits);

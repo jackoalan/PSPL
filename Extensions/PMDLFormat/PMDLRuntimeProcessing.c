@@ -484,6 +484,12 @@ static void _pmdl_set_default_context(pmdl_draw_ctx* ctx) {
     for (i=0 ; i<PMDL_MAX_TEXCOORD_MATS ; ++i) {
         ctx->texcoord_mtx[i].m[0][0] = 1;
         ctx->texcoord_mtx[i].m[1][1] = -1;
+#       if PMDL_GX
+            ctx->texcoord_mtx[i].m[2][2] = 0;
+#       else
+            ctx->texcoord_mtx[i].m[2][2] = 1;
+            ctx->texcoord_mtx[i].m[3][3] = 1;
+#       endif
     }
     
     memset(ctx->model_mtx.m, 0, sizeof(pspl_matrix34_t));
@@ -1024,10 +1030,12 @@ void pmdl_draw_rigged(const pmdl_draw_ctx* ctx, const pmdl_t* pmdl,
                 index_buf += sizeof(uint32_t);
                 
                 // Frustum test
+                /*
                 if (!pmdl_aabb_frustum_test(ctx, mesh_head->mesh_aabb)) {
                     index_buf += sizeof(pmdl_general_prim_par1) * prim_count;
                     continue;
                 }
+                 */
                 
                 // Apply mesh context
                 const pspl_runtime_psplc_t* shader_obj = NULL;
@@ -1209,7 +1217,7 @@ void pmdl_draw_rigged(const pmdl_draw_ctx* ctx, const pmdl_t* pmdl,
                         guVecSub((guVector*)vert_cur, (guVector*)bone->base_vector->f, transformed_vert_a);
                         
                         guVecMultiply(anim_ctx->fk_instance_array[vhb->bone_idx].bone_matrix->m, transformed_vert_a, transformed_vert_b);
-                        guVecMultiply(anim_ctx->fk_instance_array[vhb->bone_idx].bone_matrix->m, (guVector*)norm_cur, transformed_norm_b);
+                        guVecMultiplySR(anim_ctx->fk_instance_array[vhb->bone_idx].bone_matrix->m, (guVector*)norm_cur, transformed_norm_b);
                         
                         guVecScale(transformed_vert_b, transformed_vert_a, vhb->bone_weight);
                         guVecScale(transformed_norm_b, transformed_norm_a, vhb->bone_weight);
@@ -1265,10 +1273,12 @@ void pmdl_draw_rigged(const pmdl_draw_ctx* ctx, const pmdl_t* pmdl,
                 pmdl_gx_mesh* gx_mesh = index_buf;
                 
                 // Frustum test
+                /*
                 if (!pmdl_aabb_frustum_test(ctx, mesh_head->mesh_aabb)) {
                     index_buf += sizeof(pmdl_gx_mesh);
                     continue;
                 }
+                 */
                 
                 // Apply mesh context
                 const pspl_runtime_psplc_t* shader_obj = NULL;

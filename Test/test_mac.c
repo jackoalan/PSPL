@@ -108,8 +108,8 @@ int main(int argc, char* argv[]) {
     
     // Setup monkey rendering context
     monkey_ctx = pmdl_new_draw_context();
-    monkey_ctx->texcoord_mtx[1].m[0][0] = 1;
-    monkey_ctx->texcoord_mtx[1].m[1][1] = -1;
+    monkey_ctx->texcoord_mtx[1].m[0][0] = 0.5;
+    monkey_ctx->texcoord_mtx[1].m[1][1] = -0.5;
     monkey_ctx->texcoord_mtx[1].m[0][3] = 0.5;
     monkey_ctx->texcoord_mtx[1].m[1][3] = 0.5;
     

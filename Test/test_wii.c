@@ -217,10 +217,10 @@ int main(int argc, char* argv[]) {
     // Setup monkey rendering context
     monkey_ctx = pmdl_new_draw_context();
     
-    monkey_ctx->texcoord_mtx[1].m[0][0] = 1;
-    monkey_ctx->texcoord_mtx[1].m[1][1] = -1;
-    monkey_ctx->texcoord_mtx[1].m[0][3] = 1;
-    monkey_ctx->texcoord_mtx[1].m[1][3] = 1;
+    monkey_ctx->texcoord_mtx[1].m[0][0] = 0.5;
+    monkey_ctx->texcoord_mtx[1].m[1][1] = -0.5;
+    monkey_ctx->texcoord_mtx[1].m[0][3] = 0.5;
+    monkey_ctx->texcoord_mtx[1].m[1][3] = 0.5;
 
     
     monkey_ctx->camera_view.pos.f[0] = 0;
@@ -258,20 +258,23 @@ int main(int argc, char* argv[]) {
     
     printf("Animation Context Setup\n");
     
-    init_time_profile(&profile);
+    //init_time_profile(&profile);
     
     // Loop until reset button pressed
     SYS_SetResetCallback(reset_press_cb);
+    double tex_off = 0;
     while (!reset_pressed) {
         
-        start_time_profile(&profile);
+        //start_time_profile(&profile);
         
         // Update action contexts
         pmdl_action_advance(rotate_action_ctx, 0.1/60.0);
         pmdl_action_advance(haha_action_ctx, 1/60.0);
         pmdl_animation_evaluate(anim_ctx);
+
+        tex_off += 0.005;
         
-        stop_time_profile(&profile);
+        //stop_time_profile(&profile);
         //report_time_profile(&profile);
         
 #if USING_AA
