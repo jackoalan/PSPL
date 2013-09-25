@@ -64,116 +64,109 @@ def image_mipmap_compatible(image):
     return False
 
 # Write PSPL file
-class pspl_writer:
+def write_pspl(mesh_obj, armature):
 
-    @classmethod
-    def write_pspl(cls, mesh_obj, armature):
+    # Material lookup
+    material = lookup_pspl_material(mesh_obj)
+    if material is None:
+        return None
 
-        # Material lookup
-        material = lookup_pspl_material(mesh_obj)
-        if material is None:
-            return None
+    # Begin writing
+    pspl_out = str()
+    pspl_out += """\
+/* Auto-Generated Blender PSPL
+ * File:     '{0}'
+ * Mesh:     '{1}'
+ * Material: '{2}'
+ */\n""".format(os.path.basename(bpy.data.filepath), mesh_obj.name, material[1].name)
 
-        # Begin writing
-        pspl_out = str()
-        pspl_out += ""
-        "/* Auto-Generated Blender PSPL\n"
-        " * File:     '{0}'\n"
-        " * Mesh:     '{1}'\n"
-        " * Material: '{2}'\n"
-        " */\n".format(os.path.basename(bpy.data.filepath), mesh_obj.name, material[1].name)
-
-        pspl_out += "NAME(\"{0}\")\n\n".format(material[0])
+    pspl_out += "NAME(\"{0}\")\n\n".format(material[0])
 
 
-        # Write vertex section
-        pspl_out += "VERTEX\n======\n"
+    # Write vertex section
+    pspl_out += "VERTEX\n======\n"
 
-        # If rigging (armature present),
-        # determine max count of vert groups for this (sub)mesh
-        if armature:
-            max_bones = 0
-            for polygon in mesh_obj.data.polygons:
-                polygon_groups = set()
-                for vert_idx in polygon.vertices:
-                    for group in mesh_obj.data.vertices[vert_idx].groups:
-                        polygon_groups.add(group.group)
+    # If rigging (armature present),
+    # determine max count of vert groups for this (sub)mesh
+    if armature:
+        max_bones = 0
+        for polygon in mesh_obj.data.polygons:
+            polygon_groups = set()
+            for vert_idx in polygon.vertices:
+                for group in mesh_obj.data.vertices[vert_idx].groups:
+                    polygon_groups.add(group.group)
 
-                if max_bones < len(polygon_groups):
-                    max_bones = len(polygon_groups)
+            if max_bones < len(polygon_groups):
+                max_bones = len(polygon_groups)
 
-            pspl_out += "BONE_COUNT({0})\n".format(max_bones)
+        pspl_out += "BONE_COUNT({0})\n".format(max_bones)
 
 
 
-        # Add UV generators from texture slots
-        added_uvs = set()
-        for slot in material[1].texture_slots:
+    # Add UV generators from texture slots
+    added_uvs = set()
+    for slot in material[1].texture_slots:
+        
+        if slot is None:
+            continue
 
-            uv_index = pspl_uvgen.pspl_uvgen.pspl_uv_index(material[1], slot.name)
-            
-            if uv_index < 0:
-                continue
+        uv_index = pspl_uvgen.pspl_uv_index(material[1], slot.name)
+        
+        if uv_index < 0:
+            continue
 
-            if uv_index in added_uvs:
-                continue
+        if uv_index in added_uvs:
+            continue
 
-            added_uvs.add(uv_index)
+        added_uvs.add(uv_index)
 
-            uv_source = None
-            if slot.texture_coords == 'UV':
-                uv_source = mesh_obj.data.uv_layers.find(slot.uv_layer)
-            elif slot.texture_coords == 'ORCO':
-                uv_source = "POSITION"
-            elif slot.texture_coords == 'NORMAL':
-                uv_source = "NORMAL"
+        uv_source = None
+        if slot.texture_coords == 'UV':
+            uv_source = mesh_obj.data.uv_layers.find(slot.uv_layer)
+        elif slot.texture_coords == 'ORCO':
+            uv_source = "POSITION"
+        elif slot.texture_coords == 'NORMAL':
+            uv_source = "NORMAL"
 
-            pspl_out += "UV_GEN({0} {1})\n".format(uv_index, uv_source)
+        pspl_out += "UV_GEN({0} {1})\n".format(uv_index, uv_source)
 
 
-        # Write Fragment section
-        pspl_out += "\n\nFRAGMENT\n========\n"
+    # Write Fragment section
+    pspl_out += "\n\nFRAGMENT\n========\n"
 
-        # Add stages from texture slots
-        slot_idx = 0
-        for slot in material[1].texture_slots:
-            
-            uv_index = pspl_uvgen.pspl_uvgen.pspl_uv_index(material[1], slot.name)
-            
-            if uv_index < 0:
-                continue
-            
-            if slot_idx != 0:
-                if slot.blend_type == 'MIX':
-                    pspl_out += "~~~"
-                elif slot.blend_type == 'ADD':
-                    pspl_out += "+++"
-                elif slot.blend_type == 'SUBTRACT':
-                    pspl_out += "+--"
-                elif slot.blend_type == 'MULTIPLY':
-                    pspl_out += "***"
-                pspl_out += "\n"
+    # Add stages from texture slots
+    slot_idx = 0
+    for slot in material[1].texture_slots:
+        
+        if slot is None:
+            continue
+        
+        uv_index = pspl_uvgen.pspl_uv_index(material[1], slot.name)
+        
+        if uv_index < 0:
+            continue
+        
+        if slot_idx != 0:
+            if slot.blend_type == 'MIX':
+                pspl_out += "~~~"
+            elif slot.blend_type == 'ADD':
+                pspl_out += "+++"
+            elif slot.blend_type == 'SUBTRACT':
+                pspl_out += "+--"
+            elif slot.blend_type == 'MULTIPLY':
+                pspl_out += "***"
+            pspl_out += "\n"
 
-            mipmap_str = ""
-            if slot.texture.pspl_mipmap and image_mipmap_compatible(slot.texture.image):
-                mipmap_str = "MIPMAP"
+        mipmap_str = ""
+        if slot.texture.pspl_mipmap and image_mipmap_compatible(slot.texture.image):
+            mipmap_str = "MIPMAP"
 
-            pspl_out += "[SAMPLE ../{0} IMAGE {1} UV {2} {3}]\n".format(os.path.basename(bpy.data.filepath), slot.texture.image.name, uv_index, mipmap_str)
-                    
-            uv_source = None
-            if slot.texture_coords == 'UV':
-                uv_source = mesh_obj.data.uv_layers.find(slot.uv_layer)
-            elif slot.texture_coords == 'ORCO':
-                uv_source = "POSITION"
-            elif slot.texture_coords == 'NORMAL':
-                uv_source = "NORMAL"
-            
-            pspl_out += "UV_GEN({0} {1})\n".format(uv_index, uv_source)
+        pspl_out += "[SAMPLE ../{0} IMAGE {1} UV {2} {3}]\n".format(os.path.basename(bpy.data.filepath), slot.texture.image.name, uv_index, mipmap_str)
 
-            slot_idx += 1
+        slot_idx += 1
 
-        pspl_out += "\n\n"
+    pspl_out += "\n\n"
 
-        return (pspl_out, material[0])
+    return (pspl_out, material[0])
 
 

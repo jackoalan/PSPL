@@ -123,12 +123,7 @@ def save_handler(dummy):
             else:
                 break
 
-        print('ABOUT TO PSPL', mesh_obj.name)
-        pspl = pspl_writer.pspl_writer.write_pspl(mesh_obj, armature)
-        if pspl is None:
-            print('ERROR PSPL', mesh_obj.name)
-        else:
-            print('DONE PSPL', pspl[0])
+        pspl = pspl_writer.write_pspl(mesh_obj, armature)
 
 
         if pspl is not None:
@@ -140,11 +135,9 @@ def save_handler(dummy):
             except:
                 pass
 
-            print('ABOUT to write', pspl_path)
-
-#            pspl_file = open(pspl_path, 'w')
-#            pspl_file.write(pspl[0])
-#            pspl_file.close()
+            pspl_file = open(pspl_path, 'w')
+            pspl_file.write(pspl[0])
+            pspl_file.close()
 
 
 # Registration

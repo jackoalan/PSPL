@@ -38,36 +38,35 @@ def pspl_filter_texture_slots(material):
     
     return tex_slots
 
-class pspl_uvgen:
 
-    # Determine PSPL UV index
-    def pspl_uv_index(material, tex_name):
-        
-        tex_slots = pspl_filter_texture_slots(material)
-        
-        this_tex_slot_idx = material.texture_slots.find(tex_name)
-        if this_tex_slot_idx >= 0:
-            if this_tex_slot_idx not in tex_slots:
-                return -1
-        else:
+# Determine PSPL UV index
+def pspl_uv_index(material, tex_name):
+    
+    tex_slots = pspl_filter_texture_slots(material)
+    
+    this_tex_slot_idx = material.texture_slots.find(tex_name)
+    if this_tex_slot_idx >= 0:
+        if this_tex_slot_idx not in tex_slots:
             return -1
-        this_tex_slot = material.texture_slots[this_tex_slot_idx]
-        
-        return_uv_idx = 0
-        for tex_slot_idx in tex_slots:
-            tex_slot = material.texture_slots[tex_slot_idx]
-            
-            if tex_slot.texture.pspl_uv_share_texture and tex_slot.texture.pspl_uv_share_texture != tex_slot.name:
-                if tex_slot == this_tex_slot:
-                    child_slot = pspl_uv_index(material, tex_slot.texture.pspl_uv_share_texture)
-                    if child_slot >= 0:
-                        return child_slot
-                else:
-                    continue
-            
-            if tex_slot == this_tex_slot:
-                return return_uv_idx
-            
-            return_uv_idx += 1
-        
+    else:
         return -1
+    this_tex_slot = material.texture_slots[this_tex_slot_idx]
+    
+    return_uv_idx = 0
+    for tex_slot_idx in tex_slots:
+        tex_slot = material.texture_slots[tex_slot_idx]
+        
+        if tex_slot.texture.pspl_uv_share_texture and tex_slot.texture.pspl_uv_share_texture != tex_slot.name:
+            if tex_slot == this_tex_slot:
+                child_slot = pspl_uv_index(material, tex_slot.texture.pspl_uv_share_texture)
+                if child_slot >= 0:
+                    return child_slot
+            else:
+                continue
+        
+        if tex_slot == this_tex_slot:
+            return return_uv_idx
+        
+        return_uv_idx += 1
+    
+    return -1
